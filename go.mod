@@ -1,4 +1,4 @@
-module github.com/DituLin/Atritum
+module github.com/DituLin/Atrium
 
 go 1.25.0
 

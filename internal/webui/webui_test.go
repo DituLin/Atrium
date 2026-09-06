@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/webui"
+	"github.com/DituLin/Atrium/internal/webui"
 )
 
 func builtFS() fstest.MapFS {

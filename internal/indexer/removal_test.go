@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 func TestRemovalNeedsTwoCompletedScans(t *testing.T) {

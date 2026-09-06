@@ -8,8 +8,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/store"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 // PairingTTL is how long a code stays usable (design §6.8).

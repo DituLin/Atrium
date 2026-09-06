@@ -9,13 +9,13 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/app/events"
-	"github.com/DituLin/Atritum/internal/clock"
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/jobs"
-	"github.com/DituLin/Atritum/internal/media"
-	"github.com/DituLin/Atritum/internal/source"
-	"github.com/DituLin/Atritum/internal/store"
+	"github.com/DituLin/Atrium/internal/app/events"
+	"github.com/DituLin/Atrium/internal/clock"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/jobs"
+	"github.com/DituLin/Atrium/internal/media"
+	"github.com/DituLin/Atrium/internal/source"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 // ProgressFlushEvery is how many files pass before scan counters are written

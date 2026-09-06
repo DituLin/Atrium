@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/store"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 // Authenticator resolves credentials on a request into an Identity.

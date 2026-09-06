@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/clock"
+	"github.com/DituLin/Atrium/internal/clock"
 )
 
 func mustLoad(t *testing.T, name string) *time.Location {

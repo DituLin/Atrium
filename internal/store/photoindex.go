@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // RemovalThreshold is the number of consecutive completed scans a file must be

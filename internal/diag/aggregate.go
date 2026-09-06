@@ -5,11 +5,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/media"
-	"github.com/DituLin/Atritum/internal/source"
-	"github.com/DituLin/Atritum/internal/store"
-	"github.com/DituLin/Atritum/internal/version"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/media"
+	"github.com/DituLin/Atrium/internal/source"
+	"github.com/DituLin/Atrium/internal/store"
+	"github.com/DituLin/Atrium/internal/version"
 )
 
 // Presence reports which screens have a live session; the hub implements it.

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 type exclusionDTO struct {

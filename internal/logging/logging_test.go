@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/logging"
+	"github.com/DituLin/Atrium/internal/logging"
 )
 
 func readLog(t *testing.T, dir string) map[string]any {

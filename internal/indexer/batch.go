@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/DituLin/Atritum/internal/jobs"
-	"github.com/DituLin/Atritum/internal/store"
+	"github.com/DituLin/Atrium/internal/jobs"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 // BatchSize is how many files one index transaction covers. Writing each file

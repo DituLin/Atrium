@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/version"
+	"github.com/DituLin/Atrium/internal/version"
 )
 
 type healthBody struct {

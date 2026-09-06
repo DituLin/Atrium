@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/config"
+	"github.com/DituLin/Atrium/internal/config"
 )
 
 const minimal = `

@@ -4,13 +4,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/auth"
-	"github.com/DituLin/Atritum/internal/backup"
-	"github.com/DituLin/Atritum/internal/config"
-	"github.com/DituLin/Atritum/internal/diag"
-	"github.com/DituLin/Atritum/internal/screen"
-	"github.com/DituLin/Atritum/internal/store"
-	"github.com/DituLin/Atritum/internal/ws"
+	"github.com/DituLin/Atrium/internal/auth"
+	"github.com/DituLin/Atrium/internal/backup"
+	"github.com/DituLin/Atrium/internal/config"
+	"github.com/DituLin/Atrium/internal/diag"
+	"github.com/DituLin/Atrium/internal/screen"
+	"github.com/DituLin/Atrium/internal/store"
+	"github.com/DituLin/Atrium/internal/ws"
 )
 
 // buildRealtime wires the WebSocket hub and the command service. They are

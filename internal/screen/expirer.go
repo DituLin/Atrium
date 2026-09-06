@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // RunExpirer ticks once a second and closes out commands whose time is up.

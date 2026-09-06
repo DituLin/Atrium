@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // CoalesceWindow is the delivery window from design §9: notifications raised

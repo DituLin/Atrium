@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/backup"
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/store"
-	"github.com/DituLin/Atritum/internal/store/testutil"
+	"github.com/DituLin/Atrium/internal/backup"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/store"
+	"github.com/DituLin/Atrium/internal/store/testutil"
 )
 
 type stepClock struct{ at time.Time }

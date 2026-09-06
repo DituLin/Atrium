@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // Screens is the screens repository.

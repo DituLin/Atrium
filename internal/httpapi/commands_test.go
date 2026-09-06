@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/httpapi"
-	"github.com/DituLin/Atritum/internal/logging"
-	"github.com/DituLin/Atritum/internal/screen"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/httpapi"
+	"github.com/DituLin/Atrium/internal/logging"
+	"github.com/DituLin/Atrium/internal/screen"
 )
 
 // stubSessions answers presence and records revocations without sockets.

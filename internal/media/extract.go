@@ -5,10 +5,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/jobs"
-	"github.com/DituLin/Atritum/internal/source"
-	"github.com/DituLin/Atritum/internal/store"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/jobs"
+	"github.com/DituLin/Atrium/internal/source"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 // ExtractMeta implements the extract_meta job (design §6.3).

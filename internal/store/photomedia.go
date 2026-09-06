@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // MetaResult is what the extract_meta job writes back.

@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/logging"
-	"github.com/DituLin/Atritum/internal/screen"
-	"github.com/DituLin/Atritum/internal/store"
-	"github.com/DituLin/Atritum/internal/store/testutil"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/logging"
+	"github.com/DituLin/Atrium/internal/screen"
+	"github.com/DituLin/Atrium/internal/store"
+	"github.com/DituLin/Atrium/internal/store/testutil"
 )
 
 // fakeHub records deliveries and can simulate an offline or wedged session.

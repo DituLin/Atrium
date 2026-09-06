@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/diag"
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/store"
-	"github.com/DituLin/Atritum/internal/store/testutil"
+	"github.com/DituLin/Atrium/internal/diag"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/store"
+	"github.com/DituLin/Atrium/internal/store/testutil"
 )
 
 type fakePresence struct{ online map[string]bool }

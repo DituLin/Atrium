@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/screen"
-	"github.com/DituLin/Atritum/internal/ws"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/screen"
+	"github.com/DituLin/Atrium/internal/ws"
 )
 
 func TestAckAppliedResolvesOnce(t *testing.T) {

@@ -6,9 +6,9 @@ PKG        := ./...
 VERSION    ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo 0.1.0)
 COMMIT     ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 BUILD_DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
-LDFLAGS    := -X github.com/DituLin/Atritum/internal/version.Version=$(VERSION) \
-              -X github.com/DituLin/Atritum/internal/version.Commit=$(COMMIT) \
-              -X github.com/DituLin/Atritum/internal/version.BuildDate=$(BUILD_DATE)
+LDFLAGS    := -X github.com/DituLin/Atrium/internal/version.Version=$(VERSION) \
+              -X github.com/DituLin/Atrium/internal/version.Commit=$(COMMIT) \
+              -X github.com/DituLin/Atrium/internal/version.BuildDate=$(BUILD_DATE)
 
 DEV_CONFIG ?= config.yaml
 

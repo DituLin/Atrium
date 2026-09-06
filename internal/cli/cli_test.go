@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/cli"
+	"github.com/DituLin/Atrium/internal/cli"
 )
 
 // run executes the command tree with args and returns its combined output.

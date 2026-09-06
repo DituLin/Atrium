@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/clock"
-	"github.com/DituLin/Atritum/internal/config"
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/store"
+	"github.com/DituLin/Atrium/internal/clock"
+	"github.com/DituLin/Atrium/internal/config"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 // SchemaVersion is the home snapshot contract version.

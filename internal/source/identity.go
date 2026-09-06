@@ -8,7 +8,7 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // networkFilesystems is the allowlist from design §6.1. A root that is not on

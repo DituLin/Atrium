@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/DituLin/Atritum/internal/auth"
+	"github.com/DituLin/Atrium/internal/auth"
 )
 
 type tokenRotateResult struct {

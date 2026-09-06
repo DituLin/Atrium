@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/source"
+	"github.com/DituLin/Atrium/internal/source"
 )
 
 func newTree(t *testing.T) (string, *source.OSFS) {

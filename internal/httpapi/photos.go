@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/store"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 // RandomPoolLimit caps how many IDs one random round shuffles (design §6.4).

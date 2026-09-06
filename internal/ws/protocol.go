@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // SchemaVersion is the envelope version every message carries.

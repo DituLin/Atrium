@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/app/events"
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/app/events"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 func TestBusFansOutAndNormalizes(t *testing.T) {

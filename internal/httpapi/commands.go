@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/auth"
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/auth"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // commandDTO is the wire shape of a screen command (design §8).

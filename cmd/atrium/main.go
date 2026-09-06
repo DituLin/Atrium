@@ -4,7 +4,7 @@ package main
 import (
 	"os"
 
-	"github.com/DituLin/Atritum/internal/cli"
+	"github.com/DituLin/Atrium/internal/cli"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // ScreenCookieName is the credential cookie set at pairing claim.

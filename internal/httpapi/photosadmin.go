@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/jobs"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/jobs"
 )
 
 // photoAdminDTO is the only representation that reveals a relative path, and

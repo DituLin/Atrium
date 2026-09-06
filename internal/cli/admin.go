@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/DituLin/Atritum/internal/config"
+	"github.com/DituLin/Atrium/internal/config"
 )
 
 // adminFlags are shared by every `atrium admin` subcommand.

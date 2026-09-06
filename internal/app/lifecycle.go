@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/media"
+	"github.com/DituLin/Atrium/internal/media"
 )
 
 // Serve starts the listener and blocks until ctx is cancelled, then shuts down

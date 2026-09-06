@@ -1,6 +1,6 @@
 package diag
 
-import "github.com/DituLin/Atritum/internal/domain"
+import "github.com/DituLin/Atrium/internal/domain"
 
 // Document is the diagnostics payload of design §6.11. Every field is a
 // counter, a state name or an identifier: no path, no credential, no photo

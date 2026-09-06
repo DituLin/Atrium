@@ -15,12 +15,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/app"
-	"github.com/DituLin/Atritum/internal/auth/tlsgen"
-	"github.com/DituLin/Atritum/internal/config"
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/logging"
-	"github.com/DituLin/Atritum/internal/store"
+	"github.com/DituLin/Atrium/internal/app"
+	"github.com/DituLin/Atrium/internal/auth/tlsgen"
+	"github.com/DituLin/Atrium/internal/config"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/logging"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 func testConfig(t *testing.T, mutate ...func(*config.Config)) *config.Config {

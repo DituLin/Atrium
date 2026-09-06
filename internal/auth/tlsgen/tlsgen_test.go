@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/auth/tlsgen"
+	"github.com/DituLin/Atrium/internal/auth/tlsgen"
 )
 
 func parseCert(t *testing.T, path string) *x509.Certificate {

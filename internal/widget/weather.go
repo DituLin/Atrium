@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/config"
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/store"
+	"github.com/DituLin/Atrium/internal/config"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 // Reading is one provider observation.

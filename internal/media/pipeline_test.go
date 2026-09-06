@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/jobs"
-	"github.com/DituLin/Atritum/internal/media"
-	"github.com/DituLin/Atritum/internal/media/testutil"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/jobs"
+	"github.com/DituLin/Atrium/internal/media"
+	"github.com/DituLin/Atrium/internal/media/testutil"
 )
 
 func jpegBytes(t *testing.T, w, h int, opts testutil.ExifOptions) []byte {

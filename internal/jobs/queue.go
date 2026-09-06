@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/store"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 // Job priorities from design §6.2: metadata before previews, so a photo

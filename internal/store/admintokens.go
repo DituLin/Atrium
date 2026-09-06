@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // AdminTokens is the admin_tokens repository.

@@ -8,7 +8,7 @@ import (
 
 	"github.com/coder/websocket"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // SendQueueSize is the per-session outbound bound from design §4.1.

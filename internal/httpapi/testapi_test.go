@@ -12,14 +12,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/auth"
-	"github.com/DituLin/Atritum/internal/clock"
-	"github.com/DituLin/Atritum/internal/config"
-	"github.com/DituLin/Atritum/internal/httpapi"
-	"github.com/DituLin/Atritum/internal/logging"
-	"github.com/DituLin/Atritum/internal/store"
-	"github.com/DituLin/Atritum/internal/store/testutil"
-	"github.com/DituLin/Atritum/internal/widget"
+	"github.com/DituLin/Atrium/internal/auth"
+	"github.com/DituLin/Atrium/internal/clock"
+	"github.com/DituLin/Atrium/internal/config"
+	"github.com/DituLin/Atrium/internal/httpapi"
+	"github.com/DituLin/Atrium/internal/logging"
+	"github.com/DituLin/Atrium/internal/store"
+	"github.com/DituLin/Atrium/internal/store/testutil"
+	"github.com/DituLin/Atrium/internal/widget"
 )
 
 // harness is a running API backed by a temporary database and a fake clock.

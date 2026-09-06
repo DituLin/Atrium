@@ -6,8 +6,8 @@ import (
 	"io/fs"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/source"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/source"
 )
 
 // candidate is one file the walk accepted for indexing.

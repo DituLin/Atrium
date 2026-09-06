@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/media"
-	"github.com/DituLin/Atritum/internal/media/testutil"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/media"
+	"github.com/DituLin/Atrium/internal/media/testutil"
 )
 
 // seedPreview inserts a photo with a cached preview of the given size.

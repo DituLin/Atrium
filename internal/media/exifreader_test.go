@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/media"
-	"github.com/DituLin/Atritum/internal/media/testutil"
+	"github.com/DituLin/Atrium/internal/media"
+	"github.com/DituLin/Atrium/internal/media/testutil"
 )
 
 func TestExifReaderReadsDateOffsetAndOrientation(t *testing.T) {

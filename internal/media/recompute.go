@@ -3,7 +3,7 @@ package media
 import (
 	"context"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // RecomputeBatch is the page size of the recompute_day job (design §6.2).

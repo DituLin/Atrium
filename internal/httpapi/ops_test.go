@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/auth"
-	"github.com/DituLin/Atritum/internal/backup"
-	"github.com/DituLin/Atritum/internal/config"
-	"github.com/DituLin/Atritum/internal/httpapi"
+	"github.com/DituLin/Atrium/internal/auth"
+	"github.com/DituLin/Atrium/internal/backup"
+	"github.com/DituLin/Atrium/internal/config"
+	"github.com/DituLin/Atrium/internal/httpapi"
 )
 
 // Rotation hands over a working credential before the old one dies, so a lost

@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/DituLin/Atritum/internal/app"
-	"github.com/DituLin/Atritum/internal/backup"
-	"github.com/DituLin/Atritum/internal/logging"
-	"github.com/DituLin/Atritum/internal/store"
+	"github.com/DituLin/Atrium/internal/app"
+	"github.com/DituLin/Atrium/internal/backup"
+	"github.com/DituLin/Atrium/internal/logging"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 // newBackupCmd implements `atrium backup now | list` (design §11). Both work

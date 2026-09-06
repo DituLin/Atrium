@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/ws"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/ws"
 )
 
 // OnHeartbeat records presence and the client-reported state, then annotates

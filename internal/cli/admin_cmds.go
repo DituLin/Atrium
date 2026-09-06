@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/DituLin/Atritum/internal/diag"
+	"github.com/DituLin/Atrium/internal/diag"
 )
 
 // The diagnostics document is decoded straight into the server's own type, so

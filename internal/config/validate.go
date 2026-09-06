@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // Validate enforces every rule from technical design §10.

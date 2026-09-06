@@ -7,9 +7,9 @@ import (
 	"image"
 	"os"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/jobs"
-	"github.com/DituLin/Atritum/internal/source"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/jobs"
+	"github.com/DituLin/Atrium/internal/source"
 )
 
 // MaxPreviewAttempts is the number of decode attempts before a photo's preview

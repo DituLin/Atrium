@@ -2,14 +2,14 @@ package httpapi_test
 
 import (
 	"context"
-	"github.com/DituLin/Atritum/internal/widget"
+	"github.com/DituLin/Atrium/internal/widget"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 func TestSourcesListIsAdminOnlyAndHidesRootPath(t *testing.T) {

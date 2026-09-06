@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/config"
-	"github.com/DituLin/Atritum/internal/widget"
+	"github.com/DituLin/Atrium/internal/config"
+	"github.com/DituLin/Atrium/internal/widget"
 )
 
 func TestHomeSnapshotBaselineShape(t *testing.T) {

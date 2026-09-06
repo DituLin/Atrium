@@ -10,9 +10,9 @@ import (
 
 	"github.com/coder/websocket"
 
-	"github.com/DituLin/Atritum/internal/app/events"
-	"github.com/DituLin/Atritum/internal/auth"
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/app/events"
+	"github.com/DituLin/Atrium/internal/auth"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // ServeHTTP upgrades an authenticated screen request into a session. An

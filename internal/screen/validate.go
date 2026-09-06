@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // Validate checks a command payload against its kind (design §6.5). It

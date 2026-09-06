@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/auth"
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/auth"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // screenDTO is the admin and self view of a paired screen. It never carries the

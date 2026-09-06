@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/auth"
-	"github.com/DituLin/Atritum/internal/backup"
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/auth"
+	"github.com/DituLin/Atrium/internal/backup"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // backupDTO is the wire shape of one snapshot. The directory is configuration,

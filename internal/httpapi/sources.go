@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // sourceDTO is the admin view of a data source. It never carries root_path:

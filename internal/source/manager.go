@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/app/events"
-	"github.com/DituLin/Atritum/internal/config"
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/store"
+	"github.com/DituLin/Atrium/internal/app/events"
+	"github.com/DituLin/Atrium/internal/config"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 // ProbeInterval is the health check cadence from design §4.1.

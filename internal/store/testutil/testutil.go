@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/DituLin/Atritum/internal/store"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 // NewDB opens a migrated SQLite database in a temporary directory and closes it

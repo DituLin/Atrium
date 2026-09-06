@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/auth"
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/auth"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // Client talks to a running server over loopback with the admin token.

@@ -3,7 +3,7 @@ package httpapi
 import (
 	"net/http"
 
-	"github.com/DituLin/Atritum/internal/auth"
+	"github.com/DituLin/Atrium/internal/auth"
 )
 
 // APIPrefix is the versioned API root.

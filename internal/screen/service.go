@@ -9,8 +9,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/store"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 // AckGrace is how long a delivered command waits for its acknowledgement past

@@ -3,8 +3,8 @@ package media
 import (
 	"time"
 
-	"github.com/DituLin/Atritum/internal/clock"
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/clock"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // Metadata error codes stored on photos.meta_error.

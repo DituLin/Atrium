@@ -4,14 +4,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/app/events"
-	"github.com/DituLin/Atritum/internal/clock"
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/indexer"
-	"github.com/DituLin/Atritum/internal/jobs"
-	"github.com/DituLin/Atritum/internal/media"
-	"github.com/DituLin/Atritum/internal/source"
-	"github.com/DituLin/Atritum/internal/widget"
+	"github.com/DituLin/Atrium/internal/app/events"
+	"github.com/DituLin/Atrium/internal/clock"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/indexer"
+	"github.com/DituLin/Atrium/internal/jobs"
+	"github.com/DituLin/Atrium/internal/media"
+	"github.com/DituLin/Atrium/internal/source"
+	"github.com/DituLin/Atrium/internal/widget"
 )
 
 // buildPipeline constructs the V0.2 subsystems: the source registry, the job

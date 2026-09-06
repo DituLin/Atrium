@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/auth"
+	"github.com/DituLin/Atrium/internal/auth"
 )
 
 // credential names the token a matrix case presents.

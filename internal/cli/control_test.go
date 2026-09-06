@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DituLin/Atritum/internal/cli"
+	"github.com/DituLin/Atrium/internal/cli"
 )
 
 // controlServer answers the command routes and lets a test script the status

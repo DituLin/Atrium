@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
-	"github.com/DituLin/Atritum/internal/jobs"
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/jobs"
 )
 
 // PreviewRetryAfterSeconds is the Retry-After hint for a 202 response.

@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/DituLin/Atritum/internal/config"
-	"github.com/DituLin/Atritum/internal/version"
+	"github.com/DituLin/Atrium/internal/config"
+	"github.com/DituLin/Atrium/internal/version"
 )
 
 // globalFlags are shared by the server-side commands.

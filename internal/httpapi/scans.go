@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/DituLin/Atritum/internal/domain"
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // scanRunDTO reports one pass over a source.
