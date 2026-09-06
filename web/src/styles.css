@@ -1,0 +1,622 @@
+/*
+ * Dark TV theme. Designed at 1920x1080 and expressed in vw/vh so the same
+ * composition fills a 3840x2160 panel. Layout uses flex/grid only (design
+ * §7.5); the font stack is the system one, with no external request anywhere.
+ *
+ * Type scale: the smallest primary text is 32px at 1080p (1.667vw at 1920).
+ */
+
+:root {
+  --bg: #0b0d10;
+  --bg-raised: #14181d;
+  --fg: #f2f4f7;
+  --fg-dim: #a7b0bb;
+  --line: #263039;
+  --ok: #57d38c;
+  --warn: #f0b429;
+  --bad: #f2603c;
+  --focus: #7fc4ff;
+
+  --gap: 2.2vh;
+  --pad: 3vw;
+  --radius: 1.2vh;
+
+  --fs-body: max(24px, 1.45vw);
+  --fs-primary: max(32px, 1.85vw);
+  --fs-heading: max(44px, 2.8vw);
+  --fs-clock: 12.5vw;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+  font-size: var(--fs-primary);
+  line-height: 1.25;
+  overflow: hidden;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--pad);
+  gap: var(--gap);
+}
+
+/* ------------------------------------------------------------- dashboard */
+
+.dashboard {
+  display: flex;
+  flex: 1 1 auto;
+  gap: var(--pad);
+  min-height: 0;
+}
+
+.dashboard__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  flex: 0 0 34%;
+  min-width: 0;
+}
+
+.dashboard__main {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.widget {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--gap);
+}
+
+.widget--clock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6vh;
+}
+
+.clock__time {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8vw;
+  font-variant-numeric: tabular-nums;
+}
+
+.clock__hhmm {
+  font-size: var(--fs-clock);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.clock__seconds {
+  font-size: calc(var(--fs-clock) / 3.4);
+  color: var(--fg-dim);
+}
+
+.clock__date {
+  font-size: var(--fs-heading);
+}
+
+.clock__zone {
+  font-size: var(--fs-body);
+  color: var(--fg-dim);
+}
+
+.badge {
+  align-self: flex-start;
+  font-size: var(--fs-body);
+  padding: 0.4vh 1vw;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+
+.badge--warn {
+  color: var(--warn);
+}
+
+/* ---------------------------------------------------------------- photos */
+
+.widget--photos {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: var(--gap);
+  min-width: 0;
+}
+
+.photos__frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  min-height: 0;
+}
+
+.photos__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1vh;
+  color: var(--fg-dim);
+  font-size: var(--fs-heading);
+  margin: 0;
+  text-align: center;
+}
+
+.photos__hint,
+.photos__progress {
+  font-size: var(--fs-body);
+  color: var(--fg-dim);
+  margin: 0;
+}
+
+.photos__title {
+  font-size: var(--fs-heading);
+  text-transform: capitalize;
+  margin: 0;
+}
+
+/* --------------------------------------------------------- other widgets */
+
+.widget--weather {
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+}
+
+.weather__temp {
+  font-size: calc(var(--fs-heading) * 1.6);
+  font-variant-numeric: tabular-nums;
+}
+
+.weather__place,
+.weather__source {
+  font-size: var(--fs-body);
+  color: var(--fg-dim);
+}
+
+.notice__text {
+  margin: 0;
+  font-size: var(--fs-primary);
+}
+
+.widget--error {
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+  color: var(--warn);
+  font-size: var(--fs-body);
+}
+
+.widget-error__icon {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  width: 1.6em;
+  height: 1.6em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ------------------------------------------------------------- statusbar */
+
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+  font-size: var(--fs-body);
+  border-top: 1px solid var(--line);
+  padding-top: var(--gap);
+  flex: 0 0 auto;
+}
+
+.chip {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5vw;
+}
+
+.chip__label {
+  color: var(--fg-dim);
+}
+
+.chip__value {
+  text-transform: capitalize;
+}
+
+.chip--ok .chip__glyph {
+  color: var(--ok);
+}
+
+.chip--warn .chip__glyph {
+  color: var(--warn);
+}
+
+.chip--bad .chip__glyph {
+  color: var(--bad);
+}
+
+.chip--idle .chip__glyph {
+  color: var(--fg-dim);
+}
+
+.statusbar__spacer {
+  flex: 1 1 auto;
+}
+
+.statusbar__version {
+  color: var(--fg-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 0.8vw;
+  background: #2a2110;
+  border: 1px solid var(--warn);
+  color: var(--warn);
+  border-radius: var(--radius);
+  padding: 1vh 1.5vw;
+  font-size: var(--fs-body);
+  flex: 0 0 auto;
+}
+
+/* ------------------------------------------------------------------ pair */
+
+.screen--pair,
+.screen--connect {
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.pair__title,
+.connect__title {
+  font-size: var(--fs-heading);
+  margin: 0;
+}
+
+.paircode {
+  display: flex;
+  gap: 1.2vw;
+}
+
+.paircode__digit {
+  font-size: 11vw;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  padding: 0 1.5vw;
+  border-bottom: 0.6vh solid var(--focus);
+  line-height: 1.05;
+}
+
+.pair__steps {
+  font-size: var(--fs-primary);
+  line-height: 1.6;
+  padding-left: 1.5em;
+  margin: 0;
+}
+
+.pair__command {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 0.6vh;
+  padding: 0.4vh 0.8vw;
+  font-size: var(--fs-body);
+}
+
+.pair__status,
+.connect__lead {
+  font-size: var(--fs-heading);
+  margin: 0;
+}
+
+.pair__status--warn {
+  color: var(--warn);
+}
+
+.pair__error {
+  color: var(--bad);
+  font-size: var(--fs-primary);
+}
+
+.connect__detail {
+  font-size: var(--fs-primary);
+  color: var(--fg-dim);
+  max-width: 60vw;
+  margin: 0;
+}
+
+.connect__facts {
+  display: flex;
+  gap: 2vw;
+  font-size: var(--fs-body);
+  margin: 0;
+}
+
+.connect__facts dt {
+  color: var(--fg-dim);
+}
+
+.connect__facts dd {
+  margin: 0;
+  text-transform: capitalize;
+}
+
+/* -------------------------------------------------------- focus & buttons */
+
+.button {
+  font: inherit;
+  font-size: var(--fs-body);
+  color: var(--fg);
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1vh 2vw;
+  cursor: pointer;
+}
+
+.focusable {
+  outline: none;
+  border-radius: var(--radius);
+}
+
+.focusable.is-focused,
+.button:focus,
+.focusable:focus {
+  /* Outline plus scale: never colour alone (FR-01, FR-04). */
+  outline: 0.5vh solid var(--focus);
+  outline-offset: 0.4vh;
+  transform: scale(1.02);
+}
+
+/* ------------------------------------------------------- slideshow (W-201) */
+
+.photos__frame {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+/*
+ * Crossfade layers. Only `opacity` is animated: a TV compositor blends two
+ * already-decoded surfaces for free, while a transform or filter would
+ * re-rasterise a 2560 px image every frame. The incoming image is a freshly
+ * mounted element, so a keyframe animation (not a transition) is what actually
+ * runs; the outgoing one simply holds underneath until it is dropped.
+ */
+.slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 1;
+  will-change: opacity;
+}
+
+.slide--in {
+  animation: slide-fade-in 700ms linear;
+}
+
+@keyframes slide-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.slide__caption {
+  position: absolute;
+  left: 1.5vw;
+  bottom: 1.5vh;
+  margin: 0;
+  padding: 0.6vh 1.2vw;
+  border-radius: var(--radius);
+  background: rgba(6, 8, 10, 0.66);
+  font-size: var(--fs-body);
+  color: var(--fg);
+}
+
+.slide__estimated,
+.thumb__estimated,
+.viewer__estimated {
+  color: var(--fg-dim);
+  font-style: italic;
+}
+
+/* ------------------------------------------------ collection browser (W-202) */
+
+.photos__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2vw;
+  flex: 0 0 auto;
+}
+
+.photos__count,
+.photos__note {
+  font-size: var(--fs-body);
+  color: var(--fg-dim);
+  margin: 0;
+}
+
+.photos__note--bad {
+  color: var(--bad);
+}
+
+.photos__emptystate {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+}
+
+.photogrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--gap) 1.4vw;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.6vh;
+}
+
+.thumb {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8vh;
+  min-width: 0;
+}
+
+.thumb__frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.thumb__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumb__placeholder {
+  color: var(--fg-dim);
+  font-size: var(--fs-heading);
+}
+
+/* 28 px floor at 1080p: readable from 2-3 m (FR-01). */
+.thumb__caption {
+  margin: 0;
+  font-size: max(28px, 1.3vw);
+  color: var(--fg-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ----------------------------------------------------- photo viewer (W-203) */
+
+.screen--photo {
+  padding: 1.5vh 2vw;
+}
+
+.viewer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.viewer__image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.viewer__status {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+  font-size: var(--fs-primary);
+  color: var(--fg-dim);
+  margin: 0;
+}
+
+.spinner {
+  width: 1em;
+  height: 1em;
+  border: 0.18em solid var(--line);
+  border-top-color: var(--focus);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.viewer__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2vw;
+  flex: 0 0 auto;
+  font-size: var(--fs-body);
+}
+
+.viewer__caption {
+  margin: 0;
+}
+
+.viewer__hints {
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+  color: var(--fg-dim);
+}
+
+.viewer__hints .is-disabled {
+  opacity: 0.35;
+}
+
+.chip__detail {
+  color: var(--fg-dim);
+}
+
+/* Respect a reduced-motion preference: cut the crossfade and the spinner. */
+@media (prefers-reduced-motion: reduce) {
+  .slide--in {
+    animation: none;
+  }
+
+  .spinner {
+    animation: none;
+  }
+
+  .focusable.is-focused,
+  .button:focus,
+  .focusable:focus {
+    transform: none;
+  }
+}

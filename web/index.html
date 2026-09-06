@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Atrium</title>
+    <!--
+      Critical CSS is inlined so a TV showing a black screen for a second while
+      the hashed stylesheet loads never flashes white. Everything else lives in
+      src/styles.css. No external font or asset requests, ever.
+    -->
+    <style>
+      :root {
+        --bg: #0b0d10;
+        --fg: #f2f4f7;
+        color-scheme: dark;
+      }
+      html,
+      body,
+      #root {
+        height: 100%;
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+      }
+      body {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+        overflow: hidden;
+      }
+      #boot {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        font-size: 32px;
+        opacity: 0.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"><div id="boot">Atrium</div></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

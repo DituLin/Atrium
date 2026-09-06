@@ -1,0 +1,46 @@
+# Build output
+/bin/
+/dist/
+/atrium
+
+# Web build output (embedded at build time, never committed)
+web/dist/*
+!web/dist/.gitkeep
+web/node_modules/
+
+# Secrets and credentials
+*.token
+*.key
+*.crt
+*.pem
+
+# Local state
+data/
+.data/
+config.yaml
+config.local.yaml
+*.local.yaml
+.env*
+
+# Databases
+*.db
+*.db-wal
+*.db-shm
+
+# Test and coverage output
+coverage*
+
+# Benchmark reports written into the working directory by scripts/bench-*.sh
+bench-api-*.txt
+bench-commands-*.txt
+
+# Editors and OS
+.DS_Store
+.claude/settings.local.json
+internal/webui/dist/*
+!internal/webui/dist/.gitkeep
+
+# e2e artifacts
+scripts/e2e/node_modules/
+scripts/e2e/out/
+scripts/e2e/package-lock.json

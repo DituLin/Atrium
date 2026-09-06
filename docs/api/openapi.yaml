@@ -1,0 +1,1775 @@
+openapi: 3.1.0
+
+info:
+  title: Atrium Home Hub API
+  version: "0.1.0"
+  summary: Local-first home hub API for screens and administration.
+  description: |
+    The contract source is `docs/tech/2026-09/atrium-home-hub/tech-design.md` §8.
+    This document covers the whole implemented surface through V0.3 and H1:
+    health, pairing, screens and sessions, the home snapshot, photo
+    collections, the media route, screen commands, diagnostics, backups, the
+    admin token rotation, and the administrative source, scan, photo and
+    exclusion controls. The realtime channel itself is specified in
+    `docs/api/ws-protocol.md`; only its upgrade endpoint appears here.
+
+    Conventions:
+
+    - JSON request and response bodies.
+    - Timestamps are RFC 3339 with an offset.
+    - Errors are `{"error": {"code", "message", "details"}}` with the stable
+      codes enumerated in `ErrorCode`.
+    - Pagination is `?cursor=&limit=`; cursors are opaque base64 and must be
+      echoed back unchanged. `limit` defaults to 50 and is capped at 100.
+  license:
+    name: MIT
+    identifier: MIT
+
+servers:
+  - url: https://192.168.1.10:8443
+    description: The Mac mini on the home LAN, reachable only from that LAN.
+  - url: https://127.0.0.1:8443
+    description: Loopback, used by the admin CLI.
+
+tags:
+  - name: health
+    description: Liveness and readiness; no credential required.
+  - name: pairing
+    description: Enrolling a screen. Unauthenticated but rate limited.
+  - name: screen
+    description: Routes a paired screen may call.
+  - name: admin
+    description: Routes that require the admin bearer token.
+
+security:
+  - screenBearer: []
+  - screenCookie: []
+  - adminBearer: []
+
+paths:
+  /health/live:
+    get:
+      tags: [health]
+      summary: Report that the process is running
+      security: []
+      responses:
+        "200":
+          description: The process is alive.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+
+  /health/ready:
+    get:
+      tags: [health]
+      summary: Report that the database answers
+      description: Exposes no home data, so it is safe without a credential.
+      security: []
+      responses:
+        "200":
+          description: The database is reachable.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+        "503":
+          description: The database is not reachable.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+
+  /api/v1/pair/start:
+    post:
+      tags: [pairing]
+      summary: Begin pairing and obtain a six-digit code
+      description: |
+        Rate limited to 5 requests per minute per IP and 20 per minute overall.
+        The code is unique among live pairings and expires after five minutes.
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                client_hint:
+                  type: string
+                  maxLength: 200
+                  description: Free-form device description shown to the operator.
+      responses:
+        "201":
+          description: A pending pairing was created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PairStart" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/v1/pair/{id}:
+    get:
+      tags: [pairing]
+      summary: Poll the status of a pairing
+      description: Rate limited to 60 requests per minute per pairing.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/PairingID"
+      responses:
+        "200":
+          description: The current pairing status.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PairStatus" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/v1/pair/{id}/claim:
+    post:
+      tags: [pairing]
+      summary: Claim the screen credential for an approved pairing
+      description: |
+        Sets the cookie `atrium_screen=<token>; HttpOnly; SameSite=Strict;
+        Path=/; Max-Age=31536000; Secure`, where `Secure` is omitted only when
+        `tls.mode = off`. The token is also returned in the body for non-browser
+        clients. A second claim returns 410.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/PairingID"
+      responses:
+        "200":
+          description: The credential was issued exactly once.
+          headers:
+            Set-Cookie:
+              schema: { type: string }
+              example: atrium_screen=atr_scr_…; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Strict
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PairClaim" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: The pairing is not approved yet.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "410":
+          description: The pairing was already claimed, or has expired.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/home:
+    get:
+      tags: [screen]
+      summary: Dashboard snapshot
+      description: |
+        Composed from cheap in-memory and database reads; the request path never
+        performs NAS I/O. Optional widgets are absent when disabled or when they
+        have never fetched successfully.
+      security:
+        - screenBearer: []
+        - screenCookie: []
+        - adminBearer: []
+      responses:
+        "200":
+          description: The dashboard snapshot.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HomeSnapshot" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "410": { $ref: "#/components/responses/ScreenRevoked" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/v1/nas/status:
+    get:
+      tags: [screen]
+      summary: Source health
+      description: The admin scope additionally sees `health_detail`.
+      security:
+        - screenBearer: []
+        - screenCookie: []
+        - adminBearer: []
+      responses:
+        "200":
+          description: Health of every active source.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NasWidget" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/photos:
+    get:
+      tags: [screen]
+      summary: List a photo collection
+      description: |
+        Eligibility is `photos.status = 'ready'` and an active source, so
+        revoking a source or excluding a photo removes it from every collection
+        immediately. Cursors are opaque base64; `next_cursor` is null at the end
+        of the collection, and for `random` at the end of a shuffle round.
+      security:
+        - screenBearer: []
+        - screenCookie: []
+        - adminBearer: []
+      parameters:
+        - name: collection
+          in: query
+          schema: { $ref: "#/components/schemas/Collection" }
+          description: Defaults to `recent`.
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: The `next_cursor` of the previous page.
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, default: 50, maximum: 100 }
+      responses:
+        "200":
+          description: One page of the collection.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PhotoList" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/photos/{id}:
+    get:
+      tags: [screen]
+      summary: One photo, optionally with its neighbours
+      security:
+        - screenBearer: []
+        - screenCookie: []
+        - adminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/PhotoID"
+        - name: neighbors
+          in: query
+          schema: { $ref: "#/components/schemas/Collection" }
+          description: |
+            Returns the previous and next IDs inside that collection. `random`
+            has no stable order, so both are null.
+      responses:
+        "200":
+          description: The photo.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [photo]
+                properties:
+                  photo: { $ref: "#/components/schemas/Photo" }
+                  neighbors:
+                    type: object
+                    properties:
+                      collection: { $ref: "#/components/schemas/Collection" }
+                      previous_id: { type: [string, "null"] }
+                      next_id: { type: [string, "null"] }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/media/photos/{id}:
+    get:
+      tags: [screen]
+      summary: Preview or thumbnail bytes
+      description: |
+        The route accepts an opaque photo ID and never a path, so the authorized
+        root is not addressable from the LAN. Bytes are re-encoded JPEG and
+        therefore carry no EXIF or GPS. `ETag` is the source fingerprint.
+
+        A `202` means the preview is being produced (pending, processing, or
+        evicted and re-queued); the client retries after `Retry-After` seconds
+        and skips the photo in the meantime. `404` covers removed, excluded,
+        revoked and unknown alike, so a screen learns nothing from it.
+      security:
+        - screenBearer: []
+        - screenCookie: []
+        - adminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/PhotoID"
+        - name: variant
+          in: query
+          schema: { type: string, enum: [preview, thumb], default: preview }
+      responses:
+        "200":
+          description: The image bytes.
+          headers:
+            ETag:
+              schema: { type: string }
+              description: The source fingerprint the file was built from.
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+        "202":
+          description: The preview is being produced.
+          headers:
+            Retry-After:
+              schema: { type: integer }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, const: preview_processing }
+                  retry_after_seconds: { type: integer }
+        "304": { description: The cached copy is current. }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503":
+          description: The source is offline and no cached preview exists.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/screens/me:
+    get:
+      tags: [screen]
+      summary: The calling screen's own record
+      security:
+        - screenBearer: []
+        - screenCookie: []
+      responses:
+        "200":
+          description: The screen record.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Screen" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "410": { $ref: "#/components/responses/ScreenRevoked" }
+
+  /api/v1/screens:
+    get:
+      tags: [admin]
+      summary: List screens with their presence
+      security:
+        - adminBearer: []
+      responses:
+        "200":
+          description: Every registered screen.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [screens]
+                properties:
+                  screens:
+                    type: array
+                    items: { $ref: "#/components/schemas/Screen" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/screens/{id}:
+    get:
+      tags: [admin]
+      summary: One screen
+      security:
+        - adminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/ScreenID"
+      responses:
+        "200":
+          description: The screen record.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Screen" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [admin]
+      summary: Revoke a screen
+      description: |
+        The credential stops authenticating immediately, the live WebSocket
+        session is closed with code 4002, and the pairing history is deleted.
+      security:
+        - adminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/ScreenID"
+      responses:
+        "200":
+          description: The revoked screen record.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Screen" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/pairings:
+    get:
+      tags: [admin]
+      summary: List recent pairing requests
+      security:
+        - adminBearer: []
+      responses:
+        "200":
+          description: Recent pairings, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [pairings]
+                properties:
+                  pairings:
+                    type: array
+                    items: { $ref: "#/components/schemas/Pairing" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/v1/pairings/{id}/approve:
+    post:
+      tags: [admin]
+      summary: Approve a pairing and register the screen
+      security:
+        - adminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/PairingID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [screen_id]
+              properties:
+                screen_id:
+                  type: string
+                  pattern: "^[a-z0-9_]+$"
+                  maxLength: 64
+                  example: living_room_tv
+                name:
+                  type: string
+                  example: Living room TV
+      responses:
+        "200":
+          description: The pairing is approved and the screen exists.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [pairing, screen]
+                properties:
+                  pairing: { $ref: "#/components/schemas/Pairing" }
+                  screen: { $ref: "#/components/schemas/Screen" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: The pairing is already approved, or the screen id is taken.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "410":
+          description: The pairing has expired or was already claimed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/pairings/{id}:
+    delete:
+      tags: [admin]
+      summary: Reject and delete a pairing request
+      security:
+        - adminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/PairingID"
+      responses:
+        "204":
+          description: The pairing was deleted.
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/sources:
+    get:
+      tags: [admin]
+      summary: Sources with health, identity and index counts
+      description: |
+        `root_path` is deliberately absent: the only route that reveals a path
+        is `GET /api/v1/photos/{id}/admin`.
+      security:
+        - adminBearer: []
+      responses:
+        "200":
+          description: Every configured or previously configured source.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sources:
+                    type: array
+                    items: { $ref: "#/components/schemas/Source" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/sources/{id}/scan:
+    post:
+      tags: [admin]
+      summary: Scan now
+      description: |
+        Scans are serial per source. When one is already running the request
+        joins it and the response has `merged: true` rather than starting an
+        overlapping pass. `full` additionally clears the stability set and
+        re-derives every file.
+      security:
+        - adminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/SourceID"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mode: { type: string, enum: [incremental, full], default: incremental }
+      responses:
+        "202":
+          description: The scan run that satisfied the request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  merged: { type: boolean }
+                  scan_run: { $ref: "#/components/schemas/ScanRun" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: The source is offline, revoked, or its identity is unconfirmed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/sources/{id}/revoke:
+    post:
+      tags: [admin]
+      summary: Hide every photo of a source
+      description: The index is kept; only visibility changes.
+      security: [{ adminBearer: [] }]
+      parameters: [{ $ref: "#/components/parameters/SourceID" }]
+      responses:
+        "200":
+          description: The updated source.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Source" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/sources/{id}/restore:
+    post:
+      tags: [admin]
+      summary: Undo a revoke
+      description: Only accepted for sources still present in the configuration.
+      security: [{ adminBearer: [] }]
+      parameters: [{ $ref: "#/components/parameters/SourceID" }]
+      responses:
+        "200":
+          description: The updated source.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Source" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: The source is no longer in the configuration.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/sources/{id}/rebind-identity:
+    post:
+      tags: [admin]
+      summary: Accept the mount currently behind the root
+      description: |
+        Clears an `identity_mismatch`. Until this is run, a source whose mount
+        fingerprint changed is never scanned and no photo is ever marked
+        removed because of it.
+      security: [{ adminBearer: [] }]
+      parameters: [{ $ref: "#/components/parameters/SourceID" }]
+      responses:
+        "200":
+          description: The rebound source.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Source" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503":
+          description: The root is not readable right now, so nothing can be bound.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/scans:
+    get:
+      tags: [admin]
+      summary: Recent scan runs, newest first
+      security: [{ adminBearer: [] }]
+      parameters:
+        - name: source_id
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, default: 50, maximum: 100 }
+      responses:
+        "200":
+          description: Scan runs.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scans:
+                    type: array
+                    items: { $ref: "#/components/schemas/ScanRun" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/scans/{id}:
+    get:
+      tags: [admin]
+      summary: One scan run
+      security: [{ adminBearer: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: The scan run.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ScanRun" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/photos/{id}/admin:
+    get:
+      tags: [admin]
+      summary: One photo including its relative path and error codes
+      description: |
+        The only route in the API that reveals a path inside a source root.
+      security: [{ adminBearer: [] }]
+      parameters: [{ $ref: "#/components/parameters/PhotoID" }]
+      responses:
+        "200":
+          description: The photo with administrative detail.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PhotoAdmin" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/photos/{id}/exclude:
+    post:
+      tags: [admin]
+      summary: Revoke one photo
+      description: |
+        Hides the photo immediately, deletes its cached previews and records a
+        `path` exclusion so a full rescan does not re-index it as new.
+      security: [{ adminBearer: [] }]
+      parameters: [{ $ref: "#/components/parameters/PhotoID" }]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+      responses:
+        "204": { description: The photo is excluded. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/photos/{id}/include:
+    post:
+      tags: [admin]
+      summary: Undo an exclude
+      security: [{ adminBearer: [] }]
+      parameters: [{ $ref: "#/components/parameters/PhotoID" }]
+      responses:
+        "204": { description: The photo is authorized again and re-queued. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/photos/{id}/retry:
+    post:
+      tags: [admin]
+      summary: Clear the failure state and re-queue the pipeline
+      security: [{ adminBearer: [] }]
+      parameters: [{ $ref: "#/components/parameters/PhotoID" }]
+      responses:
+        "202": { description: Metadata extraction is queued again. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/exclusions:
+    get:
+      tags: [admin]
+      summary: List exclusion rules
+      security: [{ adminBearer: [] }]
+      parameters:
+        - name: source_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: The rules, which survive rescans and index rebuilds.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exclusions:
+                    type: array
+                    items: { $ref: "#/components/schemas/Exclusion" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [admin]
+      summary: Add a prefix or path exclusion
+      description: |
+        Exactly one of `prefix` or `path` is used; `prefix` wins when both are
+        given. Matching is by path segment, so `private/` does not match
+        `privateer/`. Already-indexed photos under the rule are hidden at once.
+      security: [{ adminBearer: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [source_id]
+              properties:
+                source_id: { type: string }
+                prefix: { type: string, description: "Directory prefix relative to the root." }
+                path: { type: string, description: "A single relative path." }
+                reason: { type: string }
+      responses:
+        "201":
+          description: The created rule.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Exclusion" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: An identical rule already exists.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/exclusions/{id}:
+    delete:
+      tags: [admin]
+      summary: Delete an exclusion rule
+      description: |
+        Photos already marked excluded stay excluded until they are explicitly
+        included again; deleting the rule only stops future scans from applying
+        it.
+      security: [{ adminBearer: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: The rule is gone. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/diagnostics:
+    get:
+      tags: [admin]
+      summary: Server diagnostics
+      description: |
+        The operator document of design §6.11. No filesystem path, token or
+        hash ever appears in the response; `db.path_redacted` records that.
+        `screens[].online` is session presence, not the last request seen.
+      security:
+        - adminBearer: []
+      responses:
+        "200":
+          description: Diagnostics.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Diagnostics" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/v1/screens/connect:
+    get:
+      tags: [screens]
+      summary: Open the realtime session (WebSocket upgrade)
+      description: |
+        Upgrades to the WebSocket protocol of design §9, specified in
+        `docs/api/ws-protocol.md`. The handshake carries the screen credential
+        as the `atrium_screen` cookie or as `Authorization: Bearer`. A browser
+        always sends an `Origin`, which must be in `server.allowed_origins`; a
+        handshake without one is accepted only with a bearer token, which no
+        cross-site page can attach.
+
+        One session exists per screen: a new connection supersedes the previous
+        one, which receives `session.superseded` and close code `4003`. Close
+        codes are `1000` normal, `1001` server shutdown or heartbeat timeout,
+        `4001` unauthorized, `4002` revoked, `4003` superseded, `4004`
+        send-queue overflow, `4005` protocol error. Frames larger than 64 KiB
+        are a protocol error.
+      security:
+        - screenBearer: []
+        - screenCookie: []
+      responses:
+        "101":
+          description: Switching protocols; the session begins with `session.ready`.
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/screens/{id}/commands:
+    post:
+      tags: [commands]
+      summary: Issue a command to a screen
+      description: |
+        Validates the payload for its kind, allocates the screen's next
+        sequence in the same transaction as the insert, and hands the command
+        to the live session. `202` means the command was recorded and
+        delivered, not that the screen applied it: poll `GET /commands/{id}`,
+        or use `atrium admin screen … --wait`.
+
+        An offline screen is `409 screen_offline`, and the body still carries
+        the command recorded as `failed`. Nothing is queued for a screen that
+        is not connected (PRD §5.3).
+      security:
+        - adminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/ScreenID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CommandRequest" }
+            examples:
+              navigate:
+                value: { kind: navigate, payload: { route: photos, collection: recent } }
+              show:
+                value: { kind: show, payload: { photo_id: "01JPHOTO0000000000000000" } }
+              refresh:
+                value: { kind: refresh, payload: {} }
+      responses:
+        "202":
+          description: The command was accepted and delivered.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Command" }
+        "400":
+          description: |
+            `invalid_command`: an unknown kind, a route outside the whitelist,
+            an unknown collection, or a photo that is not eligible or has no
+            ready preview.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404":
+          description: The screen is not registered.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: |
+            `screen_offline`. The response carries the persisted command in a
+            top-level `command` field alongside the error.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [error, command]
+                properties:
+                  error: { $ref: "#/components/schemas/ErrorPayload" }
+                  command: { $ref: "#/components/schemas/Command" }
+
+  /api/v1/commands:
+    get:
+      tags: [commands]
+      summary: List recent commands
+      security:
+        - adminBearer: []
+      parameters:
+        - name: screen_id
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/CommandStatus" }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        "200":
+          description: Recent commands, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [commands]
+                properties:
+                  commands:
+                    type: array
+                    items: { $ref: "#/components/schemas/Command" }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/v1/commands/{id}:
+    get:
+      tags: [commands]
+      summary: Read one command and its result
+      security:
+        - adminBearer: []
+      parameters:
+        - $ref: "#/components/parameters/CommandID"
+      responses:
+        "200":
+          description: The command.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Command" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/v1/backups:
+    get:
+      tags: [admin]
+      summary: List stored snapshots
+      description: |
+        Only file names travel: the backup directory is configuration, not a
+        discovery (design §15).
+      security:
+        - adminBearer: []
+      responses:
+        "200":
+          description: The stored snapshots, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [enabled, keep, backups]
+                properties:
+                  enabled: { type: boolean }
+                  keep: { type: integer }
+                  backups:
+                    type: array
+                    items: { $ref: "#/components/schemas/Backup" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [admin]
+      summary: Take a snapshot now
+      description: |
+        `VACUUM INTO` a file in `backup.dir` plus a copy of the configuration,
+        then apply `backup.keep` retention. The preview cache is never backed
+        up; it regenerates on demand.
+      security:
+        - adminBearer: []
+      responses:
+        "201":
+          description: The snapshot that was written.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Backup" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409":
+          description: "`conflict`: `backup.dir` is not configured."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/v1/admin/token/rotate:
+    post:
+      tags: [admin]
+      summary: Rotate the admin credential
+      description: |
+        Issues a replacement token, returns it once, and revokes the token that
+        authorized the call **after** the response has been written, so a lost
+        response cannot lock the operator out. `atrium admin token rotate` also
+        rewrites `admin.token` in the data directory.
+      security:
+        - adminBearer: []
+      responses:
+        "200":
+          description: The new credential. It is never shown again.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, created_at]
+                properties:
+                  token:
+                    type: string
+                    description: "`atr_adm_` followed by 43 base64url characters."
+                  created_at: { type: string, format: date-time }
+                  note: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+components:
+  securitySchemes:
+    screenBearer:
+      type: http
+      scheme: bearer
+      description: A screen token, `atr_scr_` followed by 43 base64url characters.
+    adminBearer:
+      type: http
+      scheme: bearer
+      description: |
+        An admin token, `atr_adm_` followed by 43 base64url characters. Cookies
+        are never accepted on admin routes.
+    screenCookie:
+      type: apiKey
+      in: cookie
+      name: atrium_screen
+      description: |
+        Only honoured on GET routes and only when the `Origin` header is in
+        `server.allowed_origins`.
+
+  parameters:
+    PairingID:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+      description: The pairing ULID.
+    ScreenID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^[a-z0-9_]+$"
+      description: The screen slug.
+    PhotoID:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+      description: The photo ULID. Never a path.
+    SourceID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^[a-z0-9_]+$"
+      description: The source ID from the configuration.
+    CommandID:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+      description: The command ULID.
+
+  responses:
+    Unauthorized:
+      description: No credential, or a credential that is not recognised.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: The credential does not grant the required scope, or the Origin is not allowed.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: No such resource.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    InvalidRequest:
+      description: The request body failed validation.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ScreenRevoked:
+      description: The screen was revoked; the client must clear its state and pair again.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    RateLimited:
+      description: Too many requests or authentication failures.
+      headers:
+        Retry-After:
+          schema: { type: integer }
+          description: Seconds to wait before retrying.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    ErrorCode:
+      type: string
+      description: Stable error identifiers from design §8.
+      enum:
+        - unauthorized
+        - forbidden
+        - not_found
+        - invalid_request
+        - invalid_command
+        - screen_offline
+        - screen_revoked
+        - pairing_expired
+        - pairing_claimed
+        - rate_limited
+        - preview_processing
+        - preview_unavailable
+        - source_offline
+        - identity_mismatch
+        - conflict
+        - internal
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { $ref: "#/components/schemas/ErrorCode" }
+            message: { type: string }
+            details:
+              type: object
+              additionalProperties: true
+
+    ErrorPayload:
+      type: object
+      required: [code, message]
+      properties:
+        code: { $ref: "#/components/schemas/ErrorCode" }
+        message: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok, unavailable]
+        version: { type: string }
+
+    PairStart:
+      type: object
+      required: [pairing_id, code, expires_at, poll_interval_ms]
+      properties:
+        pairing_id: { type: string }
+        code:
+          type: string
+          pattern: "^[0-9]{6}$"
+        expires_at: { type: string, format: date-time }
+        poll_interval_ms: { type: integer, example: 3000 }
+
+    PairingStatus:
+      type: string
+      enum: [pending, approved, claimed, expired, rejected]
+
+    PairStatus:
+      type: object
+      required: [pairing_id, status, expires_at]
+      properties:
+        pairing_id: { type: string }
+        status: { $ref: "#/components/schemas/PairingStatus" }
+        expires_at: { type: string, format: date-time }
+
+    PairClaim:
+      type: object
+      required: [screen_id, name, token]
+      properties:
+        screen_id: { type: string }
+        name: { type: string }
+        token:
+          type: string
+          description: The screen credential; also set as the `atrium_screen` cookie.
+
+    Pairing:
+      type: object
+      required: [id, code, status, created_at, expires_at]
+      properties:
+        id: { type: string }
+        code: { type: string }
+        status: { $ref: "#/components/schemas/PairingStatus" }
+        client_hint: { type: string }
+        remote_ip: { type: string }
+        created_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        approved_screen_id: { type: string }
+        approved_at: { type: [string, "null"], format: date-time }
+        claimed_at: { type: [string, "null"], format: date-time }
+
+    RouteState:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          enum: [dashboard, photos, photo, pair, connect]
+        collection: { type: string }
+        photo_id: { type: string }
+
+    Screen:
+      type: object
+      required: [id, name, status, registered, online, created_at, approved_at,
+                 last_sequence, applied_sequence]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status:
+          type: string
+          enum: [active, revoked]
+        registered:
+          type: boolean
+          description: True while the screen is approved and not revoked.
+        online:
+          type: boolean
+          description: True while the screen was seen within `screens.offline_after`.
+        created_at: { type: string, format: date-time }
+        approved_at: { type: string, format: date-time }
+        revoked_at: { type: string, format: date-time }
+        last_seen_at: { type: string, format: date-time }
+        client_version: { type: string }
+        current_route: { $ref: "#/components/schemas/RouteState" }
+        last_sequence: { type: integer, format: int64 }
+        applied_sequence: { type: integer, format: int64 }
+
+    ClockWidget:
+      type: object
+      required: [timezone, server_time, utc_offset_seconds]
+      properties:
+        timezone: { type: string, example: Asia/Singapore }
+        server_time: { type: string, format: date-time }
+        utc_offset_seconds: { type: integer, example: 28800 }
+        next_offset_change_at:
+          type: string
+          format: date-time
+          description: Absent for a zone without an upcoming DST transition.
+
+    PhotoWidget:
+      type: object
+      required: [slideshow_interval_seconds, totals, new_today, captured_today,
+                 unknown_captured, baseline, index]
+      properties:
+        slideshow_interval_seconds: { type: integer }
+        totals:
+          type: object
+          required: [ready, pending_preview, unsupported]
+          properties:
+            ready: { type: integer, format: int64 }
+            pending_preview: { type: integer, format: int64 }
+            unsupported: { type: integer, format: int64 }
+        new_today: { type: integer, format: int64 }
+        captured_today: { type: integer, format: int64 }
+        unknown_captured: { type: integer, format: int64 }
+        baseline:
+          type: object
+          required: [status]
+          properties:
+            status:
+              type: string
+              enum: [importing, done, none]
+            completed_at: { type: string, format: date-time }
+        index:
+          type: object
+          required: [state, progress]
+          properties:
+            state:
+              type: string
+              enum: [idle, scanning, baseline_import]
+            progress:
+              type: object
+              required: [seen, indexed, pending_preview]
+              properties:
+                seen: { type: integer, format: int64 }
+                indexed: { type: integer, format: int64 }
+                pending_preview: { type: integer, format: int64 }
+            last_scan_at: { type: string, format: date-time }
+
+    NasWidget:
+      type: object
+      required: [sources]
+      properties:
+        sources:
+          type: array
+          items:
+            type: object
+            required: [id, name, health]
+            properties:
+              id: { type: string }
+              name: { type: string }
+              health:
+                type: string
+                enum: [online, offline, degraded, unknown]
+              last_check_at: { type: string, format: date-time }
+              last_success_at: { type: string, format: date-time }
+              share_free_bytes: { type: integer, format: int64 }
+              share_total_bytes: { type: integer, format: int64 }
+              health_detail:
+                type: string
+                description: Admin scope only; never contains a path or credential.
+
+    WeatherWidget:
+      type: object
+      required: [provider, temperature_c, condition_code, condition_text, fetched_at, stale]
+      properties:
+        provider: { type: string, example: open-meteo }
+        location_label: { type: string }
+        temperature_c: { type: number }
+        condition_code: { type: integer }
+        condition_text: { type: string }
+        fetched_at: { type: string, format: date-time }
+        stale:
+          type: boolean
+          description: True once the payload is older than `widgets.weather.stale_after`.
+
+    NoticeWidget:
+      type: object
+      required: [text, updated_at]
+      properties:
+        text: { type: string }
+        updated_at: { type: string, format: date-time }
+
+    HomeSnapshot:
+      type: object
+      description: >-
+        Dashboard snapshot. Widgets are a closed list of typed entries so a
+        client can hide types it does not know; `clock`, `photo` and `nas`
+        are always present, `weather` and `notice` only when enabled.
+      required: [schema_version, server_time, version, home, widgets]
+      properties:
+        schema_version: { type: integer, const: 1 }
+        server_time: { type: string, format: date-time }
+        version:
+          type: integer
+          format: int64
+          description: Change-bus version; `data.changed` carries the same counter.
+        home:
+          type: object
+          required: [name, timezone]
+          properties:
+            name: { type: string }
+            timezone: { type: string, description: IANA timezone name }
+        widgets:
+          type: array
+          items:
+            type: object
+            required: [type, payload]
+            properties:
+              type: { type: string, enum: [clock, photo, nas, weather, notice] }
+              payload:
+                oneOf:
+                  - $ref: "#/components/schemas/ClockWidget"
+                  - $ref: "#/components/schemas/PhotoWidget"
+                  - $ref: "#/components/schemas/NasWidget"
+                  - $ref: "#/components/schemas/WeatherWidget"
+                  - $ref: "#/components/schemas/NoticeWidget"
+
+    Diagnostics:
+      type: object
+      required: [version, uptime_seconds, insecure, db, photos, jobs, cache, commands, widgets, recent_errors]
+      properties:
+        version: { type: string }
+        uptime_seconds: { type: integer, format: int64 }
+        insecure:
+          type: boolean
+          description: True when `tls.mode = off`.
+        db:
+          type: object
+          properties:
+            path_redacted: { type: boolean, const: true }
+            size_bytes: { type: integer, format: int64 }
+            wal_bytes: { type: integer, format: int64 }
+            migrations: { type: integer }
+        sources:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              health: { type: string }
+              health_detail:
+                type: string
+                description: A stable code such as `root_missing`; never a path.
+              identity_bound: { type: boolean }
+              last_success_at: { type: string, format: date-time }
+              stuck_ops: { type: integer, format: int64 }
+              last_scan:
+                type: object
+                properties:
+                  status: { type: string }
+                  duration_ms: { type: integer, format: int64 }
+                  files_seen: { type: integer, format: int64 }
+                  errors: { type: integer, format: int64 }
+        photos:
+          type: object
+          description: |
+            Counts by photo status plus `preview_failed`, `preview_evicted`
+            and `preview_pending`.
+          additionalProperties:
+            type: integer
+            format: int64
+        jobs:
+          type: object
+          properties:
+            queued: { type: integer, format: int64 }
+            running: { type: integer, format: int64 }
+            failed: { type: integer, format: int64 }
+            done: { type: integer, format: int64 }
+            oldest_queued_at:
+              type: [string, "null"]
+              format: date-time
+        cache:
+          type: object
+          properties:
+            bytes: { type: integer, format: int64 }
+            budget_bytes: { type: integer, format: int64 }
+            free_disk_bytes: { type: integer, format: int64 }
+            paused_reason:
+              type: [string, "null"]
+              description: "`low_disk` when new preview work is paused."
+        screens:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              online:
+                type: boolean
+                description: A live session with a heartbeat inside `offline_after`.
+              registered: { type: boolean }
+              last_seen_at: { type: string, format: date-time }
+              route: { $ref: "#/components/schemas/RouteState" }
+              applied_sequence: { type: integer, format: int64 }
+              open_commands: { type: integer, format: int64 }
+        commands:
+          type: object
+          properties:
+            last_24h:
+              type: object
+              additionalProperties:
+                type: integer
+                format: int64
+        widgets:
+          type: object
+          additionalProperties: true
+        pairings:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        recent_errors:
+          type: array
+          description: |
+            The 100 most recent warnings and errors, by component and stable
+            code. Identifiers only: no message body, no path, no credential.
+          items:
+            type: object
+            properties:
+              at: { type: string, format: date-time }
+              component: { type: string }
+              code: { type: string }
+              photo_id: { type: string }
+              source_id: { type: string }
+              screen_id: { type: string }
+
+    Collection:
+      type: string
+      enum: [recent, captured_today, random, all]
+      description: |
+        `recent` excludes baseline photos and orders by discovery time.
+        `captured_today` uses the home-timezone day, left-closed and
+        right-open. `random` is a seeded shuffle with no repeats inside a
+        round. `all` orders by capture time with undated photos last.
+
+    Photo:
+      type: object
+      required: [id, source_id, captured_confidence, first_seen_at, is_baseline, preview, urls]
+      properties:
+        id: { type: string }
+        source_id: { type: string }
+        captured_at:
+          type: [string, "null"]
+          format: date-time
+          description: |
+            Null when unknown. Rendered in the original EXIF offset when one was
+            recorded, otherwise in the home timezone. Never derived from the
+            file modification time.
+        captured_confidence:
+          type: string
+          enum: [exact, inferred, unknown]
+        first_seen_at:
+          type: string
+          format: date-time
+          description: When Atrium first indexed the file, not an upload time.
+        is_baseline:
+          type: boolean
+          description: True for photos discovered by the first complete import.
+        width: { type: integer }
+        height: { type: integer }
+        preview:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [pending, processing, ready, failed, evicted, unavailable]
+            width: { type: integer }
+            height: { type: integer }
+        urls:
+          type: object
+          properties:
+            preview: { type: string }
+            thumb: { type: string }
+
+    PhotoList:
+      type: object
+      required: [items, next_cursor, meta]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Photo" }
+        next_cursor:
+          type: [string, "null"]
+          description: Null at the end of the collection or of a random round.
+        meta:
+          type: object
+          properties:
+            collection: { $ref: "#/components/schemas/Collection" }
+            unknown_captured_count:
+              type: integer
+              format: int64
+              description: Eligible photos with no known capture time.
+            baseline_only:
+              type: boolean
+              description: |
+                Set on an empty `recent` page when the library contains only
+                baseline photos, so the client can say "nothing new since the
+                first import" instead of "no photos".
+            day:
+              type: string
+              description: The home-timezone day `captured_today` resolved to.
+
+    PhotoAdmin:
+      allOf:
+        - $ref: "#/components/schemas/Photo"
+        - type: object
+          properties:
+            rel_path: { type: string }
+            ext: { type: string }
+            size_bytes: { type: integer, format: int64 }
+            mtime_unix: { type: integer, format: int64 }
+            fingerprint: { type: string }
+            status:
+              type: string
+              enum: [pending, ready, removed, excluded, unsupported]
+            meta_status: { type: string, enum: [pending, ready, failed] }
+            meta_error: { type: string }
+            preview_error:
+              type: string
+              description: One of decode_failed, unsupported, too_large, timeout, io_error, stuck.
+            preview_attempts: { type: integer }
+            preview_next_retry_at: { type: string, format: date-time }
+            last_seen_at: { type: string, format: date-time }
+            last_seen_generation: { type: integer, format: int64 }
+            missing_generations: { type: integer }
+            removed_at: { type: string, format: date-time }
+            excluded_at: { type: string, format: date-time }
+            exclude_reason: { type: string }
+
+    Source:
+      type: object
+      required: [id, name, status, health]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status: { type: string, enum: [active, revoked] }
+        health: { type: string, enum: [online, offline, degraded, unknown] }
+        health_detail:
+          type: string
+          description: |
+            A stable code: root_missing, not_connected, permission_denied,
+            not_a_mount, marker_missing, probe_timeout, stuck_io,
+            identity_mismatch, statfs_failed or never_probed.
+        identity_bound: { type: boolean }
+        identity_fstype: { type: string }
+        identity_matches:
+          type: boolean
+          description: False while the mount behind the root is not the bound one.
+        last_check_at: { type: string, format: date-time }
+        last_success_at: { type: string, format: date-time }
+        scan_generation: { type: integer, format: int64 }
+        last_scan_at: { type: string, format: date-time }
+        baseline_completed_at: { type: string, format: date-time }
+        share_total_bytes: { type: integer, format: int64 }
+        share_free_bytes:
+          type: integer
+          format: int64
+          description: |
+            Present only for a network filesystem reporting non-zero values. It
+            is the share's free space, not the NAS's physical capacity.
+        stuck_ops: { type: integer, format: int64 }
+        skipped_symlinks: { type: integer, format: int64 }
+        revoke_reason: { type: string }
+        photos:
+          type: object
+          properties:
+            ready: { type: integer, format: int64 }
+            pending: { type: integer, format: int64 }
+            unsupported: { type: integer, format: int64 }
+            removed: { type: integer, format: int64 }
+            excluded: { type: integer, format: int64 }
+
+    ScanRun:
+      type: object
+      required: [id, source_id, mode, status, started_at]
+      properties:
+        id: { type: string }
+        source_id: { type: string }
+        mode: { type: string, enum: [scheduled, manual, full] }
+        status: { type: string, enum: [running, completed, failed, aborted] }
+        started_at: { type: string, format: date-time }
+        finished_at: { type: string, format: date-time }
+        duration_ms: { type: integer, format: int64 }
+        files_seen: { type: integer, format: int64 }
+        files_new: { type: integer, format: int64 }
+        files_changed: { type: integer, format: int64 }
+        files_missing: { type: integer, format: int64 }
+        files_removed: { type: integer, format: int64 }
+        files_unsupported: { type: integer, format: int64 }
+        errors: { type: integer, format: int64 }
+        note:
+          type: string
+          description: A stable failure code; never a path.
+
+    Exclusion:
+      type: object
+      required: [id, source_id, match_kind, pattern, created_at]
+      properties:
+        id: { type: string }
+        source_id: { type: string }
+        match_kind: { type: string, enum: [path, prefix] }
+        pattern: { type: string }
+        reason: { type: string }
+        created_at: { type: string, format: date-time }
+
+    CommandKind:
+      type: string
+      description: The screen control verbs of FR-14.
+      enum: [navigate, show, refresh]
+
+    CommandStatus:
+      type: string
+      description: |
+        The lifecycle of design §6.5. `expired` means the command was never
+        delivered and definitely had no effect; `unknown` means it was
+        delivered but the outcome cannot be established, and it is never
+        resolved automatically.
+      enum: [accepted, applied, failed, expired, unknown]
+
+    CommandPayload:
+      type: object
+      description: |
+        Kind-specific parameters. `navigate` takes `route` and an optional
+        `collection`; `show` takes `photo_id`; `refresh` takes nothing, and
+        any stray field is dropped.
+      properties:
+        route:
+          type: string
+          enum: [dashboard, photos]
+        collection: { $ref: "#/components/schemas/Collection" }
+        photo_id: { type: string }
+
+    CommandRequest:
+      type: object
+      required: [kind]
+      properties:
+        kind: { $ref: "#/components/schemas/CommandKind" }
+        payload: { $ref: "#/components/schemas/CommandPayload" }
+
+    CommandResult:
+      type: object
+      description: The client-reported outcome, or what the screen was observed doing.
+      properties:
+        route: { $ref: "#/components/schemas/RouteState" }
+        resource_id: { type: string }
+        client_version: { type: string }
+        observed:
+          type: object
+          description: |
+            Filled in from the next heartbeat for a command left `unknown`, so
+            an operator can decide what happened instead of being told.
+          properties:
+            applied_sequence: { type: integer, format: int64 }
+            route: { $ref: "#/components/schemas/RouteState" }
+
+    Command:
+      type: object
+      required: [id, screen_id, sequence, kind, issued_at, expires_at, status]
+      properties:
+        id: { type: string }
+        screen_id: { type: string }
+        sequence:
+          type: integer
+          format: int64
+          description: |
+            Monotonic per screen, allocated in the same transaction as the
+            insert. The client applies a command only when the sequence is
+            greater than the one it has already applied.
+        kind: { $ref: "#/components/schemas/CommandKind" }
+        payload: { $ref: "#/components/schemas/CommandPayload" }
+        issued_by: { type: string, description: "The actor, never the credential." }
+        issued_at: { type: string, format: date-time }
+        expires_at:
+          type: string
+          format: date-time
+          description: |
+            `screens.command_ttl` after issue (10 s). The server owns expiry;
+            a client never evaluates this against its own clock.
+        status: { $ref: "#/components/schemas/CommandStatus" }
+        delivered_at: { type: string, format: date-time }
+        resolved_at: { type: string, format: date-time }
+        error_code:
+          type: string
+          description: |
+            Server-side: `screen_offline`, `delivery_failed`, `expired`,
+            `ack_timeout`, `server_restart`. Client-side: `superseded`,
+            `invalid_route`, `photo_unavailable`, `render_failed`.
+        result: { $ref: "#/components/schemas/CommandResult" }
+
+    Backup:
+      type: object
+      required: [name, size_bytes, created_at]
+      properties:
+        name:
+          type: string
+          description: "The file name only, e.g. `atrium-20260906-030000.db`."
+        size_bytes: { type: integer, format: int64 }
+        created_at: { type: string, format: date-time }
+        config_copy:
+          type: boolean
+          description: Whether the configuration was copied beside the snapshot.
