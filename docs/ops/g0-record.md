@@ -88,9 +88,9 @@ completed record is an operations document, not a public one.
 | Viewport (CSS pixels) and device pixel ratio | |
 | Full-screen behaviour | |
 | Cookie persistence across a power cycle | |
-| WebSocket support | |
+| WebSocket support | yes: screen online with 15 s heartbeats over WSS |
 | `Intl` timezone support | |
-| Local CA trust method (or why it was impossible) | |
+| Local CA trust method (or why it was impossible) | the TV loaded the HTTPS page and kept the WSS session after the CA was made available over plain HTTP from the Mac mini; exact install path to be recorded by the maintainer |
 | Back-key code observed | |
 | Standby / resume behaviour | |
 | 24 h unattended run result | |
@@ -118,7 +118,7 @@ Method and thresholds: `docs/ops/acceptance.md`. Attach the raw
 | `GET /nas/status` P95 | ≤ 200 ms | | 1000 | |
 | Read API error rate | < 1% | | | |
 | Initial dashboard P95 | ≤ 3 s | | ≥ 20 | |
-| Screen control P95 | ≤ 1 s | | ≥ 100 | |
+| Screen control P95 | ≤ 1 s | first `navigate` 4.4 s (collection page + thumbnails), then `show`/`refresh`/`navigate` ≈ 0.25 s | 4 (informal) | pending formal run |
 | Screen control max | ≤ 3 s | | | |
 | Data push P95 | ≤ 2 s | | ≥ 100 | |
 | New photo visible P95 | ≤ 120 s | | ≥ 5 batches | |
