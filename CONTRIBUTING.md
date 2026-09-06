@@ -17,7 +17,7 @@ properties intact.
 
 ## Toolchain
 
-- Go 1.24 or newer (`go build ./...` must work without cgo).
+- Go 1.25 or newer (`go build ./...` must work without cgo).
 - Node 20 or newer for the web client.
 - `golangci-lint` and `shellcheck` for linting.
 

@@ -34,7 +34,7 @@ Go (single static binary, `net/http`, WebSocket, SQLite via `modernc.org/sqlite`
 
 ## Quick start (development)
 
-Requirements: Go 1.24+, Node 20+.
+Requirements: Go 1.25+, Node 24+ (the dev mock uses Node's native TypeScript type stripping).
 
 ```sh
 make web            # build the TV client and copy it into the embed directory
