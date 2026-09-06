@@ -45,8 +45,8 @@ completed record is an operations document, not a public one.
 | --- | --- |
 | Protocol (SMB / NFS / AFP) | SMB (smbfs) |
 | Read-only account used (describe, do not name) | the owner's personal NAS account, mounted `-o rdonly`; a dedicated read-only account is still recommended |
-| Mount method (login agent + Keychain / autofs / other) | manual `mount_smbfs -o rdonly` from a remote shell during G0 (see open issue 1) |
-| Mount point shape (`/Volumes/<share>`) | a directory under the service user's home (`<app dir>/mnt/<share>`) |
+| Mount method (login agent + Keychain / autofs / other) | Finder "Connect to Server" in the console session with the password remembered in the login keychain; an earlier `mount_smbfs` from a remote shell was unusable by the LaunchAgent (open issue 1) |
+| Mount point shape (`/Volumes/<share>`) | `/Volumes/<share>` (Finder default); note Finder mounts read-write at the client, Atrium itself only reads |
 | Authorized root: mount point itself or a subdirectory? | a subdirectory of the share (`<share>/Photos`) |
 | Filesystem reported by `atrium admin sources list` | `bound/smbfs` |
 | `marker_file` in use | no |
@@ -124,7 +124,7 @@ Method and thresholds: `docs/ops/acceptance.md`. Attach the raw
 | New photo visible P95 | ≤ 120 s | | ≥ 5 batches | |
 | TV reconnect | ≤ 60 s | | ≥ 10 | |
 | NAS recovery | ≤ 120 s | | ≥ 5 | |
-| Core recovery (process kill) | ≤ 120 s | | 3 | |
+| Core recovery (process kill) | ≤ 120 s | < 8 s (LaunchAgent KeepAlive) | 2 | pass (informal) |
 | Core recovery (system reboot) | ≤ 120 s | | 3 | |
 | Seven-day availability | ≥ 99.5% | | 10 s probe | |
 | Unrecovered crashes | 0 | | | |
@@ -209,7 +209,7 @@ One row per PRD §7.2 scenario; procedure in `docs/ops/failure-matrix.md`.
 
 | # | Issue | Severity | Owner | Status |
 | --- | --- | --- | --- | --- |
-| 1 | An SMB mount created from a remote (SSH) session is unusable by the LaunchAgent: `stat` works, deeper reads block (`degraded / stuck_io`). The share must be mounted in the GUI login session (login agent + keychain, or Finder). | blocking for unattended operation | maintainer | open — decide keychain vs credentials file |
+| 1 | An SMB mount created from a remote (SSH) session is unusable by the LaunchAgent: `stat` works, deeper reads block (`degraded / stuck_io`). The share must be mounted in the GUI login session. | blocking for unattended operation | maintainer | resolved 2026-09-06: mounted via Finder with the keychain; switching the mount changed the mount-from identity and required one `sources rebind-identity`; LaunchAgent then ran with 0 `stuck_io` and survived `kill -9` (back in < 8 s). Remaining: add the share as a Login Item so it remounts after a reboot, and move to a read-only NAS account |
 | 2 | macOS TCC "Network Volumes" prompt blocks the first read until approved on screen | high | maintainer | approved once during G0; re-check after binary path changes |
 | 3 | Preview jobs that time out with `stuck` consume a retry attempt; a long outage can exhaust the 5 attempts | medium | dev | follow-up: treat `stuck` while the source is `degraded` as a deferral |
 | 4 | On a first import previews start only after all metadata jobs (priority 10 vs 5), so the dashboard shows nothing for the first minutes | low | dev | follow-up: interleave priorities or raise preview priority for the first N photos |
