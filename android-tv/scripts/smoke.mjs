@@ -35,6 +35,7 @@ async function attach(){
 function call(method,params={}){return new Promise((resolve,reject)=>{const i=++id;const timer=setTimeout(()=>{pending.delete(i);reject(new Error(`CDP timeout: ${method}`));},10000);pending.set(i,m=>{clearTimeout(timer);if(m.error)reject(new Error(`CDP ${method}: ${m.error.message}`));else resolve(m)});ws.send(JSON.stringify({id:i,method,params}));});}
 async function evaluate(expression){const r=await call('Runtime.evaluate',{expression,returnByValue:true});assert(!r.result?.exceptionDetails,'JS evaluation failed');return r.result.result.value;}
 async function until(expression,label,ms=20000){const start=Date.now();while(Date.now()-start<ms){try{if(await evaluate(expression))return;}catch{}await sleep(200);}throw new Error(`Timeout: ${label}`);}
+async function waitForScreen(){const start=Date.now();while(Date.now()-start<30000){const value=JSON.parse(execFileSync(binary,['admin','screens','get',screen,'--config',config,'--json'],{encoding:'utf8',timeout:5000}));if(value.online===true)return;await sleep(500);}throw new Error('Screen did not come online before command setup');}
 function command(kind,...args){const start=Date.now();const out=execFileSync(binary,['admin','screen',kind,screen,...args,'--wait','--config',config,'--json'],{encoding:'utf8',timeout:25000});const result=JSON.parse(out);assert.equal(result.status,'applied',`Command ${kind} failed: ${result.error_code||result.status}`);console.log(JSON.stringify({command:kind,elapsed_ms:Date.now()-start,core_resolved_ms:result.resolved_at?Date.parse(result.resolved_at)-Date.parse(result.issued_at):null,status:result.status}));return result;}
 async function key(n){shell('shell','input','keyevent',String(n));await sleep(250);}
 const decoded="!!document.querySelector('.viewer__image:not(.viewer__image--retained)')?.naturalWidth && !document.querySelector('.viewer__status')";
@@ -129,6 +130,7 @@ async function songFlow(){
 try {
  shell('shell','am','start','-W','-n','io.atrium.tv/.MainActivity');
  await attach();
+ await waitForScreen();
  command('navigate','--route','dashboard');
  await until("!!document.querySelector('.dashboard')",'paired dashboard');
  if(process.env.ATRIUM_TEST_BOOT==='1') {
