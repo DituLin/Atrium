@@ -6,6 +6,8 @@
  * layer only dispatches; all rules are testable without rendering.
  */
 
+import { houseReducer, initialHouseState } from './house';
+import type { HouseAction, HouseState } from './house';
 import type { ClockState } from '../core/clock';
 import { clockReducer, initialClockState } from '../core/clock';
 import type { HomeResponse, PhotoWidgetPayload } from '../types/api';
@@ -22,7 +24,7 @@ import { initialRouterState, routerReducer } from './router';
 import type { SlideshowAction, SlideshowState } from './slideshow';
 import { initialSlideshowState, slideshowReducer } from './slideshow';
 
-export type ScreenName = 'pair' | 'connect' | 'dashboard' | 'photos' | 'photo' | 'settings';
+export type ScreenName = 'pair' | 'connect' | 'dashboard' | 'photos' | 'photo' | 'house' | 'settings';
 
 export interface AppState {
   router: RouterState;
@@ -31,6 +33,7 @@ export interface AppState {
   clock: ClockState;
   /** Latest `/api/v1/home` snapshot, or `null` when nothing is cached. */
   home: HomeResponse | null;
+  house: HouseState;
   /** Dashboard slideshow: one seeded `random` round (W-201). */
   slideshow: SlideshowState;
   /** The collection browser's page, focus and cursor (W-202). */
@@ -52,6 +55,7 @@ export function createInitialState(nowMs: number): AppState {
     pairing: initialPairingState,
     clock: initialClockState,
     home: null,
+    house: initialHouseState,
     slideshow: initialSlideshowState,
     collection: initialPhotoListState,
     viewer: initialPhotoViewerState,
@@ -62,6 +66,7 @@ export function createInitialState(nowMs: number): AppState {
 }
 
 export type AppAction =
+  | HouseAction
   | RouterAction
   | ConnectionAction
   | PairingAction
@@ -91,10 +96,19 @@ function purgedPhotoState(state: AppState): AppState {
     collection: photoListReducer(state.collection, { type: 'photos.reset' }),
     viewer: photoViewerReducer(state.viewer, { type: 'viewer.close' }),
     home: null,
+    house: initialHouseState,
   };
 }
 
 export function appReducer(state: AppState, action: AppAction): AppState {
+  if (action.type.startsWith('house.')) {
+    if (state.needsPairing && action.type !== 'house.reset') return state;
+    if (state.authExpired && action.type === 'house.loaded') return state;
+    const house = houseReducer(state.house, action as HouseAction);
+    const clock = action.type === 'house.loaded' && house !== state.house
+      ? clockReducer(state.clock, { type: 'clock.sync', serverTime: action.snapshot.generated_at, receivedAt: action.receivedAt }) : state.clock;
+    return { ...state, house, clock };
+  }
   if (action.type.startsWith(ROUTER_PREFIX)) {
     if ((state.authExpired || state.needsPairing) && action.type !== 'router.reset'
       && !(action.type === 'router.navigate' && (action.route.name === 'pair' || action.route.name === 'connect'))) return state;
@@ -141,7 +155,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     // An explicit successful claim establishes fresh authorization. Ordinary
     // authOk responses cannot clear revocation; only this claim clears both
     // the pairing blocker and an empty/expired cache from before pairing.
-    return action.type === 'pair.claimed' ? { ...next, needsPairing: false, authExpired: false } : next;
+    return action.type === 'pair.claimed' ? { ...purgedPhotoState(next), needsPairing: false, authExpired: false } : next;
   }
 
   switch (action.type) {
@@ -202,6 +216,8 @@ export function selectScreen(state: AppState): ScreenName {
   if (state.needsPairing) return 'pair';
   if (state.router.route.name === 'pair') return 'pair';
   if (state.authExpired) return 'connect';
+  if (state.connection.stopReason === 'superseded') return 'connect';
+  if (state.router.route.name === 'house') return 'house';
   if (needsConnectScreen(state.connection)) return 'connect';
   return state.router.route.name;
 }

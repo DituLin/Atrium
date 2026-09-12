@@ -58,7 +58,7 @@ export interface ApiClientOptions {
   transport?: AuthTransport;
   /** Called after any successful authenticated response (feeds the 24 h rule). */
   onAuthOk?: () => void;
-  /** Called on 401 so the app can route to `pair`. */
+  /** Called on 401 or authenticated 410/screen_revoked so the app can route to `pair`. */
   onUnauthorized?: () => void;
 }
 
@@ -103,16 +103,25 @@ export class ApiClient {
     const response = await this.fetchImpl(path, finalInit);
 
     this.assertCurrent(generation);
+    if (init.signal?.aborted) throw new DOMException('Request cancelled', 'AbortError');
     if (response.status === 401) {
       this.invalidateAuthorization();
       this.onUnauthorized?.();
       throw await toApiError(response, 'unauthorized');
     }
     if (!response.ok) {
-      throw await toApiError(response, 'internal');
+      const error = await toApiError(response, 'internal');
+      this.assertCurrent(generation);
+      if (init.signal?.aborted) throw new DOMException('Request cancelled', 'AbortError');
+      if (authenticated && error.status === 410 && error.code === 'screen_revoked') {
+        this.invalidateAuthorization();
+        this.onUnauthorized?.();
+      }
+      throw error;
     }
     const body = response.status === 204 ? undefined : await response.json();
     this.assertCurrent(generation);
+    if (init.signal?.aborted) throw new DOMException('Request cancelled', 'AbortError');
     if (authenticated) this.onAuthOk?.();
     return body as T;
   }
@@ -166,9 +175,9 @@ export class ApiClient {
     return this.get<HomeResponse>(`${API_BASE}/home`);
   }
 
-  getHouse(): Promise<HouseResponse> {
+  getHouse(signal?: AbortSignal): Promise<HouseResponse> {
     return this.request<HouseResponse>(`${API_BASE}/family/house`, {
-      method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-store',
+      method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-store', ...(signal ? { signal } : {}),
     }, true);
   }
 

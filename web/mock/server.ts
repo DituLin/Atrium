@@ -9,6 +9,7 @@
  * publish a change). Development only; never part of the bundle.
  */
 
+import type { HomeResponse, HouseResponse, NasStatusResponse } from '../src/types/api.ts';
 import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
@@ -34,6 +35,27 @@ import type { Screen } from './core.ts';
 
 const PORT = Number(process.env.ATRIUM_MOCK_PORT ?? 8788);
 const HOST = process.env.ATRIUM_MOCK_HOST ?? '127.0.0.1';
+
+// Test controls only. Values are captured per request so delayed-response races are reproducible.
+let houseOverride: HouseResponse | null = null;
+let houseStatus = 200;
+let houseDelayMs = 0;
+let homeStatus = 200;
+function houseSnapshot(): HouseResponse {
+  const generated_at = new Date().toISOString();
+  const expires_at = new Date(Date.now() + 60_000).toISOString();
+  const meta = { id: 'health', updated_at: null, valid_from: null, valid_until: null };
+  const missing = { observed_at: null, expires_at: null, availability: 'not_connected' as const, items: [] };
+  return { schema_version: 1, generated_at, home: (homeSnapshot() as HomeResponse).home,
+    core: { source_id: 'core', source_label: 'Atrium Core', observed_at: generated_at, expires_at, availability: 'available', reason: null, items: [{ ...meta, id: 'response', responding: true }] },
+    nas: (nasStatus() as NasStatusResponse).sources.map(source => ({ source_id: source.id, source_label: source.name,
+      observed_at: source.last_check_at, expires_at: source.last_check_at ? new Date(Date.parse(source.last_check_at) + 60_000).toISOString() : null,
+      availability: !source.last_check_at ? 'loading' : Date.now() >= Date.parse(source.last_check_at) + 60_000 ? 'stale' : 'available',
+      reason: !source.last_check_at ? 'not_observed' : Date.now() >= Date.parse(source.last_check_at) + 60_000 ? 'expired' : null,
+      items: source.last_check_at ? [{ ...meta, health: source.health, last_success_at: source.last_success_at }] : [] })),
+    profile: { ...missing, source_id: 'profile', source_label: '房屋资料', reason: 'not_provided' },
+    environment: { ...missing, source_id: 'environment', source_label: '环境数据', reason: 'not_supported' } };
+}
 
 function json(res: ServerResponse, status: number, body: unknown, headers: string[][] = []): void {
   const payload = JSON.stringify(body);
@@ -265,6 +287,14 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
         }
         return json(res, 200, { id, status, overrides: mediaOverrides.size });
       }
+      case '/__control/house':
+        if (method === 'POST') {
+          houseOverride = body.snapshot ?? null;
+          houseStatus = Number(body.status ?? 200);
+          houseDelayMs = Math.max(0, Number(body.delay_ms ?? 0));
+          homeStatus = Number(body.home_status ?? 200);
+        }
+        return json(res, 200, { snapshot: houseOverride, status: houseStatus, delay_ms: houseDelayMs, home_status: homeStatus });
       case '/__control/state':
         return json(res, 200, { overrides: applyOverrides(body as Record<string, unknown>) });
       case '/__control/sessions':
@@ -327,7 +357,13 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
     const screen = authenticate(req);
     if (!screen) return fail(res, 401, 'unauthorized', 'no screen credential');
 
-    if (path === '/api/v1/home') return json(res, 200, homeSnapshot());
+    if (path === '/api/v1/family/house') {
+      const snapshot = houseOverride ?? houseSnapshot();
+      const status = houseStatus;
+      if (houseDelayMs) await new Promise(resolve => setTimeout(resolve, houseDelayMs));
+      return status === 200 ? json(res, 200, snapshot) : fail(res, status, status === 401 ? 'unauthorized' : 'unavailable');
+    }
+    if (path === '/api/v1/home') return homeStatus === 200 ? json(res, 200, homeSnapshot()) : fail(res, homeStatus, 'unavailable');
     if (path === '/api/v1/nas/status') return json(res, 200, nasStatus());
     if (path === '/api/v1/screens/me') {
       return json(res, 200, { id: screen.id, name: screen.name, status: 'active' });

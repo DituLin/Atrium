@@ -5,6 +5,7 @@
 
 import { createContext, useContext } from 'react';
 
+import type { HouseLoader } from './house';
 import type { ApiClient } from '../core/api';
 import type { AppAction, AppState } from './state';
 
@@ -12,6 +13,7 @@ export interface AppContextValue {
   state: AppState;
   dispatch: (action: AppAction) => void;
   api: ApiClient;
+  house: HouseLoader;
   clientVersion: string;
   /** Remote/back handling lives in the provider so every screen shares it. */
   goBack: () => void;

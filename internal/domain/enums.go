@@ -212,12 +212,13 @@ const (
 	RoutePair      RouteName = "pair"
 	RouteConnect   RouteName = "connect"
 	RouteSettings  RouteName = "settings"
+	RouteHouse     RouteName = "house"
 )
 
 // Valid reports whether the value is a known route.
 func (r RouteName) Valid() bool {
 	switch r {
-	case RouteDashboard, RoutePhotos, RoutePhoto, RoutePair, RouteConnect, RouteSettings:
+	case RouteDashboard, RoutePhotos, RoutePhoto, RoutePair, RouteConnect, RouteSettings, RouteHouse:
 		return true
 	}
 	return false

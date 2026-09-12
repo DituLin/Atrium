@@ -18,7 +18,7 @@ function renderPane(item: PhotoItem | null): void {
     count: item ? 1 : 0,
   });
   render(
-    <AppContext.Provider value={{ state: createInitialState(0), api: new ApiClient(),
+    <AppContext.Provider value={{ house: { load: async () => {}, invalidate: () => {} }, state: createInitialState(0), api: new ApiClient(),
       dispatch: () => {}, goBack: () => {}, clientVersion: 'test' }}>
       <PhotoPane payload={null} />
     </AppContext.Provider>,

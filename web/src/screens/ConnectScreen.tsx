@@ -5,7 +5,7 @@
  */
 
 import type { ReactElement } from 'react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 
 import { RemoteButton } from '../ui/RemoteButton';
 import { useApp } from '../app/context';
@@ -15,8 +15,23 @@ export interface ConnectScreenProps {
 }
 
 export function ConnectScreen(props: ConnectScreenProps): ReactElement {
-  const { state, dispatch, api } = useApp();
+  const { state, dispatch, api, house } = useApp();
   const { connection, authExpired } = state;
+
+  const [notice, setNotice] = useState('');
+  const houseButton = useRef<HTMLButtonElement>(null);
+  const entering = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const openHouse = async () => {
+    if (entering.current) return;
+    entering.current = true; setNotice('正在确认屏幕授权…');
+    try {
+      await house.load(true);
+      if (mounted.current) dispatch({ type: 'router.navigate', route: { name: 'house' } });
+    } catch { if (mounted.current) setNotice('暂时无法读取中枢状态'); }
+    finally { entering.current = false; }
+  };
 
   const superseded = connection.stopReason === 'superseded';
 
@@ -92,9 +107,12 @@ export function ConnectScreen(props: ConnectScreenProps): ReactElement {
         ) : null}
       </dl>
 
-      <RemoteButton ref={buttonRef} type="button" className="button" onClick={retry}>
+      <RemoteButton ref={buttonRef} type="button" className="button" onClick={retry} onDirection={key => { if (key === 'down' || key === 'right') houseButton.current?.focus(); }}>
         {superseded ? '重新连接此屏幕' : '立即重试'}
       </RemoteButton>
+      {!superseded ? <RemoteButton ref={houseButton} className="button" onClick={() => { void openHouse(); }}
+        onDirection={key => { if (key === 'up' || key === 'left') buttonRef.current?.focus(); }}>查看中枢状态</RemoteButton> : null}
+      {notice ? <p role="status">{notice}</p> : null}
     </div>
   );
 }

@@ -22,3 +22,20 @@ it.each(['app.needsPairing', 'app.authExpired'] as const)('synchronously invalid
   expect(loadLastAuthOkAt()).toBeNull();
   expect(type === 'app.needsPairing' ? app.state.needsPairing : app.state.authExpired).toBe(true);
 });
+
+it('new pairing invalidates older House work while retaining the fresh authorization timestamp', async () => {
+  const pairedAt = Date.now(); saveLastAuthOkAt(pairedAt);
+  let app!: AppContextValue;
+  let finish!: (response: Response) => void;
+  vi.stubGlobal('fetch', vi.fn((path: string) => path.includes('/family/house')
+    ? new Promise<Response>(resolve => { finish = resolve; }) : new Promise(() => {})));
+  function Harness() { const current = useApp(); useEffect(() => { app = current; }, [current]); return null; }
+  render(<AppProvider><Harness /></AppProvider>);
+  await waitFor(() => expect(app).toBeDefined());
+  let old!: Promise<unknown>;
+  act(() => { old = app.house.load().catch(error => error); });
+  act(() => { app.dispatch({ type: 'pair.claimed', screenName: 'New screen' }); finish(new Response('{}')); });
+  expect(await old).toMatchObject({ name: 'AbortError' });
+  expect(app.state.house.snapshot).toBeNull();
+  expect(loadLastAuthOkAt()).toBe(pairedAt);
+});

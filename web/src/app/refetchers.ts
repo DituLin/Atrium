@@ -8,6 +8,7 @@
  * keeps the current page and pause state (PRD 5.3).
  */
 
+import type { HouseLoader } from './house';
 import type { ApiClient } from '../core/api';
 import type { PhotoItem, PhotoListMeta } from '../types/api';
 import { COLLECTION_PAGE_SIZE } from './photoList';
@@ -16,12 +17,14 @@ import { SLIDESHOW_PAGE_SIZE } from './slideshow';
 import type { AppAction, AppState } from './state';
 
 export interface RefetchPorts {
+  house?: HouseLoader;
   api: ApiClient;
   dispatch: (action: AppAction) => void;
   getState: () => AppState;
 }
 
 export interface Refetchers {
+  house(): Promise<void>;
   home(): Promise<void>;
   collection(): Promise<void>;
   slideshow(): Promise<void>;
@@ -31,6 +34,11 @@ export interface Refetchers {
 
 export function createRefetchers(ports: RefetchPorts): Refetchers {
   const { api, dispatch, getState } = ports;
+
+  const house = (): Promise<void> => {
+    if (!ports.house) return Promise.reject(new Error('House loader unavailable'));
+    return ports.house.load();
+  };
 
   const home = async (): Promise<void> => {
     const snapshot = await api.getHome();
@@ -95,6 +103,7 @@ export function createRefetchers(ports: RefetchPorts): Refetchers {
   };
 
   const route = async (target: AppRoute): Promise<void> => {
+    if (target.name === 'house') { await house(); return; }
     const jobs: Array<Promise<void>> = [home()];
     switch (target.name) {
       case 'dashboard':
@@ -114,11 +123,12 @@ export function createRefetchers(ports: RefetchPorts): Refetchers {
     await Promise.all(jobs);
   };
 
-  return { home, collection, slideshow, route };
+  return { house, home, collection, slideshow, route };
 }
 
 /** Fire-and-forget wrappers for the throttled `data.changed` path. */
 export function toRefetchHandlers(refetchers: Refetchers): {
+  house: () => void;
   home: () => void;
   collection: () => void;
   slideshow: () => void;
@@ -129,6 +139,7 @@ export function toRefetchHandlers(refetchers: Refetchers): {
     void run().catch(() => undefined);
   };
   return {
+    house: swallow(refetchers.house),
     home: swallow(refetchers.home),
     collection: swallow(refetchers.collection),
     slideshow: swallow(refetchers.slideshow),

@@ -148,3 +148,18 @@ describe('RouteState shape (§9)', () => {
     });
   });
 });
+
+it('reports House locally and restores source focus through House, photos and settings', () => {
+  expect(parseRoutePath('house')).toEqual({ name: 'house' });
+  expect(toRouteState({ name: 'house' })).toEqual({ name: 'house' });
+  expect(ROUTE_NAMES).toContain('house');
+  let state = routerReducer(initialRouterState, { type: 'router.navigate', route: { name: 'house' }, sourceFocus: 'nav-house' });
+  for (const route of [{ name: 'photos', collection: 'recent' }, { name: 'settings' }] as const) {
+    state = routerReducer(state, { type: 'router.navigate', route, sourceFocus: `nav-${route.name}` });
+    state = routerReducer(state, { type: 'router.back' });
+    expect(state.route.name).toBe('house'); expect(state.restoreFocus).toBe(`nav-${route.name}`);
+  }
+  state = routerReducer(state, { type: 'router.back' });
+  expect(state.route.name).toBe('dashboard'); expect(state.restoreFocus).toBe('nav-house');
+  expect(backRoute({ name: 'house' })).toEqual({ name: 'dashboard' });
+});

@@ -25,11 +25,12 @@ function harness(strict = false, probeMedia = vi.fn(async () => 200)) {
   let current: AppState;
   let dispatch: (action: AppAction) => void;
   const api = { getPhoto: vi.fn(async () => ({ item })), probeMedia, mediaUrl: () => '/preview' } as unknown as ApiClient;
+  const house = { load: async () => {}, invalidate: () => {} };
   function Harness() {
     const [state, send] = useReducer(appReducer, 0, createInitialState);
     current = state; dispatch = send;
-    useConnection({ api, state, dispatch: send, enabled: true, clientVersion: 'test' });
-    return <AppContext.Provider value={{ api, state, dispatch: send, clientVersion: 'test', goBack: () => send({ type: 'router.back' }) }}>{state.router.route.name === 'photo' ? <PhotoScreen /> : <div>Dashboard</div>}</AppContext.Provider>;
+    useConnection({ house, api, state, dispatch: send, enabled: true, clientVersion: 'test' });
+    return <AppContext.Provider value={{ house, api, state, dispatch: send, clientVersion: 'test', goBack: () => send({ type: 'router.back' }) }}>{state.router.route.name === 'photo' ? <PhotoScreen /> : <div>Dashboard</div>}</AppContext.Provider>;
   }
   const view = render(strict ? <StrictMode><Harness /></StrictMode> : <Harness />);
   return { view, state: () => current,

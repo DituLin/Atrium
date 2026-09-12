@@ -3,7 +3,7 @@ import { useApp } from '../app/context';
 import { DEFAULT_COLLECTION } from '../app/router';
 import { RemoteButton } from './RemoteButton';
 
-const LINKS = [['dashboard', '首页'], ['photos', '照片'], ['settings', '设置']] as const;
+const LINKS = [['dashboard', '首页'], ['photos', '照片'], ['house', '房屋'], ['settings', '设置']] as const;
 export function PrimaryNav({ onUp }: { onUp: () => void }) {
   const { state, dispatch } = useApp();
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
@@ -14,7 +14,7 @@ export function PrimaryNav({ onUp }: { onUp: () => void }) {
       aria-current={state.router.route.name === name ? 'page' : undefined}
       onDirection={key => {
         if (key === 'up') onUp();
-        if (key === 'left' || key === 'right') buttons.current[Math.max(0, Math.min(2, index + (key === 'left' ? -1 : 1)))]?.focus();
+        if (key === 'left' || key === 'right') buttons.current[Math.max(0, Math.min(LINKS.length - 1, index + (key === 'left' ? -1 : 1)))]?.focus();
       }}
       onClick={() => dispatch({ type: 'router.navigate', sourceFocus: `nav-${name}`, route: name === 'photos'
         ? { name, collection: DEFAULT_COLLECTION } : { name } })}>{label}</RemoteButton>)}
@@ -22,7 +22,7 @@ export function PrimaryNav({ onUp }: { onUp: () => void }) {
   </nav>;
 }
 
-export function focusPrimaryNav(name: 'dashboard' | 'photos' | 'settings'): void {
+export function focusPrimaryNav(name: 'dashboard' | 'photos' | 'house' | 'settings'): void {
   document.querySelector<HTMLButtonElement>(`[data-nav="${name}"]`)?.focus();
 }
 

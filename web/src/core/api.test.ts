@@ -194,3 +194,32 @@ it('rejects House JSON arriving after authorization invalidation', async () => {
   await expect(old).rejects.toMatchObject({ name: 'AbortError' });
   expect(onAuthOk).not.toHaveBeenCalled();
 });
+
+it('clears revoked screen authorization from authenticated HTTP410 without confusing removed photos or consumed pairings', async () => {
+  const onUnauthorized = vi.fn();
+  const fetchImpl = vi.fn(async () => jsonResponse(410, { error: { code: 'screen_revoked' } }));
+  const client = new ApiClient({ fetchImpl, onUnauthorized });
+  await expect(client.getHouse()).rejects.toMatchObject({ status: 410, code: 'screen_revoked' });
+  expect(onUnauthorized).toHaveBeenCalledTimes(1);
+  fetchImpl.mockResolvedValueOnce(jsonResponse(410, { error: { code: 'photo_removed' } }));
+  await expect(client.getPhoto('removed')).rejects.toMatchObject({ status: 410 });
+  await expect(client.pairStatus('consumed')).rejects.toMatchObject({ status: 410 });
+  expect(onUnauthorized).toHaveBeenCalledTimes(1);
+});
+it('ignores late revoked-screen error JSON from an older authorization', async () => {
+  let finish!: (body: unknown) => void;
+  const onUnauthorized = vi.fn();
+  const client = new ApiClient({ onUnauthorized, fetchImpl: async () => ({ ok: false, status: 410, headers: new Headers(),
+    json: () => new Promise(resolve => { finish = resolve; }) }) as Response });
+  const old = client.getHouse().catch(error => error); await Promise.resolve();
+  client.invalidateAuthorization(); finish({ error: { code: 'screen_revoked' } });
+  expect(await old).toMatchObject({ name: 'AbortError' }); expect(onUnauthorized).not.toHaveBeenCalled();
+});
+it('passes a House abort signal to transport and ignores successful JSON after cancellation', async () => {
+  const onAuthOk = vi.fn(); let finish!: (body: unknown) => void;
+  const fetchImpl = vi.fn(async (_path: string, _init?: RequestInit) => ({ ok: true, status: 200, json: () => new Promise(resolve => { finish = resolve; }) }) as Response);
+  const client = new ApiClient({ onAuthOk, fetchImpl }); const abort = new AbortController();
+  const old = client.getHouse(abort.signal).catch(error => error); await Promise.resolve();
+  expect(fetchImpl.mock.calls[0]?.[1]?.signal).toBe(abort.signal);
+  abort.abort(); finish({}); expect(await old).toMatchObject({ name: 'AbortError' }); expect(onAuthOk).not.toHaveBeenCalled();
+});

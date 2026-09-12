@@ -77,3 +77,17 @@ it('does not overwrite pagination and a newer bookmark established during refres
   expect(h.get().collection.returnFocus?.scrollTop).toBe(900);
   expect(h.get().collection.returnNotice).not.toContain('已移除');
 });
+
+it('awaits House independently of failing home and preserves route, history and focus on remote refresh', async () => {
+  let state = createInitialState(0);
+  const dispatch = (action: AppAction) => { state = appReducer(state, action); };
+  dispatch({ type: 'router.navigate', route: { name: 'house' }, sourceFocus: 'nav-house' });
+  const router = state.router;
+  let finish!: () => void;
+  const house = { load: vi.fn(() => new Promise<void>(resolve => { finish = resolve; })), invalidate() {} };
+  const getHome = vi.fn(async () => { throw new Error('photo query failure'); });
+  const refetch = createRefetchers({ api: { getHome } as unknown as ApiClient, house, dispatch, getState: () => state });
+  let settled = false; const task = refetch.route({ name: 'house' }).then(() => { settled = true; });
+  await Promise.resolve(); expect(settled).toBe(false); expect(getHome).not.toHaveBeenCalled();
+  finish(); await task; expect(state.router).toBe(router);
+});

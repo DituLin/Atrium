@@ -7,6 +7,7 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 
+import type { HouseLoader } from './house';
 import type { ApiClient } from '../core/api';
 import type { WsClient } from '../core/ws';
 import { WS_PATH, createWsClient, wsUrl } from '../core/ws';
@@ -17,13 +18,14 @@ import type { Session } from './session';
 import { createSession } from './session';
 import { syncSnapshot } from './snapshotSync';
 import type { AppAction, AppState } from './state';
-import { slideshowActive } from './state';
+import { selectScreen, slideshowActive } from './state';
 import { toRouteState } from './router';
 
 export { DATA_CHANGED_THROTTLE_MS } from './dataChanged';
 
 export interface ConnectionDeps {
   api: ApiClient;
+  house: HouseLoader;
   clientVersion: string;
   state: AppState;
   dispatch: (action: AppAction) => void;
@@ -37,7 +39,7 @@ export interface WsHandle {
 }
 
 export function useConnection(deps: ConnectionDeps): WsHandle {
-  const { api, clientVersion, dispatch, enabled } = deps;
+  const { api, house, clientVersion, dispatch, enabled } = deps;
   // The socket callbacks must read the freshest state without re-creating the
   // client on every render, so state is mirrored through a ref after commit.
   const stateRef = useRef(deps.state);
@@ -63,12 +65,16 @@ export function useConnection(deps: ConnectionDeps): WsHandle {
     if (!enabled) return;
 
     const getState = (): AppState => stateRef.current;
-    const refetchers = createRefetchers({ api, dispatch, getState });
+    const refetchers = createRefetchers({ api, dispatch, getState, house });
     // Change notifications are throttled per target (W-205); the refetcher
     // lives with the socket so it is torn down with it.
-    const refetch = createTopicRefetcher(toRefetchHandlers(refetchers));
+    const handlers = toRefetchHandlers(refetchers);
+    const houseVisible = () => selectScreen(getState()) === 'house' && document.visibilityState !== 'hidden';
+    const refetch = createTopicRefetcher({ ...handlers, house: () => { if (houseVisible()) handlers.house(); } });
     const notifyChanged = (topics: readonly DataChangedTopic[]): void => {
+      if (topics.includes('nas') || topics.includes('home')) house.invalidate();
       refetch.notify(topics, {
+        houseActive: houseVisible(),
         activeCollection: getState().collection.collection,
         slideshowActive: slideshowActive(getState()),
       });
@@ -112,7 +118,7 @@ export function useConnection(deps: ConnectionDeps): WsHandle {
       sessionRef.current = null;
       refetch.cancel();
     };
-  }, [api, clientVersion, dispatch, enabled, retryNonce]);
+  }, [api, house, clientVersion, dispatch, enabled, retryNonce]);
 
   return useMemo<WsHandle>(
     () => ({

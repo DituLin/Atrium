@@ -119,3 +119,12 @@ describe('render-confirmed acks (design §7.2)', () => {
     });
   });
 });
+
+it('rejects remote House navigate while allowing a refresh to retain the local House route', () => {
+  const router = { ...initialRouterState, route: { name: 'house' as const } };
+  const decision = decideCommand(router, command({ payload: { route: 'house' } }));
+  expect(decision.kind === 'reject' && decision.ack.error_code).toBe('invalid_route');
+  const refresh = decideCommand(router, command({ kind: 'refresh', payload: {} }));
+  expect(refresh).toMatchObject({ kind: 'refresh' });
+  expect(router.route.name).toBe('house');
+});
