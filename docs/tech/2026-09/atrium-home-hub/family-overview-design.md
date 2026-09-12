@@ -85,7 +85,7 @@ NAS freshness 工程默认固定为 60 秒，取 `LastCheckAt + 60s`；服务端
 
 ## 已选 API 形状与隔离
 
-House 端点已实现并部署；calendar 与 overview 仍是后续目标，目前不可调用。首批只新增 `GET /api/v1/family/house`，以 `requireScope(auth.ScopeScreen, ...)` 接入现有鉴权；admin 可按现有兼容规则访问同一公开投影，不能因此附加维护字段。integration/MCP 不新增权限、端点或工具。未来日历与概览使用 `GET /api/v1/family/calendar`、`GET /api/v1/family/overview`，按各自里程碑实现，不为未接入功能提前添加空 handler。
+House 端点已实现并部署；overview 已在 `cc62ad8` 实现并完成审查，尚未部署到家庭设备；calendar 仍是后续目标，目前不可调用。首批只新增 `GET /api/v1/family/house`，以 `requireScope(auth.ScopeScreen, ...)` 接入现有鉴权；admin 可按现有兼容规则访问同一公开投影，不能因此附加维护字段。integration/MCP 不新增权限、端点或工具。概览使用 `GET /api/v1/family/overview`，具体 sources 与排序引用见简报实施计划；未来日历使用 `GET /api/v1/family/calendar`，来源确认后实现，不为未接入功能提前添加空 handler。
 
 House 响应形状如下；这是类型草图，非真实家庭数据：
 
