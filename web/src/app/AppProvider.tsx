@@ -4,6 +4,10 @@
  * clock tick, and the remote Back key.
  */
 
+import { createOverviewLoader } from './overview';
+import { useOverviewLifecycle } from './useOverviewLifecycle';
+
+
 import type { ReactElement, ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
@@ -25,10 +29,10 @@ export const CLIENT_VERSION: string =
 
 export function AppProvider(props: { children: ReactNode }): ReactElement {
   const [state, reduce] = useReducer(appReducer, 0, createInitialState);
-  const { api, dispatch, house } = useMemo(() => {
+  const { api, dispatch, house, overview } = useMemo(() => {
     const send = (action: AppAction) => {
       if (action.type === 'app.needsPairing' || action.type === 'app.authExpired' || action.type === 'pair.claimed') {
-        house.invalidate();
+        house.invalidate(); overview.invalidate();
         client.invalidateAuthorization();
         if (action.type !== 'pair.claimed') clearLastAuthOkAt();
       }
@@ -36,14 +40,15 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
     };
     const client = createScreenApi(send);
     const house = createHouseLoader(client, send);
-    return { api: client, dispatch: send, house };
+    const overview = createOverviewLoader(client, send);
+    return { api: client, dispatch: send, house, overview };
   }, [reduce]);
   const stateRef = useRef(state);
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
 
-  useEffect(() => () => { api.invalidateAuthorization(); house.invalidate(); }, [api, house]);
+  useEffect(() => () => { api.invalidateAuthorization(); house.invalidate(); overview.invalidate(); }, [api, house, overview]);
 
   // Seed the clock immediately; the one-second tick keeps it moving.
   useEffect(() => {
@@ -87,8 +92,9 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
   // auth cache has not expired. Pairing screens never open one.
   const connectionEnabled =
     !state.needsPairing && !state.authExpired && authTransport.hasCredential();
-  const ws = useConnection({ api, clientVersion: CLIENT_VERSION, state, dispatch, house, enabled: connectionEnabled });
+  const ws = useConnection({ api, clientVersion: CLIENT_VERSION, state, dispatch, house, overview, enabled: connectionEnabled });
 
+  useOverviewLifecycle(overview, selectScreen(state) === 'briefing', state.connection.status);
   useHouseLifecycle(house, selectScreen(state) === 'house', state.connection.status);
 
   // Report route changes immediately (design §6.5).
@@ -107,8 +113,8 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
   }, [state.needsPairing]);
 
   const value = useMemo<AppContextValue>(
-    () => ({ state, dispatch, api, house, clientVersion: CLIENT_VERSION, goBack }),
-    [state, api, house, goBack, dispatch],
+    () => ({ state, dispatch, api, house, overview, clientVersion: CLIENT_VERSION, goBack }),
+    [state, api, house, overview, goBack, dispatch],
   );
 
   return <AppContext.Provider value={value}>{props.children}</AppContext.Provider>;

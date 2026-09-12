@@ -8,6 +8,9 @@
  * keeps the current page and pause state (PRD 5.3).
  */
 
+import type { OverviewLoader } from './overview';
+
+
 import type { HouseLoader } from './house';
 import type { ApiClient } from '../core/api';
 import type { PhotoItem, PhotoListMeta } from '../types/api';
@@ -18,6 +21,7 @@ import type { AppAction, AppState } from './state';
 
 export interface RefetchPorts {
   house?: HouseLoader;
+  overview?: OverviewLoader;
   api: ApiClient;
   dispatch: (action: AppAction) => void;
   getState: () => AppState;
@@ -25,6 +29,7 @@ export interface RefetchPorts {
 
 export interface Refetchers {
   house(): Promise<void>;
+  overview(): Promise<void>;
   home(): Promise<void>;
   collection(): Promise<void>;
   slideshow(): Promise<void>;
@@ -34,6 +39,8 @@ export interface Refetchers {
 
 export function createRefetchers(ports: RefetchPorts): Refetchers {
   const { api, dispatch, getState } = ports;
+
+  const overview = (): Promise<void> => ports.overview?.load() ?? Promise.reject(new Error('Overview loader unavailable'));
 
   const house = (): Promise<void> => {
     if (!ports.house) return Promise.reject(new Error('House loader unavailable'));
@@ -103,6 +110,7 @@ export function createRefetchers(ports: RefetchPorts): Refetchers {
   };
 
   const route = async (target: AppRoute): Promise<void> => {
+    if (target.name === 'briefing') { await overview(); return; }
     if (target.name === 'house') { await house(); return; }
     const jobs: Array<Promise<void>> = [home()];
     switch (target.name) {
@@ -123,12 +131,13 @@ export function createRefetchers(ports: RefetchPorts): Refetchers {
     await Promise.all(jobs);
   };
 
-  return { house, home, collection, slideshow, route };
+  return { overview, house, home, collection, slideshow, route };
 }
 
 /** Fire-and-forget wrappers for the throttled `data.changed` path. */
 export function toRefetchHandlers(refetchers: Refetchers): {
   house: () => void;
+  overview: () => void;
   home: () => void;
   collection: () => void;
   slideshow: () => void;
@@ -140,6 +149,7 @@ export function toRefetchHandlers(refetchers: Refetchers): {
   };
   return {
     house: swallow(refetchers.house),
+    overview: swallow(refetchers.overview),
     home: swallow(refetchers.home),
     collection: swallow(refetchers.collection),
     slideshow: swallow(refetchers.slideshow),

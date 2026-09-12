@@ -30,7 +30,7 @@ function harness(strict = false, probeMedia = vi.fn(async () => 200)) {
     const [state, send] = useReducer(appReducer, 0, createInitialState);
     current = state; dispatch = send;
     useConnection({ house, api, state, dispatch: send, enabled: true, clientVersion: 'test' });
-    return <AppContext.Provider value={{ house, api, state, dispatch: send, clientVersion: 'test', goBack: () => send({ type: 'router.back' }) }}>{state.router.route.name === 'photo' ? <PhotoScreen /> : <div>Dashboard</div>}</AppContext.Provider>;
+    return <AppContext.Provider value={{ overview: { load: async () => {}, invalidate: () => {} }, house, api, state, dispatch: send, clientVersion: 'test', goBack: () => send({ type: 'router.back' }) }}>{state.router.route.name === 'photo' ? <PhotoScreen /> : <div>Dashboard</div>}</AppContext.Provider>;
   }
   const view = render(strict ? <StrictMode><Harness /></StrictMode> : <Harness />);
   return { view, state: () => current,

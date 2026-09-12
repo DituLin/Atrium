@@ -6,6 +6,10 @@
  * layer only dispatches; all rules are testable without rendering.
  */
 
+import { overviewReducer, initialOverviewState } from './overview';
+import type { OverviewAction, OverviewState } from './overview';
+
+
 import { houseReducer, initialHouseState } from './house';
 import type { HouseAction, HouseState } from './house';
 import type { ClockState } from '../core/clock';
@@ -24,7 +28,7 @@ import { initialRouterState, routerReducer } from './router';
 import type { SlideshowAction, SlideshowState } from './slideshow';
 import { initialSlideshowState, slideshowReducer } from './slideshow';
 
-export type ScreenName = 'pair' | 'connect' | 'dashboard' | 'photos' | 'photo' | 'house' | 'settings';
+export type ScreenName = 'pair' | 'connect' | 'dashboard' | 'photos' | 'photo' | 'house' | 'briefing' | 'settings';
 
 export interface AppState {
   router: RouterState;
@@ -34,6 +38,7 @@ export interface AppState {
   /** Latest `/api/v1/home` snapshot, or `null` when nothing is cached. */
   home: HomeResponse | null;
   house: HouseState;
+  overview: OverviewState;
   /** Dashboard slideshow: one seeded `random` round (W-201). */
   slideshow: SlideshowState;
   /** The collection browser's page, focus and cursor (W-202). */
@@ -56,6 +61,7 @@ export function createInitialState(nowMs: number): AppState {
     clock: initialClockState,
     home: null,
     house: initialHouseState,
+    overview: initialOverviewState,
     slideshow: initialSlideshowState,
     collection: initialPhotoListState,
     viewer: initialPhotoViewerState,
@@ -66,6 +72,7 @@ export function createInitialState(nowMs: number): AppState {
 }
 
 export type AppAction =
+  | OverviewAction
   | HouseAction
   | RouterAction
   | ConnectionAction
@@ -97,10 +104,19 @@ function purgedPhotoState(state: AppState): AppState {
     viewer: photoViewerReducer(state.viewer, { type: 'viewer.close' }),
     home: null,
     house: initialHouseState,
+    overview: initialOverviewState,
   };
 }
 
 export function appReducer(state: AppState, action: AppAction): AppState {
+  if (action.type.startsWith('overview.')) {
+    if (state.needsPairing && action.type !== 'overview.reset') return state;
+    if (state.authExpired && action.type === 'overview.loaded') return state;
+    const overview = overviewReducer(state.overview, action as OverviewAction);
+    const clock = action.type === 'overview.loaded' && overview !== state.overview
+      ? clockReducer(state.clock, { type: 'clock.sync', serverTime: action.snapshot.generated_at, receivedAt: action.receivedAt }) : state.clock;
+    return { ...state, overview, clock };
+  }
   if (action.type.startsWith('house.')) {
     if (state.needsPairing && action.type !== 'house.reset') return state;
     if (state.authExpired && action.type === 'house.loaded') return state;
@@ -218,6 +234,7 @@ export function selectScreen(state: AppState): ScreenName {
   if (state.authExpired) return 'connect';
   if (state.connection.stopReason === 'superseded') return 'connect';
   if (state.router.route.name === 'house') return 'house';
+  if (state.router.route.name === 'briefing') return 'briefing';
   if (needsConnectScreen(state.connection)) return 'connect';
   return state.router.route.name;
 }

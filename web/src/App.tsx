@@ -1,3 +1,4 @@
+import { BriefingScreen } from './screens/BriefingScreen';
 /**
  * Screen switch plus the global error boundary. A crash anywhere below lands
  * on the connect screen with a retry instead of a white page (W-106, FR-03).
@@ -24,6 +25,8 @@ export function CurrentScreen(): ReactElement {
       return <PairScreen />;
     case 'connect':
       return <ConnectScreen />;
+    case 'briefing':
+      return <BriefingScreen />;
     case 'house':
       return <HouseScreen />;
     case 'settings':

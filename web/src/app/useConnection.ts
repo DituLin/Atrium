@@ -5,6 +5,9 @@
  * lifetime of those objects and the state mirror the callbacks read from.
  */
 
+import type { OverviewLoader } from './overview';
+
+
 import { useEffect, useMemo, useRef } from 'react';
 
 import type { HouseLoader } from './house';
@@ -26,6 +29,7 @@ export { DATA_CHANGED_THROTTLE_MS } from './dataChanged';
 export interface ConnectionDeps {
   api: ApiClient;
   house: HouseLoader;
+  overview?: OverviewLoader;
   clientVersion: string;
   state: AppState;
   dispatch: (action: AppAction) => void;
@@ -39,7 +43,7 @@ export interface WsHandle {
 }
 
 export function useConnection(deps: ConnectionDeps): WsHandle {
-  const { api, house, clientVersion, dispatch, enabled } = deps;
+  const { api, house, overview, clientVersion, dispatch, enabled } = deps;
   // The socket callbacks must read the freshest state without re-creating the
   // client on every render, so state is mirrored through a ref after commit.
   const stateRef = useRef(deps.state);
@@ -65,16 +69,18 @@ export function useConnection(deps: ConnectionDeps): WsHandle {
     if (!enabled) return;
 
     const getState = (): AppState => stateRef.current;
-    const refetchers = createRefetchers({ api, dispatch, getState, house });
+    const refetchers = createRefetchers({ api, dispatch, getState, house, overview });
     // Change notifications are throttled per target (W-205); the refetcher
     // lives with the socket so it is torn down with it.
     const handlers = toRefetchHandlers(refetchers);
+    const overviewVisible = () => selectScreen(getState()) === 'briefing' && document.visibilityState !== 'hidden';
     const houseVisible = () => selectScreen(getState()) === 'house' && document.visibilityState !== 'hidden';
-    const refetch = createTopicRefetcher({ ...handlers, house: () => { if (houseVisible()) handlers.house(); } });
+    const refetch = createTopicRefetcher({ ...handlers, overview: () => { if (overviewVisible()) handlers.overview(); }, house: () => { if (houseVisible()) handlers.house(); } });
     const notifyChanged = (topics: readonly DataChangedTopic[]): void => {
-      if (topics.includes('nas') || topics.includes('home')) house.invalidate();
+      if (topics.includes('nas') || topics.includes('home')) { house.invalidate(); overview?.invalidate(); }
       refetch.notify(topics, {
         houseActive: houseVisible(),
+        overviewActive: overviewVisible(),
         activeCollection: getState().collection.collection,
         slideshowActive: slideshowActive(getState()),
       });
@@ -118,7 +124,7 @@ export function useConnection(deps: ConnectionDeps): WsHandle {
       sessionRef.current = null;
       refetch.cancel();
     };
-  }, [api, house, clientVersion, dispatch, enabled, retryNonce]);
+  }, [api, house, overview, clientVersion, dispatch, enabled, retryNonce]);
 
   return useMemo<WsHandle>(
     () => ({

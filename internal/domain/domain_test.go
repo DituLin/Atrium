@@ -136,3 +136,8 @@ func TestHouseReportedRouteIsNotNavigable(t *testing.T) {
 	require.True(t, domain.RouteName("house").Valid())
 	require.False(t, domain.RouteName("house").NavigableRoute())
 }
+
+func TestBriefingReportedRouteIsNotNavigable(t *testing.T) {
+	require.True(t, domain.RouteName("briefing").Valid())
+	require.False(t, domain.RouteName("briefing").NavigableRoute())
+}

@@ -163,3 +163,28 @@ it('reports House locally and restores source focus through House, photos and se
   expect(state.route.name).toBe('dashboard'); expect(state.restoreFocus).toBe('nav-house');
   expect(backRoute({ name: 'house' })).toEqual({ name: 'dashboard' });
 });
+
+it('reports Briefing locally and restores source focus through Briefing, photos and settings', () => {
+  expect(parseRoutePath('briefing')).toEqual({ name: 'briefing' });
+  expect(toRouteState({ name: 'briefing' })).toEqual({ name: 'briefing' });
+  expect(ROUTE_NAMES).toContain('briefing');
+  let state = routerReducer(initialRouterState, { type: 'router.navigate', route: { name: 'briefing' }, sourceFocus: 'nav-briefing' });
+  for (const route of [{ name: 'photos', collection: 'recent' }, { name: 'settings' }] as const) {
+    state = routerReducer(state, { type: 'router.navigate', route, sourceFocus: `nav-${route.name}` });
+    state = routerReducer(state, { type: 'router.back' });
+    expect(state.route.name).toBe('briefing'); expect(state.restoreFocus).toBe(`nav-${route.name}`);
+  }
+  state = routerReducer(state, { type: 'router.back' });
+  expect(state.route.name).toBe('dashboard'); expect(state.restoreFocus).toBe('nav-briefing');
+  expect(backRoute({ name: 'briefing' })).toEqual({ name: 'dashboard' });
+});
+
+it('returns House -> Briefing -> Settings one layer at a time to each original entry', () => {
+ let state = routerReducer(initialRouterState, { type: 'router.navigate', route: { name: 'house' }, sourceFocus: 'nav-house' });
+ state = routerReducer(state, { type: 'router.navigate', route: { name: 'briefing' }, sourceFocus: 'nav-briefing' });
+ state = routerReducer(state, { type: 'router.navigate', route: { name: 'settings' }, sourceFocus: 'nav-settings' });
+ for (const [name, focus] of [['briefing', 'nav-settings'], ['house', 'nav-briefing'], ['dashboard', 'nav-house']]) {
+  state = routerReducer(state, { type: 'router.back' }); expect(state.route.name).toBe(name); expect(state.restoreFocus).toBe(focus);
+ }
+ expect(state.returnStack).toEqual([]);
+});

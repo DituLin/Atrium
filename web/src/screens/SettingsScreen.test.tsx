@@ -64,7 +64,7 @@ describe('settings and Back ownership', () => {
   it('returns settings to photos navigation and gallery to the original home navigation entry', async () => {
     await setup(); key('ArrowDown'); key('ArrowRight'); key('Enter');
     await screen.findByRole('tab', { name: '最近新增' });
-    key('ArrowUp'); key('ArrowRight'); key('ArrowRight'); key('Enter');
+    key('ArrowUp'); key('ArrowRight'); key('ArrowRight'); key('ArrowRight'); key('Enter');
     await screen.findByRole('tab', { name: '连接状态' });
     key('Escape');
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: '设置' })));
@@ -98,7 +98,7 @@ it('returns from photos to the original settings navigation entry', async () => 
   await setup(); key('ArrowRight'); key('Enter');
   await screen.findByRole('tab', { name: '连接状态' });
   fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
-  key('ArrowDown'); key('ArrowDown'); key('ArrowLeft'); key('ArrowLeft'); key('Enter');
+  key('ArrowDown'); key('ArrowDown'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('Enter');
   await screen.findByRole('tab', { name: '最近新增' });
   key('Escape');
   expect(document.activeElement).toBe(screen.getByRole('button', { name: '照片' }));

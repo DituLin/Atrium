@@ -128,3 +128,12 @@ it('rejects remote House navigate while allowing a refresh to retain the local H
   expect(refresh).toMatchObject({ kind: 'refresh' });
   expect(router.route.name).toBe('house');
 });
+
+it('rejects remote Briefing navigate while allowing a refresh to retain the local Briefing route', () => {
+  const router = { ...initialRouterState, route: { name: 'briefing' as const } };
+  const decision = decideCommand(router, command({ payload: { route: 'briefing' } }));
+  expect(decision.kind === 'reject' && decision.ack.error_code).toBe('invalid_route');
+  const refresh = decideCommand(router, command({ kind: 'refresh', payload: {} }));
+  expect(refresh).toMatchObject({ kind: 'refresh' });
+  expect(router.route.name).toBe('briefing');
+});

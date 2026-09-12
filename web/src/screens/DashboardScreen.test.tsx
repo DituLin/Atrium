@@ -11,7 +11,7 @@ function setup() {
   const dispatch = vi.fn();
   vi.mocked(useSlideshow).mockReturnValue({ status: 'playing', previous: null, item: null,
     shown: { id: 'actually_visible', src: '/visible', element: new Image() }, fixed: false, count: 2 });
-  render(<AppContext.Provider value={{ house: { load: async () => {}, invalidate: () => {} }, state: createInitialState(0), api: new ApiClient(),
+  render(<AppContext.Provider value={{ overview: { load: async () => {}, invalidate: () => {} }, house: { load: async () => {}, invalidate: () => {} }, state: createInitialState(0), api: new ApiClient(),
     dispatch, goBack: () => {}, clientVersion: 'test' }}><DashboardScreen /></AppContext.Provider>);
   return dispatch;
 }

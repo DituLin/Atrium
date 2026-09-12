@@ -98,7 +98,7 @@ async function songFlow(){
  }
  assert(scrollChecks>0,'Insufficient fixture: no nonzero gallery scroll roundtrip verified');
  assert(nextPreviousChecks>0,'Insufficient fixture: no previous/next roundtrip verified');
- await key(19);await key(22);await key(22);await key(23);
+ await key(19);await key(22);await key(22);await key(22);await key(23);
  await until("!!document.querySelector('.screen--settings')",'settings via remote');
  const settingsTabs=['连接状态','照片来源','关于 Atrium'];
  for(let index=0;index<settingsTabs.length;index++){

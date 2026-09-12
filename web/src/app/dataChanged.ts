@@ -14,10 +14,11 @@ import type { DataChangedTopic } from '../types/ws';
 export const DATA_CHANGED_THROTTLE_MS = 1000;
 
 /** What a change notification can make the client re-read. */
-export type RefetchTarget = 'home' | 'collection' | 'slideshow' | 'house';
+export type RefetchTarget = 'home' | 'collection' | 'slideshow' | 'house' | 'overview';
 
 export interface RefetchContext {
   houseActive?: boolean;
+  overviewActive?: boolean;
   /** Collection currently on screen, or null when the browser is not open. */
   activeCollection: string | null;
   /** True while the dashboard slideshow holds a round. */
@@ -40,6 +41,7 @@ export function refetchTargets(
       case 'nas':
         targets.add('home');
         if (context.houseActive) targets.add('house');
+        if (context.overviewActive) targets.add('overview');
         break;
       case 'photos':
         targets.add('home');
@@ -53,7 +55,7 @@ export function refetchTargets(
   return [...targets];
 }
 
-export type RefetchHandlers = Readonly<Record<Exclude<RefetchTarget, 'house'>, () => void> & { house?: () => void }>;
+export type RefetchHandlers = Readonly<Record<Exclude<RefetchTarget, 'house' | 'overview'>, () => void> & { house?: () => void; overview?: () => void }>;
 
 export interface TopicRefetcher {
   /** Feed one `data.changed` payload; runs at most one refetch per target/s. */
@@ -68,6 +70,7 @@ export function createTopicRefetcher(
   const intervalMs = options.throttleMs ?? DATA_CHANGED_THROTTLE_MS;
   const clock = options.clock ?? defaultThrottleClock;
   const throttled: Record<RefetchTarget, Throttled<[]>> = {
+    overview: createThrottle(intervalMs, handlers.overview ?? (() => {}), clock),
     house: createThrottle(intervalMs, handlers.house ?? (() => {}), clock),
     home: createThrottle(intervalMs, handlers.home, clock),
     collection: createThrottle(intervalMs, handlers.collection, clock),
@@ -79,7 +82,7 @@ export function createTopicRefetcher(
       for (const target of refetchTargets(topics, context)) throttled[target]();
     },
     cancel() {
-      throttled.house.cancel();
+      throttled.house.cancel(); throttled.overview.cancel();
       throttled.home.cancel();
       throttled.collection.cancel();
       throttled.slideshow.cancel();
