@@ -32,6 +32,8 @@ M0 的 Mac / NAS / OnePlus / AI 集成回归见 [集成基线](2026-09-12-integr
 
 9 月 12 日只读核对：OnePlus 6T，物理屏幕 1080×2340、密度 450；Android WebView `com.google.android.webview 119.0.6045.66`，Atrium APK `0.1.0` / versionCode 1（targetSdk 35）。横屏 CSS 视口按既有实测 804×384 检查。未修改屏幕分辨率、密度或系统 WebView。该清单不代替新版页面部署后的测试。
 
+T06 前置只读检查（2026-09-12 08:37 UTC）：部署仍为 M0 的 `7f43094+7f43094`；OnePlus 在线、首页、已应用序号 156。数据库中 `family_photos` 有 17,166 张 ready/preview-ready（横图 9,776、竖图 7,339、方图 51），另有 2 张待处理、4 张不支持。来源报告 `degraded / stuck_io`，最近成功检查 07:55:11 UTC，8 个卡住的 I/O；缓存约 11.9 GB / 21.5 GB 预算，未暂停。这一状态只能用于故障场景与缓存展示检查，不能作为正常 NAS 性能基线。没有修改挂载或重置来源。私有 `t05/library-readonly-baseline.json`、`t05/diag-readonly.json` 留证。
+
 ## 未完成出口
 
 T06–T08 尚未完成，T04/T05 尚未部署至 OnePlus；真实电视 2–3 米可读性、正式签名、连续展示和正式 PRD 基准未由本记录证明。Mac 断电恢复与 NAS 自动挂载继续暂停。
