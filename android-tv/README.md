@@ -28,10 +28,11 @@ adb shell am start -n io.atrium.tv/.MainActivity
 
 ## 遥控器
 
-- 首页左右键进入照片集合，确认键打开当前轮播照片。
+- 首页初始焦点在照片，确认打开当前照片；向下到首页/照片/设置导航，向右到状态。导航确认后才打开页面。
 - 集合方向键移动焦点，确认键打开照片。
-- 单张页左右键切换、返回键回到集合/首页。
-- 菜单键打开“继续展示 / 连接设置 / 退出应用”。没有菜单键的遥控器可快速双击返回键。
+- 单张页左右键切换，确认打开操作层；返回先关闭操作层，再返回来源集合/首页。图库与设置返回来源入口。
+- 首页导航/状态处返回先回照片；首页照片处返回打开“继续展示 / 连接设置 / 退出应用”，初始选中“继续展示”。菜单键也可直接打开。
+- 一次返回只处理一个层级；长按确认/返回不重复触发，方向键可连续移动。
 - Android Home 键仍正常退出到系统桌面；应用不会夺回前台。
 
 ## 生命周期与网络
@@ -45,17 +46,18 @@ adb shell am start -n io.atrium.tv/.MainActivity
 
 ## 真机回归
 
-安装 debug APK，完成配对，设备连到家庭 Wi-Fi 并保持 Atrium 在前台。脚本会导航、展示照片、切后台、强制结束并重启应用，最后回首页；不会改 NAS 文件。
+安装 debug APK，完成配对，设备连到家庭 Wi-Fi 并保持 Atrium 在前台。脚本使用方向、确认和返回走通首页预览、四个合集、上下张、来源卡片与滚动恢复、设置三面板及原生菜单；随后回归远程 show/refresh/navigate、切后台、强制结束并重启应用，最后回首页。空合集单独记录，不把加载失败当成空数据通过；不会改 NAS 文件。
 
 ```sh
 ADB="$ANDROID_HOME/platform-tools/adb" \
 ATRIUM_BINARY=/absolute/path/to/atrium \
 ATRIUM_CONFIG=/absolute/path/to/config.yaml \
 ATRIUM_SCREEN=your_test_screen \
+ATRIUM_DEVICE=your_adb_serial \
 node scripts/smoke.mjs
 ```
 
-加 `ATRIUM_TEST_NETWORK=1` 会短暂关闭测试机 Wi-Fi、离线冷启动后恢复 Wi-Fi，验证原生重连页与自动恢复。仅在指定测试机执行。脚本使用 localhost:9223 临时转发，退出时移除。输出只记录结果和耗时，不输出凭据、照片路径或内容。
+可省略 `ATRIUM_DEVICE`，但此时 ADB 必须恰有一台就绪设备。加 `ATRIUM_TEST_NETWORK=1` 会短暂关闭测试机 Wi-Fi、离线冷启动后恢复 Wi-Fi，验证原生重连页与自动恢复；该项必须使用 USB ADB，以便 Wi-Fi 断开后仍能恢复网络。仅在指定测试机执行。脚本使用 localhost:9223 临时转发，退出时移除。输出只记录结果和耗时，不输出凭据、照片路径或内容；控制回执单列 Core 发出至确认的耗时。至少一个合集应有足够多的可用照片，实际产生非零滚动并完成上下张，否则以样本不足停止。
 
 OnePlus 6T 的通过结果不等同于真实电视遥控器、TV 厂商节能策略、24 小时或七天稳定性验收。
 
