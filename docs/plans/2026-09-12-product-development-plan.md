@@ -200,6 +200,8 @@ Mac 断电恢复、NAS 自动挂载不得自动恢复排期。暂停项如果使
 
 ### 下一批任务与验收标准
 
+细化方案见 [家庭提示与今日简报基础](2026-09-12-briefing-foundation.md)，视觉与遥控见 [今日设计](../design/song-tv-v1/briefing.md)。
+
 | 顺序 | 实现范围与落点 | 验收标准 |
 | --- | --- | --- |
 | N1 家庭提示 | `internal/config` 增加可选 `updated_at/valid_from/valid_until` 与校验；`internal/widget` 共用有效性筛选；同步 Go/TS/OpenAPI | 旧配置兼容；未知更新时间为 null；配置观测时间与内容更新时间分开；开始时生效、截止时撤下；非法时间拒绝装载 |
