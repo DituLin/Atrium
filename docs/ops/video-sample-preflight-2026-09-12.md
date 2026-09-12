@@ -13,3 +13,17 @@
 Mac 电源与 NAS 自动挂载继续暂停，不为本次样本准备修改这两项。
 
 简报版 `28ffc09` 部署后，真实 overview 曾取得新的 NAS online 观测，因此对同一授权根做了一次有外部截止的复查。仍在 15.01 秒结束并回收子进程，目录枚举数和候选数均为 0；状态是 deadline，不是空目录。证据：`~/Atrium/iteration-20260912/video-preflight-after-briefing/result.json`。来源健康观测不能替代视频文件可读性证明，M4-A 仍需要可读实际样本；没有扩大目录、修改挂载或写入 NAS。
+
+## 目录阻塞定位
+
+2026-09-12 19:52–19:55（Asia/Singapore）进行只读分层诊断，没有更改运行配置或挂载。
+
+- SMB 共享仍挂载，协商 SMB 3.1.1；现有 TCP 会话显示 ESTABLISHED。直接连接已观测 NAS 地址的 445 端口耗时 2.3 毫秒。它只证明端口可达，不证明 SMB 文件操作正常。
+- 对授权根执行 `stat` 在 1.8 毫秒内返回目录信息；独立 Python 的 `os.scandir` 却未返回目录句柄，进程采样持续停在 `__opendir2 → open$NOCANCEL → __open_nocancel`。没有取得第一个目录项；采样后子进程被终止并回收。
+- Core 的采样也存在多个停在系统 `open → __open` 的线程；同一时段 diag 显示 `degraded/stuck_io`、8 个 stuck_ops、扫描 20.002 秒中止且 files_seen=0。独立探测与 Core 都复现，问题不局限于视频遍历脚本。
+- hostname 连接尝试触发外部 7 秒截止，未单独隔离 DNS 与连接阶段，不能将其直接归因于 DNS。直接 IP 成功也不能证明现有挂载会话正常。
+- 定向 TCC 日志只显示一次 AllFiles preflight 的拒绝结果，没有得到网络卷权限被拒绝或待处理提示的证据；不据此要求重复授予权限。
+
+目前定位到应用下方的目录打开边界，尚未确定挂载会话或 NAS 服务端的根因。不修改播放器代码、不扩大目录、不强制卸载，也不再无变化地循环探测。下一步需要现有授权挂载恢复可读，或用户提供明确可读且允许测试的视频本地副本路径，才能继续 M4-A。
+
+私有证据在 `~/Atrium/iteration-20260912/video-io-diagnosis/`：进程采样、共享状态、端口与 stat 结果、定向系统日志及 `summary.json`；Core diag 在 `m3-briefing/diag-before-video.json`。该 diag 同时存在未清空的任务队列，未满足 `acceptance.md` 要求的来源全部 online、队列清空基线，不能在此状态出具 M5 正常性能结论。
