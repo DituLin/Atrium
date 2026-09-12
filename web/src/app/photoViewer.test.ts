@@ -40,6 +40,7 @@ function opened(
     type: 'viewer.open',
     photoId: id,
     collection: 'recent',
+    sequence: [neighbors?.previous_id, id, neighbors?.next_id].filter((id): id is string => !!id),
   });
   return photoViewerReducer(state, {
     type: 'viewer.loaded',
@@ -149,4 +150,40 @@ describe('photo viewer: media rules', () => {
     expect(state.photoId).toBeNull();
     expect(state.status).toBe('idle');
   });
+});
+
+it('freezes the entry sequence and ignores arbitrary server neighbors', () => {
+  const state = photoViewerReducer(initialPhotoViewerState, { type: 'viewer.open', photoId: 'p2', collection: 'random', sequence: ['p1', 'p2', 'p3'] });
+  const loaded = photoViewerReducer(state, { type: 'viewer.loaded', generation: state.generation, item: photo('p2'), neighbors: { previous_id: 'random-a', next_id: 'random-b' } });
+  expect(neighborId(loaded, 'next')).toBe('p3');
+  const next = photoViewerReducer(loaded, { type: 'viewer.open', photoId: 'p3', collection: 'random' });
+  expect(neighborId(next, 'previous')).toBe('p2');
+  expect(neighborId(next, 'next')).toBeNull();
+});
+
+it('skips failed entries once and terminates when the known sequence is exhausted', () => {
+  let state = photoViewerReducer(initialPhotoViewerState, { type: 'viewer.open', photoId: 'p1', collection: null, sequence: ['p1', 'p2'] });
+  state = photoViewerReducer(state, { type: 'viewer.mediaUnavailable', id: 'p1', generation: state.generation });
+  expect(skipTarget(state)).toBe('p2');
+  state = photoViewerReducer(state, { type: 'viewer.open', photoId: 'p2', collection: null });
+  state = photoViewerReducer(state, { type: 'viewer.mediaUnavailable', id: 'p2', generation: state.generation });
+  expect(skipTarget(state)).toBeNull();
+  expect(neighborId(state, 'previous')).toBeNull();
+});
+
+it('ignores stale same-ID media callbacks after a fresh show generation', () => {
+  const old = opened();
+  const fresh = photoViewerReducer(old, { type: 'viewer.open', photoId: 'p2', collection: 'recent', freshRender: true });
+  expect(photoViewerReducer(fresh, { type: 'viewer.mediaUnavailable', id: 'p2', generation: old.generation })).toBe(fresh);
+  expect(photoViewerReducer(fresh, { type: 'viewer.mediaGone', id: 'p2', generation: old.generation })).toBe(fresh);
+});
+
+it('retains only the last rendered photo during a failed manual step, clearing it on fresh show', () => {
+  let state = opened();
+  state = photoViewerReducer(state, { type: 'viewer.rendered', id: 'p2', generation: state.generation });
+  state = photoViewerReducer(state, { type: 'viewer.open', photoId: 'p3', collection: 'recent' });
+  state = photoViewerReducer(state, { type: 'viewer.mediaUnavailable', id: 'p3', generation: state.generation });
+  expect(state.shownItem?.id).toBe('p2');
+  state = photoViewerReducer(state, { type: 'viewer.open', photoId: 'p3', collection: null, freshRender: true });
+  expect(state.shownItem).toBeNull();
 });

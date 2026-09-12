@@ -64,9 +64,9 @@ export function createScreenHarness(options: HarnessOptions): ScreenHarness {
     }
     if (
       state.viewer.renderedId !== before.viewer.renderedId ||
-      state.viewer.status !== before.viewer.status
+      state.viewer.status !== before.viewer.status || state.viewer.commandId !== before.viewer.commandId
     ) {
-      session?.settleRender(state.viewer.renderedId, state.viewer.status);
+      session?.settleRender(state.viewer.renderedId, state.viewer.status, state.viewer.commandId);
     }
   };
 

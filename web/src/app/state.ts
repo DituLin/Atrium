@@ -86,6 +86,7 @@ const VIEWER_PREFIX = 'viewer.';
 function purgedPhotoState(state: AppState): AppState {
   return {
     ...state,
+    router: { ...state.router, route: { name: 'dashboard' } },
     slideshow: slideshowReducer(state.slideshow, { type: 'slideshow.reset' }),
     collection: photoListReducer(state.collection, { type: 'photos.reset' }),
     viewer: photoViewerReducer(state.viewer, { type: 'viewer.close' }),
@@ -95,25 +96,42 @@ function purgedPhotoState(state: AppState): AppState {
 
 export function appReducer(state: AppState, action: AppAction): AppState {
   if (action.type.startsWith(ROUTER_PREFIX)) {
+    if ((state.authExpired || state.needsPairing) && action.type !== 'router.reset'
+      && !(action.type === 'router.navigate' && (action.route.name === 'pair' || action.route.name === 'connect'))) return state;
     const router = routerReducer(state.router, action as RouterAction);
-    return router === state.router ? state : { ...state, router };
+    if (router === state.router) return state;
+    const before = state.router.route;
+    const after = router.route;
+    let viewer = state.viewer;
+    let collection = state.collection;
+    if (action.type === 'router.navigate' && after.name === 'photo' && before.name !== 'photo') {
+      const ids = before.name === 'photos' && before.collection === after.collection
+        ? collection.items.map(item => item.id) : before.name === 'dashboard'
+          ? state.slideshow.round.map(item => item.id) : [];
+      viewer = photoViewerReducer(viewer, { type: 'viewer.open', photoId: after.photoId,
+        collection: after.collection ?? null, sequence: ids.includes(after.photoId) ? ids : [after.photoId], freshRender: true });
+    } else if (before.name === 'photo' && after.name !== 'photo') {
+      viewer = photoViewerReducer(viewer, { type: 'viewer.close' });
+      if (after.name === 'photos' && before.collection === after.collection) collection = photoListReducer(collection, { type: 'photos.restore' });
+    }
+    return { ...state, router, viewer, collection };
   }
   if (action.type.startsWith(CONNECTION_PREFIX)) {
     const connection = connectionReducer(state.connection, action as ConnectionAction);
     return connection === state.connection ? state : { ...state, connection };
   }
   if (action.type.startsWith(SLIDESHOW_PREFIX)) {
-    if (state.authExpired) return state;
+    if (state.authExpired || state.needsPairing) return state;
     const slideshow = slideshowReducer(state.slideshow, action as SlideshowAction);
     return slideshow === state.slideshow ? state : { ...state, slideshow };
   }
   if (action.type.startsWith(PHOTO_LIST_PREFIX)) {
-    if (state.authExpired) return state;
+    if (state.authExpired || state.needsPairing) return state;
     const collection = photoListReducer(state.collection, action as PhotoListAction);
     return collection === state.collection ? state : { ...state, collection };
   }
   if (action.type.startsWith(VIEWER_PREFIX)) {
-    if (state.authExpired) return state;
+    if (state.authExpired || state.needsPairing) return state;
     const viewer = photoViewerReducer(state.viewer, action as PhotoViewerAction);
     return viewer === state.viewer ? state : { ...state, viewer };
   }

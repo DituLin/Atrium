@@ -122,7 +122,7 @@ describe('show (W-302)', () => {
     expect(acks).toHaveLength(0);
     expect(store.get().router.appliedSequence).toBe(0);
 
-    executor.settleRender('ph_9', 'ready');
+    executor.settleRender('ph_9', 'ready', store.get().viewer.commandId);
     expect(acks).toEqual([
       {
         command_id: 'cmd_s',
@@ -135,9 +135,9 @@ describe('show (W-302)', () => {
   });
 
   it('does not settle on some other photo rendering', () => {
-    const { acks, executor } = harness();
+    const { store, acks, executor } = harness();
     executor.execute(command({ command_id: 'cmd_s', kind: 'show', payload: { photo_id: 'ph_9' } }));
-    executor.settleRender('ph_1', 'ready');
+    executor.settleRender('ph_1', 'ready', store.get().viewer.commandId);
     expect(acks).toHaveLength(0);
     expect(executor.pending()?.resourceId).toBe('ph_9');
   });
@@ -145,7 +145,7 @@ describe('show (W-302)', () => {
   it('acks photo_unavailable when the photo turns out to be missing', () => {
     const { store, acks, executor } = harness();
     executor.execute(command({ command_id: 'cmd_s', kind: 'show', payload: { photo_id: 'ph_9' } }));
-    executor.settleRender(null, 'missing');
+    executor.settleRender(null, 'missing', store.get().viewer.commandId);
     expect(acks[0]).toEqual({
       command_id: 'cmd_s',
       status: 'failed',
@@ -169,7 +169,7 @@ describe('show (W-302)', () => {
     executor.execute(
       command({ command_id: 'cmd_s', sequence: 2, kind: 'show', payload: { photo_id: 'ph_2' } }),
     );
-    executor.settleRender('ph_2', 'ready');
+    executor.settleRender('ph_2', 'ready', store.get().viewer.commandId);
     expect(store.get().router.route).toEqual({
       name: 'photo',
       photoId: 'ph_2',
@@ -221,4 +221,16 @@ describe('refresh (W-302)', () => {
       error_code: 'render_failed',
     });
   });
+});
+
+it('refresh completion keeps a newer locally selected route', async () => {
+  let finish!: () => void;
+  const h = harness(() => new Promise<void>(resolve => { finish = resolve; }));
+  h.store.dispatch({ type: 'router.navigate', route: { name: 'photo', photoId: 'p1' } });
+  h.executor.execute(command({ kind: 'refresh', payload: {} }));
+  h.store.dispatch({ type: 'router.navigate', route: { name: 'settings' } });
+  finish();
+  await Promise.resolve();
+  expect(h.store.get().router.route).toEqual({ name: 'settings' });
+  expect(h.acks[h.acks.length - 1]?.route).toEqual({ name: 'settings' });
 });

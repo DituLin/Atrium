@@ -14,12 +14,15 @@ import { nextFocusIndex } from '../ui/focusNav';
 export type PhotoListStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 /** Thumbs per row on the browser grid; also the "near the end" prefetch step. */
-export const GRID_COLUMNS = 5;
+export const GRID_COLUMNS = 4;
 
 /** Photos per request (design §6.4: default 50, max 100). */
 export const COLLECTION_PAGE_SIZE = 50;
 
 export interface PhotoListState {
+  returnFocus: { id: string; index: number; scrollTop: number } | null;
+  restorePending: boolean;
+  returnNotice: string | null;
   collection: PhotoCollection | null;
   items: readonly PhotoItem[];
   cursor: string | null;
@@ -33,6 +36,9 @@ export interface PhotoListState {
 }
 
 export const initialPhotoListState: PhotoListState = {
+  returnFocus: null,
+  restorePending: false,
+  returnNotice: null,
   collection: null,
   items: [],
   cursor: null,
@@ -56,9 +62,13 @@ export type PhotoListAction =
     }
   | { type: 'photos.pageRequested' }
   | { type: 'photos.loadFailed'; generation: number }
-  | { type: 'photos.move'; direction: RemoteKey }
+  | { type: 'photos.move'; direction: RemoteKey; columns?: number }
   | { type: 'photos.focus'; index: number }
   | { type: 'photos.itemGone'; id: string }
+  | { type: 'photos.remember'; scrollTop: number }
+  | { type: 'photos.restore' }
+  | { type: 'photos.restored' }
+  | { type: 'photos.refreshDeferred'; generation: number }
   | { type: 'photos.reset' };
 
 export function photoListReducer(
@@ -90,7 +100,7 @@ export function photoListReducer(
         meta: action.meta,
         status: 'ready',
         loadingMore: false,
-        focusIndex: Math.min(state.focusIndex, Math.max(0, items.length - 1)),
+        focusIndex: restoredIndex(items, state.items[state.focusIndex]?.id, state.focusIndex),
       };
     }
     case 'photos.loadFailed':
@@ -99,7 +109,7 @@ export function photoListReducer(
     case 'photos.move': {
       const next = nextFocusIndex(state.focusIndex, action.direction, {
         count: state.items.length,
-        columns: GRID_COLUMNS,
+        columns: action.columns ?? GRID_COLUMNS,
       });
       return next < 0 || next === state.focusIndex ? state : { ...state, focusIndex: next };
     }
@@ -110,12 +120,29 @@ export function photoListReducer(
     case 'photos.itemGone': {
       const items = state.items.filter((item) => item.id !== action.id);
       if (items.length === state.items.length) return state;
+      const removedIndex = state.items.findIndex(item => item.id === action.id);
       return {
         ...state,
         items,
-        focusIndex: Math.min(state.focusIndex, Math.max(0, items.length - 1)),
+        returnFocus: state.returnFocus ? { ...state.returnFocus,
+          index: restoredIndex(items, state.returnFocus.id, state.returnFocus.index - (removedIndex < state.returnFocus.index ? 1 : 0)) } : null,
+        focusIndex: restoredIndex(items, state.items[state.focusIndex]?.id, state.focusIndex),
       };
     }
+    case 'photos.remember': {
+      const item = focusedItem(state);
+      return item ? { ...state, returnFocus: { id: item.id, index: state.focusIndex, scrollTop: action.scrollTop }, returnNotice: null } : state;
+    }
+    case 'photos.restore': {
+      if (!state.returnFocus) return state;
+      const { id, index } = state.returnFocus;
+      return { ...state, restorePending: true, focusIndex: restoredIndex(state.items, id, index),
+        returnNotice: state.items.some(item => item.id === id) ? state.returnNotice : '原照片已移除，已选择相邻照片。' };
+    }
+    case 'photos.refreshDeferred':
+      return action.generation === state.generation ? { ...state, returnNotice: '照片列表已有更新，暂保留原浏览位置。' } : state;
+    case 'photos.restored':
+      return { ...state, restorePending: false, returnFocus: null };
     case 'photos.reset':
       return { ...initialPhotoListState, generation: state.generation + 1 };
     default:
@@ -149,4 +176,9 @@ export function emptyKind(state: PhotoListState): PhotoListEmptyKind {
     default:
       return 'generic';
   }
+}
+
+function restoredIndex(items: readonly PhotoItem[], id: string | undefined, fallback: number): number {
+  const found = items.findIndex(item => item.id === id);
+  return found >= 0 ? found : Math.min(fallback, Math.max(0, items.length - 1));
 }

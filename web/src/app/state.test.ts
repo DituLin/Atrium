@@ -124,3 +124,17 @@ describe('app state', () => {
     expect(selectScreen(state)).toBe('dashboard');
   });
 });
+
+it.each(['app.authExpired', 'app.needsPairing'] as const)('purges viewer entry and return state on %s and ignores late callbacks', type => {
+  let state = appReducer(createInitialState(0), { type: 'router.navigate', route: { name: 'photo', photoId: 'p1' } });
+  const generation = state.viewer.generation;
+  state = appReducer(state, { type });
+  expect(state.viewer.sequence).toEqual([]);
+  expect(state.collection.returnFocus).toBeNull();
+  expect(state.router.route).toEqual({ name: 'dashboard' });
+  const purged = state;
+  state = appReducer(state, { type: 'viewer.loaded', generation, item: PHOTO, neighbors: null });
+  state = appReducer(state, { type: 'viewer.rendered', generation, id: 'p1' });
+  state = appReducer(state, { type: 'router.navigate', route: { name: 'photo', photoId: 'p1' } });
+  expect(state).toBe(purged);
+});

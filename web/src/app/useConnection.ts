@@ -51,9 +51,10 @@ export function useConnection(deps: ConnectionDeps): WsHandle {
   // viewer's render signal is fed to the executor from here.
   const renderedId = deps.state.viewer.renderedId;
   const viewerStatus = deps.state.viewer.status;
+  const viewerCommandId = deps.state.viewer.commandId;
   useEffect(() => {
-    sessionRef.current?.settleRender(renderedId, viewerStatus);
-  }, [renderedId, viewerStatus]);
+    sessionRef.current?.settleRender(renderedId, viewerStatus, viewerCommandId);
+  }, [renderedId, viewerStatus, viewerCommandId]);
 
   // A manual retry after `4003 superseded` rebuilds the client (W-303).
   const retryNonce = deps.state.connection.retryNonce;

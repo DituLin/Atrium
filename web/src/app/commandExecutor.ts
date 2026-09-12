@@ -19,6 +19,7 @@ import { appliedAck, decideCommand, failedAck, pendingAckFor, resolvePendingAck 
 import type { PendingAck } from './commands';
 import type { PhotoViewerStatus } from './photoViewer';
 import type { AppRoute, RouterState } from './router';
+import { toRouteState } from './router';
 import type { AppAction } from './state';
 
 export interface ExecutorPorts {
@@ -32,13 +33,21 @@ export interface ExecutorPorts {
 export interface CommandExecutor {
   execute: (command: ScreenCommand) => void;
   /** Render signal from the photo viewer; settles a held `show` ack. */
-  settleRender: (renderedId: string | null, viewerStatus: PhotoViewerStatus) => void;
+  settleRender: (renderedId: string | null, viewerStatus: PhotoViewerStatus, commandId: string | null) => void;
   pending: () => PendingAck | null;
 }
 
 export function createCommandExecutor(ports: ExecutorPorts): CommandExecutor {
   const { getRouter, dispatch, sendAck, refreshRoute } = ports;
   let held: PendingAck | null = null;
+
+  const supersedeHeld = (): void => {
+    if (!held) return;
+    const pending = held;
+    held = null;
+    sendAck({ command_id: pending.command.command_id, status: 'failed',
+      route: toRouteState(getRouter().route), error_code: 'superseded' });
+  };
 
   const applyNow = (command: ScreenCommand, route: AppRoute, resourceId?: string): void => {
     dispatch({
@@ -55,7 +64,7 @@ export function createCommandExecutor(ports: ExecutorPorts): CommandExecutor {
     // the data behind the current page is re-read, and the ack waits for it.
     dispatch({ type: 'router.commandStarted', route, commandId: command.command_id });
     void refreshRoute(route).then(
-      () => applyNow(command, route),
+      () => applyNow(command, getRouter().route),
       () => {
         sendAck({
           command_id: command.command_id,
@@ -83,9 +92,11 @@ export function createCommandExecutor(ports: ExecutorPorts): CommandExecutor {
           sendAck(decision.ack);
           return;
         case 'refresh':
+          supersedeHeld();
           runRefresh(command, router.route);
           return;
         case 'apply': {
+          supersedeHeld();
           // `show` pauses the slideshow until Back, another command, or a
           // manual photo change (PRD 5.3).
           if (decision.route.name === 'photo') dispatch({ type: 'slideshow.pause' });
@@ -95,7 +106,7 @@ export function createCommandExecutor(ports: ExecutorPorts): CommandExecutor {
             // Every show needs this image generation's load, even when a
             // previous visit decoded the same photo. Old callbacks are ignored.
             if (decision.route.name === 'photo') {
-              dispatch({ type: 'viewer.open', photoId: decision.route.photoId, collection: decision.route.collection ?? null, freshRender: true });
+              dispatch({ type: 'viewer.open', photoId: decision.route.photoId, collection: decision.route.collection ?? null, freshRender: true, commandId: command.command_id });
             }
             dispatch({
               type: 'router.commandStarted',
@@ -112,9 +123,10 @@ export function createCommandExecutor(ports: ExecutorPorts): CommandExecutor {
       }
     },
 
-    settleRender(renderedId, viewerStatus) {
+    settleRender(renderedId, viewerStatus, commandId) {
       const pending = held;
       if (!pending) return;
+      if (commandId !== pending.command.command_id) { supersedeHeld(); return; }
       const ack = resolvePendingAck(pending, renderedId);
       if (ack) {
         held = null;

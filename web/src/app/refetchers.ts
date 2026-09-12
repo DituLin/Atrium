@@ -9,6 +9,7 @@
  */
 
 import type { ApiClient } from '../core/api';
+import type { PhotoItem, PhotoListMeta } from '../types/api';
 import { COLLECTION_PAGE_SIZE } from './photoList';
 import type { AppRoute } from './router';
 import { SLIDESHOW_PAGE_SIZE } from './slideshow';
@@ -40,16 +41,44 @@ export function createRefetchers(ports: RefetchPorts): Refetchers {
     const list = getState().collection;
     const name = list.collection;
     if (!name) return;
-    const page = await api.listPhotos({ collection: name, limit: COLLECTION_PAGE_SIZE });
-    dispatch({
-      type: 'photos.pageLoaded',
-      collection: name,
-      generation: list.generation,
-      items: page.items,
-      nextCursor: page.next_cursor,
-      meta: page.meta ?? null,
-      append: false,
-    });
+    const windowChanged = (): boolean => {
+      const latest = getState().collection;
+      if (latest.generation !== list.generation) return true;
+      if (latest.items !== list.items || latest.cursor !== list.cursor
+        || latest.focusIndex !== list.focusIndex || latest.returnFocus !== list.returnFocus) {
+        dispatch({ type: 'photos.refreshDeferred', generation: list.generation });
+        return true;
+      }
+      return false;
+    };
+    // Rebuild the loaded window atomically. Replacing only page one loses a
+    // paginated return card even when it still exists on the next page.
+    const budget = Math.max(1, Math.ceil(list.items.length / COLLECTION_PAGE_SIZE));
+    const items: PhotoItem[] = [];
+    const known = new Set<string>();
+    const cursors = new Set<string>();
+    let cursor: string | null = null;
+    let meta: PhotoListMeta | null = null;
+    for (let pageIndex = 0; pageIndex < budget; pageIndex += 1) {
+      if (windowChanged()) return;
+      const page = await api.listPhotos({ collection: name, cursor, limit: COLLECTION_PAGE_SIZE });
+      for (const item of page.items) if (!known.has(item.id)) { known.add(item.id); items.push(item); }
+      meta = page.meta ?? meta;
+      cursor = page.next_cursor;
+      if (!cursor) break;
+      if (cursors.has(cursor)) throw new Error('Collection cursor did not advance');
+      cursors.add(cursor);
+    }
+    if (windowChanged()) return;
+    const anchor = list.returnFocus?.id ?? list.items[list.focusIndex]?.id;
+    if (cursor && anchor && !known.has(anchor)) {
+      // New rows (or a new random ordering) can shift the card beyond this
+      // bounded window. Absence here is not removal: retain the known window.
+      dispatch({ type: 'photos.refreshDeferred', generation: list.generation });
+      return;
+    }
+    dispatch({ type: 'photos.pageLoaded', collection: name, generation: list.generation,
+      items, nextCursor: cursor, meta, append: false });
   };
 
   const slideshow = async (): Promise<void> => {
@@ -76,7 +105,7 @@ export function createRefetchers(ports: RefetchPorts): Refetchers {
         break;
       case 'photo':
         // The image on screen is left alone; the list behind it is re-read so
-        // Left/Right keep walking fresh neighbours.
+        // the return page can reconcile its loaded window.
         if (target.collection) jobs.push(collection());
         break;
       default:

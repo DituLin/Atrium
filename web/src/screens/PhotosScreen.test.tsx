@@ -12,6 +12,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CurrentScreen } from '../App';
 import { AppProvider } from '../app/AppProvider';
 import { useApp } from '../app/context';
+import { saveLastAuthOkAt } from '../core/authExpiry';
 import type { AppRoute } from '../app/router';
 import type { HomeResponse, PhotoItem } from '../types/api';
 
@@ -67,7 +68,7 @@ function stubApi(items: PhotoItem[]): void {
         body = { items, next_cursor: null, meta: { unknown_captured_count: 2 } };
       } else if (input.startsWith('/api/v1/photos/')) {
         body = {
-          item: items[0],
+          item: items.find(item => input.split('?')[0]?.endsWith(`/${item.id}`)) ?? items[0],
           neighbors: { previous_id: null, next_id: items[1]?.id ?? null },
         };
       } else if (input.startsWith('/api/v1/media/')) {
@@ -101,6 +102,7 @@ function renderAt(route: AppRoute): void {
 
 beforeEach(() => {
   vi.unstubAllGlobals();
+  saveLastAuthOkAt(Date.now());
 });
 
 describe('collection browser (W-202)', () => {
@@ -123,10 +125,10 @@ describe('collection browser (W-202)', () => {
     await waitFor(() =>
       expect(document.activeElement).toBe(screen.getAllByRole('button').filter(el => el.classList.contains('thumb'))[1] as HTMLElement),
     );
-    // Down moves a whole row (5 columns), and never past the last item.
+    // Down moves a whole row (4 columns), and never past the last item.
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'ArrowDown' });
     await waitFor(() =>
-      expect(document.activeElement).toBe(screen.getAllByRole('button').filter(el => el.classList.contains('thumb'))[6] as HTMLElement),
+      expect(document.activeElement).toBe(screen.getAllByRole('button').filter(el => el.classList.contains('thumb'))[5] as HTMLElement),
     );
   });
 
@@ -139,12 +141,12 @@ describe('collection browser (W-202)', () => {
     fireEvent.keyDown(document.activeElement!, { key: 'Enter' });
     await waitFor(() => expect(document.activeElement?.classList.contains('thumb')).toBe(true));
     fireEvent.keyDown(document.activeElement!, { key: 'Enter' });
-    await waitFor(() => expect(screen.getByText(/Preparing this photo/)).toBeDefined());
+    await waitFor(() => expect(screen.getByText(/正在准备照片/)).toBeDefined());
 
     const image = document.querySelector('.viewer__image') as HTMLImageElement;
     expect(image.getAttribute('src')).toContain('/api/v1/media/photos/ph_0');
     fireEvent.load(image);
-    await waitFor(() => expect(screen.queryByText(/Preparing this photo/)).toBeNull());
+    await waitFor(() => expect(screen.queryByText(/正在准备照片/)).toBeNull());
   });
 
   it('explains an empty recent collection and offers all photos and status', async () => {
@@ -278,4 +280,93 @@ describe('collection browser (W-202)', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: '照片' }));
   });
 
+});
+
+it('returns from operations to the same gallery card and scroll without repeated Back leaking', async () => {
+  stubApi(Array.from({ length: 12 }, (_, i) => photo(i)));
+  renderAt({ name: 'photos', collection: 'random' });
+  await waitFor(() => expect(document.querySelectorAll('.thumb')).toHaveLength(12));
+  const card = document.querySelectorAll<HTMLElement>('.thumb')[7]!;
+  const grid = document.querySelector('.photogrid')!;
+  grid.scrollTop = 245;
+  fireEvent.click(card);
+  await waitFor(() => expect(document.querySelector('.viewer__image')).not.toBeNull());
+  fireEvent.keyDown(document.activeElement!, { key: 'Enter' });
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: '关闭操作' }));
+  fireEvent.keyDown(document.activeElement!, { key: 'Escape', repeat: true });
+  expect(screen.getByRole('button', { name: '关闭操作' })).toBeDefined();
+  fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+  expect(screen.queryByRole('button', { name: '关闭操作' })).toBeNull();
+  expect(document.querySelector('.viewer')).not.toBeNull();
+  fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+  await waitFor(() => expect(document.activeElement).toBe(document.querySelectorAll('.thumb')[7]));
+  expect(document.querySelector('.photogrid')?.scrollTop).toBe(245);
+  expect(screen.getByRole('tab', { name: '随心看看' }).getAttribute('aria-selected')).toBe('true');
+});
+
+it('uses the responsive column count for both the grid and short-tail navigation', async () => {
+  vi.stubGlobal('innerWidth', 804);
+  stubApi(Array.from({ length: 5 }, (_, i) => photo(i)));
+  renderAt({ name: 'photos', collection: 'recent' });
+  await waitFor(() => expect(document.querySelectorAll('.thumb')).toHaveLength(5));
+  fireEvent.keyDown(document.activeElement!, { key: 'Enter' });
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+  const shortTailColumn = document.activeElement;
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+  expect(document.activeElement).toBe(shortTailColumn);
+  expect((document.querySelector('.screen--photos') as HTMLElement).style.getPropertyValue('--photo-columns')).toBe('3');
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' });
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+  expect(document.activeElement).toBe(document.querySelectorAll('.thumb')[4]);
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: '照片' }));
+  vi.stubGlobal('innerWidth', 1920);
+  fireEvent(window, new Event('resize'));
+  expect((document.querySelector('.screen--photos') as HTMLElement).style.getPropertyValue('--photo-columns')).toBe('4');
+});
+
+it('preserves the paginated entry card while browsing several frozen neighbors', async () => {
+  const items = Array.from({ length: 22 }, (_, i) => photo(i));
+  stubApi(items);
+  const original = globalThis.fetch;
+  const fetcher = vi.fn((input: string) => input.startsWith('/api/v1/photos?')
+    ? Promise.resolve(new Response(JSON.stringify({ items: input.includes('cursor=page2') ? items.slice(12) : items.slice(0, 12), next_cursor: input.includes('cursor=page2') ? null : 'page2' }), { status: 200 })) : original(input));
+  vi.stubGlobal('fetch', fetcher);
+  renderAt({ name: 'photos', collection: 'random' });
+  await waitFor(() => expect(document.querySelectorAll('.thumb')).toHaveLength(12));
+  fireEvent.focus(document.querySelectorAll('.thumb')[8]!);
+  await waitFor(() => expect(document.querySelectorAll('.thumb')).toHaveLength(22));
+  document.querySelector('.photogrid')!.scrollTop = 420;
+  fireEvent.click(document.querySelectorAll('.thumb')[15]!);
+  await waitFor(() => expect(document.querySelector('.viewer__image')?.getAttribute('src')).toContain('ph_15'));
+  for (const id of [16, 17, 18]) {
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+    await waitFor(() => expect(document.querySelector('.viewer__image:not(.viewer__image--retained)')?.getAttribute('src')).toContain(`ph_${id}`));
+  }
+  expect(fetcher.mock.calls.filter(([url]) => url.startsWith('/api/v1/photos?'))).toHaveLength(2);
+  expect(fetcher.mock.calls.filter(([url]) => url.startsWith('/api/v1/photos/') && url.includes('collection='))).toHaveLength(0);
+  fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+  await waitFor(() => expect(document.activeElement).toBe(document.querySelectorAll('.thumb')[15]));
+  expect(document.querySelector('.photogrid')?.scrollTop).toBe(420);
+});
+
+it('retains a rendered image on failure and only skips on an explicit direction', async () => {
+  stubApi(Array.from({ length: 3 }, (_, i) => photo(i)));
+  renderAt({ name: 'photos', collection: 'all' });
+  await waitFor(() => expect(document.querySelectorAll('.thumb')).toHaveLength(3));
+  fireEvent.click(document.querySelector('.thumb')!);
+  await waitFor(() => expect(document.querySelector('.viewer__image')).not.toBeNull());
+  fireEvent.load(document.querySelector('.viewer__image')!);
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+  await waitFor(() => expect(document.querySelector('.viewer__image:not(.viewer__image--retained)')?.getAttribute('src')).toContain('ph_1'));
+  fireEvent.error(document.querySelector('.viewer__image:not(.viewer__image--retained)')!);
+  await screen.findByText(/这张照片暂时无法显示/);
+  expect(document.querySelector('.viewer__image--retained')?.getAttribute('src')).toContain('ph_0');
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+  await waitFor(() => expect(document.querySelector('.viewer__image:not(.viewer__image--retained)')?.getAttribute('src')).toContain('ph_2'));
+  fireEvent.load(document.querySelector('.viewer__image:not(.viewer__image--retained)')!);
+  expect(document.querySelector('.viewer__image--retained')).toBeNull();
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' });
+  await waitFor(() => expect(document.querySelector('.viewer__image:not(.viewer__image--retained)')?.getAttribute('src')).toContain('ph_0'));
 });

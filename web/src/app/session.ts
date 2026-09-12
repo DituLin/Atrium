@@ -42,7 +42,7 @@ export interface SessionPorts {
 export interface Session {
   handleMessage: (message: ServerMessage) => void;
   /** Feed the viewer's render signal so a held `show` ack can settle. */
-  settleRender: (renderedId: string | null, viewerStatus: PhotoViewerStatus) => void;
+  settleRender: (renderedId: string | null, viewerStatus: PhotoViewerStatus, commandId: string | null) => void;
   executor: CommandExecutor;
 }
 
@@ -101,7 +101,7 @@ export function createSession(ports: SessionPorts): Session {
 
   return {
     handleMessage,
-    settleRender: (renderedId, viewerStatus) => executor.settleRender(renderedId, viewerStatus),
+    settleRender: (renderedId, viewerStatus, commandId) => executor.settleRender(renderedId, viewerStatus, commandId),
     executor,
   };
 }

@@ -165,3 +165,32 @@ describe('photo list: empty states', () => {
     expect(emptyKind(loaded(2))).toBe('none');
   });
 });
+
+it.each([3, 4])('moves using the actual %i-column grid and holds above a short tail', columns => {
+  let state = photoListReducer(loaded(columns + 1), { type: 'photos.focus', index: 1 });
+  expect(photoListReducer(state, { type: 'photos.move', direction: 'down', columns }).focusIndex).toBe(1);
+  state = photoListReducer(state, { type: 'photos.focus', index: 0 });
+  expect(photoListReducer(state, { type: 'photos.move', direction: 'down', columns }).focusIndex).toBe(columns);
+});
+
+it('restores the same card by ID after earlier removal and the closest card after its removal', () => {
+  let state = photoListReducer(loaded(8), { type: 'photos.focus', index: 5 });
+  state = photoListReducer(state, { type: 'photos.remember', scrollTop: 240 });
+  state = photoListReducer(state, { type: 'photos.itemGone', id: 'p1' });
+  expect(focusedItem(state)?.id).toBe('p5');
+  state = photoListReducer(state, { type: 'photos.restore' });
+  expect(state.returnFocus?.scrollTop).toBe(240);
+  expect(state.restorePending).toBe(true);
+  state = photoListReducer(state, { type: 'photos.itemGone', id: 'p5' });
+  expect(focusedItem(state)?.id).toBe('p6');
+});
+
+it('keeps a bookmark nearest its original slot as earlier items disappear', () => {
+  let state = photoListReducer(loaded(8), { type: 'photos.focus', index: 5 });
+  state = photoListReducer(state, { type: 'photos.remember', scrollTop: 240 });
+  state = photoListReducer(state, { type: 'photos.itemGone', id: 'p1' });
+  state = photoListReducer(state, { type: 'photos.itemGone', id: 'p5' });
+  state = photoListReducer(state, { type: 'photos.restore' });
+  expect(focusedItem(state)?.id).toBe('p6');
+  expect(state.returnNotice).toContain('原照片已移除');
+});

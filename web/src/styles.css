@@ -454,7 +454,7 @@ body {
 
 .photogrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(var(--photo-columns, 4), minmax(0, 1fr));
   gap: var(--gap) 1.4vw;
   flex: 1 1 auto;
   min-height: 0;
@@ -632,6 +632,7 @@ body {
   --line: var(--photo-line);
   --focus: var(--photo-focus);
   background: var(--photo-background);
+  color: var(--photo-text);
 }
 
 .chip {
@@ -765,3 +766,23 @@ body {
 .settings__facts > div { display: flex; gap: calc(32 * var(--design-pixel)); }
 .settings__facts dt { color: var(--muted); }
 .settings__facts dd { margin: 0; }
+
+/* Single-photo browsing uses a quiet full-image frame with explicit controls. */
+.viewer__operations { position: absolute; inset: auto 0 0; padding: var(--gap); background: var(--photo-background); border-top: 1px solid var(--photo-line); }
+.viewer__operations p { margin: 0 0 var(--gap); overflow-wrap: anywhere; }
+.viewer__actions { display: flex; flex-wrap: wrap; gap: var(--gap); }
+.viewer__status { padding: var(--gap); background: var(--photo-background); text-align: center; }
+.viewer__image { width: 100%; height: 100%; }
+.viewer__image--retained { position: absolute; inset: 0; }
+.viewer__image--pending { opacity: 0; }
+.screen--photo:focus { outline: none; }
+.viewer__bar { flex-wrap: wrap; }
+.viewer__hints { flex-wrap: wrap; }
+
+/* A short WebView still needs a complete 4:3 card, caption and focus outline.
+ * Reclaim redundant branding/gaps instead of shrinking the reading sizes. */
+@media (max-height: 500px) {
+  .screen--photos { gap: calc(12 * var(--design-pixel)); }
+  .screen--photos > .masthead { display: none; }
+  .screen--photos > .primary-nav { margin-top: 0; }
+}
