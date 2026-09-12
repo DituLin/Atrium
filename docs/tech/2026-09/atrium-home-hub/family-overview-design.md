@@ -73,7 +73,7 @@ NAS freshness 工程默认固定为 60 秒，取 `LastCheckAt + 60s`；服务端
 
 当前 `domain.Source.ShareStatsAt` 与 `LastCheckAt` 不同，检查失败后容量可能仍是旧值。M3-B House API 与页面省略 `share_free_bytes` / `share_total_bytes`；已有 `/home` 与 `/nas/status` 容量行为不在本批改动范围。日后确需展示，容量须独立使用 `ShareStatsAt` 的观测与过期状态，不能沿用健康检查时间标为新鲜。这一选择不需要迁移。
 
-原 `internal/widget/composer.go` 每次 Compose 把静态 notice 的 `UpdatedAt` 设为当前时间；N1 已在 `a583db6` 修正并完成审查，尚未部署。`widgets.notice` 现支持可选 `updated_at`、`valid_from`、`valid_until`；未提供均为 null，旧 `enabled/text` 配置继续有效，首期保持一条。非空时间必须是带偏移 RFC 3339，若两端均有值则要求 `valid_until > valid_from`，非法配置拒绝装载。成功装载配置的时刻仅作为来源 `observed_at`，不是内容发布时间；配置无 TTL，禁用或变更立即替换投影。
+原 `internal/widget/composer.go` 每次 Compose 把静态 notice 的 `UpdatedAt` 设为当前时间；N1 已在 `a583db6` 修正并完成审查，随 `28ffc09` 部署。`widgets.notice` 现支持可选 `updated_at`、`valid_from`、`valid_until`；未提供均为 null，旧 `enabled/text` 配置继续有效，首期保持一条。非空时间必须是带偏移 RFC 3339，若两端均有值则要求 `valid_until > valid_from`，非法配置拒绝装载。成功装载配置的时刻仅作为来源 `observed_at`，不是内容发布时间；配置无 TTL，禁用或变更立即替换投影。
 
 提示只在 enabled、非空文本和有效区间内出现；未到生效时间或已到期时来源为 available + 空列表，不能显示旧提示。Go `Notice.UpdatedAt` 已改为可空、与现有 TS 的 `string | null` 对齐，并同步 wire/OpenAPI；`/home` 和新简报必须使用同一有效区间过滤，避免一边撤下另一边仍保留。此修复是提示进入 M3-D 之前的独立任务，不要求先改 M2 UI。
 
@@ -85,7 +85,7 @@ NAS freshness 工程默认固定为 60 秒，取 `LastCheckAt + 60s`；服务端
 
 ## 已选 API 形状与隔离
 
-House 端点已实现并部署；overview 已在 `cc62ad8` 实现并完成审查，尚未部署到家庭设备；calendar 仍是后续目标，目前不可调用。首批只新增 `GET /api/v1/family/house`，以 `requireScope(auth.ScopeScreen, ...)` 接入现有鉴权；admin 可按现有兼容规则访问同一公开投影，不能因此附加维护字段。integration/MCP 不新增权限、端点或工具。概览使用 `GET /api/v1/family/overview`，具体 sources 与排序引用见简报实施计划；未来日历使用 `GET /api/v1/family/calendar`，来源确认后实现，不为未接入功能提前添加空 handler。
+House 端点已实现并部署；overview 已在 `cc62ad8` 实现并完成审查，随 `28ffc09` 部署到家庭设备并通过 OnePlus 今日页验收；calendar 仍是后续目标，目前不可调用。首批只新增 `GET /api/v1/family/house`，以 `requireScope(auth.ScopeScreen, ...)` 接入现有鉴权；admin 可按现有兼容规则访问同一公开投影，不能因此附加维护字段。integration/MCP 不新增权限、端点或工具。概览使用 `GET /api/v1/family/overview`，具体 sources 与排序引用见简报实施计划；未来日历使用 `GET /api/v1/family/calendar`，来源确认后实现，不为未接入功能提前添加空 handler。
 
 House 响应形状如下；这是类型草图，非真实家庭数据：
 

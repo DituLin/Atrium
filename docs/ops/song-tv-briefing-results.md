@@ -1,6 +1,6 @@
 # 家庭提示与今日简报：实施记录
 
-2026-09-12。N1 提示契约已在 `a583db6` 完成并通过规范与独立质量审查；N2 今日汇总接口已在 `cc62ad8` 完成并通过双阶段审查，N3 页面已在 `b025b17` 完成代码、双阶段审查与三尺寸浏览器验收，N4 实机验收尚未完成。运行设备仍为已验收的 `cb1314c` 房屋候选版，本记录不代表简报已上线。
+2026-09-12。N1 提示契约已在 `a583db6` 完成并通过规范与独立质量审查；N2 今日汇总接口已在 `cc62ad8` 完成并通过双阶段审查，N3 页面已在 `b025b17` 完成代码、双阶段审查与三尺寸浏览器验收，N4 已完成干净构建、备份部署、OnePlus 与照片/AI 回归。当前家庭设备运行 `28ffc09` 简报候选版；完整 M3 仍需真实日历和家庭内容。
 
 依据：[开发计划](../plans/2026-09-12-product-development-plan.md)、[简报细化方案](../plans/2026-09-12-briefing-foundation.md)、[宋式今日页设计](../design/song-tv-v1/briefing.md)。设计已独立审阅，来源到期重排与未来提示轮询发现的语义已明确。
 
@@ -57,10 +57,37 @@ Overview 独立生命周期接入 30 秒可见轮询、前台/重连重取、通
 
 首轮截图发现列高覆盖刷新/导航，已修正；浏览器返回发现 briefing 未进入通用返回栈，已补失败回归。最后首帧测试复现暂停计时器后的过期提示闪现，已修复并复审。测试脚本另修正了进入页自动刷新与手动请求合并的等待时序，并替换 Python Playwright Response.finished 的结束阶段等待，最终日志无该异步关闭噪声；这些脚本问题不列为产品缺陷。
 
-最终私有证据位于 `m3-briefing/`：`n3-tests-final.log`、`n3-build.log`、`n3-go.log`、`n3-make-check.log`、`briefing-browser-flow-final.log`、`briefing-browser-flow-results.json`、`briefing-browser-races-final.log`、`briefing-browser-race-results.json` 及 `briefing-*.png`。检查二进制标识为 `e5a1af3-dirty`，只表示提交前检查产物。尚未把新 Web 嵌入干净发布构建或替换运行 Core，APK 无改动。
+最终私有证据位于 `m3-briefing/`：`n3-tests-final.log`、`n3-build.log`、`n3-go.log`、`n3-make-check.log`、`briefing-browser-flow-final.log`、`briefing-browser-flow-results.json`、`briefing-browser-races-final.log`、`briefing-browser-race-results.json` 及 `briefing-*.png`。检查二进制标识为 `e5a1af3-dirty`，只表示提交前检查产物。以上为部署前检查记录；随后 N4 从干净 `28ffc09` 构建并部署，APK 无改动。
+
+## N4：备份部署与 OnePlus / AI 回归
+
+2026-09-12 19:41（Asia/Singapore）从干净 `28ffc09` 构建 Web 并执行 `make web-sync build`，备份后替换 Core、home-mcp 和 Brain Host。健康检查为 `28ffc09+28ffc09`，Web 为 `0.1.0+28ffc09`；OnePlus 实际加载 `index-CRYbAiQ0.js`。配置、CA、launchd 和 Android APK 未改变，没有增加数据库迁移。
+
+| 验证 | 结果 |
+| --- | --- |
+| 真实今日页 | 804×384 CSS / 2262×1080 实屏；本地字体、两栏、固定来源与导航无溢出或覆盖。真实 NAS 有新在线观测；日历/提示未接入、资料未填写、环境未接入均准确显示 |
+| 遥控与恢复 | 全程 D-pad/确认/返回完成今日与房屋/设置/照片往返；来源焦点恢复，手动与远程刷新保持简报页和焦点 |
+| 截止与独立读取 | 只在测试机已鉴权的 200 响应中注入明确标记的短期提示，到期自动撤下；不改真实家庭配置。冷启动 /home 503 时，经 House 新鉴权仍能打开今日 |
+| 照片完整 smoke | 四合集、单图上下张、非零滚动与原卡片恢复、操作层/长按/原生菜单、设置三页、前后台、进程重开保持配对均通过；照片页 refresh 保持预览 |
+| 故障恢复 | JavaScript 503 后自动恢复 11.444 秒；关闭测试机 Wi-Fi 后离线冷启动，恢复 Wi-Fi 到页面连通 10.876 秒。结束时 Wi-Fi 为 1，CDP 转发已移除 |
+| DeepSeek 联动 | 新收据 12 次：查询/刷新/展示/回首页各 3 次全部通过；查询报告 briefing，3 次刷新后仍是 briefing；9 个不同控制均为 applied |
+| 耗时与账本 | AI 入口耗时 4.463–7.114 秒；Core 精确 issued_at→resolved_at 为 102.322–193.570 毫秒。只读恢复核对后 Brain 9 条对应动作均 applied，没有补发未确认控制；这些样本不作为 M5 P95 验收 |
+| 适配器 | OpenClaw 44 项测试通过，0 失败 |
+
+备份：`~/Atrium/iteration-20260912/rollback-song-briefing/`，含原三个二进制、配置及 SQLite 在线备份，目录 0700、敏感文件 0600。部署辅助程序核验旧文件与 launchd 参数后执行原子替换，并具备失败回滚；部署和最终健康检查均成功。
+
+候选包：`~/Atrium/releases/2026-09-12-song-briefing/`，只含三个 Mac ARM64 二进制、未变更 M2 debug APK、README 与哈希清单，不含凭据、数据库或家庭素材。APK SHA-256 为 `89b530a9fead5c60795e288a458c28ecae5950b41300da391d29d8195b0181f1`。尚未正式签名，不能替代真实电视验收。
+
+| 运行文件 | SHA-256 |
+| --- | --- |
+| atrium | `d36a4e62c4dddc959ed7850906c632856057fc54166615ff1911691301230d59` |
+| home-mcp | `d9df2f890039dc485cf6af5c588173ace24c64ec5c5fd4b0ef123038a207653c` |
+| atrium-brain-host | `7b85e09b4a1ddc77e8996346ba508aa088f12b6c070f1077ecf6dd3ed892c182` |
+
+私有证据：`m3-briefing/release-build.log`、`deployment.log`、`deployed-build.json`、`device-briefing-results.json`、`device-briefing-*.png`（实屏已人工查看）、`device-smoke.log`、`ai-product.log`、`adapter-tests.log`，以及 `ai/` 内的 12 份原始收据、命令最终结果、恢复结果和 `ai-timing-precise.json`。测试结束恢复真实首页并确认 Core 健康。
 
 ## 剩余交付
 
-N1–N3 已完成代码、审查及浏览器检查。下一批 N4 从干净提交构建并备份部署，再完成 OnePlus 全遥控/恢复/截止验证与照片、AI 回归，记录实际构建和候选包。运行设备仍是 cb1314c，不能由浏览器结果宣称今日页面已在家庭 TV 上交付。
+N1–N4 提示/简报基础已完成，在 OnePlus 验证并交付家庭候选包。它只证明已接入模块的真实汇总与页面流程，不代表真实日历、家庭提示内容或正式 TV 已验收。
 
 真实日历来源、公开字段与家庭内容仍待明确，完整 M3 尚未完成；视频样本与正式发布门槛继续保留。Mac 断电恢复、NAS 自动挂载保持暂停。
