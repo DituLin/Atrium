@@ -1,6 +1,6 @@
 # 家庭提示与今日简报：实施记录
 
-2026-09-12。N1 提示契约已在 `a583db6` 完成并通过规范与独立质量审查；N2 今日汇总接口已在 `cc62ad8` 完成并通过双阶段审查，N3 页面与 N4 实机验收尚未完成。运行设备仍为已验收的 `cb1314c` 房屋候选版，本记录不代表简报已上线。
+2026-09-12。N1 提示契约已在 `a583db6` 完成并通过规范与独立质量审查；N2 今日汇总接口已在 `cc62ad8` 完成并通过双阶段审查，N3 页面已在 `b025b17` 完成代码、双阶段审查与三尺寸浏览器验收，N4 实机验收尚未完成。运行设备仍为已验收的 `cb1314c` 房屋候选版，本记录不代表简报已上线。
 
 依据：[开发计划](../plans/2026-09-12-product-development-plan.md)、[简报细化方案](../plans/2026-09-12-briefing-foundation.md)、[宋式今日页设计](../design/song-tv-v1/briefing.md)。设计已独立审阅，来源到期重排与未来提示轮询发现的语义已明确。
 
@@ -36,8 +36,31 @@ Screen 和 admin 获得同一公开投影，integration 为 403，响应 no-stor
 
 `make check`、briefing/httpapi/family/config/widget 相关 race、Web lint/build 通过。规范审查独立通过相关五包测试、三个包 race 与 20 项 API 测试；质量审查接受，独立重跑 briefing/httpapi（非缓存）与 Web API 20 项通过。检查产物标识 `fbdff8c-dirty`，未部署。私有日志为 `m3-briefing/n2-make-check.log`、`n2-go-race.log`、`n2-web-api.log`。
 
+## N3：宋式今日页面
+
+`b025b17` 加入“首页、照片、今日、房屋、设置”导航。今日页面左侧完整阅读/滚动，右侧固定五类来源摘要与房屋入口，刷新栏固定。长文、状态变化、House/设置返回和远程 refresh 保留页面与焦点；本地 briefing 可上报，远程 navigate 仍只允许 dashboard/photos。
+
+Overview 独立生命周期接入 30 秒可见轮询、前台/重连重取、通知前清空、请求中止及授权代次。HTTP 401/410 screen_revoked、WS 4002、重新配对和授权缓存失效同步清空内容。新 API 成功的来源不因 WebSocket 未建立而误标为旧数据；照片 /home 故障时仍可经真实 House 鉴权进入今日。
+
+客户端按校时重新投影有效区间、来源 TTL 和引用排序，消费与 Go 相同的八个场景。除常规时钟 tick 外，截止定时器确保亚秒边界撤下；进入时的时钟样本与前台同步更新确保后台计时器暂停后，过期提示不会进入首帧或停留到下一个 tick。保留源内容时间，不为旧响应续期。
+
+| 验证 | 结果 |
+| --- | --- |
+| Web | 最终 47 文件、347 项测试，typecheck/lint/build/postbuild 通过 |
+| Go | domain/ws/httpapi/briefing 测试通过；父任务 make check 通过（最后两项 React 首帧修复后重跑完整 Web，Go 未再变化） |
+| 审查 | 规范与质量各独立验证 73 项/9 文件；首帧增量分别复核 25 项/6 文件并接受 |
+| 三尺寸 | 1920×1080、3840×2160、804×384 完整键盘流程均通过；长文滚动分别 1408/2816/604 CSS 像素；截图人工查看 |
+| 视觉 | 长中文、24 个来源、混合状态、空/失败/过期、故障恢复；各状态按钮不裁切，列区域不覆盖刷新栏，刷新栏不覆盖导航 |
+| 时间与故障 | NAS 到期新增旧状态项，提示到期撤下；未来提示通过下一次轮询取得；传输失败保留仍有效旧提示；成功空/来源失败清空内容 |
+| 独立鉴权 | 冷启动照片接口 503、过期授权缓存，经 House 真正鉴权后进入今日；HTTP-only 撤销回配对并清空内容与授权时间 |
+| 浏览器竞态 | 真实 mock WebSocket 通知后旧内容立即清空；两次迟到的 200 均被忽略，撤销后不会复活页面或续期授权；页面错误为零 |
+
+首轮截图发现列高覆盖刷新/导航，已修正；浏览器返回发现 briefing 未进入通用返回栈，已补失败回归。最后首帧测试复现暂停计时器后的过期提示闪现，已修复并复审。测试脚本另修正了进入页自动刷新与手动请求合并的等待时序，并替换 Python Playwright Response.finished 的结束阶段等待，最终日志无该异步关闭噪声；这些脚本问题不列为产品缺陷。
+
+最终私有证据位于 `m3-briefing/`：`n3-tests-final.log`、`n3-build.log`、`n3-go.log`、`n3-make-check.log`、`briefing-browser-flow-final.log`、`briefing-browser-flow-results.json`、`briefing-browser-races-final.log`、`briefing-browser-race-results.json` 及 `briefing-*.png`。检查二进制标识为 `e5a1af3-dirty`，只表示提交前检查产物。尚未把新 Web 嵌入干净发布构建或替换运行 Core，APK 无改动。
+
 ## 剩余交付
 
-N1/N2 已完成代码与审查，下一批 N3 接宋式今日页与授权/有效期生命周期，N4 完成三尺寸、OnePlus、照片与 AI 回归后再构建部署。当前 Dashboard 不显示 notice，因此 N1 API 修正不能当作家庭提示已在 TV 可见。
+N1–N3 已完成代码、审查及浏览器检查。下一批 N4 从干净提交构建并备份部署，再完成 OnePlus 全遥控/恢复/截止验证与照片、AI 回归，记录实际构建和候选包。运行设备仍是 cb1314c，不能由浏览器结果宣称今日页面已在家庭 TV 上交付。
 
 真实日历来源、公开字段与家庭内容仍待明确，完整 M3 尚未完成；视频样本与正式发布门槛继续保留。Mac 断电恢复、NAS 自动挂载保持暂停。
