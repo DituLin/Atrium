@@ -1,6 +1,6 @@
 # 2026-09-12 集成基线
 
-状态：源码集成与既有部署回归通过；集成构建部署验证进行中。此记录不表示 M1–M5 已交付。
+状态：M0 源码集成、构建与部署回归通过。此记录不表示 M1–M5 已交付。
 
 ## 源码来源
 
@@ -39,3 +39,17 @@
 ## 保留边界
 
 Mac 断电恢复、NAS 自动挂载仍暂停。OnePlus 是开发终端；真实电视远距离可读性、正式签名、24 小时展示及 7 天可用性仍未通过本次记录证明。
+
+## 集成构建部署验收
+
+提交 `7f43094`，构建时间 2026-09-12T07:50:15Z。先保存旧二进制、配置与 SQLite online backup 一致性快照至私有 `~/Atrium/iteration-20260912/rollback-integration/`，随后替换三个可执行程序并重启原 Core launchd 服务。没有修改 launchd 配置、配对、NAS 或电源设置；未重建 Android APK（原生源码未变）。
+
+| 产物 | SHA-256 |
+| --- | --- |
+| Core | b4adae878e277792347bb28dc9f144566af4d82083d5817ff9b88edac95527e6 |
+| home-mcp | 989cb3fdd6584ef6b91400c31048089577b5682317cb2e0c1d53e507ec58afaf |
+| Brain host | dc81b4161e85171c953d69e8ccd0b95105f8302c93b0382fae13425b41ab2796 |
+
+健康检查返回 `7f43094+7f43094`。集成部署再次通过同一 OnePlus 全流程 smoke：D-pad/确认/返回、show、refresh、首页、Home 后恢复与重开保留配对；四次控制 applied，观测耗时 266 / 271 / 523 / 269 ms。正式 ask 查询在线状态并回首页成功，回执保留在私有 `integrated-ask.txt`；不将模型等待计入 TV 渲染延迟。
+
+证据：私有 `~/Atrium/iteration-20260912/{deployed-builds.json,integrated-device.jsonl,integrated-ask.txt}`。M0 通过并进入 M1；不以此提前完成产品体验或正式 V1 验收。
