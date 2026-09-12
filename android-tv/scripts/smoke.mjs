@@ -19,7 +19,9 @@ let restoreWifi=false, failScript=false, injectedScriptFailure=false;
 let ws,id=0;const pending=new Map();
 async function attach(){
  ws?.close();
- const pid=shell('shell','pidof','io.atrium.tv').trim();assert(pid,'TV app not running');
+ let pid='';
+ for(let n=0;n<30;n++){try{pid=shell('shell','pidof','io.atrium.tv').trim();if(pid)break;}catch{}await sleep(500);}
+ assert(pid,'TV app did not start');
  shell('forward','tcp:9223',`localabstract:webview_devtools_remote_${pid}`);
  let pages;
  for(let n=0;n<30;n++){try{pages=await(await fetch('http://127.0.0.1:9223/json',{signal:AbortSignal.timeout(3000)})).json();if(pages.length)break;}catch{}await sleep(500);}
