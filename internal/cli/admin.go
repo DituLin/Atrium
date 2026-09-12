@@ -73,6 +73,7 @@ func newAdminCmd() *cobra.Command {
 		newAdminDiagCmd(f), newAdminPairCmd(f), newAdminScreensCmd(f),
 		newAdminSourcesCmd(f), newAdminScansCmd(f), newAdminPhotosCmd(f), newAdminExclusionsCmd(f),
 		newAdminScreenCmd(f), newAdminCommandsCmd(f), newAdminTokenCmd(f),
+		newAdminIntegrationsCmd(f),
 	)
 	return cmd
 }

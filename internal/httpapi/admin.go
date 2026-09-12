@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -154,14 +155,14 @@ func (a *API) handleDiagnostics(w http.ResponseWriter, r *http.Request) {
 
 // audit records an administrative action; failures never break the request.
 func (a *API) audit(ctx context.Context, r *http.Request, action, target, detail string) {
-	id := auth.FromContext(r.Context())
-	actor := "unknown"
-	if id != nil {
-		actor = string(id.Scope)
-		if id.AdminTokenID != "" {
-			actor = "admin:" + id.AdminTokenID
-		}
+	actor := actorOf(r)
+	if id := auth.FromContext(r.Context()); id != nil && id.Integration != nil {
+		fields := integrationTraceFields(r)
+		fields["detail"] = detail
+		encoded, _ := json.Marshal(fields)
+		detail = string(encoded)
 	}
+
 	_ = a.deps.DB.Audit().Append(ctx, &domain.AuditEntry{
 		At: a.now(), Actor: actor, Action: action, Target: target, Detail: detail,
 	})

@@ -11,28 +11,30 @@ type ErrorCode string
 
 // Stable error codes. Keep in sync with docs/api/openapi.yaml.
 const (
-	CodeUnauthorized       ErrorCode = "unauthorized"
-	CodeForbidden          ErrorCode = "forbidden"
-	CodeNotFound           ErrorCode = "not_found"
-	CodeInvalidRequest     ErrorCode = "invalid_request"
-	CodeInvalidCommand     ErrorCode = "invalid_command"
-	CodeScreenOffline      ErrorCode = "screen_offline"
-	CodeScreenRevoked      ErrorCode = "screen_revoked"
-	CodePairingExpired     ErrorCode = "pairing_expired"
-	CodePairingClaimed     ErrorCode = "pairing_claimed"
-	CodeRateLimited        ErrorCode = "rate_limited"
-	CodePreviewProcessing  ErrorCode = "preview_processing"
-	CodePreviewUnavailable ErrorCode = "preview_unavailable"
-	CodeSourceOffline      ErrorCode = "source_offline"
-	CodeIdentityMismatch   ErrorCode = "identity_mismatch"
-	CodeConflict           ErrorCode = "conflict"
-	CodeInternal           ErrorCode = "internal"
+	CodeIdempotencyConflict ErrorCode = "idempotency_conflict"
+	CodeOperationExpired    ErrorCode = "operation_expired"
+	CodeUnauthorized        ErrorCode = "unauthorized"
+	CodeForbidden           ErrorCode = "forbidden"
+	CodeNotFound            ErrorCode = "not_found"
+	CodeInvalidRequest      ErrorCode = "invalid_request"
+	CodeInvalidCommand      ErrorCode = "invalid_command"
+	CodeScreenOffline       ErrorCode = "screen_offline"
+	CodeScreenRevoked       ErrorCode = "screen_revoked"
+	CodePairingExpired      ErrorCode = "pairing_expired"
+	CodePairingClaimed      ErrorCode = "pairing_claimed"
+	CodeRateLimited         ErrorCode = "rate_limited"
+	CodePreviewProcessing   ErrorCode = "preview_processing"
+	CodePreviewUnavailable  ErrorCode = "preview_unavailable"
+	CodeSourceOffline       ErrorCode = "source_offline"
+	CodeIdentityMismatch    ErrorCode = "identity_mismatch"
+	CodeConflict            ErrorCode = "conflict"
+	CodeInternal            ErrorCode = "internal"
 )
 
 // AllErrorCodes lists every stable code, used by tests and documentation.
 func AllErrorCodes() []ErrorCode {
 	return []ErrorCode{
-		CodeUnauthorized, CodeForbidden, CodeNotFound, CodeInvalidRequest,
+		CodeIdempotencyConflict, CodeOperationExpired, CodeUnauthorized, CodeForbidden, CodeNotFound, CodeInvalidRequest,
 		CodeInvalidCommand, CodeScreenOffline, CodeScreenRevoked, CodePairingExpired,
 		CodePairingClaimed, CodeRateLimited, CodePreviewProcessing, CodePreviewUnavailable,
 		CodeSourceOffline, CodeIdentityMismatch, CodeConflict, CodeInternal,
@@ -48,9 +50,9 @@ func (c ErrorCode) HTTPStatus() int {
 		return http.StatusForbidden
 	case CodeNotFound:
 		return http.StatusNotFound
-	case CodeInvalidRequest, CodeInvalidCommand:
+	case CodeInvalidRequest, CodeInvalidCommand, CodeOperationExpired:
 		return http.StatusBadRequest
-	case CodeScreenOffline, CodeConflict, CodeIdentityMismatch:
+	case CodeIdempotencyConflict, CodeScreenOffline, CodeConflict, CodeIdentityMismatch:
 		return http.StatusConflict
 	case CodeScreenRevoked, CodePairingExpired, CodePairingClaimed:
 		return http.StatusGone

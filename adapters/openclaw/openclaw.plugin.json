@@ -1,0 +1,86 @@
+{
+  "id": "atrium-home",
+  "name": "Atrium Home",
+  "description": "Restricted household tools through the durable Atrium Brain host",
+  "contracts": {
+    "tools": [
+      "home_get_status",
+      "home_list_screens",
+      "home_get_screen",
+      "home_get_nas_status",
+      "home_list_photos",
+      "home_get_photo",
+      "home_get_command",
+      "home_navigate_screen",
+      "home_show_photo",
+      "home_refresh_screen"
+    ]
+  },
+  "activation": {
+    "onStartup": true
+  },
+  "toolMetadata": {
+    "home_get_status": {
+      "optional": true
+    },
+    "home_list_screens": {
+      "optional": true
+    },
+    "home_get_screen": {
+      "optional": true
+    },
+    "home_get_nas_status": {
+      "optional": true
+    },
+    "home_list_photos": {
+      "optional": true
+    },
+    "home_get_photo": {
+      "optional": true
+    },
+    "home_get_command": {
+      "optional": true
+    },
+    "home_navigate_screen": {
+      "optional": true
+    },
+    "home_show_photo": {
+      "optional": true
+    },
+    "home_refresh_screen": {
+      "optional": true
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "agentId",
+      "hostBinary",
+      "hostArgs",
+      "toolsFile"
+    ],
+    "properties": {
+      "agentId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "hostBinary": {
+        "type": "string",
+        "minLength": 1
+      },
+      "hostArgs": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 32
+      },
+      "toolsFile": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

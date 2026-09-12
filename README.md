@@ -12,7 +12,7 @@ Atrium is a local-first home hub: a Mac mini runs the core service, a NAS holds 
 - **Recovery by design**: the TV reconnects with backoff, the service survives restarts under launchd, the NAS being offline never blocks the dashboard, and scans never mass-delete on failure.
 - **Security on an untrusted LAN**: paired screens and the admin use separate credentials; TLS with a locally generated CA; no NAS credentials or paths ever reach the TV; previews are re-encoded so EXIF/GPS is stripped.
 
-AI integration (`home-mcp`) is a later, optional increment; the base system does not depend on it.
+AI integration (`home-mcp`) is an optional increment. The integration branch includes scoped Core APIs, an MCP server, a bounded Brain host and an OpenClaw adapter using the configured DeepSeek provider. Real-device results and remaining limits are recorded in the integration results. The base system does not depend on AI.
 
 ## Architecture in one picture
 
@@ -25,6 +25,8 @@ atrium admin / scripts  -- Bearer -->    |
 - `docs/prd/2026-09/atrium-home-hub/prd.md` — product requirements (Chinese)
 - [TV visual and interaction design](docs/plans/2026-09-06-song-tv-experience-design.md) — Song-inspired design discussion: photos, video, briefing, home information and calendar (Chinese; draft)
 - `docs/tech/2026-09/atrium-home-hub/tech-design.md` — technical design: stack, data model, HTTP/WebSocket contracts, pipelines, security, deployment
+- [AI integration results](docs/ops/ai-brain-mcp-results.md) — implementation, model validation and device evidence
+- [AI integration runbook](docs/ops/ai-brain-mcp-runbook.md) — build, service credentials, MCP configuration and recovery
 - [AI Brain and home-mcp design](docs/tech/2026-09/atrium-home-hub/ai-brain-home-mcp-design.md) — proposed Agent integration, scoped service identity, tools and command idempotency (Chinese; draft)
 - `docs/plan/2026-09/atrium-home-hub/dev-plan.md` — task-level development plan and decision log
 - `docs/api/` — OpenAPI and WebSocket protocol

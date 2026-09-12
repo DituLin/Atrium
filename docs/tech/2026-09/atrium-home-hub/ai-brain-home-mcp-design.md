@@ -2,6 +2,8 @@
 
 版本：0.1 · 评审草案 · 2026-09-06
 
+实施注记：本方案的代码事实表保留设计时基线。独立工作区已推进 M1–M3，当前交付与未完成项见 [实施结果](../../../ops/ai-brain-mcp-results.md)；OpenClaw + DeepSeek 接线与实机 AI 闭环已进入验收，详细结果及限制以实施记录为准。
+
 本轮交付技术方案，不代表 Brain、MCP 服务或下述新接口已经实现。依据现有 Core 代码、基础 PRD 和官方 MCP 文档；外部资料核对日期为 2026-09-06。
 
 ## 1. 目标与优先级
@@ -68,7 +70,7 @@ home-mcp 是能力接口，不是 AI Brain。Brain 的运行时与模型也是�
 
 | 路线 | 优点 | 代价 | 本轮建议 |
 | --- | --- | --- | --- |
-| 现成 Agent + home-mcp | 复用聊天、模型调用和 MCP client，尽快验证家庭场景 | 要验证运行时权限、工具调用和持久状态能力 | 第一阶段建议；OpenClaw 为候选，等待用户选择 |
+| 现成 Agent + home-mcp | 复用聊天、模型调用和 MCP client，尽快验证家庭场景 | 要验证运行时权限、工具调用和持久状态能力 | 第一阶段采用 OpenClaw + 用户现有 DeepSeek（2026-09-07 确认） |
 | Atrium 轻量 Brain 服务 | 可控制会话、预算、操作记录和未来入口 | 自行维护模型适配、工具循环、取消/恢复和会话存储 | 若需要独立 Atrium 助手体验，再建设 |
 | 完整自研 Agent 平台 | 高度可定制 | 当前无足够任务证明需要规划器、多 Agent、长期记忆等复杂度 | 不作为首轮前置条件 |
 
@@ -272,8 +274,8 @@ MCP 合约测试和真实模型测试分开：前者应确定性通过；后者�
 | home-mcp 独立 Go 二进制、本机 stdio | 方案建议 |
 | 专用服务身份、Core 端限域、操作幂等 | 根据现有代码提出的必要补齐 |
 | 第一阶段 11 个照片/状态/控制工具 | 方案建议 |
-| Brain 用现成 Agent 还是自有轻量服务 | 等待用户选择；不阻塞 MCP 与 Core 契约设计 |
-| 模型提供方、数据外发及保留策略 | 真正接入前确定，本轮未配置 |
+| Brain 用现成 Agent 还是自有轻量服务 | 采用 OpenClaw，补受控 Go Brain 宿主与插件适配层 |
+| 模型提供方、数据外发及保留策略 | 用户现有 DeepSeek；本地专用 agent、无长期记忆，工具只提供范围内元数据；部署细节见运维文档 |
 | 视频/日历/房屋的未来工具 | 对应 Core 能力交付后再注册 |
 
 参考资料：上述官方 MCP 传输、工具与 Go SDK 文档，以及 [MCP 授权规范](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)、[MCP 安全边界](https://modelcontextprotocol.io/docs/2025-11-25/tutorials/security/security_best_practices)。MCP 入站凭据与下游 Core 凭据应分离，尤其在未来增加 HTTP 传输时不能透传调用方 token。

@@ -16,7 +16,7 @@ DEV_CONFIG ?= config.yaml
 
 all: check
 
-build:
+build: build-mcp build-brain-host
 	@mkdir -p $(BIN_DIR)
 	go build -trimpath -ldflags '$(LDFLAGS)' -o $(BINARY) ./cmd/atrium
 
@@ -43,7 +43,7 @@ check: lint test build
 run-dev: build
 	$(BINARY) serve --config $(DEV_CONFIG) --dev
 
-release: web-sync
+release: web-sync release-mcp release-brain-host
 	@mkdir -p $(BIN_DIR)
 	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags '$(LDFLAGS)' -o $(BIN_DIR)/atrium-darwin-arm64 ./cmd/atrium
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags '$(LDFLAGS)' -o $(BIN_DIR)/atrium-darwin-amd64 ./cmd/atrium
@@ -69,3 +69,23 @@ web-sync:
 	@rm -rf internal/webui/dist && mkdir -p internal/webui/dist
 	@if [ -f web/dist/index.html ]; then cp -R web/dist/. internal/webui/dist/; fi
 	@touch internal/webui/dist/.gitkeep
+
+.PHONY: build-mcp release-mcp
+build-mcp:
+	@mkdir -p $(BIN_DIR)
+	go build -trimpath -o $(BIN_DIR)/home-mcp ./cmd/home-mcp
+
+release-mcp:
+	@mkdir -p $(BIN_DIR)
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -o $(BIN_DIR)/home-mcp-darwin-arm64 ./cmd/home-mcp
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o $(BIN_DIR)/home-mcp-darwin-amd64 ./cmd/home-mcp
+
+.PHONY: build-brain-host release-brain-host
+build-brain-host:
+	@mkdir -p $(BIN_DIR)
+	go build -trimpath -o $(BIN_DIR)/atrium-brain-host ./cmd/atrium-brain-host
+
+release-brain-host:
+	@mkdir -p $(BIN_DIR)
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -o $(BIN_DIR)/atrium-brain-host-darwin-arm64 ./cmd/atrium-brain-host
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o $(BIN_DIR)/atrium-brain-host-darwin-amd64 ./cmd/atrium-brain-host

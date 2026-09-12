@@ -106,7 +106,13 @@ func (a *Authenticator) AuthenticateWebSocket(ctx context.Context, r *http.Reque
 func (a *Authenticator) authorize(id *Identity, required Scope, ip string) (*Identity, error) {
 	switch required {
 	case ScopeNone:
-		return id, nil
+		if id.Scope != ScopeIntegration {
+			return id, nil
+		}
+	case ScopeIntegration:
+		if id.Scope == ScopeIntegration {
+			return id, nil
+		}
 	case ScopeScreen:
 		// The admin scope includes every screen route.
 		if id.Scope == ScopeScreen || id.Scope == ScopeAdmin {
@@ -122,6 +128,18 @@ func (a *Authenticator) authorize(id *Identity, required Scope, ip string) (*Ide
 
 func (a *Authenticator) byBearer(ctx context.Context, token string) (*Identity, error) {
 	switch ScopeOf(token) {
+	case ScopeIntegration:
+		p, c, err := a.db.Integrations().GetByTokenHash(ctx, HashToken(token))
+		if errors.Is(err, domain.ErrNotFound) {
+			return nil, domain.Errorf(domain.CodeUnauthorized, "unknown integration credential")
+		}
+		if err != nil {
+			return nil, err
+		}
+		if !p.Active(a.now()) || !c.Active(a.now()) {
+			return nil, domain.Errorf(domain.CodeUnauthorized, "integration credential is inactive")
+		}
+		return &Identity{Scope: ScopeIntegration, Integration: p}, nil
 	case ScopeScreen:
 		return a.byScreenToken(ctx, token)
 	case ScopeAdmin:

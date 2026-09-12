@@ -23,7 +23,7 @@ func TestMigrateFromEmptyIsIdempotent(t *testing.T) {
 
 	n, err := db.Migrate(ctx)
 	require.NoError(t, err)
-	require.Equal(t, 1, n)
+	require.Equal(t, 3, n)
 
 	again, err := db.Migrate(ctx)
 	require.NoError(t, err)
@@ -31,7 +31,7 @@ func TestMigrateFromEmptyIsIdempotent(t *testing.T) {
 
 	version, err := db.SchemaVersion(ctx)
 	require.NoError(t, err)
-	require.Equal(t, 1, version)
+	require.Equal(t, 3, version)
 }
 
 func TestOpenEnablesWALAndForeignKeys(t *testing.T) {
@@ -74,7 +74,7 @@ func TestSchemaMatchesDesignTables(t *testing.T) {
 	require.ElementsMatch(t, []string{
 		"admin_tokens", "audit_log", "data_sources", "jobs", "pairings", "photo_exclusions",
 		"photos", "preview_files", "scan_runs", "schema_migrations", "screen_commands",
-		"screens", "settings", "widget_cache",
+		"screens", "settings", "widget_cache", "integration_principals", "integration_credentials", "integration_operations",
 	}, got)
 }
 

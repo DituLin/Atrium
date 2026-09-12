@@ -53,13 +53,13 @@ describe('photo viewer: loading', () => {
   it('shows the spinner until the image reports onload', () => {
     const state = opened();
     expect(isWaiting(state)).toBe(true);
-    const rendered = photoViewerReducer(state, { type: 'viewer.rendered', id: 'p2' });
+    const rendered = photoViewerReducer(state, { type: 'viewer.rendered', id: 'p2', generation: state.generation });
     expect(rendered.status).toBe('ready');
     expect(rendered.renderedId).toBe('p2');
   });
 
   it('ignores a render signal for a photo the viewer left', () => {
-    const state = photoViewerReducer(opened(), { type: 'viewer.rendered', id: 'p9' });
+    const state = photoViewerReducer(opened(), { type: 'viewer.rendered', id: 'p9', generation: 1 });
     expect(state.renderedId).toBeNull();
   });
 

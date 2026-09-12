@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/DituLin/Atrium/internal/auth"
 	"github.com/DituLin/Atrium/internal/domain"
 )
 
@@ -55,7 +56,19 @@ func WriteError(w http.ResponseWriter, r *http.Request, err error) {
 			w.Header().Set("Retry-After", strconv.Itoa(retry))
 		}
 	}
-	if status >= http.StatusInternalServerError {
+	if identity := auth.FromContext(r.Context()); identity != nil && identity.Integration != nil {
+		if log := LoggerFrom(r.Context()); log != nil {
+			code := domain.CodeInternal
+			for _, stable := range domain.AllErrorCodes() {
+				if apiErr.Code == stable {
+					code = stable
+					break
+				}
+			}
+			// Wrapped causes, messages and details may contain family data.
+			log.InfoContext(r.Context(), "Integration request failed", "event", "integration.error", "error_code", string(code), "http_status", status)
+		}
+	} else if status >= http.StatusInternalServerError {
 		if log := LoggerFrom(r.Context()); log != nil {
 			log.Error("request failed", "code", string(apiErr.Code), "error", apiErr.Error())
 		}

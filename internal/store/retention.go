@@ -44,7 +44,7 @@ func (d *DB) RunRetention(ctx context.Context, now time.Time) (RetentionResult, 
 		*into = n
 	}
 
-	n, err := d.Commands().DeleteOlderThan(ctx, history)
+	n, err := d.Commands().DeleteOlderThanAt(ctx, history, now)
 	collect(n, err, &res.Commands)
 	n, err = d.ScanRuns().DeleteOlderThan(ctx, history)
 	collect(n, err, &res.ScanRuns)

@@ -134,3 +134,15 @@ jobs:
           name: atrium-darwin-amd64
           path: bin/atrium-darwin-amd64
           retention-days: 14
+
+      - name: Upload home-mcp and Brain host
+        uses: actions/upload-artifact@v4
+        with:
+          name: atrium-ai-darwin
+          path: |
+            bin/home-mcp-darwin-arm64
+            bin/home-mcp-darwin-amd64
+            bin/atrium-brain-host-darwin-arm64
+            bin/atrium-brain-host-darwin-amd64
+          if-no-files-found: error
+          retention-days: 14
