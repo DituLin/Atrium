@@ -252,6 +252,42 @@ paths:
         "410": { $ref: "#/components/responses/ScreenRevoked" }
         "429": { $ref: "#/components/responses/RateLimited" }
 
+  /api/v1/family/overview:
+    get:
+      tags: [screen]
+      summary: Deterministic public family overview
+      description: |
+        Independently composes public House observations and configured notice at
+        one generated_at instant without photo statistics, NAS probes or model calls.
+        Sources reuse House freshness, authorization and failure semantics. Calendar
+        is not_connected/not_configured until a real authorized source is connected.
+        Notice observed_at is successful configuration load time, not content update
+        time; expires_at is null. Enabled empty/future/expired notice is available
+        with empty items, disabled is not_connected/not_configured. Enabled configs
+        without successful load evidence are loading/not_observed with empty items.
+        Entries reference sources/items without copying content or renewing timestamps.
+        NAS failures and current offline/degraded precede stale, then loading/unknown,
+        then valid notice. Ties preserve configured NAS order. Stale health never
+        becomes a current alarm; an empty entries array does not mean all sources healthy.
+        Screen and admin receive the same public projection; integration has no access.
+      security:
+        - screenBearer: []
+        - screenCookie: []
+        - adminBearer: []
+      responses:
+        "200":
+          description: Independent source snapshots and deterministic references.
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OverviewResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "410": { $ref: "#/components/responses/ScreenRevoked" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
   /api/v1/nas/status:
     get:
       tags: [screen]
@@ -1589,6 +1625,97 @@ components:
             - properties:
                 source_id: { const: environment }
                 reason: { const: not_supported }
+
+    OverviewNoticeItem:
+      type: object
+      additionalProperties: false
+      required: [id, text, updated_at, valid_from, valid_until]
+      properties:
+        id: { type: string, const: notice }
+        text: { type: string }
+        updated_at: { type: [string, "null"], format: date-time }
+        valid_from: { type: [string, "null"], format: date-time }
+        valid_until: { type: [string, "null"], format: date-time }
+
+    OverviewNoticeSnapshot:
+      allOf:
+        - $ref: "#/components/schemas/FamilySourceSnapshot"
+        - properties:
+            source_id: { const: notice }
+            expires_at: { type: "null" }
+            items:
+              type: array
+              maxItems: 1
+              items: { $ref: "#/components/schemas/OverviewNoticeItem" }
+
+    OverviewEntry:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [id, kind, module, source_id, item_id]
+          properties:
+            id: { type: string, description: Stable nas/source/type identity. }
+            kind: { type: string, const: source_status }
+            module: { type: string, const: nas }
+            source_id: { type: string }
+            item_id: { type: "null" }
+        - type: object
+          additionalProperties: false
+          required: [id, kind, module, source_id, item_id]
+          properties:
+            id: { type: string, const: 'notice:notice:notice' }
+            kind: { type: string, const: notice }
+            module: { type: string, const: notice }
+            source_id: { type: string, const: notice }
+            item_id: { type: string, const: notice }
+
+    OverviewSources:
+      type: object
+      additionalProperties: false
+      required: [core, nas, profile, environment, notice, calendar]
+      properties:
+        core: { $ref: "#/components/schemas/HouseCoreSnapshot" }
+        nas:
+          type: array
+          items: { $ref: "#/components/schemas/HouseNASSnapshot" }
+        profile:
+          allOf:
+            - $ref: "#/components/schemas/HouseEmptySnapshot"
+            - properties:
+                source_id: { const: profile }
+                reason: { const: not_provided }
+        environment:
+          allOf:
+            - $ref: "#/components/schemas/HouseEmptySnapshot"
+            - properties:
+                source_id: { const: environment }
+                reason: { const: not_supported }
+        notice: { $ref: "#/components/schemas/OverviewNoticeSnapshot" }
+        calendar:
+          allOf:
+            - $ref: "#/components/schemas/HouseEmptySnapshot"
+            - properties:
+                source_id: { const: calendar }
+                reason: { const: not_configured }
+
+    OverviewResponse:
+      type: object
+      additionalProperties: false
+      required: [schema_version, generated_at, home, sources, entries]
+      properties:
+        schema_version: { type: integer, const: 1 }
+        generated_at: { type: string, format: date-time }
+        home:
+          type: object
+          additionalProperties: false
+          required: [name, timezone]
+          properties:
+            name: { type: string }
+            timezone: { type: string, description: IANA timezone name }
+        sources: { $ref: "#/components/schemas/OverviewSources" }
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/OverviewEntry" }
 
     Diagnostics:
       type: object

@@ -262,3 +262,32 @@ export interface HouseResponse {
   profile: FamilySourceSnapshot<never>;
   environment: FamilySourceSnapshot<never>;
 }
+
+/* --------------------------------------------------------- family overview */
+
+export interface OverviewSources extends Pick<HouseResponse, 'core' | 'nas' | 'profile' | 'environment'> {
+  notice: FamilySourceSnapshot<{ text: string }>;
+  calendar: FamilySourceSnapshot<never>;
+}
+
+export type OverviewEntry = {
+  id: string;
+  kind: 'source_status';
+  module: 'nas';
+  source_id: string;
+  item_id: null;
+} | {
+  id: string;
+  kind: 'notice';
+  module: 'notice';
+  source_id: string;
+  item_id: string;
+};
+
+export interface OverviewResponse {
+  schema_version: 1;
+  generated_at: string;
+  home: HouseResponse['home'];
+  sources: OverviewSources;
+  entries: OverviewEntry[];
+}

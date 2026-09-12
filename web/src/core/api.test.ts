@@ -223,3 +223,43 @@ it('passes a House abort signal to transport and ignores successful JSON after c
   expect(fetchImpl.mock.calls[0]?.[1]?.signal).toBe(abort.signal);
   abort.abort(); finish({}); expect(await old).toMatchObject({ name: 'AbortError' }); expect(onAuthOk).not.toHaveBeenCalled();
 });
+
+it('reads Overview independently with authenticated no-store requests', async () => {
+  const onAuthOk = vi.fn();
+  const transport = createAuthTransport('bearer');
+  transport.onClaimed('atr_scr_house');
+  const body = { schema_version: 1, nas: [], core: { availability: 'available' } };
+  const fetchImpl = vi.fn((_path: string, _init?: RequestInit) => Promise.resolve(jsonResponse(200, body)));
+  const client = new ApiClient({ fetchImpl, transport, onAuthOk });
+  expect(await client.getOverview()).toEqual(body);
+  expect(fetchImpl).toHaveBeenCalledTimes(1);
+  expect(fetchImpl.mock.calls[0]?.[0]).toBe('/api/v1/family/overview');
+  const init = fetchImpl.mock.calls[0]?.[1];
+  expect(init?.method).toBe('GET');
+  expect(init?.cache).toBe('no-store');
+  expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer atr_scr_house');
+  expect(onAuthOk).toHaveBeenCalledOnce();
+});
+
+it('rejects Overview JSON arriving after authorization invalidation', async () => {
+  let finish!: (body: unknown) => void;
+  const onAuthOk = vi.fn();
+  const client = new ApiClient({ onAuthOk, fetchImpl: () => Promise.resolve({ status: 200, ok: true,
+    json: () => new Promise(resolve => { finish = resolve; }) } as Response) });
+  const old = client.getOverview();
+  await Promise.resolve();
+  expect(finish).toBeDefined();
+  client.invalidateAuthorization();
+  finish({ nas: [{ items: [{ health: 'online' }] }] });
+  await expect(old).rejects.toMatchObject({ name: 'AbortError' });
+  expect(onAuthOk).not.toHaveBeenCalled();
+});
+
+it('passes a Overview abort signal to transport and ignores successful JSON after cancellation', async () => {
+  const onAuthOk = vi.fn(); let finish!: (body: unknown) => void;
+  const fetchImpl = vi.fn(async (_path: string, _init?: RequestInit) => ({ ok: true, status: 200, json: () => new Promise(resolve => { finish = resolve; }) }) as Response);
+  const client = new ApiClient({ onAuthOk, fetchImpl }); const abort = new AbortController();
+  const old = client.getOverview(abort.signal).catch(error => error); await Promise.resolve();
+  expect(fetchImpl.mock.calls[0]?.[1]?.signal).toBe(abort.signal);
+  abort.abort(); finish({}); expect(await old).toMatchObject({ name: 'AbortError' }); expect(onAuthOk).not.toHaveBeenCalled();
+});

@@ -7,6 +7,7 @@ import type {
   ApiErrorBody,
   HomeResponse,
   HouseResponse,
+  OverviewResponse,
   NasStatusResponse,
   PairClaimResponse,
   PairStartResponse,
@@ -177,6 +178,12 @@ export class ApiClient {
 
   getHouse(signal?: AbortSignal): Promise<HouseResponse> {
     return this.request<HouseResponse>(`${API_BASE}/family/house`, {
+      method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-store', ...(signal ? { signal } : {}),
+    }, true);
+  }
+
+  getOverview(signal?: AbortSignal): Promise<OverviewResponse> {
+    return this.request<OverviewResponse>(`${API_BASE}/family/overview`, {
       method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-store', ...(signal ? { signal } : {}),
     }, true);
   }

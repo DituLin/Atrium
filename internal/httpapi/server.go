@@ -10,6 +10,7 @@ import (
 	"github.com/DituLin/Atrium/internal/app/events"
 	"github.com/DituLin/Atrium/internal/auth"
 	"github.com/DituLin/Atrium/internal/backup"
+	"github.com/DituLin/Atrium/internal/briefing"
 	"github.com/DituLin/Atrium/internal/clock"
 	"github.com/DituLin/Atrium/internal/config"
 	"github.com/DituLin/Atrium/internal/diag"
@@ -34,6 +35,7 @@ type Deps struct {
 	Home     *clock.Home
 	Snapshot *widget.Composer
 	House    *family.HouseComposer
+	Overview *briefing.Composer
 	Now      func() time.Time
 	// Insecure is true when tls.mode = off; it drops the Secure cookie flag.
 	Insecure bool
@@ -113,6 +115,9 @@ func New(deps Deps) *API {
 	}
 	if deps.House == nil && deps.Config != nil && deps.DB != nil && deps.Home != nil {
 		deps.House = family.NewHouseComposer(deps.Config, deps.DB.Sources(), deps.Home)
+	}
+	if deps.Overview == nil && deps.Config != nil && deps.House != nil {
+		deps.Overview = briefing.NewComposer(deps.Config, deps.House)
 	}
 	if deps.Diagnostics == nil && deps.DB != nil {
 		// A route that answers 500 because a collaborator is missing is worse

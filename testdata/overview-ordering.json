@@ -1,0 +1,480 @@
+[
+  {
+    "name": "priority and configured order",
+    "sources": {
+      "nas": [
+        {
+          "source_id": "unknown",
+          "source_label": "unknown",
+          "observed_at": "2026-09-12T10:00:00Z",
+          "expires_at": "2026-09-12T10:01:00Z",
+          "availability": "available",
+          "reason": null,
+          "items": [
+            {
+              "id": "health",
+              "updated_at": null,
+              "valid_from": null,
+              "valid_until": null,
+              "health": "unknown",
+              "last_success_at": null
+            }
+          ]
+        },
+        {
+          "source_id": "old-offline",
+          "source_label": "old-offline",
+          "observed_at": "2026-09-12T10:00:00Z",
+          "expires_at": "2026-09-12T10:01:00Z",
+          "availability": "stale",
+          "reason": "expired",
+          "items": [
+            {
+              "id": "health",
+              "updated_at": null,
+              "valid_from": null,
+              "valid_until": null,
+              "health": "offline",
+              "last_success_at": null
+            }
+          ]
+        },
+        {
+          "source_id": "offline",
+          "source_label": "offline",
+          "observed_at": "2026-09-12T10:00:00Z",
+          "expires_at": "2026-09-12T10:01:00Z",
+          "availability": "available",
+          "reason": null,
+          "items": [
+            {
+              "id": "health",
+              "updated_at": null,
+              "valid_from": null,
+              "valid_until": null,
+              "health": "offline",
+              "last_success_at": null
+            }
+          ]
+        },
+        {
+          "source_id": "failed",
+          "source_label": "failed",
+          "observed_at": null,
+          "expires_at": null,
+          "availability": "failed",
+          "reason": "read_failed",
+          "items": []
+        },
+        {
+          "source_id": "degraded",
+          "source_label": "degraded",
+          "observed_at": "2026-09-12T10:00:00Z",
+          "expires_at": "2026-09-12T10:01:00Z",
+          "availability": "available",
+          "reason": null,
+          "items": [
+            {
+              "id": "health",
+              "updated_at": null,
+              "valid_from": null,
+              "valid_until": null,
+              "health": "degraded",
+              "last_success_at": null
+            }
+          ]
+        },
+        {
+          "source_id": "loading",
+          "source_label": "loading",
+          "observed_at": null,
+          "expires_at": null,
+          "availability": "loading",
+          "reason": "not_observed",
+          "items": []
+        },
+        {
+          "source_id": "online",
+          "source_label": "online",
+          "observed_at": "2026-09-12T10:00:00Z",
+          "expires_at": "2026-09-12T10:01:00Z",
+          "availability": "available",
+          "reason": null,
+          "items": [
+            {
+              "id": "health",
+              "updated_at": null,
+              "valid_from": null,
+              "valid_until": null,
+              "health": "online",
+              "last_success_at": null
+            }
+          ]
+        },
+        {
+          "source_id": "removed",
+          "source_label": "removed",
+          "observed_at": null,
+          "expires_at": null,
+          "availability": "not_connected",
+          "reason": "sharing_stopped",
+          "items": []
+        }
+      ],
+      "notice": {
+        "source_id": "notice",
+        "source_label": "家庭提示",
+        "observed_at": "2026-09-12T09:00:00Z",
+        "expires_at": null,
+        "availability": "available",
+        "reason": null,
+        "items": [
+          {
+            "id": "notice",
+            "updated_at": null,
+            "valid_from": null,
+            "valid_until": null,
+            "text": "Synthetic ordering fixture"
+          }
+        ]
+      }
+    },
+    "entries": [
+      {
+        "id": "nas:offline:source_status",
+        "kind": "source_status",
+        "module": "nas",
+        "source_id": "offline",
+        "item_id": null
+      },
+      {
+        "id": "nas:failed:source_status",
+        "kind": "source_status",
+        "module": "nas",
+        "source_id": "failed",
+        "item_id": null
+      },
+      {
+        "id": "nas:degraded:source_status",
+        "kind": "source_status",
+        "module": "nas",
+        "source_id": "degraded",
+        "item_id": null
+      },
+      {
+        "id": "nas:old-offline:source_status",
+        "kind": "source_status",
+        "module": "nas",
+        "source_id": "old-offline",
+        "item_id": null
+      },
+      {
+        "id": "nas:unknown:source_status",
+        "kind": "source_status",
+        "module": "nas",
+        "source_id": "unknown",
+        "item_id": null
+      },
+      {
+        "id": "nas:loading:source_status",
+        "kind": "source_status",
+        "module": "nas",
+        "source_id": "loading",
+        "item_id": null
+      },
+      {
+        "id": "notice:notice:notice",
+        "kind": "notice",
+        "module": "notice",
+        "source_id": "notice",
+        "item_id": "notice"
+      }
+    ]
+  },
+  {
+    "name": "online observation expires into stale status",
+    "sources": {
+      "nas": [
+        {
+          "source_id": "online",
+          "source_label": "online",
+          "observed_at": "2026-09-12T10:00:00Z",
+          "expires_at": "2026-09-12T10:01:00Z",
+          "availability": "stale",
+          "reason": "expired",
+          "items": [
+            {
+              "id": "health",
+              "updated_at": null,
+              "valid_from": null,
+              "valid_until": null,
+              "health": "online",
+              "last_success_at": null
+            }
+          ]
+        }
+      ],
+      "notice": {
+        "source_id": "notice",
+        "source_label": "家庭提示",
+        "observed_at": null,
+        "expires_at": null,
+        "availability": "not_connected",
+        "reason": "not_configured",
+        "items": []
+      }
+    },
+    "entries": [
+      {
+        "id": "nas:online:source_status",
+        "kind": "source_status",
+        "module": "nas",
+        "source_id": "online",
+        "item_id": null
+      }
+    ]
+  },
+  {
+    "name": "expired offline is historical and follows current degraded",
+    "sources": {
+      "nas": [
+        {
+          "source_id": "old-offline",
+          "source_label": "old-offline",
+          "observed_at": "2026-09-12T10:00:00Z",
+          "expires_at": "2026-09-12T10:01:00Z",
+          "availability": "stale",
+          "reason": "expired",
+          "items": [
+            {
+              "id": "health",
+              "updated_at": null,
+              "valid_from": null,
+              "valid_until": null,
+              "health": "offline",
+              "last_success_at": null
+            }
+          ]
+        },
+        {
+          "source_id": "current-degraded",
+          "source_label": "current-degraded",
+          "observed_at": "2026-09-12T10:00:00Z",
+          "expires_at": "2026-09-12T10:01:00Z",
+          "availability": "available",
+          "reason": null,
+          "items": [
+            {
+              "id": "health",
+              "updated_at": null,
+              "valid_from": null,
+              "valid_until": null,
+              "health": "degraded",
+              "last_success_at": null
+            }
+          ]
+        }
+      ],
+      "notice": {
+        "source_id": "notice",
+        "source_label": "家庭提示",
+        "observed_at": "2026-09-12T09:00:00Z",
+        "expires_at": null,
+        "availability": "available",
+        "reason": null,
+        "items": []
+      }
+    },
+    "entries": [
+      {
+        "id": "nas:current-degraded:source_status",
+        "kind": "source_status",
+        "module": "nas",
+        "source_id": "current-degraded",
+        "item_id": null
+      },
+      {
+        "id": "nas:old-offline:source_status",
+        "kind": "source_status",
+        "module": "nas",
+        "source_id": "old-offline",
+        "item_id": null
+      }
+    ]
+  },
+  {
+    "name": "transport stale retains still valid notice",
+    "sources": {
+      "nas": [
+        {
+          "source_id": "online",
+          "source_label": "online",
+          "observed_at": "2026-09-12T10:00:00Z",
+          "expires_at": "2026-09-12T10:01:00Z",
+          "availability": "stale",
+          "reason": "expired",
+          "items": [
+            {
+              "id": "health",
+              "updated_at": null,
+              "valid_from": null,
+              "valid_until": null,
+              "health": "online",
+              "last_success_at": null
+            }
+          ]
+        }
+      ],
+      "notice": {
+        "source_id": "notice",
+        "source_label": "家庭提示",
+        "observed_at": "2026-09-12T09:00:00Z",
+        "expires_at": null,
+        "availability": "stale",
+        "reason": "read_failed",
+        "items": [
+          {
+            "id": "notice",
+            "updated_at": null,
+            "valid_from": null,
+            "valid_until": null,
+            "text": "Synthetic ordering fixture"
+          }
+        ]
+      }
+    },
+    "entries": [
+      {
+        "id": "nas:online:source_status",
+        "kind": "source_status",
+        "module": "nas",
+        "source_id": "online",
+        "item_id": null
+      },
+      {
+        "id": "notice:notice:notice",
+        "kind": "notice",
+        "module": "notice",
+        "source_id": "notice",
+        "item_id": "notice"
+      }
+    ]
+  },
+  {
+    "name": "expired notice already filtered out",
+    "sources": {
+      "nas": [],
+      "notice": {
+        "source_id": "notice",
+        "source_label": "家庭提示",
+        "observed_at": "2026-09-12T09:00:00Z",
+        "expires_at": null,
+        "availability": "stale",
+        "reason": "read_failed",
+        "items": []
+      }
+    },
+    "entries": []
+  },
+  {
+    "name": "notice failure discards even supplied content",
+    "sources": {
+      "nas": [],
+      "notice": {
+        "source_id": "notice",
+        "source_label": "家庭提示",
+        "observed_at": null,
+        "expires_at": null,
+        "availability": "failed",
+        "reason": "read_failed",
+        "items": [
+          {
+            "id": "notice",
+            "updated_at": null,
+            "valid_from": null,
+            "valid_until": null,
+            "text": "Synthetic ordering fixture"
+          }
+        ]
+      }
+    },
+    "entries": []
+  },
+  {
+    "name": "missing observation content is unknown",
+    "sources": {
+      "nas": [
+        {
+          "source_id": "missing",
+          "source_label": "missing",
+          "observed_at": "2026-09-12T10:00:00Z",
+          "expires_at": "2026-09-12T10:01:00Z",
+          "availability": "available",
+          "reason": null,
+          "items": []
+        }
+      ],
+      "notice": {
+        "source_id": "notice",
+        "source_label": "家庭提示",
+        "observed_at": null,
+        "expires_at": null,
+        "availability": "loading",
+        "reason": "read_failed",
+        "items": [
+          {
+            "id": "notice",
+            "updated_at": null,
+            "valid_from": null,
+            "valid_until": null,
+            "text": "Synthetic ordering fixture"
+          }
+        ]
+      }
+    },
+    "entries": [
+      {
+        "id": "nas:missing:source_status",
+        "kind": "source_status",
+        "module": "nas",
+        "source_id": "missing",
+        "item_id": null
+      }
+    ]
+  },
+  {
+    "name": "revoked sources omitted and all current online",
+    "sources": {
+      "nas": [
+        {
+          "source_id": "online",
+          "source_label": "online",
+          "observed_at": "2026-09-12T10:00:00Z",
+          "expires_at": "2026-09-12T10:01:00Z",
+          "availability": "available",
+          "reason": null,
+          "items": [
+            {
+              "id": "health",
+              "updated_at": null,
+              "valid_from": null,
+              "valid_until": null,
+              "health": "online",
+              "last_success_at": null
+            }
+          ]
+        }
+      ],
+      "notice": {
+        "source_id": "notice",
+        "source_label": "家庭提示",
+        "observed_at": null,
+        "expires_at": null,
+        "availability": "not_connected",
+        "reason": "not_configured",
+        "items": []
+      }
+    },
+    "entries": []
+  }
+]
