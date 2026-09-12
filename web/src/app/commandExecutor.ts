@@ -55,6 +55,7 @@ export function createCommandExecutor(ports: ExecutorPorts): CommandExecutor {
       route,
       sequence: command.sequence,
       commandId: command.command_id,
+      preserveHistory: command.kind === 'refresh',
     });
     sendAck(appliedAck(command, route, resourceId));
   };
@@ -62,7 +63,7 @@ export function createCommandExecutor(ports: ExecutorPorts): CommandExecutor {
   const runRefresh = (command: ScreenCommand, route: AppRoute): void => {
     // The route and the slideshow's paused flag are untouched (PRD 5.3); only
     // the data behind the current page is re-read, and the ack waits for it.
-    dispatch({ type: 'router.commandStarted', route, commandId: command.command_id });
+    dispatch({ type: 'router.commandStarted', route, commandId: command.command_id, preserveHistory: true });
     void refreshRoute(route).then(
       () => applyNow(command, getRouter().route),
       () => {

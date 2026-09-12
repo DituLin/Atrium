@@ -186,10 +186,12 @@ describe('collection browser (W-202)', () => {
     expect(screen.queryByRole('heading', { name: '设置与状态' })).toBeNull();
     fireEvent.keyDown(settings, { key: 'Select' });
     await waitFor(() => expect(screen.getByRole('heading', { name: '设置与状态' })).toBeDefined());
+    fireEvent.click(screen.getByRole('tab', { name: '关于 Atrium' }));
     expect(screen.getByText('客户端版本')).toBeDefined();
     expect(screen.getByText('0.0.0+test')).toBeDefined();
     fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
-    await waitFor(() => expect(screen.getByRole('button', { name: '打开当前照片' })).toBeDefined());
+    await waitFor(() => expect(screen.getByRole('tab', { name: '全部照片' })).toBeDefined());
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: '设置' }));
   });
 
   it('keeps old collection photos unavailable during a delayed switch and rapid confirmation', async () => {

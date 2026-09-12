@@ -118,6 +118,8 @@ export function backRoute(route: AppRoute): AppRoute {
 
 export interface RouterState {
   route: AppRoute;
+  returnStack?: readonly { route: AppRoute; focus?: string }[];
+  restoreFocus?: string;
   /** Highest command sequence this client has applied (§6.5). */
   appliedSequence: number;
   /** Command IDs already handled; duplicates are ignored (§6.5). */
@@ -134,7 +136,7 @@ export const initialRouterState: RouterState = {
 const HANDLED_COMMAND_LIMIT = 64;
 
 export type RouterAction =
-  | { type: 'router.navigate'; route: AppRoute }
+  | { type: 'router.navigate'; route: AppRoute; sourceFocus?: string }
   | { type: 'router.back' }
   /**
    * A command whose target is on screen but not yet rendered. The route moves
@@ -143,8 +145,8 @@ export type RouterAction =
    * applies a sequence only when it acks `applied`, and a `show` can still end
    * in `failed / photo_unavailable`.
    */
-  | { type: 'router.commandStarted'; route: AppRoute; commandId: string }
-  | { type: 'router.commandApplied'; route: AppRoute; sequence: number; commandId: string }
+  | { type: 'router.commandStarted'; route: AppRoute; commandId: string; preserveHistory?: boolean }
+  | { type: 'router.commandApplied'; route: AppRoute; sequence: number; commandId: string; preserveHistory?: boolean }
   | { type: 'router.commandRejected'; sequence: number; commandId: string }
   | { type: 'router.reset' };
 
@@ -157,9 +159,21 @@ function rememberCommand(state: RouterState, commandId: string): readonly string
 
 export function routerReducer(state: RouterState, action: RouterAction): RouterState {
   switch (action.type) {
-    case 'router.navigate':
-      return routesEqual(state.route, action.route) ? state : { ...state, route: action.route };
+    case 'router.navigate': {
+      if (routesEqual(state.route, action.route)) return state;
+      const entersPage = (action.route.name === 'settings' || action.route.name === 'photos')
+        && state.route.name !== action.route.name && state.route.name !== 'photo';
+      const stack = action.route.name === 'dashboard' ? [] : entersPage
+        ? [...(state.returnStack ?? []), { route: state.route, focus: action.sourceFocus }].slice(-8)
+        : state.returnStack;
+      return { ...state, route: action.route, returnStack: stack, restoreFocus: undefined };
+    }
     case 'router.back': {
+      const stack = state.returnStack ?? [];
+      if ((state.route.name === 'photos' || state.route.name === 'settings') && stack.length) {
+        const entry = stack[stack.length - 1]!;
+        return { ...state, route: entry.route, returnStack: stack.slice(0, -1), restoreFocus: entry.focus };
+      }
       const target = backRoute(state.route);
       return routesEqual(state.route, target) ? state : { ...state, route: target };
     }
@@ -167,10 +181,14 @@ export function routerReducer(state: RouterState, action: RouterAction): RouterS
       return {
         ...state,
         route: action.route,
+        returnStack: action.preserveHistory ? state.returnStack : [],
+        restoreFocus: action.preserveHistory ? state.restoreFocus : undefined,
         handledCommandIds: rememberCommand(state, action.commandId),
       };
     case 'router.commandApplied':
       return {
+        returnStack: action.preserveHistory ? state.returnStack : [],
+        restoreFocus: action.preserveHistory ? state.restoreFocus : undefined,
         route: action.route,
         appliedSequence: Math.max(state.appliedSequence, action.sequence),
         handledCommandIds: rememberCommand(state, action.commandId),

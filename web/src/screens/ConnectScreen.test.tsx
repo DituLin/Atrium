@@ -63,15 +63,15 @@ describe('connect screen (W-303)', () => {
       (dispatch as unknown as (action: AppAction) => void)({ type: 'connection.superseded' });
     });
 
-    await waitFor(() => expect(screen.getByText(/Another session is active/)).toBeDefined());
-    expect(screen.getByText(/replaced by a newer connection/)).toBeDefined();
+    await waitFor(() => expect(screen.getByText(/此屏幕已在另一处连接/)).toBeDefined());
+    expect(screen.getByText(/同一设备的新连接已接替此页面/)).toBeDefined();
 
-    const button = screen.getByRole('button', { name: 'Take over this screen' });
+    const button = screen.getByRole('button', { name: '重新连接此屏幕' });
     // The remote has no pointer, so the only actionable control holds focus.
     await waitFor(() => expect(document.activeElement).toBe(button));
 
     fireEvent.click(button);
     await waitFor(() => expect(screen.getByTestId('nonce').textContent).toBe('1'));
-    expect(screen.queryByText(/Another session is active/)).toBeNull();
+    expect(screen.queryByText(/此屏幕已在另一处连接/)).toBeNull();
   });
 });

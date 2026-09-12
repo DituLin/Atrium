@@ -102,6 +102,24 @@ describe('App shell', () => {
       ),
     );
     render(<App />);
-    await waitFor(() => expect(screen.getByText('Pair this screen')).toBeDefined());
+    await waitFor(() => expect(screen.getByText('连接这方屏幕')).toBeDefined());
   });
+});
+
+it('completes first pairing from an empty auth cache and loads the dashboard automatically', async () => {
+  let claimed = false;
+  vi.stubGlobal('fetch', vi.fn((path: string) => {
+    if (path === '/api/v1/pair/start') return Promise.resolve(jsonResponse({ pairing_id: 'fresh', code: '123456',
+      expires_at: new Date(Date.now() + 300000).toISOString(), poll_interval_ms: 1000 }));
+    if (path === '/api/v1/pair/fresh') return Promise.resolve(jsonResponse({ status: 'approved' }));
+    if (path === '/api/v1/pair/fresh/claim') { claimed = true; return Promise.resolve(jsonResponse({ screen_id: 'fresh', name: '新屏幕' })); }
+    if (!claimed) return Promise.resolve(jsonResponse({ error: { code: 'unauthorized', message: 'no' } }, 401));
+    return Promise.resolve(jsonResponse(path.includes('/photos?') ? { items: [], next_cursor: null } : HOME));
+  }));
+  render(<App />);
+  await screen.findByLabelText('配对码 1 2 3 4 5 6');
+  expect(screen.getByText('此屏幕尚未获得有效授权。请在 Mac mini 上完成配对。')).toBeDefined();
+  await waitFor(() => expect(claimed).toBe(true), { timeout: 2500 });
+  await screen.findByRole('button', { name: '打开当前照片' });
+  expect(screen.queryByText('需要重新确认屏幕授权')).toBeNull();
 });

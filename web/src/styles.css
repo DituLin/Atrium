@@ -786,3 +786,31 @@ body {
   .screen--photos > .masthead { display: none; }
   .screen--photos > .primary-nav { margin-top: 0; }
 }
+
+/* Song settings: sidebar selection is separate from the remote focus frame. */
+.settings__layout { display: grid; grid-template-columns: calc(340 * var(--design-pixel)) minmax(0, 1fr); gap: calc(64 * var(--design-pixel)); flex: 1; min-height: 0; margin-block: calc(32 * var(--design-pixel)); }
+.settings__tabs { display: flex; flex-direction: column; gap: calc(22 * var(--design-pixel)); padding: var(--focus-offset); }
+.settings__tabs button { border: 0; border-bottom: 1px solid var(--rule); background: transparent; color: var(--text); font: inherit; font-size: var(--fs-text); padding: calc(22 * var(--design-pixel)); text-align: left; }
+.settings__tabs [aria-selected="true"] { background: var(--celadon); color: var(--paper); }
+.settings__panel { display: flex; flex-direction: column; min-height: 0; overflow: visible; padding: var(--focus-offset); font-size: var(--fs-aux); }
+.settings__panel h2 { font-family: var(--font-title); font-weight: 400; font-size: calc(42 * var(--design-pixel)); margin: 0 0 calc(24 * var(--design-pixel)); }
+.settings__panel h3 { font-size: var(--fs-text); font-weight: 400; margin: 0; }
+.settings__panel p { margin: calc(16 * var(--design-pixel)) 0; }
+.settings__facts { padding-block: calc(16 * var(--design-pixel)); }
+.settings__facts > div { padding-block: calc(6 * var(--design-pixel)); }
+.settings__facts dt { flex: 0 0 calc(190 * var(--design-pixel)); }
+.settings__facts dd { overflow-wrap: anywhere; }
+.settings__source { border-bottom: 1px solid var(--rule); padding-block: calc(16 * var(--design-pixel)); }
+.settings__recovery { flex: 0 0 auto; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: calc(12 * var(--design-pixel)) calc(24 * var(--design-pixel)); margin-top: calc(24 * var(--design-pixel)); }
+.settings__body { min-height: 0; flex: 1; overflow-y: auto; padding: var(--focus-offset); }
+.settings__body:focus { outline: var(--focus-width) solid var(--focus); outline-offset: 0; }
+.settings__recovery .settings__notice, .settings__recovery .settings__help { margin: 0; }
+.settings__help { grid-column: 1 / -1; }
+.settings__recovery p { color: var(--muted); }
+.screen--pair, .screen--connect { gap: calc(24 * var(--design-pixel)); }
+.pair__command { white-space: normal; overflow-wrap: anywhere; }
+
+@media (max-height: 500px) {
+  .screen--settings .masthead { display: none; }
+  .settings__layout { margin-block: calc(20 * var(--design-pixel)); }
+}

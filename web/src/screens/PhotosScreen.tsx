@@ -48,8 +48,12 @@ export function PhotosScreen() {
   // A fresh screen starts at its selected collection. Loading never moves this
   // focus; only an explicit confirmation transfers ownership to the photo grid.
   useEffect(() => {
-    if (!restoringOnEntry.current) screenRef.current?.querySelector<HTMLElement>('[aria-selected="true"]')?.focus();
-  }, []);
+    if (!restoringOnEntry.current) {
+      const selector = state.router.restoreFocus ? `[data-return-focus="${state.router.restoreFocus}"]` : '[aria-selected="true"]';
+      const source = screenRef.current?.querySelector<HTMLElement>(selector);
+      (source ?? screenRef.current?.querySelector<HTMLElement>('[aria-selected="true"]'))?.focus();
+    }
+  }, [state.router.restoreFocus]);
 
   useLayoutEffect(() => {
     if (!readyForRoute || !list.restorePending) return;
@@ -71,7 +75,8 @@ export function PhotosScreen() {
         else screenRef.current?.querySelector<HTMLElement>('.thumb')?.focus();
       }
     }
-    if (hasRecovery && (region === 'grid' || region === 'recovery')) recovery.current?.focus();
+    if (hasRecovery && (region === 'grid' || region === 'recovery')
+      && !screenRef.current?.querySelector('.photos__recovery')?.contains(document.activeElement)) recovery.current?.focus();
   }, [collection, readyForRoute, list.status, hasRecovery, region]);
 
   const applyCollection = (next: PhotoCollection) => {
@@ -139,7 +144,7 @@ export function PhotosScreen() {
           if (collection === 'all' && failed) { dispatch({ type: 'photos.reset' }); dispatch({ type: 'photos.open', collection }); setRegion('grid'); }
           else applyCollection('all');
         }}>{collection === 'all' && failed ? '重试' : '查看全部照片'}</RemoteButton>
-        <RemoteButton className="button" onClick={() => dispatch({ type: 'router.navigate', route: { name: 'settings' } })}>查看状态</RemoteButton>
+        <RemoteButton className="button" data-return-focus="photos-status" onClick={() => dispatch({ type: 'router.navigate', sourceFocus: 'photos-status', route: { name: 'settings' } })}>查看状态</RemoteButton>
       </div>
     </div> : readyForRoute && list.items.length > 0 ? <PhotoGrid items={list.items} focusIndex={list.focusIndex} active={region === 'grid'}
       columns={columns} options={clockOptions(state.home)} onDirection={onDirection} onActivate={onActivate} onFocusIndex={onFocusIndex} />

@@ -119,3 +119,47 @@ describe('probeMedia (design §7.3)', () => {
     }
   });
 });
+
+it('rejects an old successful home response after a concurrent 401, even after a new claim', async () => {
+  let finish!: (response: Response) => void;
+  const onAuthOk = vi.fn();
+  const client = new ApiClient({ onAuthOk, fetchImpl: path => {
+    if (path.endsWith('/home')) return new Promise(resolve => { finish = resolve; });
+    if (path.endsWith('/claim')) return Promise.resolve(jsonResponse(200, { name: 'New screen' }));
+    return Promise.resolve(jsonResponse(401, {}));
+  } });
+  const old = client.getHome();
+  await expect(client.getScreenSelf()).rejects.toBeInstanceOf(ApiError);
+  await client.pairClaim('new');
+  onAuthOk.mockClear();
+  finish(jsonResponse(200, { home: { name: 'Old family' } }));
+  await expect(old).rejects.toMatchObject({ name: 'AbortError' });
+  expect(onAuthOk).not.toHaveBeenCalled();
+});
+
+it('ignores an old 401 after a successful new claim', async () => {
+  let finish!: (response: Response) => void;
+  const unauthorized = vi.fn();
+  const client = new ApiClient({ onUnauthorized: unauthorized, fetchImpl: path => path.endsWith('/claim')
+    ? Promise.resolve(jsonResponse(200, { name: 'New screen' }))
+    : new Promise(resolve => { finish = resolve; }) });
+  const old = client.getHome();
+  await client.pairClaim('new');
+  finish(jsonResponse(401, {}));
+  await expect(old).rejects.toMatchObject({ name: 'AbortError' });
+  expect(unauthorized).not.toHaveBeenCalled();
+});
+
+it('checks authorization again after a delayed JSON body', async () => {
+  let finish!: (body: unknown) => void;
+  const onAuthOk = vi.fn();
+  const client = new ApiClient({ onAuthOk, fetchImpl: () => Promise.resolve({ status: 200, ok: true,
+    json: () => new Promise(resolve => { finish = resolve; }) } as Response) });
+  const old = client.getHome();
+  await Promise.resolve();
+  expect(finish).toBeDefined();
+  client.invalidateAuthorization();
+  finish({ home: { name: 'Old family' } });
+  await expect(old).rejects.toMatchObject({ name: 'AbortError' });
+  expect(onAuthOk).not.toHaveBeenCalled();
+});

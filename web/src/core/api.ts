@@ -70,6 +70,14 @@ function parseRetryAfter(header: string | null): number | null {
 }
 
 export class ApiClient {
+  private generation = 0;
+  /** Invalidate all responses begun under the previous authorization. */
+  invalidateAuthorization(): void { this.generation += 1; }
+
+  private assertCurrent(generation: number): void {
+    if (generation !== this.generation) throw new DOMException("Authorization changed", "AbortError");
+  }
+
   private readonly fetchImpl: FetchLike;
   private readonly transport: AuthTransport;
   private readonly onAuthOk: (() => void) | undefined;
@@ -89,19 +97,23 @@ export class ApiClient {
     init: RequestInit,
     authenticated: boolean,
   ): Promise<T> {
+    const generation = this.generation;
     const finalInit = authenticated ? this.transport.decorate(init) : { ...init };
     const response = await this.fetchImpl(path, finalInit);
 
+    this.assertCurrent(generation);
     if (response.status === 401) {
+      this.invalidateAuthorization();
       this.onUnauthorized?.();
       throw await toApiError(response, 'unauthorized');
     }
     if (!response.ok) {
       throw await toApiError(response, 'internal');
     }
+    const body = response.status === 204 ? undefined : await response.json();
+    this.assertCurrent(generation);
     if (authenticated) this.onAuthOk?.();
-    if (response.status === 204) return undefined as T;
-    return (await response.json()) as T;
+    return body as T;
   }
 
   private get<T>(path: string, authenticated = true): Promise<T> {
@@ -141,6 +153,7 @@ export class ApiClient {
       },
       false,
     );
+    this.invalidateAuthorization();
     this.transport.onClaimed(claimed.token);
     this.onAuthOk?.();
     return claimed;
@@ -194,11 +207,13 @@ export class ApiClient {
    * auth-cache rule (PRD 8.2).
    */
   async probeMedia(id: string, variant: 'preview' | 'thumb' = 'preview'): Promise<number> {
+    const generation = this.generation;
     const response = await this.fetchImpl(
       this.mediaUrl(id, variant),
       this.transport.decorate({ method: 'GET', headers: { Range: 'bytes=0-0' } }),
     );
-    if (response.status === 401) this.onUnauthorized?.();
+    this.assertCurrent(generation);
+    if (response.status === 401) { this.invalidateAuthorization(); this.onUnauthorized?.(); }
     else if (isMediaSuccess(response.status)) this.onAuthOk?.();
     return response.status;
   }

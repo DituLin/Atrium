@@ -37,7 +37,8 @@ public final class MainActivity extends Activity {
     private String origin = "";
     private boolean resumed, failed, tlsFailed;
     private int retryDelay = 1000;
-    private long lastBack;
+    private final KeyDispatchGuard keyGuard = new KeyDispatchGuard();
+    private AlertDialog nativeMenu;
     private final Runnable retry = () -> { if (resumed && failed && !tlsFailed && web != null) web.reload(); };
 
     // The SPA cannot reconnect until its startup bundle has run. An HTML 200
@@ -55,7 +56,7 @@ public final class MainActivity extends Activity {
         super.onCreate(state);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         root = new FrameLayout(this);
-        root.setBackgroundColor(Color.rgb(11,13,16));
+        root.setBackgroundColor(Color.rgb(242,238,229));
         setContentView(root);
         WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG);
         origin = getPreferences(MODE_PRIVATE).getString("origin", "");
@@ -70,13 +71,14 @@ public final class MainActivity extends Activity {
     }
     @Override public void onWindowFocusChanged(boolean focused) { super.onWindowFocusChanged(focused); if(focused) immersive(); }
     private LinearLayout panel(String title, String detail) {
+        keyGuard.invalidate();
         clearOverlay();
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL); box.setGravity(Gravity.CENTER_VERTICAL);
-        box.setPadding(dp(36),dp(12),dp(36),dp(12)); box.setBackgroundColor(Color.rgb(11,13,16));
-        TextView heading = new TextView(this); heading.setText(title); heading.setTextSize(28); heading.setTextColor(Color.WHITE);
+        box.setPadding(dp(36),dp(12),dp(36),dp(12)); box.setBackgroundColor(Color.rgb(242,238,229));
+        TextView heading = new TextView(this); heading.setText(title); heading.setTextSize(28); heading.setTextColor(Color.rgb(40,51,47));
         box.addView(heading);
-        TextView body = new TextView(this); body.setText(detail); body.setTextSize(16); body.setTextColor(Color.LTGRAY);
+        TextView body = new TextView(this); body.setText(detail); body.setTextSize(16); body.setTextColor(Color.rgb(89,100,93));
         box.addView(body);
         root.addView(box,new FrameLayout.LayoutParams(-1,-1)); overlay=box;
         return box;
@@ -106,7 +108,7 @@ public final class MainActivity extends Activity {
     private void connect() {
         handler.removeCallbacks(retry); destroyWeb();clearOverlay();
         failed=false;tlsFailed=false;retryDelay=1000;
-        web=new WebView(this);web.setBackgroundColor(Color.rgb(11,13,16));
+        web=new WebView(this);web.setBackgroundColor(Color.rgb(242,238,229));
         WebSettings s=web.getSettings();s.setJavaScriptEnabled(true);s.setDomStorageEnabled(true);
         s.setAllowFileAccess(false);s.setAllowContentAccess(false);s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         s.setSupportMultipleWindows(false);s.setJavaScriptCanOpenWindowsAutomatically(false);
@@ -120,7 +122,7 @@ public final class MainActivity extends Activity {
                 if(OriginPolicy.allows(origin,r.getUrl().toString())) return null;
                 return new WebResourceResponse("text/plain","UTF-8",403,"Blocked",java.util.Collections.emptyMap(),new ByteArrayInputStream(new byte[0]));
             }
-            @Override public void onPageStarted(WebView v,String url,android.graphics.Bitmap icon) {failed=false;handler.removeCallbacks(checkBoot);handler.postDelayed(checkBoot,10000);}
+            @Override public void onPageStarted(WebView v,String url,android.graphics.Bitmap icon) {keyGuard.invalidate();failed=false;handler.removeCallbacks(checkBoot);handler.postDelayed(checkBoot,10000);}
             @Override public void onPageFinished(WebView v,String url) {
                 if(!failed && OriginPolicy.allows(origin,url)) {clearOverlay();retryDelay=1000;CookieManager.getInstance().flush();v.requestFocus();}
             }
@@ -148,16 +150,27 @@ public final class MainActivity extends Activity {
         if(!tlsFailed && resumed){handler.postDelayed(retry,retryDelay);retryDelay=Math.min(30000,retryDelay*2);}
     }
     private void menu() {
-        new AlertDialog.Builder(this).setTitle("Atrium")
+        if (!resumed || nativeMenu != null) return;
+        keyGuard.invalidate();
+        nativeMenu = new AlertDialog.Builder(this).setTitle("Atrium")
             .setItems(new String[]{"继续展示","连接设置","退出应用"},(d,index)->{if(index==1)setup();if(index==2)finish();})
-            .show();
+            .create();
+        nativeMenu.setOnDismissListener(d -> { nativeMenu=null; if(web!=null && overlay==null)web.requestFocus(); });
+        nativeMenu.setOnShowListener(d -> { nativeMenu.getListView().requestFocus(); nativeMenu.getListView().setSelection(0); });
+        nativeMenu.show();
     }
     private void sendKey(String key,int code) {
-        if(web!=null)web.evaluateJavascript("(()=>{const t=document.activeElement||document.body;const unhandled=t.dispatchEvent(new KeyboardEvent('keydown',{key:'"+key+"',keyCode:"+code+",which:"+code+",bubbles:true,cancelable:true}));if(unhandled&&'"+key+"'==='Enter'&&t.matches('button,a,[role=button]'))t.click();})()",null);
+        WebView current=web;
+        if(current==null || !resumed || overlay!=null || nativeMenu!=null)return;
+        KeyDispatchGuard.Ticket ticket=keyGuard.begin();
+        current.evaluateJavascript("(()=>{const t=document.activeElement||document.body;const unhandled=t.dispatchEvent(new KeyboardEvent('keydown',{key:'"+key+"',keyCode:"+code+",which:"+code+",bubbles:true,cancelable:true}));if(unhandled&&'"+key+"'==='Enter'&&t.matches('button,a,[role=button]'))t.click();return unhandled;})()", result -> {
+            if ("Escape".equals(key) && keyGuard.complete(ticket, "true".equals(result),
+                current==web && resumed && !failed && overlay==null && nativeMenu==null)) menu();
+        });
     }
     @Override public boolean dispatchKeyEvent(KeyEvent e) {
         if(e.getKeyCode()==KeyEvent.KEYCODE_MENU) {if(e.getAction()==KeyEvent.ACTION_UP)menu();return true;}
-        if(web!=null && overlay==null) {
+        if(web!=null && overlay==null && nativeMenu==null) {
             String key=null;int code=0;
             switch(e.getKeyCode()) {
                 case KeyEvent.KEYCODE_DPAD_LEFT:key="ArrowLeft";code=37;break;
@@ -166,18 +179,18 @@ public final class MainActivity extends Activity {
                 case KeyEvent.KEYCODE_DPAD_DOWN:key="ArrowDown";code=40;break;
                 case KeyEvent.KEYCODE_DPAD_CENTER:case KeyEvent.KEYCODE_ENTER:key="Enter";code=13;break;
                 case KeyEvent.KEYCODE_BACK:case KeyEvent.KEYCODE_ESCAPE:
-                    if(e.getAction()==KeyEvent.ACTION_UP) {
-                        long now=android.os.SystemClock.elapsedRealtime();
-                        if(now-lastBack<700){lastBack=0;menu();}else{lastBack=now;sendKey("Escape",27);}
-                    }return true;
+                    // Decide after release so the same press cannot release into
+                    // a newly opened native dialog. Held DOWN repeats do nothing.
+                    if(e.getAction()==KeyEvent.ACTION_UP && !e.isCanceled())sendKey("Escape",27);
+                    return true;
             }
-            if(key!=null){if(e.getAction()==KeyEvent.ACTION_DOWN)sendKey(key,code);return true;}
+            if(key!=null){if(e.getAction()==KeyEvent.ACTION_DOWN && KeyDispatchGuard.shouldSend(key,e.getRepeatCount()))sendKey(key,code);return true;}
         }
         return super.dispatchKeyEvent(e);
     }
-    @Override public void onBackPressed(){if(web==null)finish();else menu();}
+    @Override public void onBackPressed(){if(web==null)finish();else if(overlay==null)sendKey("Escape",27);else menu();}
     @Override protected void onResume(){super.onResume();resumed=true;immersive();handler.removeCallbacks(checkBoot);handler.postDelayed(checkBoot,10000);if(web!=null){web.onResume();if(failed&&!tlsFailed)handler.post(retry);}}
-    @Override protected void onPause(){resumed=false;handler.removeCallbacks(retry);handler.removeCallbacks(checkBoot);if(web!=null)web.onPause();CookieManager.getInstance().flush();super.onPause();}
-    private void destroyWeb(){handler.removeCallbacks(checkBoot);if(web!=null){web.stopLoading();root.removeView(web);web.destroy();web=null;}}
+    @Override protected void onPause(){resumed=false;keyGuard.invalidate();if(nativeMenu!=null)nativeMenu.dismiss();handler.removeCallbacks(retry);handler.removeCallbacks(checkBoot);if(web!=null)web.onPause();CookieManager.getInstance().flush();super.onPause();}
+    private void destroyWeb(){keyGuard.invalidate();handler.removeCallbacks(checkBoot);if(web!=null){web.stopLoading();root.removeView(web);web.destroy();web=null;}}
     @Override protected void onDestroy(){handler.removeCallbacksAndMessages(null);destroyWeb();super.onDestroy();}
 }

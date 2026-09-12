@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useApp } from '../app/context';
 import { showsReconnectingBanner } from '../app/connection';
 import { nasWidget, photoWidget } from '../app/homeSelect';
@@ -14,6 +14,9 @@ export function DashboardScreen() {
   const status = useRef<HTMLButtonElement>(null);
   const hero = useRef<HTMLDivElement>(null);
   const focusPhoto = () => hero.current?.querySelector<HTMLElement>('[role="button"]')?.focus();
+  useEffect(() => {
+    if (state.router.restoreFocus) document.querySelector<HTMLElement>(`[data-return-focus="${state.router.restoreFocus}"]`)?.focus();
+  }, [state.router.restoreFocus]);
   const clock = state.home?.widgets.find(widget => widget.type === 'clock');
   const photo = photoWidget(state.home);
   const nas = nasStatusText(nasWidget(state.home)?.sources ?? [], state.nowMs);
@@ -30,7 +33,7 @@ export function DashboardScreen() {
       <aside className="dashboard__side">
         {clock ? <WidgetSlot widget={clock} context={{ clock: state.clock, nowMs: state.nowMs }} /> : <p className="photos__note">时间尚未取得</p>}
         <div className="home__introduction"><h1>把日子，<br />留在眼前。</h1><p>确认照片，慢慢翻看。</p></div>
-        <RemoteButton ref={status} className="home__status" aria-label="查看状态" onClick={() => dispatch({ type: 'router.navigate', route: { name: 'settings' } })}
+        <RemoteButton ref={status} className="home__status" data-return-focus="home-status" aria-label="查看状态" onClick={() => dispatch({ type: 'router.navigate', sourceFocus: 'home-status', route: { name: 'settings' } })}
           onDirection={key => { if (key === 'left') focusPhoto(); if (key === 'down') focusPrimaryNav('settings'); }}>
           <span aria-label="系统状态"><span>{state.connection.status === 'online' ? '● 家庭服务已连接' : '○ 家庭服务连接未确认'}</span><span>NAS · {nas.value}</span></span>
           <span>查看 ›</span>

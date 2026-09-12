@@ -86,7 +86,7 @@ const VIEWER_PREFIX = 'viewer.';
 function purgedPhotoState(state: AppState): AppState {
   return {
     ...state,
-    router: { ...state.router, route: { name: 'dashboard' } },
+    router: { ...state.router, route: { name: 'dashboard' }, returnStack: [], restoreFocus: undefined },
     slideshow: slideshowReducer(state.slideshow, { type: 'slideshow.reset' }),
     collection: photoListReducer(state.collection, { type: 'photos.reset' }),
     viewer: photoViewerReducer(state.viewer, { type: 'viewer.close' }),
@@ -138,14 +138,17 @@ export function appReducer(state: AppState, action: AppAction): AppState {
   if (action.type.startsWith(PAIR_PREFIX)) {
     const pairing = pairingReducer(state.pairing, action as PairingAction);
     const next = pairing === state.pairing ? state : { ...state, pairing };
-    // A successful claim ends the "needs pairing" condition.
-    return action.type === 'pair.claimed' ? { ...next, needsPairing: false } : next;
+    // An explicit successful claim establishes fresh authorization. Ordinary
+    // authOk responses cannot clear revocation; only this claim clears both
+    // the pairing blocker and an empty/expired cache from before pairing.
+    return action.type === 'pair.claimed' ? { ...next, needsPairing: false, authExpired: false } : next;
   }
 
   switch (action.type) {
     case 'app.tick':
       return { ...state, nowMs: action.nowMs };
     case 'app.homeLoaded': {
+      if (state.needsPairing) return state;
       const interval = slideshowIntervalSeconds(action.home);
       return {
         ...state,
@@ -176,6 +179,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         }),
       };
     case 'app.authOk':
+      if (state.needsPairing) return state;
       return state.authExpired || state.needsPairing
         ? { ...state, authExpired: false, needsPairing: false }
         : state;
@@ -183,7 +187,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       // PRD 8.2: purge photo state and stop rendering cached family content.
       return state.authExpired ? state : { ...purgedPhotoState(state), authExpired: true };
     case 'app.needsPairing':
-      return { ...purgedPhotoState(state), needsPairing: true };
+      return { ...purgedPhotoState(state), needsPairing: true, pairing: initialPairingState };
     default:
       return state;
   }

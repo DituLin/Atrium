@@ -13,7 +13,8 @@ import { createScreenApi } from './apiClient';
 import type { AppContextValue } from './context';
 import { AppContext } from './context';
 import { toRouteState } from './router';
-import { appReducer, createInitialState } from './state';
+import type { AppAction } from './state';
+import { appReducer, createInitialState, selectScreen } from './state';
 import { useConnection } from './useConnection';
 import { useRemoteKeys, useSecondTick } from './useTick';
 
@@ -21,18 +22,29 @@ export const CLIENT_VERSION: string =
   typeof __CLIENT_VERSION__ === 'string' ? __CLIENT_VERSION__ : 'dev';
 
 export function AppProvider(props: { children: ReactNode }): ReactElement {
-  const [state, dispatch] = useReducer(appReducer, 0, createInitialState);
+  const [state, reduce] = useReducer(appReducer, 0, createInitialState);
+  const { api, dispatch } = useMemo(() => {
+    const send = (action: AppAction) => {
+      if (action.type === 'app.needsPairing' || action.type === 'app.authExpired') {
+        client.invalidateAuthorization();
+        clearLastAuthOkAt();
+      }
+      reduce(action);
+    };
+    const client = createScreenApi(send);
+    return { api: client, dispatch: send };
+  }, [reduce]);
   const stateRef = useRef(state);
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
 
-  const api = useMemo(() => createScreenApi(dispatch), []);
+  useEffect(() => () => api.invalidateAuthorization(), [api]);
 
   // Seed the clock immediately; the one-second tick keeps it moving.
   useEffect(() => {
     dispatch({ type: 'app.tick', nowMs: Date.now() });
-  }, []);
+  }, [dispatch]);
 
   // PRD 8.2 — boot, visibilitychange and a 60 s timer all funnel through here.
   useEffect(() => {
@@ -43,16 +55,23 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
     });
     watcher.start();
     return () => watcher.stop();
-  }, []);
+  }, [dispatch]);
 
-  useSecondTick(useCallback((nowMs: number) => dispatch({ type: 'app.tick', nowMs }), []));
+  useSecondTick(useCallback((nowMs: number) => dispatch({ type: 'app.tick', nowMs }), [dispatch]));
 
-  const goBack = useCallback(() => dispatch({ type: 'router.back' }), []);
+  const goBack = useCallback(() => dispatch({ type: 'router.back' }), [dispatch]);
 
   useRemoteKeys(
     useCallback(
       (key) => {
         if (key !== 'back') return false;
+        const screen = selectScreen(stateRef.current);
+        if (screen === 'dashboard') {
+          const hero = document.querySelector<HTMLElement>('.dashboard__main [role="button"]');
+          if (!hero || document.activeElement === hero) return false;
+          hero.focus(); return true;
+        }
+        if (screen === 'pair' || screen === 'connect') return false;
         goBack();
         return true;
       },
@@ -83,7 +102,7 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
 
   const value = useMemo<AppContextValue>(
     () => ({ state, dispatch, api, clientVersion: CLIENT_VERSION, goBack }),
-    [state, api, goBack],
+    [state, api, goBack, dispatch],
   );
 
   return <AppContext.Provider value={value}>{props.children}</AppContext.Provider>;

@@ -234,3 +234,14 @@ it('refresh completion keeps a newer locally selected route', async () => {
   expect(h.store.get().router.route).toEqual({ name: 'settings' });
   expect(h.acks[h.acks.length - 1]?.route).toEqual({ name: 'settings' });
 });
+
+it('refresh keeps the settings source entry through its acknowledgement', async () => {
+  const h = harness();
+  h.store.dispatch({ type: 'router.navigate', route: { name: 'photos', collection: 'all' }, sourceFocus: 'nav-photos' });
+  h.store.dispatch({ type: 'router.navigate', route: { name: 'settings' }, sourceFocus: 'nav-settings' });
+  h.executor.execute(command({ kind: 'refresh', payload: {} }));
+  await Promise.resolve();
+  h.store.dispatch({ type: 'router.back' });
+  expect(h.store.get().router.route).toEqual({ name: 'photos', collection: 'all' });
+  expect(h.store.get().router.restoreFocus).toBe('nav-settings');
+});

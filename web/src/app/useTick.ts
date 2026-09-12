@@ -22,6 +22,7 @@ export function useRemoteKeys(onKey: (key: RemoteKey) => boolean | void): void {
       if (event.defaultPrevented) return;
       const key = mapRemoteKey({ key: event.key, keyCode: event.keyCode });
       if (!key) return;
+      if (event.repeat && (key === 'enter' || key === 'back')) { event.preventDefault(); return; }
       // Only a listener that actually handles the key may consume it. A viewer
       // direction listener must leave Back available to the provider.
       if (onKey(key) === true) event.preventDefault();

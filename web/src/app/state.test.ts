@@ -138,3 +138,9 @@ it.each(['app.authExpired', 'app.needsPairing'] as const)('purges viewer entry a
   state = appReducer(state, { type: 'router.navigate', route: { name: 'photo', photoId: 'p1' } });
   expect(state).toBe(purged);
 });
+
+it('never lets late auth/home success undo revocation', () => {
+  const revoked = appReducer(createInitialState(0), { type: 'app.needsPairing' });
+  expect(appReducer(revoked, { type: 'app.authOk' })).toBe(revoked);
+  expect(appReducer(revoked, { type: 'app.homeLoaded', home: HOME, receivedAt: 0 })).toBe(revoked);
+});
