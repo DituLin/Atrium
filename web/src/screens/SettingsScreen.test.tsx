@@ -136,7 +136,7 @@ it('falls back to the selected collection when its old status entry disappears d
     first_seen_at: new Date().toISOString(), is_baseline: false, width: 1600, height: 1200,
     preview: { status: 'ready' as const, width: 1600, height: 1200 }, urls: { thumb: '/thumb/new', preview: '/preview/new' } };
   act(() => dispatch({ type: 'photos.pageLoaded', collection: 'recent', generation: currentState.collection.generation,
-    items: [item], nextCursor: null, append: false }));
+    items: [item], nextCursor: null, meta: null, append: false }));
   key('Escape');
   expect(screen.queryByRole('button', { name: '查看状态' })).toBeNull();
   expect(document.activeElement).toBe(screen.getByRole('tab', { name: '最近新增' }));
