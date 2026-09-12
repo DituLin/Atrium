@@ -2,9 +2,11 @@
 
 版本：0.1 · 讨论稿 · 2026-09-06
 
+2026-09-12 更新：AI 首期已完成，现进入产品视觉迭代。首轮照片版的具体构图、字体、token 与键位以 [宋式照片版规范](../design/song-tv-v1/spec.md) 和 [可操作原型](../design/song-tv-v1/prototype.html) 为准；本文保留扩展到简报、房屋、日历和视频的整体讨论。
+
 本文承载从三端技术验证进入家庭产品迭代后的设计讨论，供产品、视觉设计和开发共同使用。它不是已实现功能清单，也不是最终视觉定稿。
 
-优先级更新：用户随后要求先做 [AI Brain 与 home-mcp 技术方案](../tech/2026-09/atrium-home-hub/ai-brain-home-mcp-design.md)。本文保留，视觉实现暂后置；不因此撤销既有设计决策。
+历史优先级：用户曾要求先做 [AI Brain 与 home-mcp 技术方案](../tech/2026-09/atrium-home-hub/ai-brain-home-mcp-design.md)。该首期已验收，视觉工作已恢复；不因此撤销既有设计决策。
 
 ## 1. 已确认与待确认
 
