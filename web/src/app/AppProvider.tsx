@@ -52,7 +52,9 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
   useRemoteKeys(
     useCallback(
       (key) => {
-        if (key === 'back') goBack();
+        if (key !== 'back') return false;
+        goBack();
+        return true;
       },
       [goBack],
     ),

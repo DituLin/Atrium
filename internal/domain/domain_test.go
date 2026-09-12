@@ -116,7 +116,8 @@ func TestNormalizeExt(t *testing.T) {
 
 func TestRouteStateValidity(t *testing.T) {
 	require.True(t, domain.RouteState{Name: domain.RouteDashboard}.Valid())
-	require.False(t, domain.RouteState{Name: "settings"}.Valid())
+	require.True(t, domain.RouteState{Name: domain.RouteSettings}.Valid())
+	require.False(t, domain.RouteState{Name: "unknown"}.Valid())
 }
 
 func TestIdentityEquality(t *testing.T) {
@@ -124,4 +125,9 @@ func TestIdentityEquality(t *testing.T) {
 	require.True(t, a.Equal(domain.Identity{FSType: "smbfs", MountFromHash: "abc", Marker: true}))
 	require.False(t, a.Equal(domain.Identity{FSType: "apfs", MountFromHash: "abc", Marker: true}))
 	require.False(t, a.Equal(domain.Identity{FSType: "smbfs", MountFromHash: "xyz", Marker: true}))
+}
+
+func TestSettingsReportedRouteIsNotNavigable(t *testing.T) {
+	require.True(t, domain.RouteName("settings").Valid())
+	require.False(t, domain.RouteName("settings").NavigableRoute())
 }

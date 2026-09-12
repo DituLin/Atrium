@@ -16,16 +16,15 @@ export function useSecondTick(onTick: (nowMs: number) => void): void {
 }
 
 /** Global remote handler; screens handle direction keys locally via focus. */
-export function useRemoteKeys(onKey: (key: RemoteKey) => void): void {
+export function useRemoteKeys(onKey: (key: RemoteKey) => boolean | void): void {
   useEffect(() => {
     const handler = (event: KeyboardEvent): void => {
+      if (event.defaultPrevented) return;
       const key = mapRemoteKey({ key: event.key, keyCode: event.keyCode });
       if (!key) return;
-      if (key === 'back') {
-        // Back must never navigate the browser away from the SPA.
-        event.preventDefault();
-      }
-      onKey(key);
+      // Only a listener that actually handles the key may consume it. A viewer
+      // direction listener must leave Back available to the provider.
+      if (onKey(key) === true) event.preventDefault();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);

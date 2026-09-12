@@ -80,7 +80,7 @@ describe('App shell', () => {
     await waitFor(() => expect(screen.getByLabelText('时钟')).toBeDefined());
     // The slideshow asks for a seeded `random` round and reports the empty
     // library instead of showing a black rectangle (W-201, FR-03).
-    await waitFor(() => expect(screen.getByText('No photos yet')).toBeDefined());
+    await waitFor(() => expect(screen.getByText('暂无照片')).toBeDefined());
     const calls = (globalThis.fetch as unknown as { mock: { calls: string[][] } }).mock.calls;
     expect(calls.some(([url]) => /collection=random&limit=50&seed=\w+/.test(url ?? ''))).toBe(
       true,

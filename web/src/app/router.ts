@@ -1,10 +1,11 @@
 /**
  * Route state machine (design §7.1). There is deliberately no `react-router`:
- * the whole surface is five known routes driven by the remote and by server
+ * the surface has a small set of local routes driven by the remote and server
  * commands, so a pure reducer over a whitelist is smaller, testable, and cannot
  * be pushed into an unknown state by a malformed command.
  *
- * Whitelist: `pair | connect | dashboard | photos/:collection | photo/:id`.
+ * Local routes include settings; server navigate commands retain their own
+ * dashboard/photos whitelist in commands.ts.
  */
 
 import type { PhotoCollection } from '../types/api';
@@ -15,6 +16,7 @@ export type AppRoute =
   | { name: 'pair' }
   | { name: 'connect' }
   | { name: 'dashboard' }
+  | { name: 'settings' }
   | { name: 'photos'; collection: PhotoCollection }
   | { name: 'photo'; photoId: string; collection?: PhotoCollection };
 
@@ -43,6 +45,8 @@ export function parseRoutePath(path: string): AppRoute | null {
       return segments.length === 1 ? { name: 'pair' } : null;
     case 'connect':
       return segments.length === 1 ? { name: 'connect' } : null;
+    case 'settings':
+      return segments.length === 1 ? { name: 'settings' } : null;
     case 'dashboard':
       return segments.length === 1 ? { name: 'dashboard' } : null;
     case 'photos': {
@@ -103,6 +107,7 @@ export function backRoute(route: AppRoute): AppRoute {
         ? { name: 'photos', collection: route.collection }
         : { name: 'dashboard' };
     case 'photos':
+    case 'settings':
       return { name: 'dashboard' };
     default:
       return route;

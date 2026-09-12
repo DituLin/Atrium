@@ -129,6 +129,7 @@ func TestValidationMatrix(t *testing.T) {
 		{"navigate dashboard", domain.CommandNavigate, domain.CommandPayload{Route: domain.RouteDashboard}, false},
 		{"navigate photos", domain.CommandNavigate, domain.CommandPayload{Route: domain.RoutePhotos}, false},
 		{"navigate photo route", domain.CommandNavigate, domain.CommandPayload{Route: domain.RoutePhoto}, true},
+		{"navigate settings route", domain.CommandNavigate, domain.CommandPayload{Route: "settings"}, true},
 		{"navigate pair route", domain.CommandNavigate, domain.CommandPayload{Route: domain.RoutePair}, true},
 		{"navigate empty route", domain.CommandNavigate, domain.CommandPayload{}, true},
 		{"navigate unknown collection", domain.CommandNavigate,

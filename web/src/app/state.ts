@@ -22,7 +22,7 @@ import { initialRouterState, routerReducer } from './router';
 import type { SlideshowAction, SlideshowState } from './slideshow';
 import { initialSlideshowState, slideshowReducer } from './slideshow';
 
-export type ScreenName = 'pair' | 'connect' | 'dashboard' | 'photos' | 'photo';
+export type ScreenName = 'pair' | 'connect' | 'dashboard' | 'photos' | 'photo' | 'settings';
 
 export interface AppState {
   router: RouterState;

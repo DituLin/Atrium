@@ -519,3 +519,12 @@ func TestControlRejectsUnrelatedCommandIDs(t *testing.T) {
 		})
 	}
 }
+
+func TestNavigateSettingsIsRejected(t *testing.T) {
+	cfg := fixture(t, func(w http.ResponseWriter, r *http.Request) { t.Error("settings navigate reached Core") })
+	cs := session(t, cfg)
+	res, err := cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "home_navigate_screen", Arguments: map[string]any{"screen_id": "tv", "route": "settings", "operation_id": "01ARZ3NDEKTSV4RRFFQ69G5FAV"}})
+	if err != nil || !res.IsError {
+		t.Fatal("settings navigate accepted")
+	}
+}

@@ -23,6 +23,11 @@ function command(over: Partial<ScreenCommand>): ScreenCommand {
 }
 
 describe('client command rules (design §6.5)', () => {
+  it('rejects a remote navigate to the local settings page', () => {
+    const decision = decideCommand(initialRouterState, command({ payload: { route: 'settings' } }));
+    expect(decision.kind === 'reject' && decision.ack.error_code).toBe('invalid_route');
+  });
+
   it('applies a navigate with a higher sequence', () => {
     const decision = decideCommand(initialRouterState, command({ payload: { route: 'photos', collection: 'all' } }));
     expect(decision).toEqual({

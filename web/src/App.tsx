@@ -12,6 +12,7 @@ import { ConnectScreen } from './screens/ConnectScreen';
 import { DashboardScreen } from './screens/DashboardScreen';
 import { PairScreen } from './screens/PairScreen';
 import { PhotoScreen } from './screens/PhotoScreen';
+import { SettingsScreen } from './screens/SettingsScreen';
 import { PhotosScreen } from './screens/PhotosScreen';
 import { ErrorBoundary } from './ui/ErrorBoundary';
 
@@ -22,6 +23,8 @@ export function CurrentScreen(): ReactElement {
       return <PairScreen />;
     case 'connect':
       return <ConnectScreen />;
+    case 'settings':
+      return <SettingsScreen />;
     case 'photos':
       return <PhotosScreen />;
     case 'photo':

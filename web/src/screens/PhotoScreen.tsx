@@ -41,6 +41,8 @@ export function PhotoScreen(): ReactElement {
       (key) => {
         if (key === 'left') go('previous');
         else if (key === 'right') go('next');
+        else return false;
+        return true;
       },
       [go],
     ),

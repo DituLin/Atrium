@@ -46,6 +46,7 @@ function Thumb(props: { item: PhotoItem; options: ClockFormatOptions }): ReactEl
 export interface PhotoGridProps {
   items: readonly PhotoItem[];
   focusIndex: number;
+  active?: boolean;
   columns: number;
   options: ClockFormatOptions;
   onDirection: (direction: RemoteKey) => boolean;
@@ -57,6 +58,7 @@ export function PhotoGrid(props: PhotoGridProps): ReactElement {
   return (
     <FocusGroup
       className="photogrid"
+      active={props.active ?? true}
       columns={props.columns}
       count={props.items.length}
       index={props.focusIndex}

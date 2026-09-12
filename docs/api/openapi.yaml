@@ -1275,7 +1275,7 @@ components:
       properties:
         name:
           type: string
-          enum: [dashboard, photos, photo, pair, connect]
+          enum: [dashboard, photos, photo, pair, connect, settings]
         collection: { type: string }
         photo_id: { type: string }
 

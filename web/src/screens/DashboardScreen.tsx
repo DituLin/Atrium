@@ -1,87 +1,42 @@
-/**
- * Dashboard (FR-01). Fixed layout designed at 1920×1080 and scaled with vw/vh
- * so a 4K panel is the same composition at twice the pixels. Order is server
- * driven; unknown widget types disappear silently.
- */
-
-import type { ReactElement } from 'react';
-import { useCallback } from 'react';
-
+import { useRef } from 'react';
 import { useApp } from '../app/context';
 import { showsReconnectingBanner } from '../app/connection';
 import { nasWidget, photoWidget } from '../app/homeSelect';
-import { DEFAULT_COLLECTION } from '../app/router';
-import { currentSlide } from '../app/slideshow';
-import { useRemoteKeys } from '../app/useTick';
-import type { Widget } from '../types/api';
-import { StatusBar } from '../ui/StatusBar';
 import { WidgetBoundary } from '../ui/ErrorBoundary';
+import { Masthead, PrimaryNav, focusPrimaryNav } from '../ui/PrimaryNav';
+import { RemoteButton } from '../ui/RemoteButton';
+import { nasStatusText } from '../ui/statusText';
 import { WidgetSlot } from '../widgets/registry';
 import { PhotoPane } from '../widgets/PhotoPane';
 
-const SIDE_TYPES = new Set(['clock', 'weather', 'notice']);
-
-export function DashboardScreen(): ReactElement {
-  const { state, dispatch, clientVersion } = useApp();
-
-  // Remote entry points (design §7.1, PRD 4.2): Left/Right open the collection
-  // browser, Enter opens the photo currently on the pane.
-  useRemoteKeys(
-    useCallback(
-      (key) => {
-        if (key === 'left' || key === 'right') {
-          dispatch({
-            type: 'router.navigate',
-            route: { name: 'photos', collection: DEFAULT_COLLECTION },
-          });
-          return;
-        }
-        if (key !== 'enter') return;
-        const slide = currentSlide(state.slideshow);
-        if (slide) {
-          dispatch({ type: 'router.navigate', route: { name: 'photo', photoId: slide.id } });
-        }
-      },
-      [dispatch, state.slideshow],
-    ),
-  );
-
-  const widgets: readonly Widget[] = state.home?.widgets ?? [];
-  const context = { clock: state.clock, nowMs: state.nowMs };
+export function DashboardScreen() {
+  const { state, dispatch } = useApp();
+  const status = useRef<HTMLButtonElement>(null);
+  const hero = useRef<HTMLDivElement>(null);
+  const focusPhoto = () => hero.current?.querySelector<HTMLElement>('[role="button"]')?.focus();
+  const clock = state.home?.widgets.find(widget => widget.type === 'clock');
   const photo = photoWidget(state.home);
-  const nas = nasWidget(state.home);
-  const side = widgets.filter((widget) => SIDE_TYPES.has(widget.type));
-
-  return (
-    <div className="screen screen--dashboard">
-      {showsReconnectingBanner(state.connection) ? (
-        <div className="banner" role="status">
-          <span aria-hidden="true">↻</span> Reconnecting to Atrium Core — showing the last known
-          state
-        </div>
-      ) : null}
-
-      <main className="dashboard">
-        <div className="dashboard__side">
-          {side.map((widget, index) => (
-            <WidgetSlot key={`${widget.type}-${index}`} widget={widget} context={context} />
-          ))}
-        </div>
-        <div className="dashboard__main">
-          <WidgetBoundary name="photo">
-            <PhotoPane payload={photo} />
-          </WidgetBoundary>
-        </div>
-      </main>
-
-      <StatusBar
-        connection={state.connection}
-        nas={nas}
-        photo={photo}
-        homeName={state.home?.home.name ?? 'Atrium'}
-        clientVersion={clientVersion}
-        nowMs={state.nowMs}
-      />
-    </div>
-  );
+  const nas = nasStatusText(nasWidget(state.home)?.sources ?? [], state.nowMs);
+  return <div className="screen screen--dashboard">
+    <Masthead />
+    {showsReconnectingBanner(state.connection) ? <div className="banner" role="status">正在重连家庭服务 · 显示上次数据</div> : null}
+    <main className="dashboard">
+      <div className="dashboard__main" ref={hero}>
+        <WidgetBoundary name="photo"><PhotoPane payload={photo} interactive onDirection={key => {
+          if (key === 'right') status.current?.focus();
+          if (key === 'down') focusPrimaryNav('dashboard');
+        }} /></WidgetBoundary>
+      </div>
+      <aside className="dashboard__side">
+        {clock ? <WidgetSlot widget={clock} context={{ clock: state.clock, nowMs: state.nowMs }} /> : <p className="photos__note">时间尚未取得</p>}
+        <div className="home__introduction"><h1>把日子，<br />留在眼前。</h1><p>确认照片，慢慢翻看。</p></div>
+        <RemoteButton ref={status} className="home__status" aria-label="查看状态" onClick={() => dispatch({ type: 'router.navigate', route: { name: 'settings' } })}
+          onDirection={key => { if (key === 'left') focusPhoto(); if (key === 'down') focusPrimaryNav('settings'); }}>
+          <span aria-label="系统状态"><span>{state.connection.status === 'online' ? '● 家庭服务已连接' : '○ 家庭服务连接未确认'}</span><span>NAS · {nas.value}</span></span>
+          <span>查看 ›</span>
+        </RemoteButton>
+      </aside>
+    </main>
+    <PrimaryNav onUp={focusPhoto} />
+  </div>;
 }

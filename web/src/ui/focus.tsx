@@ -25,6 +25,7 @@ import { nextFocusIndex } from './focusNav';
 
 interface FocusGroupContextValue {
   activeIndex: number;
+  active: boolean;
   register: (element: HTMLElement | null, index: number) => void;
   setActiveIndex: (index: number) => void;
 }
@@ -33,6 +34,8 @@ const FocusGroupContext = createContext<FocusGroupContextValue | null>(null);
 
 export interface FocusGroupProps {
   columns?: number;
+  /** Only the owning screen region may request DOM focus. */
+  active?: boolean;
   count: number;
   /** Controlled focus index; omit to let the group keep its own. */
   index?: number;
@@ -55,6 +58,7 @@ export interface FocusGroupProps {
 export function FocusGroup(props: FocusGroupProps): ReactElement {
   const {
     columns = 1,
+    active = true,
     count,
     onActivate,
     onDirection,
@@ -104,10 +108,11 @@ export function FocusGroup(props: FocusGroupProps): ReactElement {
   // remote keeps working after a page load moves the selection.
   const focused = useRef(-1);
   useEffect(() => {
+    if (!active) { focused.current = -1; return; }
     if (!controlled || count === 0 || focused.current === activeIndex) return;
     focused.current = activeIndex;
     elements.current.get(activeIndex)?.focus();
-  }, [controlled, activeIndex, count]);
+  }, [active, controlled, activeIndex, count]);
 
   const handleRemoteKey = useCallback(
     (key: RemoteKey) => {
@@ -125,8 +130,8 @@ export function FocusGroup(props: FocusGroupProps): ReactElement {
   );
 
   const value = useMemo<FocusGroupContextValue>(
-    () => ({ activeIndex, register, setActiveIndex }),
-    [activeIndex, register, setActiveIndex],
+    () => ({ activeIndex, active, register, setActiveIndex }),
+    [activeIndex, active, register, setActiveIndex],
   );
 
   return (
@@ -135,8 +140,10 @@ export function FocusGroup(props: FocusGroupProps): ReactElement {
         className={className}
         data-focus-group=""
         onKeyDown={(event) => {
+          if (event.defaultPrevented) return;
           const mapped = mapRemoteKey({ key: event.key, keyCode: event.keyCode });
-          if (mapped && handleRemoteKey(mapped)) event.preventDefault();
+          if (mapped === 'enter' && event.repeat) { event.preventDefault(); event.stopPropagation(); return; }
+          if (mapped && handleRemoteKey(mapped)) { event.preventDefault(); event.stopPropagation(); }
         }}
       >
         {children}
@@ -158,7 +165,7 @@ export function Focusable(props: FocusableProps): ReactElement {
   const group = useContext(FocusGroupContext);
   const ref = useRef<HTMLDivElement | null>(null);
   const { index, children, className, onActivate, label } = props;
-  const isActive = group ? group.activeIndex === index : index === 0;
+  const isActive = group ? group.active && group.activeIndex === index : index === 0;
 
   useEffect(() => {
     group?.register(ref.current, index);
@@ -175,9 +182,10 @@ export function Focusable(props: FocusableProps): ReactElement {
       onFocus={() => group?.setActiveIndex(index)}
       onClick={onActivate}
       onKeyDown={(event) => {
-        if (event.key === 'Enter') {
+        if (mapRemoteKey(event) === 'enter' && onActivate) {
           event.preventDefault();
-          onActivate?.();
+          event.stopPropagation();
+          if (!event.repeat) onActivate();
         }
       }}
     >

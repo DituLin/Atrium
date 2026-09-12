@@ -91,11 +91,12 @@ func TestIssueCommandValidationFailures(t *testing.T) {
 	h.pairScreen(admin, "living_room_tv", "Living room")
 
 	cases := map[string]string{
-		"unknown kind":       `{"kind":"reboot","payload":{}}`,
-		"forbidden route":    `{"kind":"navigate","payload":{"route":"pair"}}`,
-		"unknown collection": `{"kind":"navigate","payload":{"route":"photos","collection":"secret"}}`,
-		"show without photo": `{"kind":"show","payload":{}}`,
-		"show unknown photo": `{"kind":"show","payload":{"photo_id":"01JNOPE"}}`,
+		"unknown kind":           `{"kind":"reboot","payload":{}}`,
+		"settings not navigable": `{"kind":"navigate","payload":{"route":"settings"}}`,
+		"forbidden route":        `{"kind":"navigate","payload":{"route":"pair"}}`,
+		"unknown collection":     `{"kind":"navigate","payload":{"route":"photos","collection":"secret"}}`,
+		"show without photo":     `{"kind":"show","payload":{}}`,
+		"show unknown photo":     `{"kind":"show","payload":{"photo_id":"01JNOPE"}}`,
 	}
 	for name, body := range cases {
 		t.Run(name, func(t *testing.T) {

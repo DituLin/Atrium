@@ -13,7 +13,10 @@ import {
 } from './router';
 
 describe('route whitelist', () => {
-  it('accepts exactly the five documented routes', () => {
+  it('accepts the documented local routes', () => {
+    expect(parseRoutePath('settings')).toEqual({ name: 'settings' });
+    expect(toRouteState({ name: 'settings' })).toEqual({ name: 'settings' });
+    expect(backRoute({ name: 'settings' })).toEqual({ name: 'dashboard' });
     expect(parseRoutePath('pair')).toEqual({ name: 'pair' });
     expect(parseRoutePath('connect')).toEqual({ name: 'connect' });
     expect(parseRoutePath('dashboard')).toEqual({ name: 'dashboard' });
