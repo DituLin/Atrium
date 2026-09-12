@@ -10,7 +10,7 @@
 
 ---
 
-2026-09-12，N1 开始实现，N2/N3 为工程细化方案，尚未交付。范围依据 [开发总计划](2026-09-12-product-development-plan.md) 与 [家庭数据契约](../tech/2026-09/atrium-home-hub/family-overview-design.md)。用户已确认简报内容为家庭今日概览：日程、家庭提示、房屋状态。当前缺少明确授权日历来源，先交付已有模块的真实汇总，不把它算作完整 M3。
+2026-09-12，N1 已在 `a583db6` 完成并经双阶段审查；N2 开始实现，N3/N4 尚未交付。范围依据 [开发总计划](2026-09-12-product-development-plan.md) 与 [家庭数据契约](../tech/2026-09/atrium-home-hub/family-overview-design.md)。用户已确认简报内容为家庭今日概览：日程、家庭提示、房屋状态。当前缺少明确授权日历来源，先交付已有模块的真实汇总，不把它算作完整 M3。
 
 ## 实现选择
 
@@ -32,7 +32,7 @@
 
 新增 `internal/briefing/{types,composer,composer_test}.go`，扩展 `internal/httpapi/family.go` 及测试、`server.go`、`routes.go`，同步 `docs/api/openapi.yaml` 与 Web API/types/tests。具体依赖构造复用既有 House composer，不读取 NAS 文件或先调用 widget.Compose。
 
-响应仅有一个根 `schema_version/generated_at/home`。`sources` 包含 `core/nas/profile/environment` 的现有公开快照，以及 `notice`、`calendar`。NAS 从 House 公开投影复用；不能把 failed/空数组转换为健康。notice 来源固定 ID `notice`、标签“家庭提示”，条目固定 ID `notice`，保留真实 updated_at/valid_from/valid_until 和文本；observed_at 是成功配置装载时刻，expires_at 为 null。启用但当前无有效提示时是 available + []；未配置/禁用是 not_connected + not_configured。日历暂为固定 `calendar`、not_connected + not_configured、null 时间、空 items；不预建日历 handler、适配器或假事件。
+响应仅有一个根 `schema_version/generated_at/home`。`sources` 包含 `core/nas/profile/environment` 的现有公开快照，以及 `notice`、`calendar`。NAS 从 House 公开投影复用；不能把 failed/空数组转换为健康。notice 来源固定 ID `notice`、标签“家庭提示”，条目固定 ID `notice`，保留真实 updated_at/valid_from/valid_until 和文本；observed_at 是成功配置装载时刻，expires_at 为 null。成功装载的配置启用但当前无有效提示时是 available + []；启用但缺少成功装载观测（仅手工构造/Parse）时为 loading + not_observed、空 items，不能由构造时间补造观测。未配置/禁用是 not_connected + not_configured。日历暂为固定 `calendar`、not_connected + not_configured、null 时间、空 items；不预建日历 handler、适配器或假事件。
 
 `entries` 是排序引用，不复制内容：`id`、`kind: source_status | notice`、`module: nas | notice`、`source_id`、可空 `item_id`。source_status 引用来源状态，item_id 为 null；notice 引用实际 notice 条目。来源与条目的时间只保留在 sources，UI 不得给引用重新续期。ID 由模块、来源、类型稳定组合，不能用本次响应时间。
 
