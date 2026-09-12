@@ -1,6 +1,6 @@
 # 家庭今日概览：数据与展示契约
 
-2026-09-12 · M3-A 工程契约已通过审阅并定稿；M2 验收通过，M3-B 后端正在实现与审查，尚未部署房屋 API 或页面。真实日历来源与公开字段已向用户询问，未获答复前不连接私人账户或读取个人日历；这一产品依赖仍待定，不妨碍先实现已有中枢状态的房屋页。
+2026-09-12 · M3-A 工程契约已通过审阅并定稿；M2 验收通过，M3-B 中枢状态 API 与房屋页已在 `cb1314c` 部署并通过浏览器、OnePlus 和 AI 回归（见房屋迭代记录）。真实日历来源与公开字段已向用户询问，未获答复前不连接私人账户或读取个人日历；这一产品依赖仍待定，不妨碍先实现已有中枢状态的房屋页。
 
 ## 目标与来源
 
@@ -85,7 +85,7 @@ NAS freshness 工程默认固定为 60 秒，取 `LastCheckAt + 60s`；服务端
 
 ## 已选 API 形状与隔离
 
-以下是后续实现目标，目前不可调用。首批只新增 `GET /api/v1/family/house`，以 `requireScope(auth.ScopeScreen, ...)` 接入现有鉴权；admin 可按现有兼容规则访问同一公开投影，不能因此附加维护字段。integration/MCP 不新增权限、端点或工具。未来日历与概览使用 `GET /api/v1/family/calendar`、`GET /api/v1/family/overview`，按各自里程碑实现，不为未接入功能提前添加空 handler。
+House 端点已实现并部署；calendar 与 overview 仍是后续目标，目前不可调用。首批只新增 `GET /api/v1/family/house`，以 `requireScope(auth.ScopeScreen, ...)` 接入现有鉴权；admin 可按现有兼容规则访问同一公开投影，不能因此附加维护字段。integration/MCP 不新增权限、端点或工具。未来日历与概览使用 `GET /api/v1/family/calendar`、`GET /api/v1/family/overview`，按各自里程碑实现，不为未接入功能提前添加空 handler。
 
 House 响应形状如下；这是类型草图，非真实家庭数据：
 
