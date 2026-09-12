@@ -1,31 +1,5 @@
-/*
- * Dark TV theme. Designed at 1920x1080 and expressed in vw/vh so the same
- * composition fills a 3840x2160 panel. Layout uses flex/grid only (design
- * §7.5); the font stack is the system one, with no external request anywhere.
- *
- * Type scale: the smallest primary text is 32px at 1080p (1.667vw at 1920).
- */
-
-:root {
-  --bg: #0b0d10;
-  --bg-raised: #14181d;
-  --fg: #f2f4f7;
-  --fg-dim: #a7b0bb;
-  --line: #263039;
-  --ok: #57d38c;
-  --warn: #f0b429;
-  --bad: #f2603c;
-  --focus: #7fc4ff;
-
-  --gap: 2.2vh;
-  --pad: 3vw;
-  --radius: 1.2vh;
-
-  --fs-body: max(24px, 1.45vw);
-  --fs-primary: max(32px, 1.85vw);
-  --fs-heading: max(44px, 2.8vw);
-  --fs-clock: 12.5vw;
-}
+/* Song-inspired paper and celadon foundation; layout composition remains unchanged. */
+@import './ui/design-tokens.css';
 
 * {
   box-sizing: border-box;
@@ -41,9 +15,9 @@ body,
 body {
   background: var(--bg);
   color: var(--fg);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+  font-family: var(--font-body);
   font-size: var(--fs-primary);
-  line-height: 1.25;
+  line-height: 1.45;
   overflow: hidden;
 }
 
@@ -100,7 +74,7 @@ body {
 
 .clock__hhmm {
   font-size: var(--fs-clock);
-  font-weight: 300;
+  font-weight: 400;
   letter-spacing: -0.02em;
   line-height: 1;
 }
@@ -111,7 +85,7 @@ body {
 }
 
 .clock__date {
-  font-size: var(--fs-heading);
+  font-size: var(--fs-primary);
 }
 
 .clock__zone {
@@ -272,7 +246,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.8vw;
-  background: #2a2110;
+  background: var(--surface-warning);
   border: 1px solid var(--warn);
   color: var(--warn);
   border-radius: var(--radius);
@@ -302,7 +276,7 @@ body {
 
 .paircode__digit {
   font-size: 11vw;
-  font-weight: 300;
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
   padding: 0 1.5vw;
   border-bottom: 0.6vh solid var(--focus);
@@ -385,8 +359,8 @@ body {
 .button:focus,
 .focusable:focus {
   /* Outline plus scale: never colour alone (FR-01, FR-04). */
-  outline: 0.5vh solid var(--focus);
-  outline-offset: 0.4vh;
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: var(--focus-offset);
   transform: scale(1.02);
 }
 
@@ -438,7 +412,7 @@ body {
   border-radius: var(--radius);
   background: rgba(6, 8, 10, 0.66);
   font-size: var(--fs-body);
-  color: var(--fg);
+  color: var(--photo-text);
 }
 
 .slide__estimated,
@@ -517,10 +491,10 @@ body {
   font-size: var(--fs-heading);
 }
 
-/* 28 px floor at 1080p: readable from 2-3 m (FR-01). */
+/* 28 design pixels at 1080p, scaled to the effective TV viewport. */
 .thumb__caption {
   margin: 0;
-  font-size: max(28px, 1.3vw);
+  font-size: var(--fs-aux);
   color: var(--fg-dim);
   white-space: nowrap;
   overflow: hidden;
@@ -621,18 +595,6 @@ body {
   }
 }
 
-/* TV WebViews often expose 960x540 or 1280x720 CSS pixels even on a 4K
- * panel. Physical-pixel floors must not force that viewport to overflow. */
-@media (max-width: 1400px) {
-  :root {
-    --fs-body: max(12px, 1.45vw);
-    --fs-primary: max(16px, 1.85vw);
-    --fs-heading: max(22px, 2.8vw);
-  }
-  .thumb__caption { font-size: max(12px, 1.46vw); }
-}
-
-:root { --fs-clock: 9vw; }
 .statusbar { flex-wrap: wrap; }
 .pair__steps { max-width: 100%; overflow-wrap: anywhere; }
 .paircode__digit { font-size: min(11vw, 22vh); }
@@ -642,6 +604,37 @@ body {
   .dashboard { flex-direction: column; }
   .dashboard__side { flex: 0 0 auto; }
   .dashboard__main { min-height: 0; }
-  .clock__time { --fs-clock: 16vw; }
   .viewer__bar { flex-wrap: wrap; }
+}
+
+/* Serif display text supplies the quiet print character; numbers stay sans. */
+.clock__date,
+.photos__title,
+.pair__title,
+.connect__title {
+  font-family: var(--font-title);
+  font-weight: 400;
+}
+
+.photos__empty,
+.viewer__status {
+  color: var(--photo-muted);
+}
+
+.slide__estimated {
+  color: var(--photo-muted);
+}
+
+.screen--photo {
+  --bg-raised: var(--photo-surface);
+  --fg: var(--photo-text);
+  --fg-dim: var(--photo-muted);
+  --line: var(--photo-line);
+  --focus: var(--photo-focus);
+  background: var(--photo-background);
+}
+
+.chip {
+  flex-wrap: wrap;
+  max-width: 100%;
 }

@@ -29,6 +29,6 @@ export function photoCaption(item: PhotoItem, options: ClockFormatOptions): Phot
 /** One line for screen readers and for the grid's `aria-label`. */
 export function captionText(item: PhotoItem, options: ClockFormatOptions): string {
   const caption = photoCaption(item, options);
-  if (caption.date === '') return 'Photo, capture date unknown';
-  return caption.estimated ? `Photo, ${caption.date} (estimated)` : `Photo, ${caption.date}`;
+  if (caption.date === '') return '照片，拍摄时间未知';
+  return caption.estimated ? `照片，${caption.date}（估算）` : `照片，${caption.date}`;
 }

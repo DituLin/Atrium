@@ -36,8 +36,8 @@ function Thumb(props: { item: PhotoItem; options: ClockFormatOptions }): ReactEl
         )}
       </div>
       <p className="thumb__caption">
-        {caption.date === '' ? 'Date unknown' : caption.date}
-        {caption.estimated ? <span className="thumb__estimated"> estimated</span> : null}
+        {caption.date === '' ? '拍摄时间未知' : caption.date}
+        {caption.estimated ? <span className="thumb__estimated"> 估算</span> : null}
       </p>
     </>
   );

@@ -112,8 +112,8 @@ describe('collection browser (W-202)', () => {
     expect(screen.getByText('Taken today')).toBeDefined();
     // captured_today carries the "not classified" count from `meta`.
     expect(screen.getByText(/2 photos have no capture time/)).toBeDefined();
-    expect(screen.getByText('Date unknown')).toBeDefined();
-    expect(screen.getAllByText('estimated').length).toBeGreaterThan(0);
+    expect(screen.getByText('拍摄时间未知')).toBeDefined();
+    expect(screen.getAllByText('估算').length).toBeGreaterThan(0);
 
     const first = screen.getAllByRole('button')[0] as HTMLElement;
     await waitFor(() => expect(document.activeElement).toBe(first));

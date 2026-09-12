@@ -77,7 +77,7 @@ describe('App shell', () => {
   it('renders the dashboard once /home succeeds and hides unknown widgets', async () => {
     stubApi();
     render(<App />);
-    await waitFor(() => expect(screen.getByLabelText('Clock')).toBeDefined());
+    await waitFor(() => expect(screen.getByLabelText('时钟')).toBeDefined());
     // The slideshow asks for a seeded `random` round and reports the empty
     // library instead of showing a black rectangle (W-201, FR-03).
     await waitFor(() => expect(screen.getByText('No photos yet')).toBeDefined());
@@ -85,7 +85,7 @@ describe('App shell', () => {
     expect(calls.some(([url]) => /collection=random&limit=50&seed=\w+/.test(url ?? ''))).toBe(
       true,
     );
-    expect(screen.getByLabelText('System status')).toBeDefined();
+    expect(screen.getByLabelText('系统状态')).toBeDefined();
     expect(screen.queryByText('must not render')).toBeNull();
   });
 

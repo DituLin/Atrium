@@ -28,16 +28,16 @@ export function ClockWidget(props: ClockWidgetProps): ReactElement {
   const unverified = isTimeUnverified(clock, nowMs);
 
   return (
-    <section className="widget widget--clock" aria-label="Clock">
+    <section className="widget widget--clock" aria-label="时钟">
       <div className="clock__time">
         <span className="clock__hhmm">{formatted.time}</span>
         <span className="clock__seconds">{formatted.seconds}</span>
       </div>
       <div className="clock__date">{formatted.date}</div>
-      <div className="clock__zone">{payload.timezone}</div>
+      <div className="clock__zone">家庭时区 · {payload.timezone}</div>
       {unverified ? (
         <div className="badge badge--warn" role="status">
-          <span aria-hidden="true">⚠</span> time unverified
+          <span aria-hidden="true">⚠</span> 时间未经核验
         </div>
       ) : null}
     </section>

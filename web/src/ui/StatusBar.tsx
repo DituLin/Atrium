@@ -2,8 +2,8 @@
  * Core / NAS / index / connection status (FR-01, FR-07, FR-12, W-204).
  *
  * Every state carries an icon glyph *and* a word: colour is never the only
- * signal, and the text must be readable from 2–3 m, so nothing here goes below
- * 32 px at 1080p. Share free space appears only when the server reports it.
+ * signal. Typography scales with the effective TV viewport. Share free space
+ * appears only when the server reports it.
  */
 
 import type { ReactElement } from 'react';
@@ -47,18 +47,18 @@ function StatusChip(props: {
 }
 
 function connectionChip(state: ConnectionState): { value: string; tone: Tone } {
-  if (state.stopReason === 'superseded') return { value: 'superseded', tone: 'warn' };
+  if (state.stopReason === 'superseded') return { value: '另一会话已接管', tone: 'warn' };
   switch (state.status) {
     case 'online':
-      return { value: 'online', tone: 'ok' };
+      return { value: '已连接', tone: 'ok' };
     case 'connecting':
-      return { value: 'connecting', tone: 'idle' };
+      return { value: '正在连接', tone: 'idle' };
     case 'reconnecting':
-      return { value: 'reconnecting', tone: 'warn' };
+      return { value: '正在重连', tone: 'warn' };
     case 'offline':
-      return { value: 'offline', tone: 'bad' };
+      return { value: '已断开', tone: 'bad' };
     default:
-      return { value: 'idle', tone: 'idle' };
+      return { value: '未连接', tone: 'idle' };
   }
 }
 
@@ -77,13 +77,16 @@ export function StatusBar(props: StatusBarProps): ReactElement {
   const nas = nasStatusText(sources, props.nowMs);
   const indexing = indexProgressText(props.photo);
   const free = shareFreeText(sources);
+  const online = props.connection.status === 'online';
+  const snapshotDetail = props.connection.hasSnapshot ? '显示上次数据' : '尚未取得数据';
 
   return (
-    <footer className="statusbar" aria-label="System status">
+    <footer className="statusbar" aria-label="系统状态">
       <StatusChip
-        label="Core"
-        value={props.connection.hasSnapshot ? 'reachable' : 'unreachable'}
-        tone={props.connection.hasSnapshot ? 'ok' : 'bad'}
+        label="家庭服务"
+        value={online ? '已连接' : '连接未确认'}
+        tone={online ? 'ok' : 'idle'}
+        detail={online ? undefined : snapshotDetail}
       />
       <StatusChip
         label="NAS"
@@ -91,9 +94,9 @@ export function StatusBar(props: StatusBarProps): ReactElement {
         tone={HEALTH_TONE[nas.health]}
         detail={nas.detail}
       />
-      {indexing ? <StatusChip label="Index" value={indexing} tone="warn" /> : null}
-      {free ? <StatusChip label="Share" value={free} tone="idle" /> : null}
-      <StatusChip label="Link" value={connection.value} tone={connection.tone} />
+      {indexing ? <StatusChip label="索引" value={indexing} tone="warn" /> : null}
+      {free ? <StatusChip label="共享空间" value={free} tone="idle" /> : null}
+      <StatusChip label="连接" value={connection.value} tone={connection.tone} />
       <div className="statusbar__spacer" />
       <div className="statusbar__home">{props.homeName}</div>
       <div className="statusbar__version">{props.clientVersion}</div>

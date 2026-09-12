@@ -62,10 +62,10 @@ export function PhotoPane(props: PhotoPaneProps): ReactElement {
             {slideshow.status === 'empty' ? 'No photos yet' : 'Loading photos…'}
           </p>
         ) : null}
-        {caption && caption.date !== '' ? (
+        {caption ? (
           <p className="slide__caption">
-            {caption.date}
-            {caption.estimated ? <span className="slide__estimated"> estimated</span> : null}
+            {caption.date || '拍摄时间未知'}
+            {caption.estimated ? <span className="slide__estimated"> 估算</span> : null}
           </p>
         ) : null}
       </div>

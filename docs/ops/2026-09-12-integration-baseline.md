@@ -50,6 +50,6 @@ Mac 断电恢复、NAS 自动挂载仍暂停。OnePlus 是开发终端；真实�
 | home-mcp | 989cb3fdd6584ef6b91400c31048089577b5682317cb2e0c1d53e507ec58afaf |
 | Brain host | dc81b4161e85171c953d69e8ccd0b95105f8302c93b0382fae13425b41ab2796 |
 
-健康检查返回 `7f43094+7f43094`。集成部署再次通过同一 OnePlus 全流程 smoke：D-pad/确认/返回、show、refresh、首页、Home 后恢复与重开保留配对；四次控制 applied，观测耗时 266 / 271 / 523 / 269 ms。正式 ask 查询在线状态并回首页成功，回执保留在私有 `integrated-ask.txt`；不将模型等待计入 TV 渲染延迟。
+健康检查返回 `7f43094+7f43094`。该次嵌入 Web 资源来自提交前已核验的集成源码，UI 构建标签仍为 `0.1.0+79ad91c`（9 月 12 日实读确认）；此标签不能当成纯 79ad91c 源码包。M2 发布时在最终提交后重新执行 Web build，再嵌入 Core，以统一构建对应关系。集成部署再次通过同一 OnePlus 全流程 smoke：D-pad/确认/返回、show、refresh、首页、Home 后恢复与重开保留配对；四次控制 applied，观测耗时 266 / 271 / 523 / 269 ms。正式 ask 查询在线状态并回首页成功，回执保留在私有 `integrated-ask.txt`；不将模型等待计入 TV 渲染延迟。
 
 证据：私有 `~/Atrium/iteration-20260912/{deployed-builds.json,integrated-device.jsonl,integrated-ask.txt}`。M0 通过并进入 M1；不以此提前完成产品体验或正式 V1 验收。

@@ -20,18 +20,18 @@ export function worstHealth(sources: readonly NasSourceStatus[]): SourceHealth {
   return 'unknown';
 }
 
-/** "just now" / "4 min ago" / "3 h ago" / "2 d ago"; "never" without a time. */
+/** Relative elapsed time; absent or invalid timestamps remain explicitly unknown. */
 export function relativeTime(iso: string | null | undefined, nowMs: number): string {
-  if (!iso) return 'never';
+  if (!iso) return '时间未知';
   const epoch = Date.parse(iso);
-  if (Number.isNaN(epoch)) return 'never';
+  if (Number.isNaN(epoch)) return '时间未知';
   const seconds = Math.max(0, Math.round((nowMs - epoch) / 1000));
-  if (seconds < 60) return 'just now';
+  if (seconds < 60) return '刚刚';
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 60) return `${minutes} 分钟前`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} h ago`;
-  return `${Math.floor(hours / 24)} d ago`;
+  if (hours < 24) return `${hours} 小时前`;
+  return `${Math.floor(hours / 24)} 天前`;
 }
 
 const UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'] as const;
@@ -52,11 +52,18 @@ export function shareFreeText(sources: readonly NasSourceStatus[]): string | nul
   for (const source of sources) {
     const free = source.share_free_bytes;
     if (typeof free === 'number' && Number.isFinite(free)) {
-      return `${formatBytes(free)} free`;
+      return `剩余 ${formatBytes(free)}`;
     }
   }
   return null;
 }
+
+const HEALTH_TEXT: Readonly<Record<SourceHealth, string>> = {
+  online: '在线',
+  degraded: '异常',
+  offline: '离线',
+  unknown: '未知',
+};
 
 export interface NasStatusText {
   health: SourceHealth;
@@ -71,16 +78,17 @@ export function nasStatusText(
   nowMs: number,
 ): NasStatusText {
   if (sources.length === 0) {
-    return { health: 'unknown', value: 'unknown', detail: 'no source configured' };
+    return { health: 'unknown', value: '未知', detail: '未配置照片来源' };
   }
   const health = worstHealth(sources);
   const affected = sources.find((source) => source.health === health) ?? sources[0];
   const checked = relativeTime(affected?.last_check_at, nowMs);
-  const name = affected?.name ?? 'source';
+  const name = affected?.name ?? '照片来源';
+  const detail = checked === '时间未知' ? '检查时间未知' : `上次检查：${checked}`;
   return {
     health,
-    value: health,
-    detail: sources.length === 1 ? `checked ${checked}` : `${name} · checked ${checked}`,
+    value: HEALTH_TEXT[health],
+    detail: sources.length === 1 ? detail : `${name} · ${detail}`,
   };
 }
 
@@ -91,8 +99,8 @@ export function indexProgressText(payload: PhotoWidgetPayload | null): string | 
   const { seen, indexed } = index.progress;
   if (index.state === 'baseline_import' || baseline.status === 'importing') {
     const percent = seen > 0 ? Math.min(100, Math.floor((indexed / seen) * 100)) : 0;
-    return `first import ${percent}% (${indexed} of ${seen})`;
+    return `首次导入 ${percent}%（${indexed} / ${seen}）`;
   }
-  if (index.state === 'scanning') return `scanning · ${indexed} indexed`;
+  if (index.state === 'scanning') return `扫描中 · 已索引 ${indexed} 项`;
   return null;
 }

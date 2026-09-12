@@ -52,18 +52,18 @@ describe('status text: NAS (FR-07)', () => {
   it('names the state in words and says when it was last checked', () => {
     expect(nasStatusText([source()], NOW)).toEqual({
       health: 'online',
-      value: 'online',
-      detail: 'checked 2 min ago',
+      value: '在线',
+      detail: '上次检查：2 分钟前',
     });
     expect(nasStatusText([source({ health: 'offline', last_check_at: null })], NOW)).toEqual({
       health: 'offline',
-      value: 'offline',
-      detail: 'checked never',
+      value: '离线',
+      detail: '检查时间未知',
     });
     expect(nasStatusText([], NOW)).toEqual({
       health: 'unknown',
-      value: 'unknown',
-      detail: 'no source configured',
+      value: '未知',
+      detail: '未配置照片来源',
     });
   });
 
@@ -72,21 +72,22 @@ describe('status text: NAS (FR-07)', () => {
       [source(), source({ id: 'archive', name: 'Archive', health: 'degraded' })],
       NOW,
     );
-    expect(text.detail).toBe('Archive · checked 2 min ago');
+    expect(text.detail).toBe('Archive · 上次检查：2 分钟前');
   });
 
   it('formats ages in the units a glance can read', () => {
-    expect(relativeTime('2026-09-06T11:59:40Z', NOW)).toBe('just now');
-    expect(relativeTime('2026-09-06T09:00:00Z', NOW)).toBe('3 h ago');
-    expect(relativeTime('2026-09-04T09:00:00Z', NOW)).toBe('2 d ago');
-    expect(relativeTime(null, NOW)).toBe('never');
-    expect(relativeTime('not a date', NOW)).toBe('never');
+    expect(relativeTime('2026-09-06T11:59:40Z', NOW)).toBe('刚刚');
+    expect(relativeTime('2026-09-06T09:00:00Z', NOW)).toBe('3 小时前');
+    expect(relativeTime('2026-09-04T09:00:00Z', NOW)).toBe('2 天前');
+    expect(relativeTime('2026-09-06T11:58:00Z', NOW)).toBe('2 分钟前');
+    expect(relativeTime(null, NOW)).toBe('时间未知');
+    expect(relativeTime('not a date', NOW)).toBe('时间未知');
   });
 });
 
 describe('status text: share free space (FR-12)', () => {
   it('shows free space only when the server reports it', () => {
-    expect(shareFreeText([source({ share_free_bytes: 512 * 1024 ** 3 })])).toBe('512 GB free');
+    expect(shareFreeText([source({ share_free_bytes: 512 * 1024 ** 3 })])).toBe('剩余 512 GB');
     expect(shareFreeText([source()])).toBeNull();
     expect(shareFreeText([source({ share_free_bytes: null })])).toBeNull();
   });
@@ -110,7 +111,7 @@ describe('status text: index progress (W-204)', () => {
         },
       }),
     );
-    expect(text).toBe('first import 25% (50 of 200)');
+    expect(text).toBe('首次导入 25%（50 / 200）');
   });
 
   it('shows a scan and nothing at all when idle', () => {
@@ -124,7 +125,7 @@ describe('status text: index progress (W-204)', () => {
           },
         }),
       ),
-    ).toBe('scanning · 7 indexed');
+    ).toBe('扫描中 · 已索引 7 项');
     expect(indexProgressText(photoWidget())).toBeNull();
     expect(indexProgressText(null)).toBeNull();
   });

@@ -1,0 +1,65 @@
+/* Local weight-400 GB2312 subsets; dynamic names can fall back to system CJK.
+ * Vite resolves these CSS URLs into hashed production assets. See fonts/SOURCES.md. */
+@font-face {
+  font-family: 'Atrium Noto Serif SC';
+  src: url('../assets/fonts/title.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Atrium Noto Sans SC';
+  src: url('../assets/fonts/body.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  --paper: #f2eee5;
+  --text: #28332f;
+  --muted: #59645d;
+  --celadon: #315e54;
+  --surface: #e6dfd2;
+  --rule: #a9b1a6;
+  --warning: #8b4a35;
+  --surface-warning: #ede1d4;
+  --photo-background: #141a17;
+  --photo-text: #f2eee5;
+  --photo-muted: #c4cdc5;
+  --photo-surface: #202621;
+  --photo-line: #717c74;
+  --photo-focus: #a7c6b9;
+
+  --font-title: 'Atrium Noto Serif SC', 'Songti SC', 'STSong', serif;
+  --font-body: 'Atrium Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+
+  /* One design pixel at 1920×1080. Both dimensions constrain scale, including
+   * 804×384 WebViews; physical-pixel font floors must not force overflow. */
+  --design-pixel: min(0.0520833333vw, 0.0925925926vh);
+  --fs-title: calc(56 * var(--design-pixel));
+  --fs-text: calc(32 * var(--design-pixel));
+  --fs-aux: calc(28 * var(--design-pixel));
+  --fs-clock: calc(126 * var(--design-pixel));
+  --safe-margin: calc(72 * var(--design-pixel));
+  --focus-width: max(1px, calc(5 * var(--design-pixel)));
+  --focus-offset: calc(7 * var(--design-pixel));
+
+  /* Existing presentation selectors consume aliases during the staged rollout. */
+  --bg: var(--paper);
+  --bg-raised: var(--surface);
+  --fg: var(--text);
+  --fg-dim: var(--muted);
+  --line: var(--rule);
+  --ok: var(--celadon);
+  --warn: var(--warning);
+  --bad: var(--warning);
+  --focus: var(--celadon);
+  --gap: calc(24 * var(--design-pixel));
+  --pad: var(--safe-margin);
+  --radius: calc(3 * var(--design-pixel));
+  --fs-body: var(--fs-aux);
+  --fs-primary: var(--fs-text);
+  --fs-heading: var(--fs-title);
+}

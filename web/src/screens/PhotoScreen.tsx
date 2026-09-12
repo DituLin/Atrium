@@ -74,8 +74,8 @@ export function PhotoScreen(): ReactElement {
 
       <footer className="viewer__bar">
         <p className="viewer__caption">
-          {caption && caption.date !== '' ? caption.date : 'Capture date unknown'}
-          {caption?.estimated ? <span className="viewer__estimated"> estimated</span> : null}
+          {caption && caption.date !== '' ? caption.date : '拍摄时间未知'}
+          {caption?.estimated ? <span className="viewer__estimated"> 估算</span> : null}
         </p>
         <div className="viewer__hints">
           <span className={neighborId(viewer, 'previous') ? '' : 'is-disabled'}>◀ Previous</span>

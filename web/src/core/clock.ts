@@ -82,10 +82,7 @@ export interface ClockFormatOptions {
 }
 
 const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
+const CHINESE_WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
 
 /**
  * Wall-clock components for `epochMs` in the home timezone. Uses named-zone
@@ -141,7 +138,7 @@ export interface FormattedClock {
   /** 24-hour `HH:MM`, the very large element on the dashboard. */
   time: string;
   seconds: string;
-  /** `Weekday, D Month YYYY` in the home timezone. */
+  /** Chinese calendar date and weekday in the home timezone. */
   date: string;
   /** `YYYY-MM-DD` in the home timezone; changes exactly at local midnight. */
   dayKey: string;
@@ -149,12 +146,11 @@ export interface FormattedClock {
 
 export function formatClock(epochMs: number, options: ClockFormatOptions): FormattedClock {
   const parts = wallClockParts(epochMs, options);
-  const weekday = WEEKDAY_NAMES[parts.weekday] ?? WEEKDAY_NAMES[0];
-  const month = MONTH_NAMES[parts.month - 1] ?? '';
+  const weekday = CHINESE_WEEKDAYS[parts.weekday] ?? CHINESE_WEEKDAYS[0];
   return {
     time: `${pad2(parts.hour)}:${pad2(parts.minute)}`,
     seconds: pad2(parts.second),
-    date: `${weekday}, ${parts.day} ${month} ${parts.year}`,
+    date: `${parts.year}年${parts.month}月${parts.day}日 ${weekday}`,
     dayKey: `${parts.year}-${pad2(parts.month)}-${pad2(parts.day)}`,
   };
 }
@@ -164,7 +160,7 @@ export function homeDayKey(epochMs: number, options: ClockFormatOptions): string
   return formatClock(epochMs, options).dayKey;
 }
 
-/** Short caption for a photo's captured date, e.g. `5 Sep 2026`. */
+/** Chinese photo capture date and time in the home timezone. */
 export function formatCapturedDate(
   isoTimestamp: string | null,
   options: ClockFormatOptions,
@@ -173,6 +169,5 @@ export function formatCapturedDate(
   const epoch = Date.parse(isoTimestamp);
   if (Number.isNaN(epoch)) return null;
   const parts = wallClockParts(epoch, options);
-  const month = MONTH_NAMES[parts.month - 1]?.slice(0, 3) ?? '';
-  return `${parts.day} ${month} ${parts.year} ${pad2(parts.hour)}:${pad2(parts.minute)}`;
+  return `${parts.year}年${parts.month}月${parts.day}日 ${pad2(parts.hour)}:${pad2(parts.minute)}`;
 }

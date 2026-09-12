@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { initialClockState } from '../core/clock';
+import { TIME_UNVERIFIED_AFTER_MS, initialClockState } from '../core/clock';
 import type { Widget } from '../types/api';
 import { WidgetSlot, findWidget, isRenderedWidgetType } from './registry';
 
@@ -36,6 +36,10 @@ describe('widget registry (design §6.7)', () => {
 
   it('shows the time-unverified badge when no server time has arrived', () => {
     render(<WidgetSlot widget={clockWidget} context={context} />);
-    expect(screen.getByText(/time unverified/)).toBeDefined();
+    expect(screen.getByText(/时间未经核验/)).toBeDefined();
+  });
+  it('uses the same unverified wording after the last sync expires', () => {
+    render(<WidgetSlot widget={clockWidget} context={{ clock: { offsetMs: 0, lastSyncAt: 0 }, nowMs: TIME_UNVERIFIED_AFTER_MS + 1 }} />);
+    expect(screen.getByText(/时间未经核验/)).toBeDefined();
   });
 });

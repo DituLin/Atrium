@@ -4,6 +4,7 @@ import {
   TIME_UNVERIFIED_AFTER_MS,
   clockReducer,
   formatClock,
+  formatCapturedDate,
   homeDayKey,
   initialClockState,
   isTimeUnverified,
@@ -57,7 +58,7 @@ describe('formatting with a named timezone', () => {
     const out = formatClock(epoch, { ...SG, timeZoneSupported: true });
     expect(out.time).toBe('10:07');
     expect(out.seconds).toBe('09');
-    expect(out.date).toBe('Saturday, 5 September 2026');
+    expect(out.date).toBe('2026年9月5日 星期六');
     expect(out.dayKey).toBe('2026-09-05');
   });
 
@@ -82,5 +83,20 @@ describe('formatting without Intl timezone support', () => {
   it('still rolls over at the offset midnight', () => {
     const after = Date.parse('2026-09-05T16:00:00.000Z');
     expect(homeDayKey(after, { ...SG, timeZoneSupported: false })).toBe('2026-09-06');
+  });
+});
+
+
+describe('Chinese captured date', () => {
+  it('uses home midnight consistently with and without named timezone support', () => {
+    for (const timeZoneSupported of [true, false]) {
+      expect(formatCapturedDate('2026-09-05T16:07:00Z', { ...SG, timeZoneSupported }))
+        .toBe('2026年9月6日 00:07');
+    }
+  });
+
+  it('does not invent a date for missing or malformed capture time', () => {
+    expect(formatCapturedDate(null, SG)).toBeNull();
+    expect(formatCapturedDate('not a date', SG)).toBeNull();
   });
 });
