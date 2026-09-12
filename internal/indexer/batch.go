@@ -24,41 +24,39 @@ type batch struct {
 	scanner *Scanner
 	ctx     context.Context //nolint:containedctx // the batch lives inside one scan call
 	tx      *sql.Tx
-	n       int
+	pending []func() error
 }
 
 func newBatch(ctx context.Context, s *Scanner) *batch {
 	return &batch{scanner: s, ctx: ctx}
 }
 
-// run executes fn inside the current batch, opening one if needed and
-// committing once BatchSize writes have accumulated.
+// run buffers reconciliation work while the caller performs network I/O.
+// Only flush opens a transaction: never retain SQLite's writer lock across
+// ReadDir, DirEntry.Info, Stat, or stability waits on a slow NAS.
 func (b *batch) run(fn func() error) error {
-	if b.tx == nil {
-		tx, err := b.scanner.db.BeginWrite(b.ctx)
-		if err != nil {
-			return err
-		}
-		b.tx = tx
-		b.scanner.tx = tx
-	}
-	if err := fn(); err != nil {
-		b.rollback()
-		return err
-	}
-	b.n++
-	if b.n >= BatchSize {
+	b.pending = append(b.pending, fn)
+	if len(b.pending) >= BatchSize {
 		return b.flush()
 	}
 	return nil
 }
 
-// flush commits whatever the batch holds; it is safe to call when empty.
+// flush applies an in-memory batch in a short database-only transaction.
 func (b *batch) flush() error {
-	tx := b.tx
-	b.tx, b.scanner.tx, b.n = nil, nil, 0
-	if tx == nil {
+	if len(b.pending) == 0 {
 		return nil
+	}
+	tx, err := b.scanner.db.BeginWrite(b.ctx)
+	if err != nil {
+		return err
+	}
+	b.tx, b.scanner.tx = tx, tx
+	defer b.rollback()
+	for _, fn := range b.pending {
+		if err := fn(); err != nil {
+			return err
+		}
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("indexer: commit batch: %w", err)
@@ -66,11 +64,9 @@ func (b *batch) flush() error {
 	return nil
 }
 
-// rollback discards the open batch. The files it covered are simply not
-// indexed by this run; the next scan sees them again.
 func (b *batch) rollback() {
 	tx := b.tx
-	b.tx, b.scanner.tx, b.n = nil, nil, 0
+	b.tx, b.scanner.tx, b.pending = nil, nil, nil
 	if tx != nil {
 		_ = tx.Rollback()
 	}

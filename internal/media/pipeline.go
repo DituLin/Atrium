@@ -130,7 +130,7 @@ func (p *Pipeline) openSource(ctx context.Context, photo *domain.Photo) (io.Read
 func classifyIOError(err error) error {
 	switch {
 	case errors.Is(err, source.ErrStuck), errors.Is(err, source.ErrDegraded):
-		return Coded(ErrCodeStuck, err)
+		return jobs.Defer(DeferInterval, Coded(ErrCodeStuck, err))
 	case errors.Is(err, source.ErrSymlink), errors.Is(err, source.ErrUnsafePath):
 		return jobs.Permanent(Coded(ErrCodeUnsupported, err))
 	case errors.Is(err, os.ErrNotExist):
