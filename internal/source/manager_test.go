@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log/slog"
+	"sync"
 	"testing"
 	"time"
 
@@ -216,4 +217,81 @@ func TestLocalDirectoryOnAPFSStillRejected(t *testing.T) {
 	p := m.Probe(context.Background(), m.Get("family_photos"))
 	assert.Equal(t, domain.HealthUnknown, p.Health)
 	assert.Equal(t, source.DetailNotAMount, p.Detail)
+}
+
+type gatedProbeFS struct {
+	*source.FakeFS
+	started chan struct{}
+	release chan struct{}
+	once    sync.Once
+}
+
+func (f *gatedProbeFS) Statfs(ctx context.Context) (source.VolumeStats, error) {
+	f.once.Do(func() { close(f.started) })
+	select {
+	case <-f.release:
+	case <-ctx.Done():
+		return source.VolumeStats{}, ctx.Err()
+	}
+	return f.FakeFS.Statfs(ctx)
+}
+
+func TestDelayedProbeCannotPublishAcrossAuthorizationChange(t *testing.T) {
+	for _, operation := range []string{"probe", "rebind"} {
+		for _, change := range []string{"revoke", "restore", "reconcile_revoked", "replace_root"} {
+			t.Run(operation+"/"+change, func(t *testing.T) {
+				db := testutil.NewDB(t)
+				now := time.Date(2026, 9, 12, 12, 0, 0, 0, time.UTC)
+				require.NoError(t, db.Sources().Upsert(t.Context(), "family", "Family", "/root/old", now))
+				fs := &gatedProbeFS{FakeFS: source.NewFakeFS(), started: make(chan struct{}), release: make(chan struct{})}
+				cfg := &config.Config{Sources: []config.Source{{ID: "family", Root: "/root/old", Identity: config.Identity{RequireMount: true}}}}
+				m, err := source.NewManager(source.ManagerOptions{Config: cfg, DB: db, Logger: quietLogger(), Now: func() time.Time { return now }, NewFS: func(config.Source) (source.FS, error) { return fs, nil }})
+				require.NoError(t, err)
+				result := make(chan source.Probe, 1)
+				go func() {
+					if operation == "rebind" {
+						p, _ := m.Rebind(t.Context(), "family")
+						result <- p
+					} else {
+						result <- m.Probe(t.Context(), m.Get("family"))
+					}
+				}()
+				select {
+				case <-fs.started:
+				case <-time.After(time.Second):
+					t.Fatal("probe did not start")
+				}
+				if change != "replace_root" {
+					require.NoError(t, db.Sources().Revoke(t.Context(), "family", "revoked", now))
+				}
+				switch change {
+				case "restore":
+					require.NoError(t, db.Sources().Restore(t.Context(), "family", now))
+				case "reconcile_revoked":
+					require.NoError(t, db.Sources().Upsert(t.Context(), "family", "Family", "/root/old", now))
+				case "replace_root":
+					require.NoError(t, db.Sources().Upsert(t.Context(), "family", "Family", "/root/new", now))
+				}
+				close(fs.release)
+				select {
+				case <-result:
+				case <-time.After(time.Second):
+					t.Fatal("probe did not finish")
+				}
+				row, err := db.Sources().Get(t.Context(), "family")
+				require.NoError(t, err)
+				require.Nil(t, row.LastCheckAt, "old in-flight observation must not be published")
+				require.Nil(t, row.LastSuccessAt)
+				require.Nil(t, row.ShareStatsAt)
+				require.Nil(t, row.IdentityBound, "old in-flight identity must not be bound")
+				require.False(t, m.Get("family").Online())
+				if change == "restore" || change == "reconcile_revoked" {
+					require.Equal(t, domain.HealthOnline, m.Probe(t.Context(), m.Get("family")).Health)
+					row, err = db.Sources().Get(t.Context(), "family")
+					require.NoError(t, err)
+					require.NotNil(t, row.LastCheckAt, "a new check under restored authorization can publish")
+				}
+			})
+		}
+	}
 }

@@ -6,6 +6,7 @@
 import type {
   ApiErrorBody,
   HomeResponse,
+  HouseResponse,
   NasStatusResponse,
   PairClaimResponse,
   PairStartResponse,
@@ -163,6 +164,12 @@ export class ApiClient {
 
   getHome(): Promise<HomeResponse> {
     return this.get<HomeResponse>(`${API_BASE}/home`);
+  }
+
+  getHouse(): Promise<HouseResponse> {
+    return this.request<HouseResponse>(`${API_BASE}/family/house`, {
+      method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-store',
+    }, true);
   }
 
   getNasStatus(): Promise<NasStatusResponse> {

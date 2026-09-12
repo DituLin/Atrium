@@ -23,6 +23,7 @@ func (a *API) routes() {
 
 	// Screen scope (admin is accepted too).
 	m.HandleFunc("GET "+APIPrefix+"/home", a.requireScope(auth.ScopeScreen, a.handleHome))
+	m.HandleFunc("GET "+APIPrefix+"/family/house", a.requireScope(auth.ScopeScreen, a.handleHouse))
 	m.HandleFunc("GET "+APIPrefix+"/screens/me", a.requireScope(auth.ScopeScreen, a.handleScreenMe))
 	m.HandleFunc("GET "+APIPrefix+"/nas/status", a.requireScope(auth.ScopeScreen, a.handleNASStatus))
 	m.HandleFunc("GET "+APIPrefix+"/photos", a.requireScope(auth.ScopeScreen, a.handlePhotosList))

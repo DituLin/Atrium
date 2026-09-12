@@ -218,6 +218,40 @@ paths:
         "410": { $ref: "#/components/responses/ScreenRevoked" }
         "429": { $ref: "#/components/responses/RateLimited" }
 
+  /api/v1/family/house:
+    get:
+      tags: [screen]
+      summary: Public house and hub observations
+      description: |
+        Reads configured, active sources from the source repository without photo
+        statistics, NAS probes or external I/O. Screen and admin receive the same
+        public projection; integration credentials have no access. Core responding
+        proves only this HTTP response. Each NAS observation expires at its last
+        check plus 60 seconds, including known offline/degraded observations.
+        Unobserved sources are loading/not_observed with empty items. Revoked or
+        configuration-removed sources are omitted. If source authorization cannot
+        be read, configured ID/name snapshots are failed/read_failed with empty
+        items and null observation/expiry; clients must clear prior items, not
+        retain them as stale. Profile and environment are not connected.
+      security:
+        - screenBearer: []
+        - screenCookie: []
+        - adminBearer: []
+      responses:
+        "200":
+          description: Independent public snapshots; NAS failure may coexist with Core available.
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+              description: Family responses must not be stored in HTTP or persistent client caches.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HouseResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "410": { $ref: "#/components/responses/ScreenRevoked" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
   /api/v1/nas/status:
     get:
       tags: [screen]
@@ -1434,6 +1468,124 @@ components:
                   - $ref: "#/components/schemas/NasWidget"
                   - $ref: "#/components/schemas/WeatherWidget"
                   - $ref: "#/components/schemas/NoticeWidget"
+
+    FamilySourceSnapshot:
+      type: object
+      additionalProperties: false
+      required: [source_id, source_label, observed_at, expires_at, availability, reason, items]
+      properties:
+        source_id: { type: string }
+        source_label: { type: string }
+        observed_at:
+          type: [string, "null"]
+          format: date-time
+          description: Last complete interpretable source observation; never renewed by serialization.
+        expires_at:
+          type: [string, "null"]
+          format: date-time
+          description: Observation freshness ends inclusively at this instant.
+        availability:
+          type: string
+          enum: [not_connected, loading, available, stale, failed]
+        reason:
+          type: [string, "null"]
+          enum: [not_configured, not_provided, not_supported, sharing_stopped, read_failed, expired, not_observed, null]
+        items: { type: array }
+
+    HouseCoreItem:
+      type: object
+      additionalProperties: false
+      required: [id, updated_at, valid_from, valid_until, responding]
+      properties:
+        id: { type: string, const: response }
+        updated_at: { type: "null" }
+        valid_from: { type: "null" }
+        valid_until: { type: "null" }
+        responding: { type: boolean, const: true }
+
+    HouseNASItem:
+      type: object
+      additionalProperties: false
+      required: [id, updated_at, valid_from, valid_until, health, last_success_at]
+      properties:
+        id: { type: string, const: health }
+        updated_at: { type: "null" }
+        valid_from: { type: "null" }
+        valid_until: { type: "null" }
+        health:
+          type: string
+          enum: [online, offline, degraded, unknown]
+        last_success_at:
+          type: [string, "null"]
+          format: date-time
+          description: Last readable check; distinct from the source observation and freshness.
+
+    HouseCoreSnapshot:
+      allOf:
+        - $ref: "#/components/schemas/FamilySourceSnapshot"
+        - properties:
+            source_id: { const: core }
+            availability: { const: available }
+            reason: { type: "null" }
+            observed_at: { type: string, format: date-time }
+            expires_at: { type: string, format: date-time }
+            items:
+              type: array
+              minItems: 1
+              maxItems: 1
+              items: { $ref: "#/components/schemas/HouseCoreItem" }
+
+    HouseNASSnapshot:
+      allOf:
+        - $ref: "#/components/schemas/FamilySourceSnapshot"
+        - properties:
+            items:
+              type: array
+              maxItems: 1
+              items: { $ref: "#/components/schemas/HouseNASItem" }
+
+    HouseEmptySnapshot:
+      allOf:
+        - $ref: "#/components/schemas/FamilySourceSnapshot"
+        - properties:
+            availability: { const: not_connected }
+            observed_at: { type: "null" }
+            expires_at: { type: "null" }
+            items:
+              type: array
+              maxItems: 0
+              items: false
+
+    HouseResponse:
+      type: object
+      additionalProperties: false
+      required: [schema_version, generated_at, home, core, nas, profile, environment]
+      properties:
+        schema_version: { type: integer, const: 1 }
+        generated_at: { type: string, format: date-time }
+        home:
+          type: object
+          additionalProperties: false
+          required: [name, timezone]
+          properties:
+            name: { type: string }
+            timezone: { type: string, description: IANA timezone name }
+        core: { $ref: "#/components/schemas/HouseCoreSnapshot" }
+        nas:
+          type: array
+          items: { $ref: "#/components/schemas/HouseNASSnapshot" }
+        profile:
+          allOf:
+            - $ref: "#/components/schemas/HouseEmptySnapshot"
+            - properties:
+                source_id: { const: profile }
+                reason: { const: not_provided }
+        environment:
+          allOf:
+            - $ref: "#/components/schemas/HouseEmptySnapshot"
+            - properties:
+                source_id: { const: environment }
+                reason: { const: not_supported }
 
     Diagnostics:
       type: object

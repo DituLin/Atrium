@@ -224,3 +224,39 @@ export interface ApiErrorBody {
     details?: Record<string, unknown>;
   };
 }
+
+/* ------------------------------------------------------------ family house */
+
+export type FamilyAvailability = 'not_connected' | 'loading' | 'available' | 'stale' | 'failed';
+export type FamilyReason = 'not_configured' | 'not_provided' | 'not_supported'
+  | 'sharing_stopped' | 'read_failed' | 'expired' | 'not_observed';
+
+export interface FamilyItemMeta {
+  id: string;
+  updated_at: string | null;
+  valid_from: string | null;
+  valid_until: string | null;
+}
+
+export interface FamilySourceSnapshot<T> {
+  source_id: string;
+  source_label: string;
+  observed_at: string | null;
+  expires_at: string | null;
+  availability: FamilyAvailability;
+  reason: FamilyReason | null;
+  items: Array<FamilyItemMeta & T>;
+}
+
+export interface HouseResponse {
+  schema_version: 1;
+  generated_at: string;
+  home: { name: string; timezone: string };
+  core: FamilySourceSnapshot<{ responding: true }>;
+  nas: Array<FamilySourceSnapshot<{
+    health: 'online' | 'offline' | 'degraded' | 'unknown';
+    last_success_at: string | null;
+  }>>;
+  profile: FamilySourceSnapshot<never>;
+  environment: FamilySourceSnapshot<never>;
+}

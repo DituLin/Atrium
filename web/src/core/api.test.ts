@@ -163,3 +163,34 @@ it('checks authorization again after a delayed JSON body', async () => {
   await expect(old).rejects.toMatchObject({ name: 'AbortError' });
   expect(onAuthOk).not.toHaveBeenCalled();
 });
+
+it('reads House independently with authenticated no-store requests', async () => {
+  const onAuthOk = vi.fn();
+  const transport = createAuthTransport('bearer');
+  transport.onClaimed('atr_scr_house');
+  const body = { schema_version: 1, nas: [], core: { availability: 'available' } };
+  const fetchImpl = vi.fn((_path: string, _init?: RequestInit) => Promise.resolve(jsonResponse(200, body)));
+  const client = new ApiClient({ fetchImpl, transport, onAuthOk });
+  expect(await client.getHouse()).toEqual(body);
+  expect(fetchImpl).toHaveBeenCalledTimes(1);
+  expect(fetchImpl.mock.calls[0]?.[0]).toBe('/api/v1/family/house');
+  const init = fetchImpl.mock.calls[0]?.[1];
+  expect(init?.method).toBe('GET');
+  expect(init?.cache).toBe('no-store');
+  expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer atr_scr_house');
+  expect(onAuthOk).toHaveBeenCalledOnce();
+});
+
+it('rejects House JSON arriving after authorization invalidation', async () => {
+  let finish!: (body: unknown) => void;
+  const onAuthOk = vi.fn();
+  const client = new ApiClient({ onAuthOk, fetchImpl: () => Promise.resolve({ status: 200, ok: true,
+    json: () => new Promise(resolve => { finish = resolve; }) } as Response) });
+  const old = client.getHouse();
+  await Promise.resolve();
+  expect(finish).toBeDefined();
+  client.invalidateAuthorization();
+  finish({ nas: [{ items: [{ health: 'online' }] }] });
+  await expect(old).rejects.toMatchObject({ name: 'AbortError' });
+  expect(onAuthOk).not.toHaveBeenCalled();
+});

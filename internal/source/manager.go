@@ -80,20 +80,6 @@ func (e *Entry) Extensions() map[string]bool {
 	return out
 }
 
-func (e *Entry) set(p Probe, mismatch bool, now time.Time) (changed bool) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-	changed = e.health != p.Health || e.detail != p.Detail || e.mismatch != mismatch
-	e.health = p.Health
-	e.detail = p.Detail
-	e.mismatch = mismatch
-	e.lastAt = now
-	if p.OK() && !mismatch {
-		e.lastOK = now
-	}
-	return changed
-}
-
 func (e *Entry) setBound(ident *domain.Identity) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -206,50 +192,39 @@ func (m *Manager) Load(ctx context.Context) error {
 // Probe checks one source and persists the outcome. It returns the health that
 // was recorded so callers can log or act on a transition.
 func (m *Manager) Probe(ctx context.Context, e *Entry) Probe {
+	lease, err := m.db.Sources().BeginObservation(ctx, e.ID, e.Config.Root)
+	if err != nil {
+		return Probe{Health: domain.HealthUnknown, Detail: DetailNeverProbed, Err: err}
+	}
 	now := m.now()
 	p := CheckIdentity(ctx, e.FS, e.Identity)
-
 	mismatch := false
+	var binding *domain.Identity
 	if p.OK() && p.Identity != nil {
-		switch bound := e.Bound(); {
+		switch bound := lease.Source.IdentityBound; {
 		case bound == nil:
-			// First success binds; from now on the mount must stay the same.
-			if err := m.db.Sources().BindIdentity(ctx, e.ID, *p.Identity, now); err != nil {
-				m.log.Warn("identity binding failed", "component", "source",
-					"event", "identity_bind_failed", "source_id", e.ID, "error", err.Error())
-			} else {
-				e.setBound(p.Identity)
-				m.log.Info("source identity bound", "component", "source",
-					"event", "identity_bound", "source_id", e.ID, "fstype", p.Identity.FSType)
-			}
+			binding = p.Identity
 		case !bound.Equal(*p.Identity):
 			mismatch = true
-			p.Health = domain.HealthUnknown
-			p.Detail = DetailIdentityMismatch
+			p.Health, p.Detail = domain.HealthUnknown, DetailIdentityMismatch
 		}
 	}
-
-	if osfs, ok := e.FS.(*OSFS); ok {
-		if p.OK() && !mismatch {
-			osfs.ClearDegraded()
-		} else if osfs.Degraded() && p.Health == domain.HealthOnline {
-			p.Health = domain.HealthDegraded
-			p.Detail = DetailStuckIO
-		}
+	observation := probeObservation(p, now)
+	observation.Success = p.OK() && !mismatch
+	observation.Identity = binding
+	committed, changed, err := m.publishObservation(ctx, e, lease, observation, mismatch, false)
+	if err != nil {
+		m.log.Warn("health update failed", "component", "source", "event", "health_write_failed", "source_id", e.ID, "error", err.Error())
 	}
-
-	changed := e.set(p, mismatch, now)
-	success := p.OK() && !mismatch
-	if err := m.db.Sources().SetHealth(ctx, e.ID, p.Health, p.Detail, success, now); err != nil &&
-		!errors.Is(err, domain.ErrNotFound) {
-		m.log.Warn("health update failed", "component", "source",
-			"event", "health_write_failed", "source_id", e.ID, "error", err.Error())
+	if !committed {
+		return Probe{Health: domain.HealthUnknown, Detail: DetailNeverProbed, Err: err}
 	}
-	m.recordShareStats(ctx, e, p, now)
-
+	if binding != nil {
+		m.log.Info("source identity bound", "component", "source",
+			"event", "identity_bound", "source_id", e.ID, "fstype", binding.FSType)
+	}
 	if changed {
-		m.log.Info("source health changed", "component", "source", "event", "health_changed",
-			"source_id", e.ID, "health", string(p.Health), "code", p.Detail)
+		m.log.Info("source health changed", "component", "source", "event", "health_changed", "source_id", e.ID, "health", string(p.Health), "code", p.Detail)
 		if m.bus != nil {
 			m.bus.Publish(domain.TopicNAS, domain.TopicHome)
 		}
@@ -257,21 +232,38 @@ func (m *Manager) Probe(ctx context.Context, e *Entry) Probe {
 	return p
 }
 
-// recordShareStats stores capacity only when it is meaningful: a network
-// filesystem reporting non-zero values (FR-12). Anything else stays hidden
-// rather than being presented as the NAS's physical capacity.
-func (m *Manager) recordShareStats(ctx context.Context, e *Entry, p Probe, now time.Time) {
-	if !p.OK() || !IsNetworkFilesystem(p.Volume.FSType) {
-		return
+// publishObservation serializes the durable commit with its runtime binding,
+// health and I/O recovery. Filesystem checks happen before acquiring this lock.
+func (m *Manager) publishObservation(ctx context.Context, e *Entry, lease store.ObservationLease, observation store.SourceObservation, mismatch, rebind bool) (committed, changed bool, err error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	committed, err = m.db.Sources().CommitObservation(ctx, lease, observation, rebind)
+	if !committed {
+		return false, false, err
 	}
-	if p.Volume.TotalBytes <= 0 || p.Volume.FreeBytes < 0 {
-		return
+	if osfs, ok := e.FS.(*OSFS); ok && observation.Success {
+		osfs.ClearDegraded()
 	}
-	if err := m.db.Sources().SetShareStats(ctx, e.ID, p.Volume.TotalBytes, p.Volume.FreeBytes, now); err != nil &&
-		!errors.Is(err, domain.ErrNotFound) {
-		m.log.Warn("share stats update failed", "component", "source",
-			"event", "share_stats_failed", "source_id", e.ID, "error", err.Error())
+	e.bound = lease.Source.IdentityBound
+	if observation.Identity != nil {
+		e.bound = observation.Identity
 	}
+	changed = e.health != observation.Health || e.detail != observation.Detail || e.mismatch != mismatch
+	e.health, e.detail, e.mismatch = observation.Health, observation.Detail, mismatch
+	e.lastAt = observation.At
+	if observation.Success {
+		e.lastOK = observation.At
+	}
+	return true, changed, nil
+}
+
+// probeObservation includes capacity only for a meaningful network share read.
+func probeObservation(p Probe, now time.Time) store.SourceObservation {
+	observation := store.SourceObservation{Health: p.Health, Detail: p.Detail, Success: p.OK(), At: now}
+	if p.OK() && IsNetworkFilesystem(p.Volume.FSType) && p.Volume.TotalBytes > 0 && p.Volume.FreeBytes >= 0 {
+		observation.TotalBytes, observation.FreeBytes = &p.Volume.TotalBytes, &p.Volume.FreeBytes
+	}
+	return observation
 }
 
 // Rebind accepts the mount currently behind a source as its new identity,
@@ -281,19 +273,24 @@ func (m *Manager) Rebind(ctx context.Context, id string) (Probe, error) {
 	if e == nil {
 		return Probe{}, fmt.Errorf("source %q: %w", id, domain.ErrNotFound)
 	}
+	lease, err := m.db.Sources().BeginObservation(ctx, e.ID, e.Config.Root)
+	if err != nil {
+		return Probe{}, err
+	}
 	p := CheckIdentity(ctx, e.FS, e.Identity)
 	if !p.OK() || p.Identity == nil {
 		return p, domain.Errorf(domain.CodeSourceOffline,
 			"source %s is not readable right now (%s)", id, p.Detail)
 	}
 	now := m.now()
-	if err := m.db.Sources().BindIdentity(ctx, id, *p.Identity, now); err != nil {
+	observation := probeObservation(p, now)
+	observation.Identity = p.Identity
+	committed, _, err := m.publishObservation(ctx, e, lease, observation, false, true)
+	if err != nil {
 		return p, err
 	}
-	e.setBound(p.Identity)
-	e.set(p, false, now)
-	if err := m.db.Sources().SetHealth(ctx, id, p.Health, p.Detail, true, now); err != nil {
-		return p, err
+	if !committed {
+		return p, domain.ErrConflict
 	}
 	m.log.Info("source identity rebound", "component", "source",
 		"event", "identity_rebound", "source_id", id)
