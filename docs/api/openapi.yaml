@@ -1429,10 +1429,13 @@ components:
 
     NoticeWidget:
       type: object
-      required: [text, updated_at]
+      required: [text, updated_at, valid_from, valid_until]
+      description: Static family notice, included only when enabled, nonblank and within [valid_from, valid_until). Unknown content timestamps are null; response time never supplies them.
       properties:
         text: { type: string }
-        updated_at: { type: string, format: date-time }
+        updated_at: { type: [string, "null"], format: date-time }
+        valid_from: { type: [string, "null"], format: date-time }
+        valid_until: { type: [string, "null"], format: date-time }
 
     HomeSnapshot:
       type: object

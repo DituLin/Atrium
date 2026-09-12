@@ -103,8 +103,10 @@ type Weather struct {
 
 // Notice is a static operator message.
 type Notice struct {
-	Text      string `json:"text"`
-	UpdatedAt string `json:"updated_at"`
+	Text       string  `json:"text"`
+	UpdatedAt  *string `json:"updated_at"`
+	ValidFrom  *string `json:"valid_from"`
+	ValidUntil *string `json:"valid_until"`
 }
 
 // formatTime renders an API timestamp with its offset.

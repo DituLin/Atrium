@@ -127,6 +127,8 @@ export interface WeatherWidgetPayload {
 export interface NoticeWidgetPayload {
   text: string;
   updated_at: string | null;
+  valid_from: string | null;
+  valid_until: string | null;
 }
 
 export const KNOWN_WIDGET_TYPES = ['clock', 'photo', 'nas', 'weather', 'notice'] as const;

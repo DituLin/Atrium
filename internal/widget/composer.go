@@ -98,9 +98,7 @@ func (c *Composer) Compose(ctx context.Context, admin bool) (*Snapshot, error) {
 			snap.Weather = wx
 		}
 	}
-	if c.cfg.Widgets.Notice.Enabled && c.cfg.Widgets.Notice.Text != "" {
-		snap.Notice = &Notice{Text: c.cfg.Widgets.Notice.Text, UpdatedAt: formatTime(now, loc)}
-	}
+	snap.Notice = CurrentNotice(c.cfg.Widgets.Notice, now)
 	return snap, nil
 }
 

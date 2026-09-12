@@ -157,6 +157,10 @@ func (c *Config) Validate() error {
 		}
 	}
 
+	if err := c.Widgets.Notice.Validate(); err != nil {
+		errs = append(errs, err)
+	}
+
 	switch c.Logging.Level {
 	case "debug", "info", "warn", "error":
 	default:

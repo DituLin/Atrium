@@ -18,11 +18,22 @@ type Config struct {
 	Backup  Backup   `yaml:"backup"`
 
 	// path is the file the config was loaded from; empty for defaults.
-	path string `yaml:"-"`
+	path     string    `yaml:"-"`
+	loadedAt time.Time `yaml:"-"`
 }
 
 // Path returns the file the configuration was loaded from.
 func (c *Config) Path() string { return c.path }
+
+// LoadedAt returns the successful file load observation, or nil for configurations
+// constructed by Defaults or Parse. It is not the notice content update time.
+func (c *Config) LoadedAt() *time.Time {
+	if c.loadedAt.IsZero() {
+		return nil
+	}
+	t := c.loadedAt
+	return &t
+}
 
 // Home describes the household context.
 type Home struct {
@@ -136,8 +147,11 @@ type Weather struct {
 
 // Notice is a static operator message.
 type Notice struct {
-	Enabled bool   `yaml:"enabled"`
-	Text    string `yaml:"text"`
+	Enabled    bool   `yaml:"enabled"`
+	Text       string `yaml:"text"`
+	UpdatedAt  string `yaml:"updated_at"`
+	ValidFrom  string `yaml:"valid_from"`
+	ValidUntil string `yaml:"valid_until"`
 }
 
 // Logging configures the JSON log files.
