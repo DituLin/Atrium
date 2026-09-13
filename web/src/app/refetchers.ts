@@ -111,7 +111,7 @@ export function createRefetchers(ports: RefetchPorts): Refetchers {
 
   const route = async (target: AppRoute): Promise<void> => {
     if (target.name === 'briefing') { await overview(); return; }
-    if (target.name === 'house') { await house(); return; }
+    if (target.name === 'house' || target.name === 'calendar') { await house(); return; }
     const jobs: Array<Promise<void>> = [home()];
     switch (target.name) {
       case 'dashboard':

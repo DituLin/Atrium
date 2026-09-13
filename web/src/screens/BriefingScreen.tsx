@@ -103,7 +103,7 @@ export function BriefingScreen() {
         </div>
         <aside className="briefing__summary" aria-label="简报来源">
           <h2>来源</h2><dl>
-            <div><dt>家庭日历</dt><dd>{projected ? summary(projected.sources.calendar) : '等待读取'}</dd></div>
+            <div><dt>日程同步</dt><dd>{projected ? summary(projected.sources.calendar) : '等待读取'}</dd></div>
             <div><dt>家庭提示</dt><dd>{projected ? summary(projected.sources.notice) : '等待读取'}</dd></div>
             <div><dt>中枢来源</dt><dd>{nasSummary}</dd></div>
             <div><dt>房屋资料</dt><dd>{projected ? projected.sources.profile.availability === 'not_connected' ? '尚未填写' : summary(projected.sources.profile) : '等待读取'}</dd></div>

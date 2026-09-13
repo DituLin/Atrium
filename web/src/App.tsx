@@ -1,3 +1,4 @@
+import { CalendarScreen } from './screens/CalendarScreen';
 import { BriefingScreen } from './screens/BriefingScreen';
 /**
  * Screen switch plus the global error boundary. A crash anywhere below lands
@@ -25,6 +26,8 @@ export function CurrentScreen(): ReactElement {
       return <PairScreen />;
     case 'connect':
       return <ConnectScreen />;
+    case 'calendar':
+      return <CalendarScreen />;
     case 'briefing':
       return <BriefingScreen />;
     case 'house':

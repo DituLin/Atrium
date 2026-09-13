@@ -105,3 +105,17 @@ it('awaits Overview independently of failing home and preserves route, history a
   await Promise.resolve(); expect(settled).toBe(false); expect(getHome).not.toHaveBeenCalled();
   finish(); await task; expect(state.router).toBe(router);
 });
+
+it('refreshes Calendar via House independently of failing home and preserves route, history and focus on remote refresh', async () => {
+  let state = createInitialState(0);
+  const dispatch = (action: AppAction) => { state = appReducer(state, action); };
+  dispatch({ type: 'router.navigate', route: { name: 'calendar' }, sourceFocus: 'nav-calendar' });
+  const router = state.router;
+  let finish!: () => void;
+  const house = { load: vi.fn(() => new Promise<void>(resolve => { finish = resolve; })), invalidate() {} };
+  const getHome = vi.fn(async () => { throw new Error('photo query failure'); });
+  const refetch = createRefetchers({ api: { getHome } as unknown as ApiClient, house, dispatch, getState: () => state });
+  let settled = false; const task = refetch.route({ name: 'calendar' }).then(() => { settled = true; });
+  await Promise.resolve(); expect(settled).toBe(false); expect(getHome).not.toHaveBeenCalled();
+  finish(); await task; expect(state.router).toBe(router);
+});

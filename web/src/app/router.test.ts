@@ -188,3 +188,13 @@ it('returns House -> Briefing -> Settings one layer at a time to each original e
  }
  expect(state.returnStack).toEqual([]);
 });
+
+it('reports calendar locally and restores the source page on Back', () => {
+ expect(parseRoutePath('calendar')).toEqual({ name:'calendar' });
+ expect(ROUTE_NAMES).toContain('calendar');
+ let state=routerReducer(initialRouterState,{type:'router.navigate',route:{name:'briefing'}});
+ state=routerReducer(state,{type:'router.navigate',route:{name:'calendar'},sourceFocus:'nav-calendar'});
+ expect(toRouteState(state.route)).toEqual({name:'calendar'});
+ state=routerReducer(state,{type:'router.back'});
+ expect(state.route.name).toBe('briefing'); expect(state.restoreFocus).toBe('nav-calendar');
+});

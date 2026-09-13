@@ -888,3 +888,18 @@ body {
  .briefing__summary dl { margin-bottom: calc(12 * var(--design-pixel)); }
  .briefing__recovery { padding-top: calc(12 * var(--design-pixel)); }
 }
+
+/* A quiet six-week almanac: today is a celadon seal, controls stay outside it. */
+.calendar__heading { display:flex; align-items:center; justify-content:space-between; gap:var(--gap); }
+.calendar__eyebrow { color:var(--muted); font-size:var(--fs-aux); margin:0; }
+.calendar__heading > p { font-size:var(--fs-text); margin:0; text-align:right; }
+.calendar__heading > p span { display:block; font-size:var(--fs-aux); color:var(--muted); margin-top:calc(8 * var(--design-pixel)); }
+.calendar__main { flex:1; min-height:0; display:flex; flex-direction:column; gap:calc(20 * var(--design-pixel)); margin-block:calc(22 * var(--design-pixel)); }
+.calendar__table { table-layout:fixed; width:100%; height:100%; min-height:0; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+.calendar__table th { color:var(--muted); font-size:var(--fs-aux); font-weight:400; border-block:1px solid var(--rule); padding-block:calc(8 * var(--design-pixel)); }
+.calendar__table td { text-align:center; border-bottom:1px solid var(--rule); font-size:calc(36 * var(--design-pixel)); padding:0; }
+.calendar__table td span { display:inline-flex; align-items:center; justify-content:center; width:calc(60 * var(--design-pixel)); height:calc(60 * var(--design-pixel)); }
+.calendar__today { background:var(--celadon); color:var(--paper); border-radius:calc(3 * var(--design-pixel)); }
+.calendar__controls { flex:0 0 auto; display:flex; justify-content:center; gap:calc(40 * var(--design-pixel)); padding:var(--focus-offset); }
+.calendar__waiting { flex:1; display:grid; place-items:center; color:var(--muted); }
+@media (max-height:600px) { .screen--calendar .masthead { display:none; } .calendar__main { margin-block:calc(12 * var(--design-pixel)); gap:calc(12 * var(--design-pixel)); } }

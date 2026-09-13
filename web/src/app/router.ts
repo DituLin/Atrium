@@ -18,6 +18,7 @@ export type AppRoute =
   | { name: 'dashboard' }
   | { name: 'settings' }
   | { name: 'house' }
+  | { name: 'calendar' }
   | { name: 'briefing' }
   | { name: 'photos'; collection: PhotoCollection }
   | { name: 'photo'; photoId: string; collection?: PhotoCollection };
@@ -47,6 +48,8 @@ export function parseRoutePath(path: string): AppRoute | null {
       return segments.length === 1 ? { name: 'pair' } : null;
     case 'connect':
       return segments.length === 1 ? { name: 'connect' } : null;
+    case 'calendar':
+      return segments.length === 1 ? { name: 'calendar' } : null;
     case 'briefing':
       return segments.length === 1 ? { name: 'briefing' } : null;
     case 'house':
@@ -113,6 +116,7 @@ export function backRoute(route: AppRoute): AppRoute {
         ? { name: 'photos', collection: route.collection }
         : { name: 'dashboard' };
     case 'photos':
+    case 'calendar':
     case 'briefing':
     case 'house':
     case 'settings':
@@ -169,7 +173,7 @@ export function routerReducer(state: RouterState, action: RouterAction): RouterS
   switch (action.type) {
     case 'router.navigate': {
       if (routesEqual(state.route, action.route)) return state;
-      const entersPage = (action.route.name === 'settings' || action.route.name === 'photos' || action.route.name === 'house' || action.route.name === 'briefing')
+      const entersPage = (action.route.name === 'settings' || action.route.name === 'photos' || action.route.name === 'house' || action.route.name === 'briefing' || action.route.name === 'calendar')
         && state.route.name !== action.route.name && state.route.name !== 'photo';
       const stack = action.route.name === 'dashboard' ? [] : entersPage
         ? [...(state.returnStack ?? []), { route: state.route, focus: action.sourceFocus }].slice(-8)
@@ -178,7 +182,7 @@ export function routerReducer(state: RouterState, action: RouterAction): RouterS
     }
     case 'router.back': {
       const stack = state.returnStack ?? [];
-      if ((state.route.name === 'photos' || state.route.name === 'settings' || state.route.name === 'house' || state.route.name === 'briefing') && stack.length) {
+      if ((state.route.name === 'photos' || state.route.name === 'settings' || state.route.name === 'house' || state.route.name === 'briefing' || state.route.name === 'calendar') && stack.length) {
         const entry = stack[stack.length - 1]!;
         return { ...state, route: entry.route, returnStack: stack.slice(0, -1), restoreFocus: entry.focus };
       }
