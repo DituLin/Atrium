@@ -133,3 +133,13 @@ Worker 对明确的无效/不支持元数据错误，在再次验证实际来源
 这项修复是后续原视频取消/超时处理的前置基础；尚未提供原视频字节、Range 或播放器，不将此测试作为播放验收。
 
 source/video/media/indexer race、额外连续打开回归与最终 make check 通过；独立审查重复相关 race 三次后接受。完整检查日志：`~/Atrium/iteration-20260912/video-open-cleanup-check.log`。接下来继续原视频读取与取消验证。
+
+### 原视频读取的有界流组件
+
+新增 `video.ReadPool/Stream`，为后续内容 HTTP 提供 io.ReadSeeker：固定容量（最多 8）限制活跃文件及遗留 I/O，每次打开/读取/跳转有独立超时（最多 30 秒）。每个 stream 只有一个 actor 持有描述符，Close 只发出取消并及时返回；底层打开、读取或关闭若仍卡住，名额一直保留到实际清理完成。
+
+读取使用独立的 64 KiB 上限缓冲区。调用者超时退出后，迟到 I/O 不会再写入其缓冲区。每次 Read/Seek 前后执行调用方提供的权限守卫，读取期间失效则丢弃该次结果；对外错误不包含 OS 路径。该组件本身不授予来源权限，后续 HTTP 必须提供授权 opener/guard。
+
+测试覆盖正常读/跳转/关闭、读超时仍占容量且调用者缓冲区不变、读后权限失效不返回数据、打开超时后迟到文件关闭、底层 Close 阻塞时不能释放容量。当前仅组件层通过，还没有原视频内容路由，不能据此认定 GET/HEAD/Range 或实际屏幕播放已验收。
+
+相关 Stream race 通过，独立审查重复五次通过；首次全量检查发现导出注释缺失的 lint 问题，补齐后最终 make check 通过。最终日志：`~/Atrium/iteration-20260912/video-stream-check-final.log`。没有修改运行配置、生产程序或 NAS。
