@@ -159,3 +159,11 @@ source/video/media/indexer race、额外连续打开回归与最终 make check �
 剩余：真实 NAS 内容接口与 OnePlus 播放验证、用户重试 API、宋式视频页面、部署回归及完整 M5。当前接口通过隔离测试不等于真实电视端已交付。
 
 httpapi/source/video race 与最终 make check 通过，独立复审接受。全量检查中的测试错误包装 lint 已修正；最终日志为 `~/Atrium/iteration-20260912/video-content-api-check-final.log`。
+
+### V2.3 真实 NAS 验证与重试 API
+
+基线 `177f69c` 上，12 个真实 NAS 样本经新隔离数据库和处理流水线发布后，36 个首/中/尾 Range 请求均返回 206 且逐字节一致，合计 9 MiB；服务在 loopback 运行并随测试成功退出。详见 [NAS HTTP 证据](../ops/video-http-nas-results-2026-09-14.md)。不把系统缓存参与的 3–4 ms 请求时间当作冷读性能，也不替代 OnePlus/TLS/持续播放验收。
+
+新增管理员 `POST /api/v1/videos/{id}/retry`，沿用图片重新处理的权限边界。严格接收正整数 revision，经当前来源可见性与 SQL CAS 后返回 202、新 revision 和 pending；旧版本/重复请求 409，屏幕凭据无权操作，新增排除规则立即阻止重试。请求只改任务状态，不在 HTTP 中执行媒体处理，并记录管理审计。
+
+相关 retry/Video race、make check 和独立审查通过。日志 `~/Atrium/iteration-20260912/video-retry-api-check.log`。尚未部署；下一步进入 V2.4 宋式视频列表与播放器、状态上报及遥控生命周期，再做真实 Core/OnePlus 部署回归。完整计划仍包含正式电视、声音听感及 M5 稳定性验收。

@@ -434,6 +434,49 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { description: Cover unavailable. }
 
+  /api/v1/videos/{id}/retry:
+    post:
+      tags: [admin]
+      summary: Request background reprocessing of a current video revision
+      description: |
+        Uses the same administrative boundary as photo reprocessing. Requires
+        current configured source visibility and a revision CAS. Excluded,
+        removed and revoked-source videos cannot be restored by this operation.
+        A stale or duplicate revision returns 409. No media I/O occurs inline.
+      security:
+        - adminBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [revision]
+              properties:
+                revision: { type: integer, minimum: 1 }
+      responses:
+        "202":
+          description: A new revision is pending background processing.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, revision]
+                properties:
+                  status: { type: string, const: pending }
+                  revision: { type: integer, minimum: 2 }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { description: Video changed; refresh before retrying. }
+
   /api/v1/videos:
     get:
       tags: [screen]

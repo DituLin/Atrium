@@ -58,6 +58,7 @@ func (a *API) videoScopes(ctx context.Context) ([]store.VideoScope, error) {
 }
 
 func (a *API) videoRoutes() {
+	a.mux.HandleFunc("POST "+APIPrefix+"/videos/{id}/retry", a.requireScope(auth.ScopeAdmin, a.handleVideoRetry))
 	a.mux.HandleFunc("GET "+APIPrefix+"/media/videos/{id}/content", a.requireScope(auth.ScopeScreen, a.handleVideoContent))
 	a.mux.HandleFunc("GET "+APIPrefix+"/media/videos/{id}/cover", a.requireScope(auth.ScopeScreen, a.handleVideoCover))
 	a.mux.HandleFunc("GET "+APIPrefix+"/videos", a.requireScope(auth.ScopeScreen, a.handleVideosList))
