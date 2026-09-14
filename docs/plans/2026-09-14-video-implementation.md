@@ -101,3 +101,13 @@ Worker 对明确的无效/不支持元数据错误，在再次验证实际来源
 回归先复现无效元数据仍 pending，再验证 unsupported 不自动领取、显式重试后成功恢复 ready、旧任务与旧 revision 拒绝、撤销/新增排除规则阻止重试、处理中改变文件及工具不可用不误标 unsupported。相关 store/video race、最终 make check 与独立审查通过；额外新增排除规则回归单独 race 通过。检查日志：`~/Atrium/iteration-20260912/video-failure-check.log`。
 
 本批仍未部署。接下来进入 V2.3 的授权列表、封面、内容 Range 和显式重试接口，再完成宋式视频页面及 V2.5/M5 验收。
+
+### V2.3 列表与详情接口
+
+新增 `GET /api/v1/videos` 与 `GET /api/v1/videos/{id}`，沿用屏幕配对/管理员读取权限。运行时来源绑定身份必须与数据库一致，并核对配置根；已知身份不匹配时不纳入查询。查询再次过滤 active 来源、根、允许扩展名、移除/排除状态和即时排除规则；离线仍允许查看已授权索引。
+
+列表按发现时间与 ID 倒序使用 keyset 游标分页，上限 100 条，响应只含 ID、来源 ID、revision、状态、发现时间及就绪元数据，不返回 NAS 路径或原文件名，使用 no-store。新授权下必须有当前任务的成功发布记录才显示 ready 元数据；审查发现只判断新 Claim 会提前显示旧数据，已先复现再增加成功发布条件，覆盖重新授权→领取→发布的完整状态转换。
+
+配对拒绝、真实屏幕 token、分页、不暴露路径、新增排除规则、撤销来源、配置根/扩展名过滤和重新授权元数据隐藏已测试。OpenAPI 增加已实现路由与 Video schema。此批不提供尚未完成的媒体 URL；封面、内容 GET/HEAD/Range、读取取消/撤销与显式重试 API 仍待后续实现，V2.3 尚未全部完成。生产仍未部署。
+
+最终 `go test -race ./internal/store ./internal/httpapi`、`make check` 和独立复审通过；日志 `~/Atrium/iteration-20260912/video-read-api-check-final.log`。后续继续媒体读取与页面，不将元数据接口视作视频可播放验收。

@@ -306,6 +306,73 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
 
+  /api/v1/videos:
+    get:
+      tags: [screen]
+      summary: List authorized videos by newest discovery first
+      description: |
+        Applies current source identity, root, extension and exclusion rules.
+        Offline sources retain their authorized index. No source paths are returned.
+        A reauthorized source's old ready metadata remains hidden until reprocessed.
+      security:
+        - screenBearer: []
+        - screenCookie: []
+        - adminBearer: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, default: 50 }
+          description: Page size, clamped to 100.
+        - name: cursor
+          in: query
+          schema: { type: string, maxLength: 1024 }
+          description: Opaque next_cursor from the preceding page.
+      responses:
+        "200":
+          description: A page of video records; Cache-Control is no-store.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, next_cursor]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Video" }
+                  next_cursor: { type: [string, "null"] }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "410": { $ref: "#/components/responses/ScreenRevoked" }
+
+  /api/v1/videos/{id}:
+    get:
+      tags: [screen]
+      summary: Get one authorized video without source paths
+      security:
+        - screenBearer: []
+        - screenCookie: []
+        - adminBearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Current video metadata; Cache-Control is no-store.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [item]
+                properties:
+                  item: { $ref: "#/components/schemas/Video" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "410": { $ref: "#/components/responses/ScreenRevoked" }
+
   /api/v1/photos:
     get:
       tags: [screen]
@@ -1833,6 +1900,30 @@ components:
         `captured_today` uses the home-timezone day, left-closed and
         right-open. `random` is a seeded shuffle with no repeats inside a
         round. `all` orders by capture time with undated photos last.
+
+    Video:
+      type: object
+      additionalProperties: false
+      required: [id, source_id, revision, status, first_seen_at]
+      properties:
+        id: { type: string }
+        source_id: { type: string }
+        revision: { type: integer, minimum: 1 }
+        status: { type: string, enum: [pending, ready, unsupported] }
+        first_seen_at: { type: string, format: date-time }
+        metadata:
+          description: Present only for ready records from the current source authorization.
+          type: object
+          additionalProperties: false
+          required: [container, video_codec, audio_codec, width, height, duration_ms, rotation]
+          properties:
+            container: { type: string }
+            video_codec: { type: string }
+            audio_codec: { type: string, description: Empty when no audio stream exists. }
+            width: { type: integer }
+            height: { type: integer }
+            duration_ms: { type: integer }
+            rotation: { type: integer }
 
     Photo:
       type: object

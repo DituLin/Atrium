@@ -12,6 +12,7 @@ const APIPrefix = "/api/v1"
 // routes registers every handler on the mux. Go 1.22 patterns carry the method
 // and the path parameters, so no third-party router is needed.
 func (a *API) routes() {
+	a.videoRoutes()
 	m := a.mux
 
 	// Unauthenticated.
