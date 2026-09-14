@@ -49,3 +49,9 @@ V2.2–V2.5 未完成。当前仓库新增的视频存储尚无生产调用者�
 验证：`go test -race ./internal/indexer ./internal/store ./internal/source` 和 `make check` 均通过；混合目录、不创建照片任务、部分目录无权限、重复缺失、排除、扩展名禁用/重新启用及未稳定文件用例通过，两轮独立审查接受。检查日志：`~/Atrium/iteration-20260912/video-indexer-check.log`。
 
 尚未部署；运行配置仍是原照片扩展名列表。生产启用视频时需在原来源的 include_extensions 加入 mp4/mov，并同时部署处理流水线。V2.2 的元数据/封面处理、V2.3–V2.5 仍未完成。下一批需实现受限可跳转输入、子进程超时/取消与输出上限、revision 和授权版本发布校验，不直接将 NAS 绝对路径交给任意外部读取。
+
+### V2.2 处理器进展
+
+`internal/video` 已完成 fd 输入的 ffprobe 元数据与 ffmpeg 封面处理，12 个已授权 NAS 样本全部成功，最终 `make check` 与重复 race/独立复审通过。见 [处理器证据](../ops/video-processor-results-2026-09-14.md)。
+
+后台任务、重试、缓存与授权版本发布仍未接入，V2.2 尚未全部完成。下一步优先实现这些连接，再接 V2.3 HTTP 与 V2.4 宋式视频界面；保持完整目标，不将孤立处理器视作产品交付。
