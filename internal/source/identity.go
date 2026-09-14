@@ -75,7 +75,14 @@ func HashMountFrom(v string) string {
 // CheckIdentity runs one probe of a root through fs and classifies the result.
 // It performs no database access, so it is trivially testable with FakeFS.
 func CheckIdentity(ctx context.Context, f FS, cfg IdentityConfig) Probe {
-	info, err := f.Stat(ctx, "")
+	// Recovery must not depend on the normal I/O gate it is trying to clear.
+	stat := f.Stat
+	if prober, ok := f.(interface {
+		probeStat(context.Context, string) (fs.FileInfo, error)
+	}); ok {
+		stat = prober.probeStat
+	}
+	info, err := stat(ctx, "")
 	if err != nil {
 		return classifyProbeError(err)
 	}
@@ -109,7 +116,7 @@ func CheckIdentity(ctx context.Context, f FS, cfg IdentityConfig) Probe {
 	}
 
 	if cfg.MarkerFile != "" {
-		if _, merr := f.Stat(ctx, cfg.MarkerFile); merr != nil {
+		if _, merr := stat(ctx, cfg.MarkerFile); merr != nil {
 			if errors.Is(merr, os.ErrNotExist) {
 				return Probe{Health: domain.HealthUnknown, Detail: DetailMarkerMissing, Volume: vol}
 			}

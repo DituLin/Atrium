@@ -148,11 +148,12 @@ func (f *OSFS) do(ctx context.Context, kind callKind, fn func() error) error {
 
 	done := make(chan error, 1)
 	go func() {
-		defer func() {
-			f.inflight.Add(-1)
-			<-slots
-		}()
-		done <- fn()
+		err := fn()
+		// Release capacity before waking a sequential caller. A timed-out
+		// syscall still owns its slot until fn actually returns.
+		f.inflight.Add(-1)
+		<-slots
+		done <- err
 	}()
 
 	select {
@@ -263,7 +264,13 @@ func (f *OSFS) Statfs(ctx context.Context) (VolumeStats, error) {
 // ProbeStat stats the root through the reserved probe slot, bypassing the
 // degraded gate so a recovered share can be detected.
 func (f *OSFS) ProbeStat(ctx context.Context) (fs.FileInfo, error) {
-	return f.lstat(ctx, callProbe, "")
+	return f.probeStat(ctx, "")
+}
+
+// probeStat reserves recovery capacity for both root and identity marker checks.
+// It retains the same path validation and symlink rules as normal Stat.
+func (f *OSFS) probeStat(ctx context.Context, rel string) (fs.FileInfo, error) {
+	return f.lstat(ctx, callProbe, rel)
 }
 
 // PathResolver is implemented by filesystems backed by real files. It exists
