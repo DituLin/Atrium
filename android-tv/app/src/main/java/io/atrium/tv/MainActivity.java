@@ -111,6 +111,10 @@ public final class MainActivity extends Activity {
         web=new WebView(this);web.setBackgroundColor(Color.rgb(242,238,229));
         WebSettings s=web.getSettings();s.setJavaScriptEnabled(true);s.setDomStorageEnabled(true);
         s.setAllowFileAccess(false);s.setAllowContentAccess(false);s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+        // Remote keys reach the page through evaluateJavascript, which does not
+        // carry Chromium user activation. The same-origin player owns explicit
+        // play/pause and lifecycle policy; allow its remote-triggered play().
+        s.setMediaPlaybackRequiresUserGesture(false);
         s.setSupportMultipleWindows(false);s.setJavaScriptCanOpenWindowsAutomatically(false);
         s.setTextZoom(100);s.setSupportZoom(false);s.setBuiltInZoomControls(false);s.setDisplayZoomControls(false);
         s.setUseWideViewPort(true);s.setLoadWithOverviewMode(true);
