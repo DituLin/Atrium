@@ -28,7 +28,7 @@ func TestIntegrationUpgradePreservesVersionOneData(t *testing.T) {
 	require.NoError(t, db.Commands().Issue(ctx, cmd))
 	n, err := db.Migrate(ctx)
 	require.NoError(t, err)
-	require.Equal(t, 3, n)
+	require.Equal(t, 4, n)
 	value, err := db.Settings().Get(ctx, "existing-setting")
 	require.NoError(t, err)
 	require.Equal(t, "preserved", value)
