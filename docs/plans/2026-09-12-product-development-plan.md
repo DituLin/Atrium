@@ -252,3 +252,7 @@ N1 已独立完成与检查，提交 `a583db6`，证据见 [简报迭代记录](
 提交数量和自动化用例数量不代表产品百分比。当前家庭设备运行照片 + 今日简报 + 房屋中枢状态 + 普通月历候选版基础上运行 NAS 恢复修复 `dbbca5a`，月历 OnePlus 交互/刷新已验证；12 次 AI 回归是前版 `28ffc09` 的验收记录；NAS 间歇性读取卡住和 M3–M5 门槛仍明确保留。
 
 参考：原 [PRD](../prd/2026-09/atrium-home-hub/prd.md)、[宋式设计讨论稿](2026-09-06-song-tv-experience-design.md)、[历史差距审计](2026-09-06-product-iteration-roadmap.md)。历史 AI 验收已在 T01 归入当前工作区的 `docs/ops/ai-brain-mcp-results.md`；本轮 AI 与页面联合回归分别见 `song-tv-photo-results.md`、`song-tv-house-results.md` 和 `song-tv-briefing-results.md`。
+
+### 2026-09-14 视频实现进展
+
+容器遥控播放修复与 5 个真实样本原型验证已完成，声音听感与正式接口仍待验收。视频独立存储基础 V2.1 已完成并通过检查，尚未接扫描或部署；其迁移、文件 revision、来源扫描完成水位及数据保留证据见 [视频实施计划](2026-09-14-video-implementation.md)。下一步 V2.2 混合目录扫描与处理，再依次实现鉴权/Range 和宋式列表/播放器。M4、M5 保持未完成。
