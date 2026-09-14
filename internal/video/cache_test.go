@@ -51,3 +51,17 @@ func TestCoverCacheShrinksExistingCoversToBudget(t *testing.T) {
 	require.NoError(t, err)
 	require.LessOrEqual(t, used, int64(10))
 }
+
+func TestCoverReadRejectsOversizedAndEscapingFiles(t *testing.T) {
+	c := NewCoverCache(t.TempDir(), 4<<20, 0, nil)
+	token := domain.NewID()
+	require.NoError(t, os.WriteFile(c.files.Abs(token+".jpg"), make([]byte, 2*1024*1024+1), 0600))
+	_, err := c.Read(token)
+	require.ErrorIs(t, err, ErrOutputLimit)
+	require.NoError(t, c.Remove(token))
+	outside := t.TempDir() + "/secret"
+	require.NoError(t, os.WriteFile(outside, []byte("private"), 0600))
+	require.NoError(t, os.Symlink(outside, c.files.Abs(token+".jpg")))
+	_, err = c.Read(token)
+	require.Error(t, err)
+}

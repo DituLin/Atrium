@@ -2,6 +2,8 @@ package store
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -89,4 +91,30 @@ func (v *Videos) GetVisible(ctx context.Context, scopes []VideoScope, id string)
 	where, args := videoScopeWhere(scopes)
 	args = append(args, id)
 	return videoResult(v.ex.QueryRowContext(ctx, `SELECT `+visibleVideoColumns()+` FROM videos v JOIN data_sources s ON s.id=v.source_id WHERE `+where+` AND v.id=?`, args...))
+}
+
+// VideoCover is a published cache reference, never a source path.
+type VideoCover struct {
+	Token           string
+	Revision, Bytes int64
+	Width, Height   int
+}
+
+// GetCover only returns covers published under the current source authority.
+func (v *Videos) GetCover(ctx context.Context, scopes []VideoScope, id string) (*VideoCover, error) {
+	where, args := videoScopeWhere(scopes)
+	args = append(args, id)
+	var c VideoCover
+	err := v.ex.QueryRowContext(ctx, `SELECT w.token,w.revision,w.cover_bytes,w.cover_width,w.cover_height
+ FROM videos v JOIN data_sources s ON s.id=v.source_id JOIN video_work w ON w.video_id=v.id
+ LEFT JOIN settings g ON g.key='source_observation_generation:'||s.id
+ WHERE `+where+` AND v.id=? AND v.status='ready' AND w.revision=v.revision AND w.cover_bytes>0
+ AND w.source_generation=COALESCE(g.value,'')`, args...).Scan(&c.Token, &c.Revision, &c.Bytes, &c.Width, &c.Height)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, domain.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &c, nil
 }

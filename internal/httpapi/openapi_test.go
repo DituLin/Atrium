@@ -66,8 +66,10 @@ func TestEveryDocumentedRouteIsRegistered(t *testing.T) {
 			// request fell through to the SPA catch-all instead.
 			assert.Contains(t, []int{http.StatusUnauthorized, http.StatusTooManyRequests}, resp.StatusCode,
 				"%s %s is documented but not registered", method, path)
-			assert.Contains(t, []string{"unauthorized", "rate_limited"}, errorCode(t, resp),
-				"%s %s", method, path)
+			if method != "head" {
+				assert.Contains(t, []string{"unauthorized", "rate_limited"}, errorCode(t, resp),
+					"%s %s", method, path)
+			}
 			checked++
 		}
 	}

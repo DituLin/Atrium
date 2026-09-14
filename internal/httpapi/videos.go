@@ -18,12 +18,14 @@ type videoDTO struct {
 	Status      domain.VideoStatus    `json:"status"`
 	FirstSeenAt string                `json:"first_seen_at"`
 	Metadata    *domain.VideoMetadata `json:"metadata,omitempty"`
+	CoverURL    string                `json:"cover_url,omitempty"`
 }
 
 func toVideoDTO(v domain.Video) videoDTO {
 	item := videoDTO{ID: v.ID, SourceID: v.SourceID, Revision: v.Revision, Status: v.Status, FirstSeenAt: v.FirstSeenAt.UTC().Format(time.RFC3339Nano)}
 	if v.Status == domain.VideoReady {
 		item.Metadata = &v.Metadata
+		item.CoverURL = APIPrefix + "/media/videos/" + v.ID + "/cover"
 	}
 	return item
 }
@@ -54,6 +56,7 @@ func (a *API) videoScopes(ctx context.Context) ([]store.VideoScope, error) {
 }
 
 func (a *API) videoRoutes() {
+	a.mux.HandleFunc("GET "+APIPrefix+"/media/videos/{id}/cover", a.requireScope(auth.ScopeScreen, a.handleVideoCover))
 	a.mux.HandleFunc("GET "+APIPrefix+"/videos", a.requireScope(auth.ScopeScreen, a.handleVideosList))
 	a.mux.HandleFunc("GET "+APIPrefix+"/videos/{id}", a.requireScope(auth.ScopeScreen, a.handleVideoGet))
 }

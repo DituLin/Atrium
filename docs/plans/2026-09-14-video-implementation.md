@@ -111,3 +111,13 @@ Worker 对明确的无效/不支持元数据错误，在再次验证实际来源
 配对拒绝、真实屏幕 token、分页、不暴露路径、新增排除规则、撤销来源、配置根/扩展名过滤和重新授权元数据隐藏已测试。OpenAPI 增加已实现路由与 Video schema。此批不提供尚未完成的媒体 URL；封面、内容 GET/HEAD/Range、读取取消/撤销与显式重试 API 仍待后续实现，V2.3 尚未全部完成。生产仍未部署。
 
 最终 `go test -race ./internal/store ./internal/httpapi`、`make check` 和独立复审通过；日志 `~/Atrium/iteration-20260912/video-read-api-check-final.log`。后续继续媒体读取与页面，不将元数据接口视作视频可播放验收。
+
+### V2.3 封面接口
+
+新增 `GET/HEAD /api/v1/media/videos/{id}/cover`，ready DTO 增加同源 cover_url，运行时注入专用封面缓存。GetCover 只返回当前授权代次、revision 和成功发布的 token。HTTP 读取前后均校验来源/发布状态；缓存读取通过 os.Root 限定目录，最多读取 2 MiB，并核对 JPEG 尺寸与发布字节数。返回 no-store，不将原始 NAS 路径、文件名或缓存路径传给屏幕。
+
+离线仍可读取已授权缓存；缺失或损坏的封面清除对应 token 引用，在线返回 202/Retry-After 5，离线无缓存返回 503。来源撤销返回 404。HEAD 具有相同授权与状态，成功时保留 Content-Length 且无响应正文。OpenAPI 已记录 GET/HEAD 与 DTO 字段，路由契约测试正确处理 HEAD 无正文。
+
+真实临时 MP4 经 ffmpeg→Worker→SQLite/封面缓存→HTTP 完整流程验证，覆盖已配对屏幕、未配对拒绝、JPEG 解码、HEAD、离线缓存、缺失重建、损坏重建及撤销；另有超限文件和越界符号链接读取回归。store/video/httpapi/app race、最终 make check、独立审查全部通过。日志 `~/Atrium/iteration-20260912/video-cover-api-check.log`。使用临时源与隔离数据库，没有修改 NAS 或生产服务。
+
+接下来仍须实现原视频 GET/HEAD/Range、撤销和取消期间的资源释放、重试 API、宋式列表/播放器以及真实 Core 部署验收；封面通过不等于视频已可播放。

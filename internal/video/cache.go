@@ -2,6 +2,7 @@ package video
 
 import (
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -50,7 +51,31 @@ func (c *CoverCache) Read(token string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return c.files.Read(name)
+	root, err := os.OpenRoot(c.files.Root())
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = root.Close() }()
+	file, err := root.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = file.Close() }()
+	info, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+	if !info.Mode().IsRegular() || info.Size() <= 0 || info.Size() > 2*1024*1024 {
+		return nil, ErrOutputLimit
+	}
+	data, err := io.ReadAll(io.LimitReader(file, 2*1024*1024+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(data) > 2*1024*1024 {
+		return nil, ErrOutputLimit
+	}
+	return data, nil
 }
 
 // Remove discards a rejected or obsolete result without following source paths.

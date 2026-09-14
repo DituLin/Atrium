@@ -306,6 +306,66 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
 
+  /api/v1/media/videos/{id}/cover:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [screen]
+      summary: Read a published JPEG cover by opaque video ID
+      description: |
+        Applies current source authorization before and after local cache reading.
+        Cached covers remain available offline. Missing or corrupt covers are
+        invalidated for background rebuilding. Responses use Cache-Control no-store.
+      security:
+        - screenBearer: []
+        - screenCookie: []
+        - adminBearer: []
+      responses:
+        "200":
+          description: A validated JPEG, at most 2 MiB.
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+        "202":
+          description: Cover processing; Retry-After is 5 seconds.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, retry_after_seconds]
+                properties:
+                  status: { type: string, const: video_processing }
+                  retry_after_seconds: { type: integer, const: 5 }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503":
+          description: Source offline without a cached cover, or local cache unavailable.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+    head:
+      tags: [screen]
+      summary: Same authorization and status as GET, without response bytes
+      security:
+        - screenBearer: []
+        - screenCookie: []
+        - adminBearer: []
+      responses:
+        "200":
+          description: JPEG length and type, no body.
+          headers:
+            Content-Length:
+              schema: { type: integer }
+        "202": { description: Cover processing; Retry-After is 5 seconds. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { description: Cover unavailable. }
+
   /api/v1/videos:
     get:
       tags: [screen]
@@ -1911,6 +1971,7 @@ components:
         revision: { type: integer, minimum: 1 }
         status: { type: string, enum: [pending, ready, unsupported] }
         first_seen_at: { type: string, format: date-time }
+        cover_url: { type: string, description: Same-origin JPEG route, present for ready records. }
         metadata:
           description: Present only for ready records from the current source authorization.
           type: object

@@ -21,6 +21,7 @@ import (
 	"github.com/DituLin/Atrium/internal/screen"
 	"github.com/DituLin/Atrium/internal/source"
 	"github.com/DituLin/Atrium/internal/store"
+	"github.com/DituLin/Atrium/internal/video"
 	"github.com/DituLin/Atrium/internal/widget"
 )
 
@@ -55,7 +56,8 @@ type Deps struct {
 	// Queue enqueues preview rebuilds requested by the media route.
 	Queue *jobs.Queue
 	// Cache reads derived images from disk.
-	Cache *media.Cache
+	Cache      *media.Cache
+	VideoCache *video.CoverCache
 	// Media owns access-time accounting and the cache janitor.
 	Media *media.Pipeline
 	// Bus publishes change notifications to the V0.3 hub.
