@@ -143,3 +143,28 @@ func TestVideoWorkConcurrentClaimAndFileChange(t *testing.T) {
 	require.NotNil(t, newTask)
 	require.EqualValues(t, 1, newTask.Attempts)
 }
+
+func TestVideoWorkNewExclusionBlocksBeforeScannerAppliesIt(t *testing.T) {
+	db := testutil.NewDB(t)
+	ctx := context.Background()
+	now := seedSource(t, db, "mixed")
+	require.NoError(t, db.Sources().SetHealth(ctx, "mixed", domain.HealthOnline, "", true, now))
+	_, err := db.Videos().Observe(ctx, domain.VideoObservation{SourceID: "mixed", RelPath: "private/a.mp4", SizeBytes: 1, Generation: 1}, now)
+	require.NoError(t, err)
+	task, err := db.VideoWork().Claim(ctx, now, time.Minute)
+	require.NoError(t, err)
+	require.NotNil(t, task)
+	require.NoError(t, db.Exclusions().Add(ctx, &domain.Exclusion{SourceID: "mixed", MatchKind: domain.MatchPrefix, Pattern: "private", CreatedAt: now}))
+	valid, err := db.VideoWork().Valid(ctx, *task, now)
+	require.NoError(t, err)
+	require.False(t, valid)
+	ok, err := db.VideoWork().Publish(ctx, *task, domain.VideoMetadata{Container: "mp4", VideoCodec: "h264", Width: 10, Height: 10, DurationMS: 1000}, 100, 10, 10, now)
+	require.NoError(t, err)
+	require.False(t, ok)
+	next, err := db.VideoWork().Claim(ctx, now.Add(2*time.Minute), time.Minute)
+	require.NoError(t, err)
+	require.Nil(t, next)
+	retained, err := db.VideoWork().RetainedTokens(ctx, now)
+	require.NoError(t, err)
+	require.Empty(t, retained)
+}

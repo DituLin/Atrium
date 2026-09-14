@@ -21,8 +21,41 @@ type VideoTask struct {
 // VideoWork owns persistent claims and atomic metadata/cover publication.
 type VideoWork struct{ db *DB }
 
+// Valid rechecks a claim before source I/O; publication checks it again.
+func (w *VideoWork) Valid(ctx context.Context, t VideoTask, now time.Time) (bool, error) {
+	var valid bool
+	err := w.db.InTx(ctx, func(tx *sql.Tx) error { var err error; valid, err = w.current(ctx, tx, t, now); return err })
+	return valid, err
+}
+
+// RetainedTokens protects both current covers and in-progress cache writes.
+func (w *VideoWork) RetainedTokens(ctx context.Context, now time.Time) (map[string]bool, error) {
+	rows, err := w.db.sql.QueryContext(ctx, `SELECT w.token FROM video_work w JOIN videos v ON v.id=w.video_id
+ JOIN data_sources s ON s.id=v.source_id LEFT JOIN settings g ON g.key='source_observation_generation:'||s.id
+ WHERE w.revision=v.revision AND s.status='active' AND COALESCE(g.value,'')=w.source_generation
+ AND v.status IN ('pending','ready') AND (w.lease_until>? OR (v.status='ready' AND w.cover_bytes>0)) AND `+videoNotExcluded, FormatTime(now))
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+	out := map[string]bool{}
+	for rows.Next() {
+		var token string
+		if err := rows.Scan(&token); err != nil {
+			return nil, err
+		}
+		out[token] = true
+	}
+	return out, rows.Err()
+}
+
 // VideoWork returns the video work repository.
 func (d *DB) VideoWork() *VideoWork { return &VideoWork{db: d} }
+
+// videoNotExcluded enforces rules even before the next scanner pass.
+const videoNotExcluded = `NOT EXISTS (SELECT 1 FROM photo_exclusions e WHERE e.source_id=v.source_id
+ AND length(trim(e.pattern,'/'))>0 AND (v.rel_path=trim(e.pattern,'/') OR
+ (e.match_kind='prefix' AND substr(v.rel_path,1,length(trim(e.pattern,'/'))+1)=trim(e.pattern,'/')||'/')))`
 
 // Claim returns nil when no eligible work is due. It serializes selection and
 // lease replacement so workers and process restarts cannot share a claim.
@@ -39,7 +72,7 @@ func (w *VideoWork) Claim(ctx context.Context, now time.Time, ttl time.Duration)
  WHERE v.status IN ('pending','ready') AND s.status='active' AND s.health='online'
  AND (w.video_id IS NULL OR w.revision<>v.revision OR w.source_generation<>COALESCE(g.value,'') OR w.cover_bytes=0)
  AND (w.video_id IS NULL OR w.revision<>v.revision OR w.source_generation<>COALESCE(g.value,'') OR (w.lease_until<=? AND w.next_run_at<=?))
- ORDER BY v.first_seen_at,v.id LIMIT 1`, FormatTime(now), FormatTime(now)).Scan(&id)
+ AND `+videoNotExcluded+` ORDER BY v.first_seen_at,v.id LIMIT 1`, FormatTime(now), FormatTime(now)).Scan(&id)
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil
 		}
@@ -85,7 +118,7 @@ func (w *VideoWork) current(ctx context.Context, tx *sql.Tx, t VideoTask, now ti
  JOIN data_sources s ON s.id=v.source_id LEFT JOIN settings g ON g.key='source_observation_generation:'||s.id
  WHERE v.id=? AND v.revision=? AND w.revision=v.revision AND w.token=? AND w.lease_until>?
  AND w.cover_bytes=0 AND v.status IN ('pending','ready') AND s.status='active' AND s.health='online'
- AND s.id=? AND s.root_path=? AND w.source_generation=? AND COALESCE(g.value,'')=w.source_generation`,
+ AND s.id=? AND s.root_path=? AND w.source_generation=? AND COALESCE(g.value,'')=w.source_generation AND `+videoNotExcluded,
 		t.Video.ID, t.Video.Revision, t.Token, FormatTime(now), t.Source.Source.ID, t.Source.Source.RootPath, t.Source.generation).Scan(&n)
 	return n == 1, err
 }
