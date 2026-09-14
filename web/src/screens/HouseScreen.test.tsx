@@ -34,7 +34,7 @@ it('opens independently through a fresh authenticated House request when home fa
 });
 it('keeps details scrolling, recheck focus and full nav/back roundtrips under the remote', async () => {
   await setup(); await screen.findByRole('button', { name: '打开当前照片' });
-  key('ArrowDown'); key('ArrowRight'); key('ArrowRight'); key('ArrowRight'); expect(document.activeElement).toBe(screen.getByRole('button', { name: '房屋' })); key('Enter');
+  key('ArrowDown'); key('ArrowRight'); key('ArrowRight'); key('ArrowRight'); key('ArrowRight'); expect(document.activeElement).toBe(screen.getByRole('button', { name: '房屋' })); key('Enter');
   const details = await screen.findByRole('region', { name: '中枢与来源' }); expect(document.activeElement).toBe(details);
   expect(details.querySelector('.house__placeholders')).toBeNull();
   Object.defineProperties(details, { clientHeight: { value: 100 }, scrollHeight: { value: 300 } });
@@ -44,7 +44,7 @@ it('keeps details scrolling, recheck focus and full nav/back roundtrips under th
   key('ArrowUp'); expect(document.activeElement).toBe(details); key('ArrowLeft'); key('ArrowRight'); key('Enter');
   await screen.findByRole('tab', { name: '连接状态' }); key('Escape');
   expect(document.activeElement).toBe(screen.getByRole('button', { name: '设置' }));
-  key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('Enter'); await screen.findByRole('tab', { name: '最近新增' }); key('Escape');
+  key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('Enter'); await screen.findByRole('tab', { name: '最近新增' }); key('Escape');
   expect(document.activeElement).toBe(screen.getByRole('button', { name: '照片' })); key('Escape');
   expect(document.activeElement).toBe(screen.getByRole('button', { name: '房屋' }));
 });
@@ -80,7 +80,7 @@ it('HTTP-only revoked authorization purges family and blocks the House recovery 
 });
 it('renders first-check, failed, empty and expired observations distinctly, while updates never steal focus', async () => {
   const fetch = await setup(); await screen.findByRole('button', { name: '打开当前照片' });
-  key('ArrowDown'); key('ArrowRight'); key('ArrowRight'); key('ArrowRight'); key('Enter');
+  key('ArrowDown'); key('ArrowRight'); key('ArrowRight'); key('ArrowRight'); key('ArrowRight'); key('Enter');
   await screen.findByText('离线'); key('ArrowRight'); const recheck = screen.getByRole('button', { name: '重新检查' });
   const replace = async (snapshot: ReturnType<typeof houseFixture>) => {
     fetch.mockResolvedValueOnce(new Response(JSON.stringify(snapshot))); key('Enter');

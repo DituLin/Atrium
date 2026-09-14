@@ -1,3 +1,4 @@
+import { VideoRefresh } from './videoRefresh';
 /**
  * Composition root: builds the API client, runs the reducer, and wires the
  * three cross-cutting rules — the 24 h auth cache (PRD 8.2), the one-second
@@ -43,6 +44,7 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
     const overview = createOverviewLoader(client, send);
     return { api: client, dispatch: send, house, overview };
   }, [reduce]);
+  const videos = useMemo(() => new VideoRefresh(), []);
   const stateRef = useRef(state);
   useEffect(() => {
     stateRef.current = state;
@@ -92,7 +94,7 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
   // auth cache has not expired. Pairing screens never open one.
   const connectionEnabled =
     !state.needsPairing && !state.authExpired && authTransport.hasCredential();
-  const ws = useConnection({ api, clientVersion: CLIENT_VERSION, state, dispatch, house, overview, enabled: connectionEnabled });
+  const ws = useConnection({ api, clientVersion: CLIENT_VERSION, state, dispatch, house, overview, videos, enabled: connectionEnabled });
 
   useOverviewLifecycle(overview, selectScreen(state) === 'briefing', state.connection.status);
   useHouseLifecycle(house, selectScreen(state) === 'house', state.connection.status);
@@ -113,8 +115,8 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
   }, [state.needsPairing]);
 
   const value = useMemo<AppContextValue>(
-    () => ({ state, dispatch, api, house, overview, clientVersion: CLIENT_VERSION, goBack }),
-    [state, api, house, overview, goBack, dispatch],
+    () => ({ state, dispatch, api, house, overview, videos, clientVersion: CLIENT_VERSION, goBack }),
+    [state, api, house, overview, videos, goBack, dispatch],
   );
 
   return <AppContext.Provider value={value}>{props.children}</AppContext.Provider>;

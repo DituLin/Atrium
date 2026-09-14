@@ -23,7 +23,7 @@ async function setup(homeFailed = false) {
  vi.stubGlobal('fetch', fetch); render(<AppProvider><Harness /></AppProvider>);
  await waitFor(() => expect(app).toBeDefined()); return fetch;
 }
-async function enter() { await screen.findByRole('button', { name: '打开当前照片' }); key('ArrowDown'); key('ArrowRight'); key('ArrowRight'); key('Enter'); return screen.findByRole('region', { name: '今日事项' }); }
+async function enter() { await screen.findByRole('button', { name: '打开当前照片' }); key('ArrowDown'); key('ArrowRight'); key('ArrowRight'); key('ArrowRight'); key('Enter'); return screen.findByRole('region', { name: '今日事项' }); }
 it('reads long content with remote scrolling and restores house/action/navigation focus', async () => {
  await setup(); const reading = await enter(); await screen.findByText('测试提示正文'); expect(document.activeElement).toBe(reading);
  Object.defineProperties(reading, { clientHeight: { value: 100 }, scrollHeight: { value: 300 } });
@@ -34,7 +34,7 @@ it('reads long content with remote scrolling and restores house/action/navigatio
  key('Enter'); await screen.findByText('已更新简报'); expect(document.activeElement).toBe(refresh);
  key('ArrowDown'); key('ArrowRight'); key('ArrowRight'); key('Enter'); await screen.findByRole('tab', { name: '连接状态' }); key('Escape');
  expect(document.activeElement).toBe(screen.getByRole('button', { name: '设置' }));
- key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('Enter'); await screen.findByRole('tab', { name: '最近新增' }); key('Escape');
+ key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('Enter'); await screen.findByRole('tab', { name: '最近新增' }); key('Escape');
  expect(document.activeElement).toBe(screen.getByRole('button', { name: '照片' }));
 });
 it('reaches today through authenticated House when photo home is unavailable', async () => {

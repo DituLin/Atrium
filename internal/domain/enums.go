@@ -206,6 +206,8 @@ type RouteName string
 
 // Route names (technical design §7.1).
 const (
+	RouteVideos    RouteName = "videos"
+	RouteVideo     RouteName = "video"
 	RouteDashboard RouteName = "dashboard"
 	RoutePhotos    RouteName = "photos"
 	RoutePhoto     RouteName = "photo"
@@ -220,7 +222,7 @@ const (
 // Valid reports whether the value is a known route.
 func (r RouteName) Valid() bool {
 	switch r {
-	case RouteDashboard, RoutePhotos, RoutePhoto, RoutePair, RouteConnect, RouteSettings, RouteHouse, RouteBriefing, RouteCalendar:
+	case RouteVideos, RouteVideo, RouteDashboard, RoutePhotos, RoutePhoto, RoutePair, RouteConnect, RouteSettings, RouteHouse, RouteBriefing, RouteCalendar:
 		return true
 	}
 	return false

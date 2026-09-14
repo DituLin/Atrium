@@ -3,7 +3,7 @@ import { useApp } from '../app/context';
 import { DEFAULT_COLLECTION } from '../app/router';
 import { RemoteButton } from './RemoteButton';
 
-const LINKS = [['dashboard', '首页'], ['photos', '照片'], ['briefing', '今日'], ['house', '房屋'], ['settings', '设置'], ['calendar', '日历']] as const;
+const LINKS = [['dashboard', '首页'], ['photos', '照片'], ['videos', '视频'], ['briefing', '今日'], ['house', '房屋'], ['settings', '设置'], ['calendar', '日历']] as const;
 export function PrimaryNav({ onUp }: { onUp: () => void }) {
   const { state, dispatch } = useApp();
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
@@ -22,7 +22,7 @@ export function PrimaryNav({ onUp }: { onUp: () => void }) {
   </nav>;
 }
 
-export function focusPrimaryNav(name: 'dashboard' | 'photos' | 'briefing' | 'house' | 'settings' | 'calendar'): void {
+export function focusPrimaryNav(name: 'videos' | 'dashboard' | 'photos' | 'briefing' | 'house' | 'settings' | 'calendar'): void {
   document.querySelector<HTMLButtonElement>(`[data-nav="${name}"]`)?.focus();
 }
 

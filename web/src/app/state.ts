@@ -28,7 +28,7 @@ import { initialRouterState, routerReducer } from './router';
 import type { SlideshowAction, SlideshowState } from './slideshow';
 import { initialSlideshowState, slideshowReducer } from './slideshow';
 
-export type ScreenName = 'pair' | 'connect' | 'dashboard' | 'photos' | 'photo' | 'house' | 'briefing' | 'calendar' | 'settings';
+export type ScreenName = 'videos' | 'video' | 'pair' | 'connect' | 'dashboard' | 'photos' | 'photo' | 'house' | 'briefing' | 'calendar' | 'settings';
 
 export interface AppState {
   router: RouterState;

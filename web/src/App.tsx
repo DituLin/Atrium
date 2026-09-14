@@ -1,3 +1,4 @@
+import { VideosScreen } from './screens/VideosScreen';
 import { CalendarScreen } from './screens/CalendarScreen';
 import { BriefingScreen } from './screens/BriefingScreen';
 /**
@@ -34,6 +35,9 @@ export function CurrentScreen(): ReactElement {
       return <HouseScreen />;
     case 'settings':
       return <SettingsScreen />;
+    case 'videos':
+    case 'video':
+      return <VideosScreen />;
     case 'photos':
       return <PhotosScreen />;
     case 'photo':

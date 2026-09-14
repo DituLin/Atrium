@@ -20,6 +20,8 @@ export type AppRoute =
   | { name: 'house' }
   | { name: 'calendar' }
   | { name: 'briefing' }
+  | { name: 'videos' }
+  | { name: 'video'; videoId: string }
   | { name: 'photos'; collection: PhotoCollection }
   | { name: 'photo'; photoId: string; collection?: PhotoCollection };
 
@@ -44,6 +46,10 @@ export function parseRoutePath(path: string): AppRoute | null {
   const segments = trimmed.split('/');
   const head = segments[0];
   switch (head) {
+    case 'videos':
+      return segments.length === 1 ? { name: 'videos' } : null;
+    case 'video':
+      return segments.length === 2 && isValidPhotoId(segments[1]) ? { name: 'video', videoId: segments[1] } : null;
     case 'pair':
       return segments.length === 1 ? { name: 'pair' } : null;
     case 'connect':
@@ -76,6 +82,7 @@ export function parseRoutePath(path: string): AppRoute | null {
 
 export function routeToPath(route: AppRoute): string {
   switch (route.name) {
+    case 'video': return `video/${route.videoId}`;
     case 'photos':
       return `photos/${route.collection}`;
     case 'photo':
@@ -88,6 +95,7 @@ export function routeToPath(route: AppRoute): string {
 /** The `RouteState` shape reported over WS (§9). */
 export function toRouteState(route: AppRoute): RouteState {
   switch (route.name) {
+    case 'video': return { name: 'video', video_id: route.videoId };
     case 'photos':
       return { name: 'photos', collection: route.collection };
     case 'photo':
@@ -111,6 +119,8 @@ export function routesEqual(a: AppRoute, b: AppRoute): boolean {
  */
 export function backRoute(route: AppRoute): AppRoute {
   switch (route.name) {
+    case 'video': return { name: 'videos' };
+    case 'videos': return { name: 'dashboard' };
     case 'photo':
       return route.collection
         ? { name: 'photos', collection: route.collection }
@@ -173,8 +183,8 @@ export function routerReducer(state: RouterState, action: RouterAction): RouterS
   switch (action.type) {
     case 'router.navigate': {
       if (routesEqual(state.route, action.route)) return state;
-      const entersPage = (action.route.name === 'settings' || action.route.name === 'photos' || action.route.name === 'house' || action.route.name === 'briefing' || action.route.name === 'calendar')
-        && state.route.name !== action.route.name && state.route.name !== 'photo';
+      const entersPage = (action.route.name === 'videos' || action.route.name === 'settings' || action.route.name === 'photos' || action.route.name === 'house' || action.route.name === 'briefing' || action.route.name === 'calendar')
+        && state.route.name !== action.route.name && state.route.name !== 'photo' && state.route.name !== 'video';
       const stack = action.route.name === 'dashboard' ? [] : entersPage
         ? [...(state.returnStack ?? []), { route: state.route, focus: action.sourceFocus }].slice(-8)
         : state.returnStack;
@@ -182,7 +192,7 @@ export function routerReducer(state: RouterState, action: RouterAction): RouterS
     }
     case 'router.back': {
       const stack = state.returnStack ?? [];
-      if ((state.route.name === 'photos' || state.route.name === 'settings' || state.route.name === 'house' || state.route.name === 'briefing' || state.route.name === 'calendar') && stack.length) {
+      if ((state.route.name === 'videos' || state.route.name === 'photos' || state.route.name === 'settings' || state.route.name === 'house' || state.route.name === 'briefing' || state.route.name === 'calendar') && stack.length) {
         const entry = stack[stack.length - 1]!;
         return { ...state, route: entry.route, returnStack: stack.slice(0, -1), restoreFocus: entry.focus };
       }

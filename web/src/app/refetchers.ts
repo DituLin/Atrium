@@ -8,6 +8,7 @@
  * keeps the current page and pause state (PRD 5.3).
  */
 
+import type { VideoRefresh } from './videoRefresh';
 import type { OverviewLoader } from './overview';
 
 
@@ -20,6 +21,7 @@ import { SLIDESHOW_PAGE_SIZE } from './slideshow';
 import type { AppAction, AppState } from './state';
 
 export interface RefetchPorts {
+  videos?: VideoRefresh;
   house?: HouseLoader;
   overview?: OverviewLoader;
   api: ApiClient;
@@ -110,6 +112,10 @@ export function createRefetchers(ports: RefetchPorts): Refetchers {
   };
 
   const route = async (target: AppRoute): Promise<void> => {
+    if (target.name === 'videos' || target.name === 'video') {
+      if (!ports.videos) throw new Error('Video refresh unavailable');
+      await ports.videos.load(target); return;
+    }
     if (target.name === 'briefing') { await overview(); return; }
     if (target.name === 'house' || target.name === 'calendar') { await house(); return; }
     const jobs: Array<Promise<void>> = [home()];

@@ -1583,9 +1583,10 @@ components:
       properties:
         name:
           type: string
-          enum: [dashboard, photos, photo, pair, connect, briefing, house, settings, calendar]
+          enum: [dashboard, photos, photo, videos, video, pair, connect, briefing, house, settings, calendar]
         collection: { type: string }
         photo_id: { type: string }
+        video_id: { type: string }
 
     Screen:
       type: object

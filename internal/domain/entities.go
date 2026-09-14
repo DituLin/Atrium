@@ -157,6 +157,7 @@ type RouteState struct {
 	Name       RouteName `json:"name"`
 	Collection string    `json:"collection,omitempty"`
 	PhotoID    string    `json:"photo_id,omitempty"`
+	VideoID    string    `json:"video_id,omitempty"`
 }
 
 // Valid reports whether the route state is well-formed.

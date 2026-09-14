@@ -50,7 +50,11 @@ export async function syncSnapshot(ports: SnapshotSyncPorts): Promise<void> {
   // A cold start has nothing to restore, so nothing is re-validated: the boot
   // route is `coldStartRoute()` by construction (PRD 5.3).
   const photoId = cold ? null : photoToRevalidate(before.router.route);
-  const availability = photoId ? await checkPhoto(ports.api, photoId) : 'present';
+  let availability: PhotoAvailability = photoId ? await checkPhoto(ports.api, photoId) : 'present';
+  if (!cold && before.router.route.name === 'video') {
+    try { await ports.api.getVideo(before.router.route.videoId); }
+    catch (error) { availability = error instanceof ApiError && error.isGone ? 'gone' : 'unknown'; }
+  }
   const next = routeAfterReconnect(before.router.route, availability);
 
   // The screen may have moved on while `/home` and the photo check were in

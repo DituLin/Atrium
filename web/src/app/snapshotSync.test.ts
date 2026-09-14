@@ -132,3 +132,21 @@ describe('route survival (W-304)', () => {
     expect(h.get().router.appliedSequence).toBe(11);
   });
 });
+
+it('revalidates a video before reporting a reconnect and falls home when gone', async () => {
+ const h = harness({ name: 'video', videoId: 'v01' }, true, { photoStatus: 404 });
+ await syncSnapshot({api: h.api, dispatch: h.dispatch, getState: h.get});
+ expect(h.calls).toContain('/api/v1/videos/v01');
+ expect(h.get().router.route).toEqual({ name: 'dashboard' });
+});
+
+it('does not replace newer local navigation with a late missing-video result', async () => {
+ const h = harness({ name: 'video', videoId: 'v01' }, true);
+ let finish!: () => void;
+ vi.spyOn(h.api, 'getVideo').mockImplementation(() => new Promise((_resolve, reject) => { finish = () => reject(new ApiError(404, 'not_found', 'gone')); }));
+ const sync = syncSnapshot({ api: h.api, dispatch: h.dispatch, getState: h.get });
+ await vi.waitFor(() => expect(h.api.getVideo).toHaveBeenCalled());
+ h.dispatch({ type: 'router.navigate', route: { name: 'calendar' } });
+ finish(); await sync;
+ expect(h.get().router.route).toEqual({ name: 'calendar' });
+});

@@ -1,3 +1,4 @@
+import type { VideoRefresh } from './videoRefresh';
 /**
  * React wiring for the WS session (W-301). Everything with rules in it lives in
  * `session.ts` (meaning), `commandExecutor.ts` (§6.5), `refetchers.ts` (re-reads)
@@ -27,6 +28,7 @@ import { toRouteState } from './router';
 export { DATA_CHANGED_THROTTLE_MS } from './dataChanged';
 
 export interface ConnectionDeps {
+  videos?: VideoRefresh;
   api: ApiClient;
   house: HouseLoader;
   overview?: OverviewLoader;
@@ -43,7 +45,7 @@ export interface WsHandle {
 }
 
 export function useConnection(deps: ConnectionDeps): WsHandle {
-  const { api, house, overview, clientVersion, dispatch, enabled } = deps;
+  const { api, house, overview, videos, clientVersion, dispatch, enabled } = deps;
   // The socket callbacks must read the freshest state without re-creating the
   // client on every render, so state is mirrored through a ref after commit.
   const stateRef = useRef(deps.state);
@@ -69,7 +71,7 @@ export function useConnection(deps: ConnectionDeps): WsHandle {
     if (!enabled) return;
 
     const getState = (): AppState => stateRef.current;
-    const refetchers = createRefetchers({ api, dispatch, getState, house, overview });
+    const refetchers = createRefetchers({ api, dispatch, getState, house, overview, videos });
     // Change notifications are throttled per target (W-205); the refetcher
     // lives with the socket so it is torn down with it.
     const handlers = toRefetchHandlers(refetchers);
@@ -124,7 +126,7 @@ export function useConnection(deps: ConnectionDeps): WsHandle {
       sessionRef.current = null;
       refetch.cancel();
     };
-  }, [api, house, overview, clientVersion, dispatch, enabled, retryNonce]);
+  }, [api, house, overview, videos, clientVersion, dispatch, enabled, retryNonce]);
 
   return useMemo<WsHandle>(
     () => ({

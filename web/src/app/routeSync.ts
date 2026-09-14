@@ -39,7 +39,7 @@ export function photoToRevalidate(route: AppRoute): string | null {
 }
 
 /**
- * The route to keep after a reconnect. `photo` is the only route that can be
+ * The route to keep after a reconnect. `photo` and `video` are routes that can be
  * invalidated by fresh data; a check that failed for transport reasons
  * (`unknown`) keeps the photo rather than punishing a flaky moment.
  */
@@ -48,6 +48,7 @@ export function routeAfterReconnect(route: AppRoute, photo: PhotoAvailability): 
     case 'pair':
     case 'connect':
       return DEFAULT_ROUTE;
+    case 'video':
     case 'photo':
       return photo === 'gone' ? DEFAULT_ROUTE : route;
     case 'photos':

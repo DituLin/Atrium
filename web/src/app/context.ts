@@ -5,6 +5,7 @@
 
 import { createContext, useContext } from 'react';
 
+import type { VideoRefresh } from './videoRefresh';
 import type { OverviewLoader } from './overview';
 import type { HouseLoader } from './house';
 import type { ApiClient } from '../core/api';
@@ -14,6 +15,7 @@ export interface AppContextValue {
   state: AppState;
   dispatch: (action: AppAction) => void;
   api: ApiClient;
+  videos?: VideoRefresh;
   house: HouseLoader;
   overview: OverviewLoader;
   clientVersion: string;
