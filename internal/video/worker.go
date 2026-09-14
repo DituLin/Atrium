@@ -89,7 +89,7 @@ func (w *Worker) RunOnce(ctx context.Context) (bool, error) {
 	go func() {
 		var outcome result
 		defer func() { <-w.slot; done <- outcome }()
-		err := w.opts.Cache.Sweep(func() (map[string]bool, error) { return w.opts.DB.VideoWork().RetainedTokens(jobCtx, w.opts.Now()) })
+		err := w.reconcileCovers(jobCtx)
 		if err != nil {
 			outcome = result{err: err}
 			return
@@ -227,6 +227,32 @@ func (w *Worker) process(ctx context.Context, t store.VideoTask) error {
 			return err
 		}
 		return ErrStale
+	}
+	return nil
+}
+
+// reconcileCovers repairs local cache loss without reauthorizing media. The
+// eventual claim and processing still pass all source/version checks.
+func (w *Worker) reconcileCovers(ctx context.Context) error {
+	var retained map[string]bool
+	err := w.opts.Cache.Sweep(func() (map[string]bool, error) {
+		var err error
+		retained, err = w.opts.DB.VideoWork().RetainedTokens(ctx, w.opts.Now())
+		return retained, err
+	})
+	if err != nil {
+		return err
+	}
+	for token := range retained {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if err := w.opts.Cache.IfMissing(token, func() error {
+			_, err := w.opts.DB.VideoWork().ForgetCover(ctx, token, w.opts.Now())
+			return err
+		}); err != nil {
+			return err
+		}
 	}
 	return nil
 }

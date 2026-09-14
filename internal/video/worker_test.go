@@ -109,3 +109,32 @@ func TestWorkerTimeoutKeepsSlotUntilProcessingExits(t *testing.T) {
 	require.NoError(t, err)
 	require.Zero(t, used)
 }
+
+func TestWorkerRebuildsMissingCover(t *testing.T) {
+	w, db, _, _ := workerFixture(t, stubProcessor{}, 1<<20)
+	ctx := context.Background()
+	worked, err := w.RunOnce(ctx)
+	require.NoError(t, err)
+	require.True(t, worked)
+	tokens, err := db.VideoWork().RetainedTokens(ctx, time.Now())
+	require.NoError(t, err)
+	require.Len(t, tokens, 1)
+	for token := range tokens {
+		require.NoError(t, w.opts.Cache.Remove(token))
+	}
+	worked, err = w.RunOnce(ctx)
+	require.NoError(t, err)
+	require.True(t, worked, "missing published cover must become claimable again")
+	replacement, err := db.VideoWork().RetainedTokens(ctx, time.Now())
+	require.NoError(t, err)
+	require.Len(t, replacement, 1)
+	for token := range replacement {
+		require.False(t, tokens[token], "rebuild must publish a fresh token")
+		data, err := w.opts.Cache.Read(token)
+		require.NoError(t, err)
+		require.NotEmpty(t, data)
+	}
+	worked, err = w.RunOnce(ctx)
+	require.NoError(t, err)
+	require.False(t, worked, "intact cover must not be rebuilt")
+}

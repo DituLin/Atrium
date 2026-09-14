@@ -3,6 +3,7 @@ package video
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -150,6 +151,28 @@ func (c *CoverCache) Sweep(loadRetained func() (map[string]bool, error)) error {
 		if err := c.files.Remove(e.Name()); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// IfMissing holds off cache writes while invalidating a missing reference.
+// This prevents a newly written publication being cleared by an older check.
+func (c *CoverCache) IfMissing(token string, forget func() error) error {
+	name, err := coverName(token)
+	if err != nil {
+		return err
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	info, err := os.Lstat(filepath.Join(c.files.Root(), name))
+	if os.IsNotExist(err) {
+		return forget()
+	}
+	if err != nil {
+		return err
+	}
+	if !info.Mode().IsRegular() || info.Size() == 0 || info.Size() > 2*1024*1024 {
+		return forget()
 	}
 	return nil
 }

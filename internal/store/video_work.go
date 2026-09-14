@@ -175,3 +175,15 @@ func (w *VideoWork) Retry(ctx context.Context, t VideoTask, code string, next, n
 	}
 	return updated, nil
 }
+
+// ForgetCover clears only the observed published token. A replacement claim or
+// publication is untouched; active claims have no published bytes to clear.
+func (w *VideoWork) ForgetCover(ctx context.Context, token string, now time.Time) (bool, error) {
+	result, err := w.db.sql.ExecContext(ctx, `UPDATE video_work SET cover_bytes=0,cover_width=0,cover_height=0,
+ next_run_at=?,error_code='cover_missing' WHERE token=? AND cover_bytes>0 AND lease_until<=?`, FormatTime(now), token, FormatTime(now))
+	if err != nil {
+		return false, fmt.Errorf("store: forget video cover: %w", err)
+	}
+	n, err := result.RowsAffected()
+	return n == 1, err
+}
