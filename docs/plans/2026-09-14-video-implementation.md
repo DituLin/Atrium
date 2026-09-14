@@ -121,3 +121,15 @@ Worker 对明确的无效/不支持元数据错误，在再次验证实际来源
 真实临时 MP4 经 ffmpeg→Worker→SQLite/封面缓存→HTTP 完整流程验证，覆盖已配对屏幕、未配对拒绝、JPEG 解码、HEAD、离线缓存、缺失重建、损坏重建及撤销；另有超限文件和越界符号链接读取回归。store/video/httpapi/app race、最终 make check、独立审查全部通过。日志 `~/Atrium/iteration-20260912/video-cover-api-check.log`。使用临时源与隔离数据库，没有修改 NAS 或生产服务。
 
 接下来仍须实现原视频 GET/HEAD/Range、撤销和取消期间的资源释放、重试 API、宋式列表/播放器以及真实 Core 部署验收；封面通过不等于视频已可播放。
+
+### 原视频读取前的文件句柄清理修复
+
+检查流式读取基础时发现 OSFS.Open 的历史问题：受限调用超时后，底层 os.OpenFile 若迟到成功，原路径会丢失文件句柄且不关闭；打开后的 Stat 也在调用者线程执行，没有受同一 I/O 超时保护。
+
+本批将打开与类型检查放入同一个受限 worker，使用无缓冲交接明确句柄所有权。请求超时后迟到句柄由 worker 关闭，清理完成前继续保留原 I/O 名额；成功交付后先释放名额再让调用者返回，避免正常连续请求误触 degraded。
+
+真实本地 FIFO 回归先在旧实现下复现：超时后放行底层 open，写端仍有读端连接。修复后待清理完成，写端返回 EPIPE，证明遗留读句柄已关闭。另验证 MaxInflight=1 下连续 1000 次正常打开不会误触限额。没有写入 NAS、改变挂载或部署生产。
+
+这项修复是后续原视频取消/超时处理的前置基础；尚未提供原视频字节、Range 或播放器，不将此测试作为播放验收。
+
+source/video/media/indexer race、额外连续打开回归与最终 make check 通过；独立审查重复相关 race 三次后接受。完整检查日志：`~/Atrium/iteration-20260912/video-open-cleanup-check.log`。接下来继续原视频读取与取消验证。

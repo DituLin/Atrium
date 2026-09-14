@@ -224,26 +224,71 @@ func (f *OSFS) Open(ctx context.Context, rel string) (io.ReadSeekCloser, error) 
 	if err != nil {
 		return nil, err
 	}
-	var file *os.File
-	err = f.do(ctx, callNormal, func() error {
-		var oerr error
-		//nolint:gosec // full is validated by abs(): contained in root, no "..", no NUL
-		file, oerr = os.OpenFile(full, os.O_RDONLY|openNoFollow, 0)
-		return oerr
-	})
-	if err != nil {
-		return nil, err
+	if f.degraded.Load() {
+		return nil, ErrDegraded
 	}
-	info, err := file.Stat()
-	if err != nil {
-		_ = file.Close()
-		return nil, fmt.Errorf("source: stat opened file: %w", err)
+	select {
+	case f.slots <- struct{}{}:
+	default:
+		f.degraded.Store(true)
+		return nil, ErrDegraded
 	}
-	if !info.Mode().IsRegular() {
-		_ = file.Close()
-		return nil, ErrSymlink
+	f.inflight.Add(1)
+	bounded, cancel := context.WithTimeout(ctx, f.timeout)
+	defer cancel()
+	type openResult struct {
+		file *os.File
+		err  error
 	}
-	return file, nil
+	// An unbuffered handoff gives the descriptor exactly one owner. If the
+	// caller times out, this worker closes any late result before freeing its
+	// I/O slot. Stat belongs to the same deadline, not the HTTP caller's thread.
+	result := make(chan openResult)
+	released := make(chan struct{})
+	go func() {
+		defer func() { f.inflight.Add(-1); <-f.slots; close(released) }()
+		//nolint:gosec // full is validated by abs(); final symlinks are refused
+		file, openErr := os.OpenFile(full, os.O_RDONLY|openNoFollow, 0)
+		if file != nil {
+			defer func() {
+				if file != nil {
+					_ = file.Close()
+				}
+			}()
+			info, statErr := file.Stat()
+			if statErr != nil {
+				openErr = fmt.Errorf("source: stat opened file: %w", statErr)
+			} else if !info.Mode().IsRegular() {
+				openErr = ErrSymlink
+			}
+		}
+		if openErr != nil && file != nil {
+			_ = file.Close()
+			file = nil
+		}
+		select {
+		case result <- openResult{file: file, err: openErr}:
+			file = nil // the receiver owns a successful descriptor
+		case <-bounded.Done():
+			// The deferred close retains capacity until cleanup actually completes.
+		}
+	}()
+	select {
+	case out := <-result:
+		<-released // sequential callers must observe the slot already released
+		if out.err != nil && !errors.Is(out.err, os.ErrNotExist) {
+			f.errorOps.Add(1)
+		}
+		if out.err != nil {
+			return nil, out.err
+		}
+		return out.file, nil
+	case <-bounded.Done():
+		f.stuckOps.Add(1)
+		f.errorOps.Add(1)
+		return nil, ErrStuck
+	}
+
 }
 
 // Statfs implements FS using the probe semaphore so capacity can still be

@@ -195,3 +195,36 @@ func TestOSFSInflightCapTripsDegraded(t *testing.T) {
 	fsys.ClearDegraded()
 	assert.False(t, fsys.Degraded())
 }
+
+func TestTimedOutOpenClosesLateDescriptor(t *testing.T) {
+	root := t.TempDir()
+	fifo := filepath.Join(root, "late.fifo")
+	require.NoError(t, syscall.Mkfifo(fifo, 0600))
+	fsys, err := source.NewOSFS(source.OSFSOptions{Root: root, IOTimeout: 20 * time.Millisecond, MaxInflight: 1})
+	require.NoError(t, err)
+	reader, err := fsys.Open(context.Background(), "late.fifo")
+	require.ErrorIs(t, err, source.ErrStuck)
+	require.Nil(t, reader)
+	// A writer lets the timed-out kernel open finish. Once its slot is released,
+	// no abandoned read descriptor may remain attached to this pipe.
+	fd, err := syscall.Open(fifo, syscall.O_WRONLY|syscall.O_NONBLOCK, 0)
+	require.NoError(t, err)
+	defer func() { _ = syscall.Close(fd) }()
+	require.Eventually(t, func() bool { return fsys.Stats().Inflight == 0 }, time.Second, time.Millisecond)
+	_, err = syscall.Write(fd, []byte("x"))
+	require.ErrorIs(t, err, syscall.EPIPE, "late reader must be closed after caller timed out")
+}
+
+func TestSequentialOpenReleasesCapacityBeforeReturning(t *testing.T) {
+	root := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(root, "video.mp4"), []byte("data"), 0600))
+	fsys, err := source.NewOSFS(source.OSFSOptions{Root: root, IOTimeout: time.Second, MaxInflight: 1})
+	require.NoError(t, err)
+	for range 1000 {
+		file, err := fsys.Open(context.Background(), "video.mp4")
+		require.NoError(t, err)
+		require.NoError(t, file.Close())
+		require.Zero(t, fsys.Stats().Inflight)
+	}
+	require.False(t, fsys.Degraded())
+}
