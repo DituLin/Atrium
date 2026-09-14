@@ -187,3 +187,37 @@ func (w *VideoWork) ForgetCover(ctx context.Context, token string, now time.Time
 	n, err := result.RowsAffected()
 	return n == 1, err
 }
+
+// FailUnsupported stops automatic retries only for conclusively invalid
+// metadata, guarded by the same lease and source authority as publication.
+func (w *VideoWork) FailUnsupported(ctx context.Context, t VideoTask, now time.Time) (bool, error) {
+	updated := false
+	err := w.db.InTx(ctx, func(tx *sql.Tx) error {
+		ok, err := w.current(ctx, tx, t, now)
+		if err != nil || !ok {
+			return err
+		}
+		if _, err = tx.ExecContext(ctx, `UPDATE videos SET status='unsupported',metadata_json='{}',updated_at=? WHERE id=?`, FormatTime(now), t.Video.ID); err != nil {
+			return err
+		}
+		_, err = tx.ExecContext(ctx, `UPDATE video_work SET error_code='unsupported',lease_until=? WHERE video_id=? AND token=?`, FormatTime(now), t.Video.ID, t.Token)
+		updated = err == nil
+		return err
+	})
+	return updated, err
+}
+
+// RequestRetry is an internal mutation; the HTTP caller must authenticate and
+// check screen/source scope first. Revision CAS invalidates old processing and
+// duplicate client requests. Revoked, excluded and removed files cannot revive.
+func (w *VideoWork) RequestRetry(ctx context.Context, id string, revision int64, now time.Time) (bool, error) {
+	result, err := w.db.sql.ExecContext(ctx, `UPDATE videos AS v SET status='pending',metadata_json='{}',revision=revision+1,updated_at=?
+ WHERE id=? AND revision=? AND status IN ('pending','ready','unsupported')
+ AND EXISTS (SELECT 1 FROM data_sources s WHERE s.id=v.source_id AND s.status='active')
+ AND `+videoNotExcluded, FormatTime(now), id, revision)
+	if err != nil {
+		return false, fmt.Errorf("store: request video retry: %w", err)
+	}
+	n, err := result.RowsAffected()
+	return n == 1, err
+}

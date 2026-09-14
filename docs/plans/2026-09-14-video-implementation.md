@@ -91,3 +91,13 @@ Core 在现有授权来源包含 mp4/mov 时装配并启动串行视频 Worker�
 独立审查发现历史封面在降额后无法收敛的 P2，已补充启动回收与回归。运行中 Core 未部署本批。失败终态/用户重试、接口、宋式页面与真实部署验收仍未完成；继续按原计划推进。
 
 最终 `go test -race ./internal/app ./internal/media ./internal/video ./internal/config` 及新增 Runtime 回归通过，`make check` 通过，独立复审接受。最终日志：`~/Atrium/iteration-20260912/video-runtime-check-final.log`。
+
+### V2.2 失败终态与显式重试协议
+
+Worker 对明确的无效/不支持元数据错误，在再次验证实际来源身份和文件 size/mtime 后，使用当前任务租约守卫提交 unsupported 终态，不再自动领取。工具不可用、工具执行失败、NAS I/O、缓存压力等不能据此断定文件不支持的错误保留 pending/既有状态，采用 2 分钟起、最长 1 小时的指数退避。
+
+新增内部 RequestRetry：调用者必须先做认证与屏幕/来源 scope 校验；数据库继续拒绝已撤销来源、排除规则与已移除文件，并用客户端所见 revision 做 CAS。成功后 revision 增加、元数据清空并重新排队，因此重复旧请求和迟到旧任务都不能覆盖新处理。此批只是底层协议，尚未有面向用户的重试 API/按钮。
+
+回归先复现无效元数据仍 pending，再验证 unsupported 不自动领取、显式重试后成功恢复 ready、旧任务与旧 revision 拒绝、撤销/新增排除规则阻止重试、处理中改变文件及工具不可用不误标 unsupported。相关 store/video race、最终 make check 与独立审查通过；额外新增排除规则回归单独 race 通过。检查日志：`~/Atrium/iteration-20260912/video-failure-check.log`。
+
+本批仍未部署。接下来进入 V2.3 的授权列表、封面、内容 Range 和显式重试接口，再完成宋式视频页面及 V2.5/M5 验收。

@@ -102,7 +102,17 @@ func (w *Worker) RunOnce(ctx context.Context) (bool, error) {
 		err = w.process(jobCtx, *task)
 		if err != nil {
 			retryCtx, retryCancel := context.WithTimeout(context.WithoutCancel(jobCtx), time.Second)
-			_, _ = w.opts.DB.VideoWork().Retry(retryCtx, *task, failureCode(err), w.opts.Now().Add(2*time.Minute), w.opts.Now())
+			if errors.Is(err, ErrMetadata) {
+				// Recheck the actual file after a failed probe before making its state
+				// terminal; an intervening file replacement must not inherit the error.
+				if _, checkErr := w.validate(retryCtx, *task); checkErr == nil {
+					_, _ = w.opts.DB.VideoWork().FailUnsupported(retryCtx, *task, w.opts.Now())
+				} else {
+					_, _ = w.opts.DB.VideoWork().Retry(retryCtx, *task, failureCode(checkErr), w.opts.Now().Add(retryDelay(task.Attempts)), w.opts.Now())
+				}
+			} else {
+				_, _ = w.opts.DB.VideoWork().Retry(retryCtx, *task, failureCode(err), w.opts.Now().Add(retryDelay(task.Attempts)), w.opts.Now())
+			}
 			retryCancel()
 		}
 		outcome = result{worked: true, err: err}
@@ -255,4 +265,10 @@ func (w *Worker) reconcileCovers(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// Retry delays grow to one hour; unavailable tools or offline storage are not
+// evidence that the file itself is unsupported.
+func retryDelay(attempt int) time.Duration {
+	return min(time.Hour, 2*time.Minute*time.Duration(1<<min(5, max(0, attempt-1))))
 }

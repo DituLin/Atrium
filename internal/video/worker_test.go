@@ -21,13 +21,14 @@ import (
 type stubProcessor struct {
 	afterProbe func()
 	afterCover func()
+	probeErr   error
 }
 
 func (p stubProcessor) Probe(context.Context, *os.File) (domain.VideoMetadata, error) {
 	if p.afterProbe != nil {
 		p.afterProbe()
 	}
-	return domain.VideoMetadata{Container: "mp4", VideoCodec: "h264", Width: 10, Height: 10, DurationMS: 1000}, nil
+	return domain.VideoMetadata{Container: "mp4", VideoCodec: "h264", Width: 10, Height: 10, DurationMS: 1000}, p.probeErr
 }
 func (p stubProcessor) Cover(context.Context, *os.File) ([]byte, error) {
 	var b bytes.Buffer
@@ -137,4 +138,51 @@ func TestWorkerRebuildsMissingCover(t *testing.T) {
 	worked, err = w.RunOnce(ctx)
 	require.NoError(t, err)
 	require.False(t, worked, "intact cover must not be rebuilt")
+}
+
+func TestWorkerStopsInvalidMetadataUntilExplicitRetry(t *testing.T) {
+	w, db, id, _ := workerFixture(t, stubProcessor{probeErr: ErrMetadata}, 1<<20)
+	ctx := context.Background()
+	worked, err := w.RunOnce(ctx)
+	require.True(t, worked)
+	require.ErrorIs(t, err, ErrMetadata)
+	v, err := db.Videos().Get(ctx, id)
+	require.NoError(t, err)
+	require.Equal(t, domain.VideoUnsupported, v.Status)
+	worked, err = w.RunOnce(ctx)
+	require.NoError(t, err)
+	require.False(t, worked)
+	ok, err := db.VideoWork().RequestRetry(ctx, id, v.Revision, time.Now())
+	require.NoError(t, err)
+	require.True(t, ok)
+	w.opts.Processor = stubProcessor{}
+	worked, err = w.RunOnce(ctx)
+	require.NoError(t, err)
+	require.True(t, worked)
+	v, err = db.Videos().Get(ctx, id)
+	require.NoError(t, err)
+	require.Equal(t, domain.VideoReady, v.Status)
+}
+
+func TestWorkerDoesNotMarkChangedFileOrUnavailableToolUnsupported(t *testing.T) {
+	for _, scenario := range []string{"changed", "tool"} {
+		t.Run(scenario, func(t *testing.T) {
+			w, db, id, file := workerFixture(t, stubProcessor{}, 1<<20)
+			p := stubProcessor{probeErr: ErrToolUnavailable}
+			if scenario == "changed" {
+				p.probeErr = ErrMetadata
+				p.afterProbe = func() { require.NoError(t, os.WriteFile(file, []byte("new file bytes"), 0600)) }
+			}
+			w.opts.Processor = p
+			worked, err := w.RunOnce(context.Background())
+			require.True(t, worked)
+			require.Error(t, err)
+			v, err := db.Videos().Get(context.Background(), id)
+			require.NoError(t, err)
+			require.Equal(t, domain.VideoPending, v.Status)
+			worked, err = w.RunOnce(context.Background())
+			require.NoError(t, err)
+			require.False(t, worked, "transient errors must back off")
+		})
+	}
 }
