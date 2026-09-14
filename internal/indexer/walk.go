@@ -27,6 +27,15 @@ func (s *Scanner) execute(ctx context.Context, run *domain.ScanRun, generation i
 		return err
 	}
 	allowed := s.entry.Extensions()
+	rules, err := s.db.Exclusions().List(ctx, s.entry.ID)
+	if err != nil {
+		return err
+	}
+	for _, rule := range rules {
+		if err := s.db.Videos().ExcludeMatching(ctx, s.entry.ID, rule.MatchKind, rule.Pattern, s.now()); err != nil {
+			return err
+		}
+	}
 
 	seenPaths := make(map[string]struct{}, 512)
 	b := newBatch(ctx, s)

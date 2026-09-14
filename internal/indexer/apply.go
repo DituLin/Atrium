@@ -11,6 +11,9 @@ import (
 
 // apply reconciles one observed file with its index row.
 func (s *Scanner) apply(ctx context.Context, run *domain.ScanRun, c candidate, generation int64, mode domain.ScanMode) error {
+	if c.Ext == "mp4" || c.Ext == "mov" {
+		return s.applyVideo(ctx, run, c, generation)
+	}
 	repo := s.photos()
 	existing, err := repo.GetByPath(ctx, s.entry.ID, c.Rel)
 	switch {
@@ -162,7 +165,7 @@ func (s *Scanner) finalize(ctx context.Context, run *domain.ScanRun, generation 
 	}
 	run.FilesUnsupported = unsupported
 
-	if err := s.db.Sources().CompleteScan(ctx, s.entry.ID, generation, now); err != nil {
+	if err := s.completeMediaScan(ctx, generation, now, run); err != nil {
 		return err
 	}
 	run.Status = domain.ScanCompleted

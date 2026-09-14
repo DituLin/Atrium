@@ -99,11 +99,32 @@ func (v *Videos) SetMetadata(ctx context.Context, id string, revision int64, m d
 // CompleteScan may only be called after a complete listing with confirmed source
 // identity. Repeating a generation is idempotent; aborted scans must not call it.
 func (v *Videos) CompleteScan(ctx context.Context, sourceID string, generation int64, now time.Time) error {
+	return v.CompleteScanExtensions(ctx, sourceID, generation, []string{"mp4", "mov"}, now)
+}
+
+// CompleteScanExtensions judges absence only for types included in this scan.
+func (v *Videos) CompleteScanExtensions(ctx context.Context, sourceID string, generation int64, extensions []string, now time.Time) error {
+	var mp4, mov bool
+	for _, ext := range extensions {
+		switch ext {
+		case "mp4":
+			mp4 = true
+		case "mov":
+			mov = true
+		default:
+			return fmt.Errorf("store: invalid video scan extension")
+		}
+	}
+	if !mp4 && !mov {
+		return fmt.Errorf("store: empty video scan extensions")
+	}
 	if generation < 1 {
 		return fmt.Errorf("store: invalid video scan generation")
 	}
 	if _, inTx := v.ex.(*sql.Tx); !inTx {
-		return v.db.InTx(ctx, func(tx *sql.Tx) error { return v.WithTx(tx).CompleteScan(ctx, sourceID, generation, now) })
+		return v.db.InTx(ctx, func(tx *sql.Tx) error {
+			return v.WithTx(tx).CompleteScanExtensions(ctx, sourceID, generation, extensions, now)
+		})
 	}
 	res, err := v.ex.ExecContext(ctx, `INSERT INTO video_scan_state(source_id,completed_generation) VALUES(?,?)
  ON CONFLICT(source_id) DO UPDATE SET completed_generation=excluded.completed_generation
@@ -121,11 +142,23 @@ func (v *Videos) CompleteScan(ctx context.Context, sourceID string, generation i
 	_, err = v.ex.ExecContext(ctx, `UPDATE videos SET missing_generations=missing_generations+1,
  last_missing_generation=?,status=CASE WHEN missing_generations+1>=? THEN 'removed' ELSE status END,
  updated_at=? WHERE source_id=? AND last_seen_generation<? AND last_missing_generation<?
- AND status IN ('pending','ready','unsupported')`, generation, RemovalThreshold, FormatTime(now), sourceID, generation, generation)
+ AND status IN ('pending','ready','unsupported') AND ((ext='mp4' AND ?) OR (ext='mov' AND ?))`, generation, RemovalThreshold, FormatTime(now), sourceID, generation, generation, mp4, mov)
 	if err != nil {
 		return fmt.Errorf("store: finalize video scan: %w", err)
 	}
 	return nil
+}
+
+// RemovalCounts returns the missing and newly removed counts for one completed
+// generation. Removed rows retain their removal generation on later scans.
+func (v *Videos) RemovalCounts(ctx context.Context, sourceID string, generation int64) (int64, int64, error) {
+	var missing, removed int64
+	err := v.ex.QueryRowContext(ctx, `SELECT count(*),COALESCE(sum(CASE WHEN status='removed' THEN 1 ELSE 0 END),0)
+ FROM videos WHERE source_id=? AND last_missing_generation=? AND status IN ('pending','ready','unsupported','removed')`, sourceID, generation).Scan(&missing, &removed)
+	if err != nil {
+		return 0, 0, fmt.Errorf("store: video removal counts: %w", err)
+	}
+	return missing, removed, nil
 }
 
 // ExcludeMatching applies the existing path exclusion semantics to videos.

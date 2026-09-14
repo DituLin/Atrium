@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -111,8 +112,17 @@ func (p *Photos) PromoteRemoved(ctx context.Context, sourceID string, now time.T
 // CompleteScan commits a scan generation onto the source and, on the first
 // completed scan, closes the baseline import window.
 func (s *Sources) CompleteScan(ctx context.Context, id string, generation int64, now time.Time) error {
+	return s.completeScan(ctx, s.ex, id, generation, now)
+}
+
+// CompleteScanInTx commits the source generation alongside media scan state.
+func (s *Sources) CompleteScanInTx(ctx context.Context, tx *sql.Tx, id string, generation int64, now time.Time) error {
+	return s.completeScan(ctx, tx, id, generation, now)
+}
+
+func (s *Sources) completeScan(ctx context.Context, ex execer, id string, generation int64, now time.Time) error {
 	ts := FormatTime(now)
-	res, err := s.db.sql.ExecContext(ctx, `
+	res, err := ex.ExecContext(ctx, `
 		UPDATE data_sources SET scan_generation = ?, last_scan_completed_at = ?,
 			baseline_completed_at = COALESCE(baseline_completed_at, ?), updated_at = ?
 		WHERE id = ?`, generation, ts, ts, ts, id)

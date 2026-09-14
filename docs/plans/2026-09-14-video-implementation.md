@@ -39,3 +39,13 @@ V2.1 存储基础已完成，尚未部署。新增 videos 与 video_scan_state�
 失败回归包括旧元数据覆盖、重复扫描计数、迟到记录恢复及首次插入。v3→v4 升级验证原照片实体与屏幕 token 保持不变，重复迁移无操作。`go test -race ./internal/store ./internal/domain` 与最终 `make check` 通过；独立审查发现的来源水位 P2 已修复并复审接受。私有检查日志：`~/Atrium/iteration-20260912/video-store-check-final.log`。
 
 V2.2–V2.5 未完成。当前仓库新增的视频存储尚无生产调用者，运行中的 Core/数据库仍保持先前版本；视频索引不能计作真实 NAS 已导入，HTTP、封面、页面与生命周期仍按后续任务验证。
+
+### V2.2 扫描接入进展
+
+混合目录扫描已接入独立视频表：MP4/MOV 按配置分派，不创建图片元数据/预览任务；同目录照片继续原链路。既有排除规则会同步到已发现视频。文件稳定前不发布新 revision，旧记录只维持存在性，后续读取必须核对实际文件 size/mtime 才能使用其元数据。
+
+视频缺失判断只覆盖本轮配置的扩展名；子目录或文件信息读取有错误的部分扫描不累计视频缺失，正常两次完整扫描才移除。video_scan_state 与来源 scan_generation 在同一事务提交，提交成功后才增加本次视频 Missing/Removed 统计。
+
+验证：`go test -race ./internal/indexer ./internal/store ./internal/source` 和 `make check` 均通过；混合目录、不创建照片任务、部分目录无权限、重复缺失、排除、扩展名禁用/重新启用及未稳定文件用例通过，两轮独立审查接受。检查日志：`~/Atrium/iteration-20260912/video-indexer-check.log`。
+
+尚未部署；运行配置仍是原照片扩展名列表。生产启用视频时需在原来源的 include_extensions 加入 mp4/mov，并同时部署处理流水线。V2.2 的元数据/封面处理、V2.3–V2.5 仍未完成。下一批需实现受限可跳转输入、子进程超时/取消与输出上限、revision 和授权版本发布校验，不直接将 NAS 绝对路径交给任意外部读取。
