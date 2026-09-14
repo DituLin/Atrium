@@ -16,6 +16,8 @@ import type {
   PhotoDetailResponse,
   PhotoListResponse,
   ScreenSelfResponse,
+  VideoDetailResponse,
+  VideoListResponse,
 } from '../types/api';
 import type { AuthTransport } from './auth';
 import { authTransport as defaultTransport } from './auth';
@@ -194,6 +196,22 @@ export class ApiClient {
 
   getScreenSelf(): Promise<ScreenSelfResponse> {
     return this.get<ScreenSelfResponse>(`${API_BASE}/screens/me`);
+  }
+
+  listVideos(params: { cursor?: string | null; limit?: number }, signal?: AbortSignal): Promise<VideoListResponse> {
+    const query = new URLSearchParams();
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.cursor) query.set('cursor', params.cursor);
+    const suffix = query.size ? `?${query.toString()}` : '';
+    return this.request<VideoListResponse>(`${API_BASE}/videos${suffix}`, {
+      method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-store', ...(signal ? { signal } : {}),
+    }, true);
+  }
+
+  getVideo(id: string, signal?: AbortSignal): Promise<VideoDetailResponse> {
+    return this.request<VideoDetailResponse>(`${API_BASE}/videos/${encodeURIComponent(id)}`, {
+      method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-store', ...(signal ? { signal } : {}),
+    }, true);
   }
 
   listPhotos(params: {

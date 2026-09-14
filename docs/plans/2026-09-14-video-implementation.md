@@ -167,3 +167,13 @@ httpapi/source/video race 与最终 make check 通过，独立复审接受。全
 新增管理员 `POST /api/v1/videos/{id}/retry`，沿用图片重新处理的权限边界。严格接收正整数 revision，经当前来源可见性与 SQL CAS 后返回 202、新 revision 和 pending；旧版本/重复请求 409，屏幕凭据无权操作，新增排除规则立即阻止重试。请求只改任务状态，不在 HTTP 中执行媒体处理，并记录管理审计。
 
 相关 retry/Video race、make check 和独立审查通过。日志 `~/Atrium/iteration-20260912/video-retry-api-check.log`。尚未部署；下一步进入 V2.4 宋式视频列表与播放器、状态上报及遥控生命周期，再做真实 Core/OnePlus 部署回归。完整计划仍包含正式电视、声音听感及 M5 稳定性验收。
+
+### V2.4 播放器组件与客户端接口
+
+新增 VideoPlayer 组件及墨色、宋体标题、青瓷焦点样式。进入预览不设置内容 src，明确确认后才请求播放；左右跳转 10 秒，上下切换播放/返回焦点。支持加载、暂停、结束、读取失败和设备不支持提示，返回先暂停、清除 src 并 load，再通知导航。视频 ID/revision 改变会卸载旧会话，新会话保持待播。
+
+播放意图按代次管理：隐藏、pagehide、卸载和取消均使旧请求失效，迟到 play 完成再核对意图/可见性并暂停。独立审查指出旧 pause 事件可能在新 play 后到达，已用失败回归复现并增加 video.paused 实际状态核对；复审接受。
+
+客户端新增 Video DTO、listVideos/getVideo，沿用当前授权传输，使用 no-store、AbortSignal 和授权代次保护。新增 12 项播放器及 4 项 API 测试，最终前端 51 个测试文件、371 项测试全部通过，类型检查、lint 和生产构建通过。日志 `~/Atrium/iteration-20260912/video-player-web-tests-final.log`。
+
+此批是未接入路由的组件与客户端基础，生产构建尚不会包含未引用的播放器。尚未完成视频列表、导航/状态上报、返回卡片与滚动恢复、授权失效触发播放器卸载、错误状态与 Core 的进一步联动、真实浏览器多尺寸视觉检查及 OnePlus 播放验收。组件测试的媒体 API 为 JSDOM mock，不能替代真实媒体事件/声音/画面验收。媒体元素使用现有同源 Cookie 模式；后续集成须保持该边界，不把 bearer 凭据放入 URL，也不整文件下载来伪装 Range 播放。没有部署、修改 NAS 或运行配置，V2.4、V2.5 和 M5 均继续待完成。

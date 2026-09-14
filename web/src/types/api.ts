@@ -70,6 +70,32 @@ export interface PhotoDetailResponse {
   neighbors?: PhotoNeighbors;
 }
 
+export interface VideoItem {
+  id: string;
+  source_id: string;
+  revision: number;
+  status: 'pending' | 'ready' | 'unsupported';
+  first_seen_at: string;
+  metadata?: {
+    container: string;
+    video_codec: string;
+    audio_codec: string;
+    width: number;
+    height: number;
+    duration_ms: number;
+    rotation: number;
+  };
+  cover_url?: string;
+  content_url?: string;
+}
+
+export interface VideoListResponse {
+  items: VideoItem[];
+  next_cursor: string | null;
+}
+
+export interface VideoDetailResponse { item: VideoItem }
+
 export interface NasSourceStatus {
   id: string;
   name: string;
