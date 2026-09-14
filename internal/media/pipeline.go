@@ -45,6 +45,9 @@ type Options struct {
 	Now       func() time.Time
 	// TempDir holds converter output; empty uses the OS temp directory.
 	TempDir string
+	// AdditionalCache reports another partition of the same total budget.
+	AdditionalCache       func() (int64, error)
+	AdditionalCacheBudget int64
 }
 
 // Pipeline implements the extract_meta, build_preview and recompute_day job

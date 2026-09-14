@@ -65,7 +65,7 @@ func (p *Pipeline) Touch(ctx context.Context, photoID string, variant domain.Var
 
 // CacheState reports the current cache accounting.
 func (p *Pipeline) CacheState(ctx context.Context) CacheState {
-	state := CacheState{BudgetBytes: p.opts.Storage.CacheBudgetBytes}
+	state := CacheState{BudgetBytes: p.opts.Storage.CacheBudgetBytes + p.opts.AdditionalCacheBudget}
 	if used, err := p.opts.DB.Previews().TotalBytes(ctx); err == nil {
 		state.Bytes = used
 	}
@@ -73,6 +73,13 @@ func (p *Pipeline) CacheState(ctx context.Context) CacheState {
 		state.FreeDiskBytes = free
 		if p.opts.Storage.MinFreeBytes > 0 && free < p.opts.Storage.MinFreeBytes {
 			state.PausedReason = PausedLowDisk
+		}
+	}
+	if p.opts.AdditionalCache != nil {
+		if used, err := p.opts.AdditionalCache(); err == nil {
+			state.Bytes += used
+		} else {
+			state.PausedReason = "cache_unavailable"
 		}
 	}
 	p.janitor.mu.Lock()

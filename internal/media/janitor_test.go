@@ -129,3 +129,15 @@ func TestJanitorLoopStopsWithContext(t *testing.T) {
 		t.Fatal("janitor loop did not stop")
 	}
 }
+
+func TestCacheStateIncludesReservedVideoPartition(t *testing.T) {
+	fx := newFixture(t, func(o *media.Options) {
+		o.Storage.CacheBudgetBytes = 900
+		o.AdditionalCacheBudget = 100
+		o.AdditionalCache = func() (int64, error) { return 60, nil }
+	})
+	fx.seedPreview(t, "cached", 400, fx.now)
+	state := fx.pipeline.CacheState(context.Background())
+	require.EqualValues(t, 1000, state.BudgetBytes)
+	require.EqualValues(t, 460, state.Bytes)
+}

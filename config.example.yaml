@@ -48,6 +48,11 @@ media:
   max_source_bytes: 62914560
   heic:
     converter: "sips"                 # sips | off
+  # Add mp4/mov to the existing source include_extensions to enable video.
+  # Covers reserve 10% (up to 512 MiB) of storage.cache_budget_bytes.
+  video:
+    ffprobe: ""                       # Empty: PATH; launchd may need /opt/homebrew/bin/ffprobe
+    ffmpeg: ""                        # Empty: PATH; launchd may need /opt/homebrew/bin/ffmpeg
 
 screens:
   heartbeat_interval: "15s"

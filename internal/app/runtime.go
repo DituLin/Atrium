@@ -27,6 +27,7 @@ import (
 	"github.com/DituLin/Atrium/internal/source"
 	"github.com/DituLin/Atrium/internal/store"
 	"github.com/DituLin/Atrium/internal/version"
+	"github.com/DituLin/Atrium/internal/video"
 	"github.com/DituLin/Atrium/internal/webui"
 	"github.com/DituLin/Atrium/internal/widget"
 	"github.com/DituLin/Atrium/internal/ws"
@@ -65,13 +66,16 @@ type Runtime struct {
 	lock     *backup.Lock
 
 	// V0.2 subsystems.
-	bus      *events.Bus
-	sources  *source.Manager
-	queue    *jobs.Queue
-	pool     *jobs.Pool
-	cache    *media.Cache
-	pipeline *media.Pipeline
-	index    *indexer.Scheduler
+	bus         *events.Bus
+	sources     *source.Manager
+	queue       *jobs.Queue
+	pool        *jobs.Pool
+	cache       *media.Cache
+	pipeline    *media.Pipeline
+	index       *indexer.Scheduler
+	videoWorker *video.Worker
+	videoCache  *video.CoverCache
+	videoBudget int64
 
 	// mu guards listener, which Start writes and Addr reads concurrently.
 	mu       sync.Mutex

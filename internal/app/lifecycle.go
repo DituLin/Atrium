@@ -175,6 +175,9 @@ func (r *Runtime) runBackground(ctx context.Context) {
 	if r.pool != nil {
 		start("jobs", r.pool.Run)
 	}
+	if r.videoWorker != nil {
+		start("video", r.videoWorker.Run)
+	}
 	if r.pipeline != nil {
 		start("media", func(c context.Context) { r.pipeline.RunJanitorLoop(c, media.JanitorInterval) })
 	}

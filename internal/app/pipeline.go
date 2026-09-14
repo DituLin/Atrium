@@ -39,10 +39,20 @@ func (r *Runtime) buildPipeline(ctx context.Context, home *clock.Home) error {
 		JobTimeout: r.cfg.Media.DecodeTimeout.D(), Now: r.now,
 	})
 
+	if err := r.buildVideo(); err != nil {
+		return err
+	}
+	photoStorage := r.cfg.Storage
+	photoStorage.CacheBudgetBytes -= r.videoBudget
+	var extraCache func() (int64, error)
+	if r.videoCache != nil {
+		extraCache = r.videoCache.Bytes
+	}
 	pipeline, err := media.NewPipeline(media.Options{
 		DB: r.db, Cache: r.cache, Queue: r.queue, Sources: r.sources,
 		Home: home, Bus: r.bus, Logger: r.log,
-		Media: r.cfg.Media, Storage: r.cfg.Storage, Now: r.now,
+		Media: r.cfg.Media, Storage: photoStorage, Now: r.now,
+		AdditionalCache: extraCache, AdditionalCacheBudget: r.videoBudget,
 	})
 	if err != nil {
 		return err

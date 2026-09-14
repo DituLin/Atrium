@@ -29,3 +29,25 @@ func TestCoverCacheBudgetAndOrphanCleanup(t *testing.T) {
 	low := NewCoverCache(t.TempDir(), 100, 100, media.FakeDiskStats{FreeBytes: 101})
 	require.ErrorIs(t, low.Write(first, []byte("123")), ErrLowDisk)
 }
+
+func TestCoverCacheWaitsForExistingPhotoUsage(t *testing.T) {
+	c := NewCoverCache(t.TempDir(), 10, 0, media.FakeDiskStats{FreeBytes: 1000})
+	photoBytes := int64(98)
+	c.SetSharedBudget(100, func() (int64, error) { return photoBytes, nil })
+	require.ErrorIs(t, c.Write(domain.NewID(), []byte("123")), ErrCacheFull)
+	photoBytes = 90
+	require.NoError(t, c.Write(domain.NewID(), []byte("123")))
+}
+
+func TestCoverCacheShrinksExistingCoversToBudget(t *testing.T) {
+	root := t.TempDir()
+	old := NewCoverCache(root, 100, 0, media.FakeDiskStats{FreeBytes: 1000})
+	first, second := domain.NewID(), domain.NewID()
+	require.NoError(t, old.Write(first, []byte("123456")))
+	require.NoError(t, old.Write(second, []byte("123456")))
+	smaller := NewCoverCache(root, 10, 0, media.FakeDiskStats{FreeBytes: 1000})
+	require.NoError(t, smaller.TrimToBudget())
+	used, err := smaller.Bytes()
+	require.NoError(t, err)
+	require.LessOrEqual(t, used, int64(10))
+}

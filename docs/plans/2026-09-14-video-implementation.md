@@ -79,3 +79,15 @@ Publish 在同一事务核对视频 revision、任务 token、租约期限、来
 回归覆盖真实缓存文件删除后重新生成、完整封面不重复生成，以及 active/旧 token 不影响新发布。首次运行恢复测试复现缺失后不再处理的问题，再实现修复。此批仍未部署；生产运行时接入、总预算分配、失败终态、HTTP 和宋式视频页面继续待办。
 
 验证结果：`go test -race ./internal/video ./internal/store` 和最终 `make check` 通过，独立复核接受；完整检查日志为 `~/Atrium/iteration-20260912/video-cover-recovery-check.log`。
+
+### V2.2 运行时与预算接入
+
+Core 在现有授权来源包含 mp4/mov 时装配并启动串行视频 Worker，随后台上下文取消退出。新增 `media.video.ffprobe` / `ffmpeg` 指定本地可执行文件，留空使用 PATH；launchd 部署宜填写绝对路径，示例配置已说明。
+
+从原缓存总额预留 10%，上限 512 MiB，供视频封面使用，其余为照片额度；诊断返回两者合计及原总预算。已有照片尚未收敛到新额度时，封面写入额外核对总占用。总预算缩小时，启动前按生成时间回收超额的自有封面文件；不支持识别的文件不会被删除，无法收敛则明确报错。关闭视频扩展名但仍留封面时也执行降额和占用统计。封面缺失的数据库引用沿用已完成的自动恢复协议。
+
+验证包含纯图片启动、混合来源装配、诊断额度与字节合计、历史照片超额时拒绝封面新写，以及预算缩小后启用/禁用来源的封面回收。本机真实 ffmpeg 生成临时 MP4，经 Runtime.Start 的后台循环自动完成 ready/cover 发布，无手动调用 RunOnce；Shutdown 正常返回。测试只使用临时目录及隔离数据库。
+
+独立审查发现历史封面在降额后无法收敛的 P2，已补充启动回收与回归。运行中 Core 未部署本批。失败终态/用户重试、接口、宋式页面与真实部署验收仍未完成；继续按原计划推进。
+
+最终 `go test -race ./internal/app ./internal/media ./internal/video ./internal/config` 及新增 Runtime 回归通过，`make check` 通过，独立复审接受。最终日志：`~/Atrium/iteration-20260912/video-runtime-check-final.log`。

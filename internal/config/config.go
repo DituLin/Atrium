@@ -111,6 +111,7 @@ type Media struct {
 	MaxPixels       int64    `yaml:"max_pixels"`
 	MaxSourceBytes  int64    `yaml:"max_source_bytes"`
 	HEIC            HEIC     `yaml:"heic"`
+	Video           Video    `yaml:"video"`
 }
 
 // HEIC selects the HEIC conversion strategy.
@@ -195,3 +196,9 @@ func (d Duration) MarshalYAML() (any, error) { return time.Duration(d).String(),
 
 // D converts to a time.Duration.
 func (d Duration) D() time.Duration { return time.Duration(d) }
+
+// Video selects local executables; empty names use PATH lookup.
+type Video struct {
+	FFprobe string `yaml:"ffprobe"`
+	FFmpeg  string `yaml:"ffmpeg"`
+}

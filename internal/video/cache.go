@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 
@@ -24,6 +25,8 @@ type CoverCache struct {
 	files           *media.Cache
 	budget, minFree int64
 	disk            media.DiskStats
+	sharedBudget    int64
+	otherBytes      func() (int64, error)
 }
 
 // NewCoverCache creates a local cache; no source directory is accepted here.
@@ -81,6 +84,15 @@ func (c *CoverCache) Write(token string, data []byte) error {
 	}
 	if c.budget <= 0 || int64(len(data)) > c.budget-used {
 		return ErrCacheFull
+	}
+	if c.otherBytes != nil {
+		other, err := c.otherBytes()
+		if err != nil {
+			return err
+		}
+		if int64(len(data)) > c.sharedBudget-other-used {
+			return ErrCacheFull
+		}
 	}
 	free, _, err := c.disk.Free(c.files.Root())
 	if err != nil {
@@ -173,6 +185,58 @@ func (c *CoverCache) IfMissing(token string, forget func() error) error {
 	}
 	if !info.Mode().IsRegular() || info.Size() == 0 || info.Size() > 2*1024*1024 {
 		return forget()
+	}
+	return nil
+}
+
+// SetSharedBudget guards against preexisting usage above another partition's
+// new budget while its janitor converges. Configure before starting the worker.
+func (c *CoverCache) SetSharedBudget(total int64, otherBytes func() (int64, error)) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.sharedBudget, c.otherBytes = total, otherBytes
+}
+
+// TrimToBudget reconciles a reduced budget at process startup, before any
+// claims run. Only generated regular cover files are evicted, oldest first.
+// Missing references are repaired by the worker's normal reconciliation.
+func (c *CoverCache) TrimToBudget() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	used, err := c.bytes()
+	if err != nil || used <= c.budget {
+		return err
+	}
+	entries, err := os.ReadDir(c.files.Root())
+	if err != nil {
+		return err
+	}
+	var candidates []os.FileInfo
+	for _, entry := range entries {
+		if !entry.Type().IsRegular() {
+			continue
+		}
+		if _, err := coverName(strings.TrimSuffix(entry.Name(), ".jpg")); err != nil || !strings.HasSuffix(entry.Name(), ".jpg") {
+			continue
+		}
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		candidates = append(candidates, info)
+	}
+	sort.Slice(candidates, func(i, j int) bool { return candidates[i].ModTime().Before(candidates[j].ModTime()) })
+	for _, info := range candidates {
+		if used <= c.budget {
+			return nil
+		}
+		if err := c.files.Remove(info.Name()); err != nil {
+			return err
+		}
+		used -= info.Size()
+	}
+	if used > c.budget {
+		return ErrCacheFull
 	}
 	return nil
 }
