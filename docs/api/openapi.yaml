@@ -306,6 +306,74 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
 
+  /api/v1/media/videos/{id}/content:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [screen]
+      summary: Stream an authorized original MP4 or MOV
+      description: |
+        Requires a current successfully processed revision and an online source.
+        Authentication, source identity, publication and file size/mtime are
+        rechecked around reads and seeks. Only single byte ranges are supported;
+        multipart requests return 416. Uses no-store and a revision/publication ETag.
+        At most four streams are active per Core. I/O and output chunks have
+        ten-second deadlines; canceled blocked I/O retains capacity until cleanup.
+        Failure after response bytes have started truncates the stream.
+      security:
+        - screenBearer: []
+        - screenCookie: []
+        - adminBearer: []
+      parameters:
+        - name: Range
+          in: header
+          schema: { type: string }
+        - name: If-Range
+          in: header
+          schema: { type: string }
+      responses:
+        "200":
+          description: Original video bytes.
+          content:
+            video/mp4:
+              schema: { type: string, format: binary }
+            video/quicktime:
+              schema: { type: string, format: binary }
+        "206":
+          description: Requested single byte range.
+          headers:
+            Content-Range:
+              schema: { type: string }
+        "304": { description: Matching current ETag; no body. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "416":
+          description: Malformed, unsatisfiable, or multiple ranges.
+          headers:
+            Content-Range:
+              schema: { type: string }
+        "503": { description: Video not ready, offline, unreadable or stream capacity exhausted. }
+    head:
+      tags: [screen]
+      summary: Check authorized video type and length without body bytes
+      security:
+        - screenBearer: []
+        - screenCookie: []
+        - adminBearer: []
+      responses:
+        "200": { description: Authorized metadata headers only. }
+        "206": { description: Single range metadata headers only. }
+        "304": { description: Matching current ETag. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "416": { description: Invalid or multiple ranges. }
+        "503": { description: Video unavailable. }
+
   /api/v1/media/videos/{id}/cover:
     parameters:
       - name: id
@@ -1972,6 +2040,7 @@ components:
         status: { type: string, enum: [pending, ready, unsupported] }
         first_seen_at: { type: string, format: date-time }
         cover_url: { type: string, description: Same-origin JPEG route, present for ready records. }
+        content_url: { type: string, description: Same-origin original video route, present for ready records. }
         metadata:
           description: Present only for ready records from the current source authorization.
           type: object

@@ -98,6 +98,7 @@ type API struct {
 	limits               rateLimits
 	integrationLimits    *auth.Limiter
 	integrationCursorKey []byte
+	videoReads           *video.ReadPool
 }
 
 // rateLimits holds the per-route limiters from design §6.8.
@@ -129,7 +130,9 @@ func New(deps Deps) *API {
 			Insecure: deps.Insecure, Now: deps.Now,
 		})
 	}
+	reads, _ := video.NewReadPool(4, 10*time.Second)
 	a := &API{
+		videoReads:           reads,
 		deps:                 deps,
 		mux:                  http.NewServeMux(),
 		integrationCursorKey: []byte(rand.Text()),

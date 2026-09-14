@@ -129,22 +129,30 @@ func (f *OSFS) do(ctx context.Context, kind callKind, fn func() error) error {
 	if kind == callNormal && f.degraded.Load() {
 		return ErrDegraded
 	}
+	ctx, cancel := context.WithTimeout(ctx, f.timeout)
+	defer cancel()
 	slots := f.slots
 	if kind == callProbe {
 		slots = f.probeSlots
 	}
-	select {
-	case slots <- struct{}{}:
-	default:
-		if kind == callNormal {
-			f.degraded.Store(true)
+	if kind == callProbe {
+		// Probe callers share a single reserved lane. Short healthy overlap waits
+		// within the same deadline instead of looking like a failed NAS identity.
+		select {
+		case slots <- struct{}{}:
+		case <-ctx.Done():
+			f.errorOps.Add(1)
+			return ErrStuck
 		}
-		return ErrDegraded
+	} else {
+		select {
+		case slots <- struct{}{}:
+		default:
+			f.degraded.Store(true)
+			return ErrDegraded
+		}
 	}
 	f.inflight.Add(1)
-
-	ctx, cancel := context.WithTimeout(ctx, f.timeout)
-	defer cancel()
 
 	done := make(chan error, 1)
 	go func() {
@@ -247,8 +255,7 @@ func (f *OSFS) Open(ctx context.Context, rel string) (io.ReadSeekCloser, error) 
 	released := make(chan struct{})
 	go func() {
 		defer func() { f.inflight.Add(-1); <-f.slots; close(released) }()
-		//nolint:gosec // full is validated by abs(); final symlinks are refused
-		file, openErr := os.OpenFile(full, os.O_RDONLY|openNoFollow, 0)
+		file, openErr := f.openConfined(full)
 		if file != nil {
 			defer func() {
 				if file != nil {
@@ -328,3 +335,28 @@ type PathResolver interface {
 
 // Realpath implements PathResolver.
 func (f *OSFS) Realpath(rel string) (string, error) { return f.abs(rel) }
+
+// openConfined prevents a changed ancestor from redirecting an indexed file
+// outside its authorized root. All work runs within Open's bounded worker.
+func (f *OSFS) openConfined(full string) (*os.File, error) {
+	root, err := os.OpenRoot(f.root)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = root.Close() }()
+	rel, err := filepath.Rel(f.root, full)
+	if err != nil {
+		return nil, err
+	}
+	parts := strings.Split(rel, string(os.PathSeparator))
+	for i := 1; i < len(parts); i++ {
+		info, err := root.Lstat(filepath.Join(parts[:i]...))
+		if err != nil {
+			return nil, err
+		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			return nil, ErrSymlink
+		}
+	}
+	return root.OpenFile(rel, os.O_RDONLY|openNoFollow, 0)
+}

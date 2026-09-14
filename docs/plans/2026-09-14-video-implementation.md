@@ -143,3 +143,19 @@ source/video/media/indexer race、额外连续打开回归与最终 make check �
 测试覆盖正常读/跳转/关闭、读超时仍占容量且调用者缓冲区不变、读后权限失效不返回数据、打开超时后迟到文件关闭、底层 Close 阻塞时不能释放容量。当前仅组件层通过，还没有原视频内容路由，不能据此认定 GET/HEAD/Range 或实际屏幕播放已验收。
 
 相关 Stream race 通过，独立审查重复五次通过；首次全量检查发现导出注释缺失的 lint 问题，补齐后最终 make check 通过。最终日志：`~/Atrium/iteration-20260912/video-stream-check-final.log`。没有修改运行配置、生产程序或 NAS。
+
+### V2.3 原视频内容接口
+
+新增 `GET/HEAD /api/v1/media/videos/{id}/content` 和 ready DTO 的 content_url。Core 每个 API 实例限 4 条流，打开/读取/跳转超时 10 秒；每次网络输出刷新 10 秒写超时。使用原 MP4/MOV 字节及正确 MIME，支持单 Range、尾段、开放结束位置、If-Range 和 ETag；多段请求拒绝为 416。
+
+授权 opener 与每次 Read/Seek 前后守卫重新检查凭据、来源配置/绑定、当前成功发布 token、在线状态、实际挂载身份以及文件 size/mtime；打开后的真实描述符也核对类型与 tuple。取消通过 ReadPool 及时结束请求，迟到 I/O 仍占用容量至清理完成。传输开始后权限撤销会停止后续读取，客户端得到截断响应，不继续发送剩余视频。
+
+同时修复并验证 OSFS.Open 的祖先符号链接逃逸：旧 O_NOFOLLOW 仅保护最后一级，新增真实回归复现后，用 os.Root 限定整个打开操作的根目录，并拒绝发现的祖先符号链接。打开/关闭仍处于原受限 worker 内。
+
+独立审查发现视频与后台身份探测共用单槽时可能互相误报不可用，已改为探测在同一截止时间内等待槽；普通 I/O 的限额行为保持原逻辑。等待槽超时不增加 kernel stuck 计数。并发探测回归先复现 ErrDegraded 后修复。
+
+真实临时 MP4 经处理流水线发布，再由 HTTP 验证完整原字节、HEAD、前段/尾段/开放 Range、无效与多段 416、条件请求、离线拒绝、未配对拒绝、请求取消及来源撤销。两条内容请求各读五次，与后台 Manager.Probe 同时运行，相关 race 多轮通过；16 MiB 临时测试文件验证已开始的响应在撤销后截断。仅修改隔离临时文件，没有写入 NAS或部署生产。
+
+剩余：真实 NAS 内容接口与 OnePlus 播放验证、用户重试 API、宋式视频页面、部署回归及完整 M5。当前接口通过隔离测试不等于真实电视端已交付。
+
+httpapi/source/video race 与最终 make check 通过，独立复审接受。全量检查中的测试错误包装 lint 已修正；最终日志为 `~/Atrium/iteration-20260912/video-content-api-check-final.log`。

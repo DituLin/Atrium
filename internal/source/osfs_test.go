@@ -228,3 +228,15 @@ func TestSequentialOpenReleasesCapacityBeforeReturning(t *testing.T) {
 	}
 	require.False(t, fsys.Degraded())
 }
+
+func TestOpenRejectsSymlinkedAncestorEscape(t *testing.T) {
+	root, fsys := newTree(t)
+	outside := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(outside, "private.mp4"), []byte("private"), 0600))
+	require.NoError(t, os.Symlink(outside, filepath.Join(root, "alias")))
+	file, err := fsys.Open(context.Background(), "alias/private.mp4")
+	if file != nil {
+		_ = file.Close()
+	}
+	require.Error(t, err, "final-component O_NOFOLLOW does not prevent ancestor escapes")
+}
