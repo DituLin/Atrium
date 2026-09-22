@@ -64,12 +64,19 @@ whether the bundle was cached.
 ./scripts/bench-commands.sh 100 living_room_tv bench-commands.txt
 ```
 
-100 `navigate` commands with `--wait`, measuring API acceptance to the client's
-`applied` acknowledgement. The screen must be online and its previews already
+100 `navigate` commands with `--wait`. The script uses Python 3 and a
+monotonic clock from CLI start to terminal receipt, including process startup,
+request time and the CLI's 250 ms polling. This is a conservative upper bound
+for API acceptance to `applied`, not an exact server latency. If the upper
+bound exceeds a target, use finer instrumentation before attributing it to
+Core or TV latency. The screen must be online and its previews already
 generated. Timeouts count as real results, not as discarded samples.
 
-Record: P50, P95, max, and the count of anything that was not `applied`, with
-its `error_code`.
+Record: P50, P95, max for applied samples, and the count of anything that was
+not `applied`, with its `error_code`. Preserve the adjacent `.samples.jsonl`
+file, which includes every attempted command, its elapsed time and outcome.
+A failed/unknown sample prevents a passing result; successful-sample
+percentiles never hide failure counts. Use a new output filename per run.
 
 ## 4. Discovered-data push — P95 ≤ 2 s
 
