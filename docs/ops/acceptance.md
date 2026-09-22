@@ -23,7 +23,11 @@ atrium admin diag --json > diag-before.json
 ```
 
 The run is only valid if `diag-before.json` shows every source `online`, the
-job queue drained (`jobs.queued` at 0) and `cache.paused_reason` null. A
+photo job queue drained (`jobs.queued` and `jobs.running` at 0) and
+`cache.paused_reason` null. With video indexing enabled, also record video
+status/work counts from a read-only database snapshot: the photo `jobs`
+section does not include video work. Pending video metadata/cover processing
+means the first import is still running. A
 benchmark taken during the first index measures the indexer, not the API.
 
 ## 1. Read API — P95 ≤ 200 ms, errors < 1%
@@ -196,7 +200,9 @@ df -h "$ATRIUM_DATA_DIR"
 
 Sample after warm-up and again after the seven-day run. Record RSS at both
 points (the question is whether it grows without bound, not its absolute
-value), cache bytes against the 10 GB budget, and confirm that low disk paused
+value), cache bytes against the configured budget (default 10 GiB; the household
+baseline records a 20 GiB override in G0 §10), and report any difference
+from the PRD/default explicitly. Confirm that low disk paused
 new preview work rather than degrading the API.
 
 ## 13. Failure matrix
