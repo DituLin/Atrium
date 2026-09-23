@@ -62,3 +62,20 @@ not change for this web/Core repair, so the APK hash is unchanged from the
 latest remote-video build. A dated installation copy is prepared locally;
 USB transfer remains pending because macOS detects no external physical disk.
 
+
+## Follow-up: TV playback and installation media
+
+NAS permission was subsequently granted: a complete scan saw 19,774 files with
+zero errors. The TV's remote Play press was independently captured rejecting
+with `NotAllowedError: play() can only be initiated by a user gesture`, before
+requesting video content. The installed APK was the older 30,512-byte build;
+the prepared 34,364-byte APK contains the existing remote-playback WebSettings
+fix. Wireless installation was rejected by the TV's system installation policy,
+so no APK update or remote-playback success is claimed yet.
+
+The USB drive later became available. Its old `app-debug.apk` matched the TV's
+installed package. Both that filename and `Atrium-TV-2026-09-23.apk` now contain
+the current build, verified by SHA-256 after writing; the USB disk was ejected
+successfully. The old package is backed up privately. Physical TV playback
+verification remains pending installation of this APK; loading a clip through
+a synthetic touch is not evidence that D-pad playback has been fixed.
