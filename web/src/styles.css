@@ -597,7 +597,10 @@ body {
 
 .statusbar { flex-wrap: wrap; }
 .pair__steps { max-width: 100%; overflow-wrap: anywhere; }
-.paircode__digit { font-size: min(11vw, 22vh); }
+.paircode__digit { font-size: 11vw; }
+@media (min-aspect-ratio: 2/1) {
+  .paircode__digit { font-size: 22vh; }
+}
 .screen--pair, .screen--connect { overflow-y: auto; }
 
 @media (orientation: portrait) {
@@ -687,7 +690,7 @@ body {
   content: '';
   display: block;
   width: calc(72 * var(--design-pixel));
-  border-top: max(1px, calc(2 * var(--design-pixel))) solid var(--celadon);
+  border-top: calc(2 * var(--design-pixel)) solid var(--celadon);
   margin-bottom: calc(30 * var(--design-pixel));
 }
 .home__introduction h1 {

@@ -172,7 +172,9 @@ func WithSecurityHeaders() Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			h := w.Header()
 			h.Set("X-Content-Type-Options", "nosniff")
-			h.Set("Referrer-Policy", "no-referrer")
+			// Legacy WebViews need Referer for same-origin cookie authentication;
+			// never disclose it to a different origin.
+			h.Set("Referrer-Policy", "same-origin")
 			h.Set("X-Frame-Options", "DENY")
 			h.Set("Content-Security-Policy",
 				"default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "+

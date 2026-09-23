@@ -151,9 +151,9 @@ export interface WsTimers {
 
 export const defaultWsTimers: WsTimers = {
   now: () => Date.now(),
-  setTimeout: (fn, ms) => globalThis.setTimeout(fn, ms) as unknown as number,
+  setTimeout: (fn, ms) => window.setTimeout(fn, ms) as unknown as number,
   clearTimeout: (handle) => {
-    globalThis.clearTimeout(handle);
+    window.clearTimeout(handle);
   },
   random: () => Math.random(),
 };

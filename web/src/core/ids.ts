@@ -8,7 +8,7 @@ const ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyz';
 
 function randomChars(length: number): string {
   const cryptoObj: Crypto | undefined =
-    typeof globalThis.crypto !== 'undefined' ? globalThis.crypto : undefined;
+    typeof window.crypto !== 'undefined' ? window.crypto : undefined;
   let out = '';
   if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
     const bytes = new Uint8Array(length);

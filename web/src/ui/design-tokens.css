@@ -37,13 +37,13 @@
 
   /* One design pixel at 1920×1080. Both dimensions constrain scale, including
    * 804×384 WebViews; physical-pixel font floors must not force overflow. */
-  --design-pixel: min(0.0520833333vw, 0.0925925926vh);
+  --design-pixel: 0.0520833333vw;
   --fs-title: calc(56 * var(--design-pixel));
   --fs-text: calc(32 * var(--design-pixel));
   --fs-aux: calc(28 * var(--design-pixel));
   --fs-clock: calc(126 * var(--design-pixel));
   --safe-margin: calc(72 * var(--design-pixel));
-  --focus-width: max(1px, calc(5 * var(--design-pixel)));
+  --focus-width: calc(5 * var(--design-pixel));
   --focus-offset: calc(7 * var(--design-pixel));
 
   /* Existing presentation selectors consume aliases during the staged rollout. */
@@ -62,4 +62,15 @@
   --fs-body: var(--fs-aux);
   --fs-primary: var(--fs-text);
   --fs-heading: var(--fs-title);
+}
+
+/* Chrome 66 has custom properties and calc(), but no min()/max(). Constrain
+ * scaling by aspect ratio instead; invalid custom-property values do not fall
+ * back to an earlier declaration when consumed through var(). */
+@media (min-aspect-ratio: 16/9) {
+  :root { --design-pixel: 0.0925925926vh; }
+}
+
+@supports (width: max(1px, 2px)) {
+  :root { --focus-width: max(1px, calc(5 * var(--design-pixel))); }
 }

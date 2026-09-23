@@ -89,7 +89,7 @@ export class ApiClient {
 
   constructor(options: ApiClientOptions = {}) {
     this.fetchImpl =
-      options.fetchImpl ?? ((input, init) => globalThis.fetch(input, init));
+      options.fetchImpl ?? ((input, init) => window.fetch(input, init));
     this.transport = options.transport ?? defaultTransport;
     this.onAuthOk = options.onAuthOk;
     this.onUnauthorized = options.onUnauthorized;
