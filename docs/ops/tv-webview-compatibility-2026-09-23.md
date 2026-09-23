@@ -38,5 +38,27 @@ allowed and foreign Referer values, missing origin information, and cross-site
 fetch metadata. Frontend: 55 files / 388 tests pass, lint and build pass.
 Backend: `make web-sync check` passes.
 
-Deployment and a fresh APK process must still be checked on the physical TV;
-a temporary patched page alone is not acceptance evidence.
+## Production verification
+
+Deployed commit `8b4edd2` with a binary/config/database rollback snapshot.
+The response header and served bundle match the candidate. After force-stopping
+and reopening the physical TV APK, the screen automatically connected and
+rendered the home photo and layout. Its runtime still has no globalThis, no
+inline scale override, and no injected referrer meta tag: this is the deployed
+repair, not the temporary probe. Core reports the paired TV online.
+
+ADB D-pad center opened the home photo, right selected a different loaded
+photo, and Back returned home. A private 1920×1080 screenshot was inspected.
+This verifies the reported connection/scaling failure and basic photo remote
+interaction, not every layout on WebView 66 or TV video decoding/audio.
+
+Replacing the unsigned Core binary caused macOS to request Network Volumes
+permission again (confirmed in TCC logs). Cached photos remain readable, but
+the first NAS scan timed out at zero files. NAS original-video acceptance is
+pending that OS permission; the source health label alone is not proof.
+
+The current APK was rebuilt/checked with Android unit tests. Native code did
+not change for this web/Core repair, so the APK hash is unchanged from the
+latest remote-video build. A dated installation copy is prepared locally;
+USB transfer remains pending because macOS detects no external physical disk.
+
