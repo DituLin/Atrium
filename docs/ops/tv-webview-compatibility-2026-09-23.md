@@ -79,3 +79,23 @@ the current build, verified by SHA-256 after writing; the USB disk was ejected
 successfully. The old package is backed up privately. Physical TV playback
 verification remains pending installation of this APK; loading a clip through
 a synthetic touch is not evidence that D-pad playback has been fixed.
+
+## USB installation completed
+
+The supported vendor route is TV Guard / 管家 → 应用管理 → 应用安装 →
+USB drive, not Media Center. The installation confirmation was accepted and
+Atrium updated in place. Pulling the installed APK confirmed SHA-256
+`329b66ecec7a61851789faec8f028d9b7d8e1f433552da209a8264e1ce96a724`.
+The app retained pairing and returned to the connected home page.
+
+A real ADB D-pad center press now starts playback without NotAllowedError.
+A 1080×1920 H.264/AAC MOV reached 10.25 / 11.94 seconds, readyState 4,
+312 decoded video frames and no media error. Navigation to the test item used
+DOM clicks; playback itself used the remote key path. Audible sound was not
+independently confirmed.
+
+A 4K HEVC/AAC MOV is still incompatible with this WebView: time and audio
+bytes advanced but videoWidth/videoHeight and decoded frames remained zero;
+`canPlayType` returned empty for HEVC. This is a distinct remaining video
+compatibility issue, not a failed APK installation or NAS read. Do not claim
+all video formats work on this TV.
