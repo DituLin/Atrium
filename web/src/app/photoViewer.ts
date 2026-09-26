@@ -85,7 +85,10 @@ export function photoViewerReducer(
         failedIds: action.sequence || action.freshRender ? [] : state.failedIds,
         shownItem: action.sequence || action.freshRender ? null : state.shownItem,
         commandId: action.commandId ?? null,
-        origin: action.commandId ? null : action.origin ?? null,
+        // Stepping within the kept order keeps where it came from; a new order
+        // (or a commanded visit) takes the origin it was given.
+        origin: action.commandId ? null : action.origin
+          ?? (!action.sequence && !action.freshRender && state.sequence.includes(action.photoId) ? state.origin : null),
         photoId: action.photoId,
         collection: action.collection,
         status: 'loading',

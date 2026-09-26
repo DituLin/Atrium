@@ -24,6 +24,9 @@ describe('viewer keeps going past the first page', () => {
       { type: 'photos.pageLoaded', collection: 'all', generation, items: page(0, 50), nextCursor: 'c1', meta: null, append: false },
       { type: 'router.navigate', route: { name: 'photo', photoId: 'p49', collection: 'all' } });
     expect(neighborId(state.viewer, 'next')).toBeNull();
+    // Stepping through the photos re-opens the viewer each time; the origin must survive.
+    state = run(state, { type: 'viewer.open', photoId: 'p48', collection: 'all' }, { type: 'viewer.open', photoId: 'p49', collection: 'all' });
+    expect(state.viewer.origin).toBe('collection');
     state = run(state, { type: 'photos.pageLoaded', collection: 'all', generation, items: page(50, 50), nextCursor: 'c2', meta: null, append: true });
     expect(state.viewer.sequence).toHaveLength(100);
     expect(neighborId(state.viewer, 'next')).toBe('p50');
