@@ -34,6 +34,7 @@ type listBody struct {
 		UnknownCapturedCount int64  `json:"unknown_captured_count"`
 		BaselineOnly         bool   `json:"baseline_only"`
 		Day                  string `json:"day"`
+		Total                *int64 `json:"total"`
 	} `json:"meta"`
 }
 
@@ -120,6 +121,8 @@ func TestPhotosCapturedTodayUsesTheHomeDayWindow(t *testing.T) {
 	require.Len(t, got.Items, 2, "the window is left-closed and right-open in the home timezone")
 	assert.Equal(t, "2026-09-05", got.Meta.Day)
 	assert.EqualValues(t, 1, got.Meta.UnknownCapturedCount, "undated photos are counted, not hidden silently")
+	require.NotNil(t, got.Meta.Total)
+	assert.EqualValues(t, 2, *got.Meta.Total, "the total uses the same home-day window as the list")
 	// Oldest first inside the day.
 	assert.Less(t, *got.Items[0].CapturedAt, *got.Items[1].CapturedAt)
 }
@@ -256,4 +259,20 @@ func TestPhotoItemHidesIneligibleAndUnknownIDs(t *testing.T) {
 
 	resp = h.request(http.MethodGet, "/api/v1/photos/01JUNKNOWN", "", bearer(token))
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+}
+
+func TestPhotosListReportsTheWholeCollectionTotalOnEveryPage(t *testing.T) {
+	h := newPhotoHarness(t)
+	token := h.newAdminToken()
+	for _, name := range []string{"a.jpg", "b.jpg", "c.jpg", "d.jpg", "e.jpg"} {
+		h.seedPhoto(t, seedOptions{RelPath: name})
+	}
+	first := h.list(t, "?collection=all&limit=2", token)
+	require.Len(t, first.Items, 2)
+	require.NotNil(t, first.Meta.Total)
+	assert.EqualValues(t, 5, *first.Meta.Total)
+	require.NotNil(t, first.NextCursor)
+	second := h.list(t, "?collection=all&limit=2&cursor="+*first.NextCursor, token)
+	require.NotNil(t, second.Meta.Total, "every page carries the total; clients keep the latest meta")
+	assert.EqualValues(t, 5, *second.Meta.Total)
 }

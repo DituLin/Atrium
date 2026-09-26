@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { NATIVE_VIDEO_EVENT, isDecoderError, nativeVideo } from '../core/nativeVideo';
+import type { NativeVideoResult } from '../core/nativeVideo';
 import { RemoteButton } from '../ui/RemoteButton';
 import { mapRemoteKey } from '../ui/keys';
 import type { RemoteKey } from '../ui/keys';
@@ -12,7 +14,7 @@ export interface VideoPlayerProps {
   subtitle?: string;
   info?: string;
 }
-type Phase = 'preview' | 'loading' | 'playing' | 'paused' | 'ended' | 'error' | 'unsupported';
+type Phase = 'preview' | 'loading' | 'playing' | 'paused' | 'ended' | 'error' | 'unsupported' | 'native';
 interface Session { toggle: () => void; stop: () => void; release: () => void }
 const PLAY = 'M8 5v14l11-7z';
 const PAUSE = 'M7 5h4v14H7z M13 5h4v14h-4z';
@@ -42,6 +44,7 @@ function PlayerSession({ id, onBack, title, subtitle, info }: VideoPlayerProps) 
     let intent = false;
     let generation = 0;
     let failed = false;
+    let nativeOpen = false;
     const visible = () => document.visibilityState === 'visible';
     const stop = () => {
       intent = false;
@@ -50,13 +53,22 @@ function PlayerSession({ id, onBack, title, subtitle, info }: VideoPlayerProps) 
       if (!disposed) setPhase('paused');
     };
     const release = () => {
+      if (native && nativeOpen) { nativeOpen = false; native.stop(); }
       stop();
       disposed = true;
       video.removeAttribute('src');
       video.load();
     };
+    const native = nativeVideo();
     const toggle = () => {
       if (disposed || !valid || !visible()) return;
+      if (native) {
+        // The host covers the page with its own player until Back.
+        native.play(`/api/v1/media/videos/${id}/content`, title ?? '家庭影像', subtitle ?? '');
+        nativeOpen = true;
+        setPhase('native');
+        return;
+      }
       if (intent) { stop(); return; }
       intent = true;
       const request = ++generation;
@@ -105,6 +117,16 @@ function PlayerSession({ id, onBack, title, subtitle, info }: VideoPlayerProps) 
       // A queued pause event can arrive after a subsequent play has begun.
       if (intent && video.paused) { intent = false; generation++; if (!disposed) setPhase('paused'); }
     };
+    const nativeClosed = (event: Event) => {
+      if (!nativeOpen || disposed) return;
+      nativeOpen = false;
+      const result = (event as CustomEvent<NativeVideoResult>).detail;
+      setPosition(result.positionMs / 1000);
+      setDuration(result.durationMs / 1000);
+      setPhase(result.error ? (isDecoderError(result.error) ? 'unsupported' : 'error') : result.ended ? 'ended' : 'paused');
+      playButton.current?.focus();
+    };
+    window.addEventListener(NATIVE_VIDEO_EVENT, nativeClosed);
     session.current = { toggle, stop, release };
     document.addEventListener('visibilitychange', hidden);
     window.addEventListener('pagehide', pagehide);
@@ -120,12 +142,15 @@ function PlayerSession({ id, onBack, title, subtitle, info }: VideoPlayerProps) 
       session.current = null;
       document.removeEventListener('visibilitychange', hidden);
       window.removeEventListener('pagehide', pagehide);
+      window.removeEventListener(NATIVE_VIDEO_EVENT, nativeClosed);
       video.removeEventListener('playing', playing);
       video.removeEventListener('waiting', waiting);
       video.removeEventListener('ended', ended);
       video.removeEventListener('error', error);
       video.removeEventListener('pause', paused);
     };
+    // Title and subtitle are labels for the native layer, read at press time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, valid]);
 
   const back = () => { session.current?.release(); onBack(); };
@@ -147,6 +172,7 @@ function PlayerSession({ id, onBack, title, subtitle, info }: VideoPlayerProps) 
   const message = !valid ? '视频不可用' : {
     preview: '按确认，展开这一刻', loading: '正在读取视频…', playing: '', paused: '已暂停',
     ended: '这一刻，已放映完毕', error: '视频读取失败，请重试', unsupported: '当前设备无法播放此视频',
+    native: '正在播放…',
   }[phase];
   const known = Number.isFinite(duration) && duration > 0;
   const percent = known ? Math.min(100, Math.max(0, (position / duration) * 100)) : 0;

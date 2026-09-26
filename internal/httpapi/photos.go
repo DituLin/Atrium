@@ -57,6 +57,9 @@ type photoListMeta struct {
 	BaselineOnly bool `json:"baseline_only,omitempty"`
 	// Day is the home-timezone day `captured_today` resolved to.
 	Day string `json:"day,omitempty"`
+	// Total is how many photos the whole collection holds, so screens can say
+	// 共 N 张 and 第 x / y 张 instead of only what has been loaded so far.
+	Total *int64 `json:"total,omitempty"`
 }
 
 type photoItemResponse struct {
@@ -160,6 +163,9 @@ func (a *API) handlePhotosList(w http.ResponseWriter, r *http.Request) {
 	}
 	if collection == domain.CollectionCapturedToday {
 		out.Meta.Day = a.deps.Home.Today()
+	}
+	if total, err := a.deps.DB.Photos().CountCollection(ctx, collection, a.deps.Home.Today()); err == nil {
+		out.Meta.Total = &total
 	}
 	if collection == domain.CollectionRecent && len(rows) == 0 {
 		if baseline, err := a.deps.DB.Photos().CountBaseline(ctx); err == nil && baseline > 0 {

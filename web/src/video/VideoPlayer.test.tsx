@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { VideoPlayer } from './VideoPlayer';
 
 let completePlay: () => void;
@@ -163,4 +163,51 @@ it('draws progress from the media clock and falls back to a neutral header', () 
   expect((bar.querySelector('.video-player__thumb') as HTMLElement).style.left).toBe('25%');
   expect(screen.getByText('0:50')).toBeTruthy();
   expect(screen.getByText('3:20')).toBeTruthy();
+});
+
+describe('VideoPlayer native playback on the Android TV host', () => {
+  function withBridge() {
+    const bridge = { play: vi.fn(), stop: vi.fn() };
+    (window as unknown as { AtriumNative?: unknown }).AtriumNative = bridge;
+    return bridge;
+  }
+  const close = (detail: object) => act(() => {
+    window.dispatchEvent(new CustomEvent('atrium-native-video', { detail: { positionMs: 0, durationMs: 0, ended: false, error: null, ...detail } }));
+  });
+  afterEach(() => { delete (window as unknown as { AtriumNative?: unknown }).AtriumNative; });
+
+  it('hands the stream to the host instead of the web element', () => {
+    const bridge = withBridge();
+    const { video } = mount();
+    fireEvent.keyDown(document.activeElement!, { key: 'OK' });
+    expect(bridge.play).toHaveBeenCalledExactlyOnceWith('/api/v1/media/videos/video_01/content', '家庭影像', '');
+    expect(play).not.toHaveBeenCalled();
+    expect(video.getAttribute('src')).toBeNull();
+  });
+
+  it('shows the outcome when the host closes and returns focus to play', () => {
+    withBridge();
+    mount();
+    fireEvent.keyDown(document.activeElement!, { key: 'OK' });
+    close({ positionMs: 42_000, durationMs: 42_000, ended: true });
+    expect(screen.getByRole('status').textContent).toBe('这一刻，已放映完毕');
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: '重新播放' }));
+  });
+
+  it('reports decoder failures as unsupported', () => {
+    withBridge();
+    mount();
+    fireEvent.keyDown(document.activeElement!, { key: 'OK' });
+    close({ error: 'ERROR_CODE_DECODING_FORMAT_UNSUPPORTED' });
+    expect(screen.getByRole('status').textContent).toBe('当前设备无法播放此视频');
+  });
+
+  it('stops native playback when the page is left, and ignores a stale close', () => {
+    const bridge = withBridge();
+    const view = mount();
+    fireEvent.keyDown(document.activeElement!, { key: 'OK' });
+    view.unmount();
+    expect(bridge.stop).toHaveBeenCalledTimes(1);
+    close({ ended: true });
+  });
 });

@@ -138,8 +138,9 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       const ids = before.name === 'photos' && before.collection === after.collection
         ? collection.items.map(item => item.id) : before.name === 'dashboard'
           ? state.slideshow.round.map(item => item.id) : [];
+      const origin = !ids.includes(after.photoId) ? undefined : before.name === 'photos' ? 'collection' as const : 'slideshow' as const;
       viewer = photoViewerReducer(viewer, { type: 'viewer.open', photoId: after.photoId,
-        collection: after.collection ?? null, sequence: ids.includes(after.photoId) ? ids : [after.photoId], freshRender: true });
+        collection: after.collection ?? null, sequence: ids.includes(after.photoId) ? ids : [after.photoId], freshRender: true, origin });
     } else if (before.name === 'photo' && after.name !== 'photo') {
       viewer = photoViewerReducer(viewer, { type: 'viewer.close' });
       if (after.name === 'photos' && before.collection === after.collection) collection = photoListReducer(collection, { type: 'photos.restore' });
@@ -153,12 +154,20 @@ export function appReducer(state: AppState, action: AppAction): AppState {
   if (action.type.startsWith(SLIDESHOW_PREFIX)) {
     if (state.authExpired || state.needsPairing) return state;
     const slideshow = slideshowReducer(state.slideshow, action as SlideshowAction);
-    return slideshow === state.slideshow ? state : { ...state, slideshow };
+    if (slideshow === state.slideshow) return state;
+    // A viewer opened from home keeps going through the same random round.
+    const viewer = action.type === 'slideshow.pageLoaded' && state.viewer.origin === 'slideshow'
+      ? photoViewerReducer(state.viewer, { type: 'viewer.extend', ids: slideshow.round.map(item => item.id) }) : state.viewer;
+    return { ...state, slideshow, viewer };
   }
   if (action.type.startsWith(PHOTO_LIST_PREFIX)) {
     if (state.authExpired || state.needsPairing) return state;
     const collection = photoListReducer(state.collection, action as PhotoListAction);
-    return collection === state.collection ? state : { ...state, collection };
+    if (collection === state.collection) return state;
+    // A viewer opened from this collection keeps going as its pages load.
+    const viewer = action.type === 'photos.pageLoaded' && state.viewer.origin === 'collection' && state.viewer.collection === collection.collection
+      ? photoViewerReducer(state.viewer, { type: 'viewer.extend', ids: collection.items.map(item => item.id) }) : state.viewer;
+    return { ...state, collection, viewer };
   }
   if (action.type.startsWith(VIEWER_PREFIX)) {
     if (state.authExpired || state.needsPairing) return state;

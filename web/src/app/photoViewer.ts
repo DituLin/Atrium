@@ -12,6 +12,11 @@ export type PhotoViewerStatus =
 export interface PhotoViewerState {
   /** Frozen client-known order for this visit; never server random neighbors. */
   sequence: readonly string[];
+  /**
+   * Where the order came from. A library collection or the home round may grow
+   * as later pages load (`viewer.extend`); a commanded single photo never does.
+   */
+  origin: 'collection' | 'slideshow' | null;
   /** Identifies the command-owned visit; manual visits never inherit it. */
   commandId: string | null;
   failedIds: readonly string[];
@@ -33,6 +38,7 @@ export interface PhotoViewerState {
 
 export const initialPhotoViewerState: PhotoViewerState = {
   sequence: [],
+  origin: null,
   commandId: null,
   failedIds: [],
   photoId: null,
@@ -49,7 +55,8 @@ export const initialPhotoViewerState: PhotoViewerState = {
 };
 
 export type PhotoViewerAction =
-  | { type: 'viewer.open'; photoId: string; collection: PhotoCollection | null; freshRender?: boolean; sequence?: readonly string[]; commandId?: string }
+  | { type: 'viewer.open'; photoId: string; collection: PhotoCollection | null; freshRender?: boolean; sequence?: readonly string[]; commandId?: string; origin?: 'collection' | 'slideshow' }
+  | { type: 'viewer.extend'; ids: readonly string[] }
   | {
       type: 'viewer.loaded';
       generation: number;
@@ -78,11 +85,19 @@ export function photoViewerReducer(
         failedIds: action.sequence || action.freshRender ? [] : state.failedIds,
         shownItem: action.sequence || action.freshRender ? null : state.shownItem,
         commandId: action.commandId ?? null,
+        origin: action.commandId ? null : action.origin ?? null,
         photoId: action.photoId,
         collection: action.collection,
         status: 'loading',
         generation: state.generation + 1,
       };
+    case 'viewer.extend': {
+      // Append only: the part already seen keeps its order and positions.
+      if (state.status === 'idle' || state.origin === null) return state;
+      const known = new Set(state.sequence);
+      const added = action.ids.filter(id => !known.has(id));
+      return added.length > 0 ? { ...state, sequence: [...state.sequence, ...added] } : state;
+    }
     case 'viewer.loaded':
       if (action.generation !== state.generation || action.item.id !== state.photoId) return state;
       return {

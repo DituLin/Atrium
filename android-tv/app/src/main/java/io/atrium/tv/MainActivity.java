@@ -12,6 +12,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.CookieManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.RenderProcessGoneDetail;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
@@ -28,7 +29,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import java.io.ByteArrayInputStream;
 
-/** TV host: no Chrome dependency, no JS-to-native bridge, no SSL bypass. */
+/**
+ * TV host: no Chrome dependency, no SSL bypass. The only JS-to-native bridge is
+ * `AtriumNative`, which can start and stop native playback of one same-origin
+ * video stream (VideoRequest) and nothing else.
+ */
 public final class MainActivity extends Activity {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private FrameLayout root;
@@ -39,6 +44,7 @@ public final class MainActivity extends Activity {
     private int retryDelay = 1000;
     private final KeyDispatchGuard keyGuard = new KeyDispatchGuard();
     private AlertDialog nativeMenu;
+    private NativeVideoPlayer video;
     private final Runnable retry = () -> { if (resumed && failed && !tlsFailed && web != null) web.reload(); };
 
     // The SPA cannot reconnect until its startup bundle has run. An HTML 200
@@ -58,6 +64,14 @@ public final class MainActivity extends Activity {
         root = new FrameLayout(this);
         root.setBackgroundColor(Color.rgb(242,238,229));
         setContentView(root);
+        video = new NativeVideoPlayer(this, root, (position, duration, ended, error) -> {
+            WebView current = web;
+            if (current == null) return;
+            String detail = "{positionMs:" + position + ",durationMs:" + duration + ",ended:" + ended
+                + ",error:" + (error == null ? "null" : org.json.JSONObject.quote(error)) + "}";
+            current.evaluateJavascript("window.dispatchEvent(new CustomEvent('atrium-native-video',{detail:" + detail + "}))", null);
+            current.requestFocus();
+        });
         WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG);
         origin = getPreferences(MODE_PRIVATE).getString("origin", "");
         if (origin.isEmpty()) setup(); else connect();
@@ -120,6 +134,7 @@ public final class MainActivity extends Activity {
         s.setUseWideViewPort(true);s.setLoadWithOverviewMode(true);
         CookieManager.getInstance().setAcceptCookie(true);CookieManager.getInstance().setAcceptThirdPartyCookies(web,false);
         web.setWebChromeClient(new WebChromeClient());
+        web.addJavascriptInterface(new Bridge(), "AtriumNative");
         web.setWebViewClient(new WebViewClient(){
             @Override public boolean shouldOverrideUrlLoading(WebView v,WebResourceRequest r) {return !OriginPolicy.allows(origin,r.getUrl().toString());}
             @Override public WebResourceResponse shouldInterceptRequest(WebView v,WebResourceRequest r) {
@@ -173,6 +188,7 @@ public final class MainActivity extends Activity {
         });
     }
     @Override public boolean dispatchKeyEvent(KeyEvent e) {
+        if(video!=null && video.isOpen()) return video.dispatchKey(e);
         if(e.getKeyCode()==KeyEvent.KEYCODE_MENU) {if(e.getAction()==KeyEvent.ACTION_UP)menu();return true;}
         if(web!=null && overlay==null && nativeMenu==null) {
             String key=null;int code=0;
@@ -192,9 +208,20 @@ public final class MainActivity extends Activity {
         }
         return super.dispatchKeyEvent(e);
     }
-    @Override public void onBackPressed(){if(web==null)finish();else if(overlay==null)sendKey("Escape",27);else menu();}
+    @Override public void onBackPressed(){if(video!=null && video.isOpen()){video.close();return;}if(web==null)finish();else if(overlay==null)sendKey("Escape",27);else menu();}
     @Override protected void onResume(){super.onResume();resumed=true;immersive();handler.removeCallbacks(checkBoot);handler.postDelayed(checkBoot,10000);if(web!=null){web.onResume();if(failed&&!tlsFailed)handler.post(retry);}}
-    @Override protected void onPause(){resumed=false;keyGuard.invalidate();if(nativeMenu!=null)nativeMenu.dismiss();handler.removeCallbacks(retry);handler.removeCallbacks(checkBoot);if(web!=null)web.onPause();CookieManager.getInstance().flush();super.onPause();}
-    private void destroyWeb(){keyGuard.invalidate();handler.removeCallbacks(checkBoot);if(web!=null){web.stopLoading();root.removeView(web);web.destroy();web=null;}}
+    @Override protected void onPause(){resumed=false;if(video!=null)video.pause();keyGuard.invalidate();if(nativeMenu!=null)nativeMenu.dismiss();handler.removeCallbacks(retry);handler.removeCallbacks(checkBoot);if(web!=null)web.onPause();CookieManager.getInstance().flush();super.onPause();}
+    private void destroyWeb(){keyGuard.invalidate();if(video!=null)video.close();handler.removeCallbacks(checkBoot);if(web!=null){web.stopLoading();root.removeView(web);web.destroy();web=null;}}
+    /** Page-facing API. Calls arrive on a binder thread; all work runs on the UI thread. */
+    private final class Bridge {
+        @JavascriptInterface public int version() { return 1; }
+        @JavascriptInterface public void play(String path, String title, String subtitle) {
+            handler.post(() -> {
+                String url = VideoRequest.resolve(origin, path);
+                if (url != null && web != null && resumed) video.open(url, origin, title, subtitle);
+            });
+        }
+        @JavascriptInterface public void stop() { handler.post(() -> video.close()); }
+    }
     @Override protected void onDestroy(){handler.removeCallbacksAndMessages(null);destroyWeb();super.onDestroy();}
 }

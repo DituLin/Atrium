@@ -2165,6 +2165,12 @@ components:
             day:
               type: string
               description: The home-timezone day `captured_today` resolved to.
+            total:
+              type: integer
+              format: int64
+              description: |
+                Photos in the whole collection (same conditions as the list),
+                sent on every page so screens can show 共 N 张 and 第 x / y 张.
 
     PhotoAdmin:
       allOf:

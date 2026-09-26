@@ -161,6 +161,32 @@ func (p *Photos) ListByIDs(ctx context.Context, ids []string) ([]domain.Photo, e
 	return out, nil
 }
 
+// CountCollection counts the eligible photos a screen collection pages through,
+// with the same conditions as its list query. day is the home-timezone day for
+// captured_today and ignored otherwise.
+func (p *Photos) CountCollection(ctx context.Context, collection domain.Collection, day string) (int64, error) {
+	where := eligible
+	var args []any
+	switch collection {
+	case domain.CollectionRecent:
+		where += ` AND p.is_baseline = 0`
+	case domain.CollectionCapturedToday:
+		where += ` AND p.captured_day = ?`
+		args = append(args, day)
+	case domain.CollectionRandom:
+		where += ` AND p.preview_status = 'ready'`
+	case domain.CollectionAll:
+	default:
+		return 0, fmt.Errorf("store: count photos: unknown collection %q", collection)
+	}
+	var n int64
+	err := p.ex.QueryRowContext(ctx, `SELECT COUNT(*) FROM photos p JOIN data_sources s ON s.id = p.source_id WHERE `+where, args...).Scan(&n)
+	if err != nil {
+		return 0, fmt.Errorf("store: count %s photos: %w", collection, err)
+	}
+	return n, nil
+}
+
 // CountBaseline counts eligible photos that came in with the first import.
 func (p *Photos) CountBaseline(ctx context.Context) (int64, error) {
 	var n int64

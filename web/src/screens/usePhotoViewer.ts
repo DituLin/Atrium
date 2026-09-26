@@ -1,11 +1,16 @@
 import { useEffect, useRef } from 'react';
 
 import { useApp } from '../app/context';
+import { COLLECTION_PAGE_SIZE } from '../app/photoList';
 import { neighborId } from '../app/photoViewer';
+import { SLIDESHOW_PAGE_SIZE } from '../app/slideshow';
 import type { PhotoViewerState } from '../app/photoViewer';
 import { ApiError } from '../core/api';
 import { MEDIA_MAX_RETRIES, MEDIA_RETRY_MS, classifyMediaStatus } from '../core/media';
 import type { PhotoCollection } from '../types/api';
+
+/** Photos left before the end of the known order when the next page is requested. */
+export const VIEWER_PAGE_AHEAD = 3;
 
 export function usePhotoViewer(
   photoId: string,
@@ -112,6 +117,37 @@ export function usePhotoViewer(
     });
     return () => { for (const image of images) image.removeAttribute('src'); };
   }, [api, previous, next]);
+
+  // Keep going past the loaded pages: within VIEWER_PAGE_AHEAD of the end, pull
+  // the next page of the source the order came from. The reducer appends it.
+  const pageRef = useRef('');
+  const position = viewer.sequence.indexOf(photoId);
+  const nearEnd = viewer.origin !== null && position >= 0 && position >= viewer.sequence.length - 1 - VIEWER_PAGE_AHEAD;
+  const list = state.collection;
+  const round = state.slideshow;
+  useEffect(() => {
+    if (!nearEnd) return;
+    if (viewer.origin === 'collection') {
+      const source = list.collection;
+      if (source === null || source !== viewer.collection || list.cursor === null || list.loadingMore || list.status !== 'ready') return;
+      const key = `c:${list.generation}:${list.cursor}`;
+      if (pageRef.current === key) return;
+      pageRef.current = key;
+      dispatch({ type: 'photos.pageRequested' });
+      void api.listPhotos({ collection: source, cursor: list.cursor, limit: COLLECTION_PAGE_SIZE })
+        .then(page => dispatch({ type: 'photos.pageLoaded', collection: source, generation: list.generation, items: page.items, nextCursor: page.next_cursor, meta: page.meta ?? null, append: true }))
+        .catch(() => { pageRef.current = ''; dispatch({ type: 'photos.loadFailed', generation: list.generation }); });
+    } else if (viewer.origin === 'slideshow') {
+      const { seed, cursor } = round;
+      if (seed === null || cursor === null) return;
+      const key = `s:${seed}:${cursor}`;
+      if (pageRef.current === key) return;
+      pageRef.current = key;
+      void api.listPhotos({ collection: 'random', seed, cursor, limit: SLIDESHOW_PAGE_SIZE })
+        .then(page => dispatch({ type: 'slideshow.pageLoaded', seed, items: page.items, nextCursor: page.next_cursor }))
+        .catch(() => { pageRef.current = ''; });
+    }
+  }, [api, dispatch, nearEnd, viewer.origin, viewer.collection, list, round]);
 
   // Failure stays visible until an explicit direction or Back. Failed IDs are
   // skipped for this visit, so even an all-failed collection cannot loop.
