@@ -48,7 +48,9 @@ export function HomeMenu(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
-    <nav className="home-menu" aria-label="主菜单" onKeyDown={arm}>
+    // Capture phase: the cards stop arrow keys from bubbling, but every key
+    // must still count as activity for the idle timer.
+    <nav className="home-menu" aria-label="主菜单" onKeyDownCapture={arm}>
       <div className="home-menu__cards">
         {props.cards.map((card, index) => (
           <RemoteButton key={card.id} ref={element => { buttons.current[index] = element; }}

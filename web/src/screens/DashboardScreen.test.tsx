@@ -58,6 +58,17 @@ describe('home remote navigation', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'router.navigate', route: { name: 'photo', photoId: 'actually_visible' } });
   });
 
+  it('keeps the menu open while the remote is in use', () => {
+    vi.useFakeTimers();
+    setup();
+    fireEvent.keyDown(hero(), { key: 'ArrowDown' });
+    for (let i = 0; i < 4; i++) {
+      act(() => { vi.advanceTimersByTime(MENU_IDLE_MS - 1000); });
+      fireEvent.keyDown(document.activeElement!, { key: i % 2 ? 'ArrowLeft' : 'ArrowRight' });
+    }
+    expect(screen.getByRole('navigation', { name: '主菜单' })).toBeDefined();
+  });
+
   it('reopens the menu on the card a page was entered from', () => {
     setup('home-today');
     expect(screen.getByRole('navigation', { name: '主菜单' })).toBeDefined();
