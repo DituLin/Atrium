@@ -15,6 +15,9 @@ import { mapRemoteKey } from '../ui/keys';
 
 const NOTICE_EMPTY = { available: '到期的提示会自动隐藏。', stale: '暂时无法更新提示。', loading: '家庭提示尚未完成首次读取。', failed: '暂时无法读取家庭提示。', not_connected: '家庭提示尚未接入。' } as const;
 
+type Projected = ReturnType<typeof projectOverview>;
+type NoticeRow = { entry: Projected['entries'][number]; item: Projected['sources']['notice']['items'][number] };
+
 export function BriefingScreen() {
   const { state, overview, dispatch } = useApp();
   // A retained snapshot may outlive the last global tick while another route
@@ -45,11 +48,13 @@ export function BriefingScreen() {
   const day = familyDay(now, familyClockOptions(state.home, snapshot?.home.timezone));
   const generated = snapshot ? familyClockTime(snapshot.generated_at, timezone) : null;
   const feedback = refreshing ? '正在刷新…' : status === 'stale' ? '暂时无法更新 · 显示仍有效的旧数据' : status === 'failed' ? '暂时无法读取简报' : snapshot ? '已更新简报' : '正在读取简报…';
-  const notices = projected ? projected.entries.flatMap(entry => {
-    if (entry.kind !== 'notice') return [];
+  // A plain loop: Array.prototype.flatMap is missing from the TCL TV's Chrome 66.
+  const notices: NoticeRow[] = [];
+  for (const entry of projected ? projected.entries : []) {
+    if (entry.kind !== 'notice' || !projected) continue;
     const item = projected.sources.notice.items.find(candidate => candidate.id === entry.item_id);
-    return item ? [{ entry, item }] : [];
-  }) : [];
+    if (item) notices.push({ entry, item });
+  }
   const noticeSource = projected?.sources.notice;
   return <div className="page info-today">
     <TopNav onDown={() => reading.current?.focus()} />
