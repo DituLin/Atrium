@@ -283,6 +283,26 @@ launchctl bootout "gui/$UID/com.atrium.core"
 atrium token reset          # revokes every admin token and issues one
 ```
 
+### Code signing and NAS access (macOS)
+
+macOS grants "Network Volumes" access per code identity. A plain Go build is
+ad-hoc signed, so every new binary looks like a new program and silently loses
+NAS access until someone approves it on the Mac mini's screen (seen in G0 and
+again on 2026-09-26: scans aborted with `stuck_io` after each deploy).
+
+Sign every binary before installing it, with a stable local identity:
+
+```bash
+deploy/sign-macos.sh /path/to/atrium          # first run creates "Atrium Core Signing"
+codesign -d -r- /path/to/atrium               # identifier "io.atrium.core" and certificate leaf = H"…"
+```
+
+The identity is self-signed, kept in its own keychain under `~/Atrium/signing/`
+(password file mode 0600), and never leaves the machine; the script adds that
+keychain to the search list only for the signing command. Approve Network
+Volumes access once (System Settings → Privacy & Security → Files and Folders →
+atrium); later signed builds keep the grant.
+
 ## 9. Upgrade and rollback
 
 ```bash
