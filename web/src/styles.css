@@ -620,3 +620,28 @@ body {
     transform: none;
   }
 }
+
+/* TV WebViews often expose 960x540 or 1280x720 CSS pixels even on a 4K
+ * panel. Physical-pixel floors must not force that viewport to overflow. */
+@media (max-width: 1400px) {
+  :root {
+    --fs-body: max(12px, 1.45vw);
+    --fs-primary: max(16px, 1.85vw);
+    --fs-heading: max(22px, 2.8vw);
+  }
+  .thumb__caption { font-size: max(12px, 1.46vw); }
+}
+
+:root { --fs-clock: 9vw; }
+.statusbar { flex-wrap: wrap; }
+.pair__steps { max-width: 100%; overflow-wrap: anywhere; }
+.paircode__digit { font-size: min(11vw, 22vh); }
+.screen--pair, .screen--connect { overflow-y: auto; }
+
+@media (orientation: portrait) {
+  .dashboard { flex-direction: column; }
+  .dashboard__side { flex: 0 0 auto; }
+  .dashboard__main { min-height: 0; }
+  .clock__time { --fs-clock: 16vw; }
+  .viewer__bar { flex-wrap: wrap; }
+}

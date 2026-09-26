@@ -15,6 +15,7 @@ web/node_modules/
 *.pem
 
 # Local state
+.worktrees/
 data/
 .data/
 config.yaml
@@ -44,3 +45,11 @@ internal/webui/dist/*
 scripts/e2e/node_modules/
 scripts/e2e/out/
 scripts/e2e/package-lock.json
+
+# Android local SDK, signing and household build inputs
+android-tv/.gradle/
+android-tv/**/build/
+android-tv/local.properties
+android-tv/*.local.properties
+*.jks
+*.keystore
