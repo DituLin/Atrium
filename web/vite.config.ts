@@ -38,6 +38,10 @@ export default defineConfig({
   base: '/',
   build: {
     target: 'es2018',
+    // The CSS minifier otherwise assumes a modern engine and folds offsets into
+    // `inset`, which the TCL TV's Chrome 66 WebView drops (the home photo
+    // collapsed to 0 px). Lower CSS for the real target instead.
+    cssTarget: 'chrome66',
     outDir: 'dist',
     emptyOutDir: true,
     assetsDir: 'assets',

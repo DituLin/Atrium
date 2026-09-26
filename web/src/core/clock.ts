@@ -93,7 +93,10 @@ export function wallClockParts(epochMs: number, options: ClockFormatOptions): Wa
   if (supported) {
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: options.timezone,
-      hourCycle: 'h23',
+      // Chrome 66 (TCL TV WebView) ignores `hourCycle` and prints 12-hour
+      // times; `hour12: false` works there, and `% 24` below absorbs engines
+      // that render midnight as 24.
+      hour12: false,
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
