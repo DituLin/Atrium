@@ -45,3 +45,25 @@ Deviations from the artboards:
 - Photo layer: no 从这张开始轮播 / 详情 buttons (no such actions exist); the filmstrip shows ±2 neighbours (not ±3) so it fits beside the four existing actions; it is display-only.
 - Video player: no 上一段/下一段 buttons and no "preview target time, OK to jump" scrubber — Left/Right keep the existing immediate ±10 s seek, which would make side buttons unreachable. No capture date in the header (videos have none in the API).
 - Photo preview's old pointer buttons (照片操作 / 返回) in the footer were dropped; OK and Back cover them.
+
+## 首页与集成
+
+- 首页：全屏常驻照片（横图铺满、竖图与超宽图完整显示），左下日期、时钟与首条家庭提示，右下照片日期与一行家中状态；方向键唤出五项菜单（这张照片、影像、今日、房屋、设置），返回或上键收起，12 秒无操作自动收起；从菜单进入的页面返回后菜单停在原卡片。概览数据改为在首页也轮询，以显示家庭提示。
+- 日历页删除，农历并入今日页的万年历卡片；`core/lunar.ts` 为本地实现（1900–2100），逐日对照 ICU 验证。
+- 旧底部导航 `PrimaryNav` 删除，信息页统一使用顶部 `TopNav`；`styles.css` 中不再使用的旧规则已清理。
+
+## 实机验证（2026-09-26，Mac mini 部署，TCL 电视与 OnePlus 6T）
+
+逐页用遥控按键走查，截图核对。TCL 电视的 WebView 为 Chrome 66，是真正的兼容基线；OnePlus 的 WebView 为 119，掩盖了以下问题，均已修复并加了防回归：
+
+| 问题 | 现象（TCL） | 修复与防回归 |
+| --- | --- | --- |
+| CSS 压缩把四边偏移合并成 `inset` | 首页照片层宽高为 0，只剩黑底 | `build.cssTarget: 'chrome66'`；构建后脚本检查产物中不得出现 `inset` 与 `@supports` 之外的 `min()/max()` |
+| `hourCycle: 'h23'` 不被支持 | 22:15 显示为 10:15（旧版就存在） | 改用 `hour12: false` |
+| `Array.prototype.flatMap` 不存在（Chrome 69 起） | 进入今日页崩溃 | 改为循环；新增测试扫描源码中 Chrome 66 缺失的内置 API |
+| 页面加载后焦点停在 body | 首次按方向键无反应 | 首页在无焦点时接管遥控键，交给照片处理 |
+| `minmax(0, 1fr)` 网格行被内容撑高 | 设置页行越过底部提示、按钮被挤出屏幕 | 今日、房屋、设置改为 flex 分栏 |
+
+两台设备都发现并修复的问题：返回首页时照片层抢焦点导致菜单无法恢复；旧 `.home__status` 规则与新状态行重叠；每分钟的例行扫描在首页显示“已索引 0 项”；菜单的空闲计时收不到方向键，使用中也会在 12 秒后关闭。
+
+未验证/已知限制：4K H.265 视频在 TCL 上无法解码（既有限制）；设计稿中“从这张开始轮播”“上一段/下一段”“全部/照片/视频筛选”未实现（见上文各节）。
