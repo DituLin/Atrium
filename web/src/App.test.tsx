@@ -102,7 +102,7 @@ describe('App shell', () => {
       ),
     );
     render(<App />);
-    await waitFor(() => expect(screen.getByText('连接这方屏幕')).toBeDefined());
+    await waitFor(() => expect(screen.getByRole('heading', { name: /把这台电视\s*加入家里/ })).toBeDefined());
   });
 });
 

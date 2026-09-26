@@ -4,7 +4,7 @@
 
 export const WS_SCHEMA_VERSION = 1;
 
-export const ROUTE_NAMES = ['videos', 'video', 'dashboard', 'photos', 'photo', 'pair', 'connect', 'calendar', 'briefing', 'house', 'settings'] as const;
+export const ROUTE_NAMES = ['videos', 'video', 'dashboard', 'photos', 'photo', 'pair', 'connect', 'briefing', 'house', 'settings'] as const;
 export type RouteName = (typeof ROUTE_NAMES)[number];
 
 export interface RouteState {

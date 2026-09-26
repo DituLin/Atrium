@@ -4,21 +4,17 @@ import { useApp } from '../app/context';
 import { useOverviewDeadline } from '../app/useOverviewDeadline';
 import { projectOverview } from '../app/overview';
 import { serverNow } from '../core/clock';
-import type { FamilyAvailability, FamilySourceSnapshot } from '../types/api';
-import { Masthead, PrimaryNav, focusPrimaryNav } from '../ui/PrimaryNav';
 import { RemoteButton } from '../ui/RemoteButton';
+import { TopNav, focusTopNav } from '../ui/TopNav';
+import { AlmanacCard } from './info/AlmanacCard';
+import { StatusRow } from './info/StatusRow';
+import { familyClockOptions, familyClockTime, familyDay, familyTime } from './info/familyDate';
+import { homeRows } from './info/homeRows';
+import { onReadingKey, restoreReturnFocus } from './info/readingRegion';
 import { mapRemoteKey } from '../ui/keys';
 
-const HEALTH = { online: '在线', offline: '离线', degraded: '异常', unknown: '尚未确认' };
-const AVAILABILITY: Record<FamilyAvailability, string> = { available: '已接入', stale: '状态待更新', loading: '尚未完成首次读取', failed: '暂时无法读取', not_connected: '未接入' };
-function time(value: string | null, timezone: string): string {
-  if (!value) return '尚无记录';
-  try { return new Intl.DateTimeFormat('zh-CN', { timeZone: timezone, month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(new Date(value)); }
-  catch { return '时间待确认'; }
-}
-function summary<T>(source: FamilySourceSnapshot<T>): string {
-  return source.availability === 'available' ? `${source.items.length} 条有效内容` : AVAILABILITY[source.availability];
-}
+const NOTICE_EMPTY = { available: '到期的提示会自动隐藏。', stale: '暂时无法更新提示。', loading: '家庭提示尚未完成首次读取。', failed: '暂时无法读取家庭提示。', not_connected: '家庭提示尚未接入。' } as const;
+
 export function BriefingScreen() {
   const { state, overview, dispatch } = useApp();
   // A retained snapshot may outlive the last global tick while another route
@@ -35,91 +31,83 @@ export function BriefingScreen() {
     document.addEventListener('visibilitychange', foreground);
     return () => document.removeEventListener('visibilitychange', foreground);
   }, []);
+  const almanacCard = useRef<HTMLElement>(null);
   const reading = useRef<HTMLDivElement>(null);
   const houseButton = useRef<HTMLButtonElement>(null);
   const refresh = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    const source = state.router.restoreFocus
-      ? Array.from(document.querySelectorAll<HTMLElement>('[data-return-focus]')).find(element => element.dataset.returnFocus === state.router.restoreFocus) : null;
-    (source ?? reading.current)?.focus();
-  }, [state.router.restoreFocus]);
+  useEffect(() => { restoreReturnFocus(state.router.restoreFocus, reading.current); }, [state.router.restoreFocus]);
   const { snapshot, status, refreshing } = state.overview;
   const now = serverNow(state.clock, Math.max(state.nowMs, entryNow));
   useOverviewDeadline(snapshot, now, state.clock.offsetMs, dispatch);
-  const projected = snapshot ? projectOverview(snapshot.sources, now, status === 'stale') : null;
+  const transportFailed = status === 'stale';
+  const projected = snapshot ? projectOverview(snapshot.sources, now, transportFailed) : null;
   const timezone = snapshot?.home.timezone ?? 'UTC';
-  let date = '';
-  if (snapshot) { try { date = new Intl.DateTimeFormat('zh-CN', { timeZone: timezone, month: 'long', day: 'numeric', weekday: 'long' }).format(new Date(now)); } catch { /* Invalid time zones never invent a family date. */ } }
+  const day = familyDay(now, familyClockOptions(state.home, snapshot?.home.timezone));
+  const generated = snapshot ? familyClockTime(snapshot.generated_at, timezone) : null;
   const feedback = refreshing ? '正在刷新…' : status === 'stale' ? '暂时无法更新 · 显示仍有效的旧数据' : status === 'failed' ? '暂时无法读取简报' : snapshot ? '已更新简报' : '正在读取简报…';
-  const counts = new Map<string, number>();
-  for (const source of projected?.sources.nas ?? []) {
-    const label = source.availability === 'available' ? HEALTH[source.items[0]?.health ?? 'unknown'] : AVAILABILITY[source.availability];
-    counts.set(label, (counts.get(label) ?? 0) + 1);
-  }
-  const nasSummary = projected ? projected.sources.nas.length ? `${projected.sources.nas.length} 个来源 · ${Array.from(counts, ([label, count]) => `${label} ${count}`).join(' · ')}` : '没有可展示的来源' : '等待读取';
-  return <div className="screen screen--briefing">
-    <Masthead /><header className="briefing__heading"><h1 className="photos__title">今日</h1><p>{date}</p></header>
-    <main className="briefing__main">
-      <div className="briefing__columns">
-        <div className="briefing__reading" role="region" aria-label="今日事项" tabIndex={0} ref={reading} onKeyDown={event => {
-          const key = mapRemoteKey(event);
-          if (!key || key === 'back' || key === 'enter') return;
-          event.preventDefault(); event.stopPropagation();
-          const element = event.currentTarget;
-          if (key === 'left') focusPrimaryNav('briefing');
-          if (key === 'right') houseButton.current?.focus();
-          if (key === 'up') element.scrollTop = Math.max(0, element.scrollTop - element.clientHeight * .7);
-          if (key === 'down') {
-            if (element.scrollTop + element.clientHeight >= element.scrollHeight - 1) refresh.current?.focus();
-            else element.scrollTop += element.clientHeight * .7;
-          }
-        }}>
-          {!projected ? <p>{status === 'failed' ? '暂时无法读取简报' : '正在读取今日事项…'}</p> : projected.entries.length === 0
-            ? <section className="briefing__empty"><h2>当前没有可展示的提示</h2><p>可在右侧查看各类来源的接入情况。</p></section>
-            : projected.entries.map(entry => {
-              if (entry.kind === 'notice') {
-                const source = projected.sources.notice;
-                const item = source.items.find(item => item.id === entry.item_id);
-                if (!item) return null;
-                return <section className="briefing__item" key={entry.id} data-entry={entry.id}>
-                  <p className="briefing__eyebrow">家庭提示{source.availability === 'stale' ? ' · 旧数据' : ' · 当前有效'}</p>
-                  <h2>{source.source_label}</h2><p className="briefing__text">{item.text}</p>
-                  <dl className="briefing__times"><div><dt>内容更新</dt><dd>{time(item.updated_at, timezone)}</dd></div>
-                    {item.valid_from ? <div><dt>开始</dt><dd>{time(item.valid_from, timezone)}</dd></div> : null}
-                    {item.valid_until ? <div><dt>有效至</dt><dd>{time(item.valid_until, timezone)}</dd></div> : null}
-                  </dl>
-                </section>;
-              }
-              const source = projected.sources.nas.find(source => source.source_id === entry.source_id);
-              if (!source) return null;
-              const health = source.items[0]?.health;
-              const label = source.availability === 'available' ? HEALTH[health ?? 'unknown'] : AVAILABILITY[source.availability];
-              return <section className="briefing__item" key={entry.id} data-entry={entry.id}>
-                <p className="briefing__eyebrow">中枢来源 · {source.source_label}</p><h2>{label}</h2>
-                {source.availability === 'stale' && health ? <p>上次观测：{HEALTH[health]}</p> : null}
-                {source.observed_at ? <p className="briefing__time">最近检查 {time(source.observed_at, timezone)}</p> : null}
-              </section>;
-            })}
+  const notices = projected ? projected.entries.flatMap(entry => {
+    if (entry.kind !== 'notice') return [];
+    const item = projected.sources.notice.items.find(candidate => candidate.id === entry.item_id);
+    return item ? [{ entry, item }] : [];
+  }) : [];
+  const noticeSource = projected?.sources.notice;
+  return <div className="page info-today">
+    <TopNav onDown={() => reading.current?.focus()} />
+    <div className="page__heading">
+      <h1 className="page__title">今日</h1>
+      {day ? <span className="page__subtitle">{day.label}</span> : null}
+      {generated ? <span className="page__aside">汇总于 {generated}</span> : null}
+    </div>
+    <main className="page__body info-today__grid">
+      <AlmanacCard day={day} ref={almanacCard} onKeyDown={event => {
+        const key = mapRemoteKey(event);
+        if (!key || key === 'back' || key === 'enter') return;
+        event.preventDefault(); event.stopPropagation();
+        if (key === 'up') focusTopNav();
+        if (key === 'right') reading.current?.focus();
+        if (key === 'down') refresh.current?.focus();
+      }} />
+      <section className="info-today__notices">
+        <h2 className="page__section-title">家庭提示</h2>
+        <div className="info-today__reading" role="region" aria-label="今日事项" tabIndex={0} ref={reading} onKeyDown={event => onReadingKey(event, {
+          left: () => almanacCard.current?.focus(), right: () => houseButton.current?.focus(),
+          top: () => focusTopNav(), bottom: () => houseButton.current?.focus(),
+        })}>
+          {!projected ? <p className="info-empty">{status === 'failed' ? '暂时无法读取简报' : '正在读取今日事项…'}</p> : notices.length === 0
+            ? <section className="info-empty"><h3 className="info-empty__title serif">当前没有可展示的提示</h3><p className="muted">{NOTICE_EMPTY[noticeSource!.availability]}</p></section>
+            : notices.map(({ entry, item }) => <article className="info-notice" key={entry.id} data-entry={entry.id}>
+              <p className="info-notice__text">{item.text}</p>
+              <p className="info-notice__meta">
+                {noticeSource!.availability === 'stale' ? <span>旧数据</span> : null}
+                {item.valid_from ? <span>开始 {familyTime(item.valid_from, timezone)}</span> : null}
+                {item.valid_until ? <span>有效至 {familyTime(item.valid_until, timezone)}</span> : null}
+                {item.updated_at ? <span>更新于 {familyTime(item.updated_at, timezone)}</span> : null}
+                <span>{noticeSource!.source_label}</span>
+              </p>
+            </article>)}
         </div>
-        <aside className="briefing__summary" aria-label="简报来源">
-          <h2>来源</h2><dl>
-            <div><dt>日程同步</dt><dd>{projected ? summary(projected.sources.calendar) : '等待读取'}</dd></div>
-            <div><dt>家庭提示</dt><dd>{projected ? summary(projected.sources.notice) : '等待读取'}</dd></div>
-            <div><dt>中枢来源</dt><dd>{nasSummary}</dd></div>
-            <div><dt>房屋资料</dt><dd>{projected ? projected.sources.profile.availability === 'not_connected' ? '尚未填写' : summary(projected.sources.profile) : '等待读取'}</dd></div>
-            <div><dt>环境数据</dt><dd>{projected ? summary(projected.sources.environment) : '等待读取'}</dd></div>
-          </dl>
-          <RemoteButton className="button button--quiet" ref={houseButton} data-return-focus="briefing-house" onClick={() => dispatch({ type: 'router.navigate', route: { name: 'house' }, sourceFocus: 'briefing-house' })} onDirection={key => {
-            if (key === 'left' || key === 'up') reading.current?.focus();
-            if (key === 'down') refresh.current?.focus();
+      </section>
+      <aside className="info-today__home" aria-label="简报来源">
+        <h2 className="page__section-title">家里</h2>
+        <div className="row-list">
+          {homeRows(projected?.sources ?? null, now, transportFailed).map(row => <StatusRow key={row.key} tone={row.tone} label={row.label} value={row.value} />)}
+        </div>
+        <div className="info-actions">
+          <RemoteButton className="btn" ref={houseButton} data-return-focus="briefing-house" onClick={() => dispatch({ type: 'router.navigate', route: { name: 'house' }, sourceFocus: 'briefing-house' })} onDirection={key => {
+            if (key === 'left') reading.current?.focus();
+            if (key === 'up') focusTopNav();
+            if (key === 'down' || key === 'right') refresh.current?.focus();
           }}>查看房屋</RemoteButton>
-        </aside>
-      </div>
-      <div className="briefing__recovery"><RemoteButton className="button" ref={refresh} onClick={() => { void overview.load().catch(() => {}); }} onDirection={key => {
-        if (key === 'up') reading.current?.focus();
-        if (key === 'down' || key === 'left') focusPrimaryNav('briefing');
-      }}>刷新简报</RemoteButton><p role="status">{feedback}</p><span>↑↓ 滚动事项</span></div>
+          <RemoteButton className="btn" ref={refresh} onClick={() => { void overview.load().catch(() => {}); }} onDirection={key => {
+            if (key === 'left') houseButton.current?.focus();
+            if (key === 'up') focusTopNav();
+          }}>刷新简报</RemoteButton>
+        </div>
+      </aside>
     </main>
-    <PrimaryNav onUp={() => reading.current?.focus()} />
+    <footer className="hints">
+      <span>方向键 移动</span><span>↑↓ 滚动提示</span><span>返回 回到首页</span>
+      <span className="hints__end" role="status">{feedback}</span>
+    </footer>
   </div>;
 }

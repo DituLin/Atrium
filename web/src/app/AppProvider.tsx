@@ -78,7 +78,7 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
         if (key !== 'back') return false;
         const screen = selectScreen(stateRef.current);
         if (screen === 'dashboard') {
-          const hero = document.querySelector<HTMLElement>('.dashboard__main [role="button"]');
+          const hero = document.querySelector<HTMLElement>('[data-home-hero]');
           if (!hero || document.activeElement === hero) return false;
           hero.focus(); return true;
         }
@@ -96,7 +96,9 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
     !state.needsPairing && !state.authExpired && authTransport.hasCredential();
   const ws = useConnection({ api, clientVersion: CLIENT_VERSION, state, dispatch, house, overview, videos, enabled: connectionEnabled });
 
-  useOverviewLifecycle(overview, selectScreen(state) === 'briefing', state.connection.status);
+  // Home shows the first family notice, so the overview also polls there.
+  const overviewScreen = selectScreen(state);
+  useOverviewLifecycle(overview, overviewScreen === 'briefing' || overviewScreen === 'dashboard', state.connection.status);
   useHouseLifecycle(house, selectScreen(state) === 'house', state.connection.status);
 
   // Report route changes immediately (design §6.5).

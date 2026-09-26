@@ -189,12 +189,18 @@ it('returns House -> Briefing -> Settings one layer at a time to each original e
  expect(state.returnStack).toEqual([]);
 });
 
-it('reports calendar locally and restores the source page on Back', () => {
- expect(parseRoutePath('calendar')).toEqual({ name:'calendar' });
- expect(ROUTE_NAMES).toContain('calendar');
- let state=routerReducer(initialRouterState,{type:'router.navigate',route:{name:'briefing'}});
- state=routerReducer(state,{type:'router.navigate',route:{name:'calendar'},sourceFocus:'nav-calendar'});
- expect(toRouteState(state.route)).toEqual({name:'calendar'});
- state=routerReducer(state,{type:'router.back'});
- expect(state.route.name).toBe('briefing'); expect(state.restoreFocus).toBe('nav-calendar');
+it('no longer has a calendar page; the lunar date lives on 今日', () => {
+ expect(parseRoutePath('calendar')).toBeNull();
+ expect(ROUTE_NAMES).not.toContain('calendar');
+});
+
+it('treats photos and videos as one library layer when switching the 影像 rail', () => {
+  let state = routerReducer(initialRouterState, { type: 'router.navigate', route: { name: 'house' } });
+  state = routerReducer(state, { type: 'router.navigate', route: { name: 'photos', collection: 'recent' }, sourceFocus: 'nav-media' });
+  state = routerReducer(state, { type: 'router.navigate', route: { name: 'videos' } });
+  state = routerReducer(state, { type: 'router.navigate', route: { name: 'photos', collection: 'all' } });
+  expect(state.returnStack).toHaveLength(2);
+  state = routerReducer(state, { type: 'router.back' });
+  expect(state.route.name).toBe('house');
+  expect(state.restoreFocus).toBe('nav-media');
 });

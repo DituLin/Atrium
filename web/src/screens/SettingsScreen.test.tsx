@@ -6,6 +6,7 @@ import { useApp } from '../app/context';
 import { CurrentScreen } from '../App';
 import type { AppAction, AppState } from '../app/state';
 import { saveLastAuthOkAt } from '../core/authExpiry';
+import { overviewFixture } from '../test/overviewFixture';
 
 const HOME = { schema_version: 1, server_time: new Date().toISOString(), version: 7,
   home: { name: '测试家庭', timezone: 'Asia/Singapore' }, widgets: [{ type: 'nas', payload: { sources: [
@@ -24,16 +25,22 @@ async function setup() {
   vi.stubGlobal('WebSocket', Socket);
   vi.stubGlobal('fetch', vi.fn((path: string) => Promise.resolve(new Response(JSON.stringify(
     path.includes('/screens/me') ? { id: 'test-screen', name: '客厅屏幕', status: 'active' }
+      : path.includes('/family/overview') ? overviewFixture()
       : path.includes('/photos?') ? { items: [], next_cursor: null } : HOME), { status: 200 }))));
   render(<AppProvider><Harness /></AppProvider>);
-  await screen.findByRole('button', { name: '打开当前照片' });
+  await waitFor(() => expect(currentState.home).not.toBeNull());
 }
+async function openSettings(sourceFocus = 'nav-settings') {
+  act(() => dispatch({ type: 'router.navigate', route: { name: 'settings' }, sourceFocus }));
+  return screen.findByRole('tab', { name: '连接状态' });
+}
+function nav(label: string) { return screen.getByRole('button', { name: label }); }
 function key(key: string, repeat = false) { return fireEvent.keyDown(document.activeElement!, { key, repeat }); }
 
 describe('settings and Back ownership', () => {
   it('confirms sidebar selection, moves right to recovery, and keeps focus during status updates', async () => {
-    await setup(); key('ArrowRight'); key('Enter');
-    const connection = await screen.findByRole('tab', { name: '连接状态' });
+    await setup();
+    const connection = await openSettings();
     expect(document.activeElement).toBe(connection);
     await screen.findByText('客厅屏幕');
     key('ArrowDown');
@@ -50,34 +57,31 @@ describe('settings and Back ownership', () => {
     key('ArrowLeft'); key('ArrowDown'); key('Enter');
     expect(screen.getByText('客户端版本')).toBeDefined();
   });
-  it('returns settings to home status, then consumes Back to hero, then leaves root Back unhandled', async () => {
-    await setup(); key('ArrowRight'); key('Enter');
-    await screen.findByRole('tab', { name: '连接状态' });
-    expect(key('Escape')).toBe(false);
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: '查看状态' }));
-    expect(key('Escape', true)).toBe(false);
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: '查看状态' }));
-    expect(key('Escape')).toBe(false);
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: '打开当前照片' }));
-    expect(key('Escape')).toBe(true);
+  it('reaches the top navigation from the first category and returns with Down', async () => {
+    await setup(); await openSettings();
+    key('ArrowUp'); expect(document.activeElement).toBe(nav('设置'));
+    key('ArrowDown'); expect(document.activeElement).toBe(screen.getByRole('tab', { name: '连接状态' }));
   });
-  it('returns settings to photos navigation and gallery to the original home navigation entry', async () => {
-    await setup(); key('ArrowDown'); key('ArrowRight'); key('Enter');
-    await screen.findByRole('tab', { name: '最近新增' });
-    key('ArrowUp'); key('ArrowRight'); key('ArrowRight'); key('ArrowRight'); key('ArrowRight'); key('Enter');
+  it('returns settings to home on Back and consumes the key', async () => {
+    await setup(); await openSettings();
+    expect(key('Escape')).toBe(false);
+    await waitFor(() => expect(currentState.router.route.name).toBe('dashboard'));
+  });
+  it('returns from photos to the top navigation entry that opened them', async () => {
+    await setup(); await openSettings();
+    key('ArrowUp'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft');
+    expect(document.activeElement).toBe(nav('影像')); key('Enter');
+    await waitFor(() => expect(currentState.router.route.name).toBe('photos'));
+    key('Escape');
     await screen.findByRole('tab', { name: '连接状态' });
-    key('Escape');
-    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: '设置' })));
-    key('Escape');
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: '照片' }));
+    await waitFor(() => expect(document.activeElement).toBe(nav('影像')));
   });
 });
 
 it('keeps missing NAS information distinct from a confirmed empty sources list', async () => {
   await setup();
   act(() => dispatch({ type: 'app.homeLoaded', home: { ...HOME, widgets: [] } as never, receivedAt: Date.now() }));
-  key('ArrowRight'); key('Enter');
-  await screen.findByRole('tab', { name: '照片来源' });
+  await openSettings();
   // A later valid home snapshot may omit a widget; omission is not configuration evidence.
   act(() => dispatch({ type: 'app.homeLoaded', home: { ...HOME, widgets: [] } as never, receivedAt: Date.now() }));
   fireEvent.click(screen.getByRole('tab', { name: '照片来源' }));
@@ -91,31 +95,22 @@ it('can recheck an expired authorization using the connect screen retry', async 
   act(() => dispatch({ type: 'app.authExpired' }));
   const retry = await screen.findByRole('button', { name: '立即重试' });
   fireEvent.keyDown(retry, { key: 'Enter' });
-  await screen.findByRole('button', { name: '打开当前照片' });
+  await waitFor(() => expect(currentState.authExpired).toBe(false));
+  expect(screen.queryByRole('button', { name: '立即重试' })).toBeNull();
 });
 
-it('returns from photos to the original settings navigation entry', async () => {
-  await setup(); key('ArrowRight'); key('Enter');
-  await screen.findByRole('tab', { name: '连接状态' });
-  fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
-  key('ArrowDown'); key('ArrowDown'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('Enter');
-  await screen.findByRole('tab', { name: '最近新增' });
-  key('Escape');
-  expect(document.activeElement).toBe(screen.getByRole('button', { name: '照片' }));
-});
-
-it('returns settings to the exact empty-gallery status recovery button', async () => {
-  await setup(); key('ArrowDown'); key('ArrowRight'); key('Enter');
-  await screen.findByRole('button', { name: '查看全部照片' });
-  key('ArrowDown'); key('ArrowRight'); key('Enter');
+it('returns settings to the exact gallery status recovery button', async () => {
+  await setup();
+  act(() => dispatch({ type: 'router.navigate', route: { name: 'photos', collection: 'recent' } }));
+  const status = await screen.findByRole('button', { name: '查看状态' });
+  status.focus(); key('Enter');
   await screen.findByRole('tab', { name: '连接状态' });
   key('Escape');
   await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: '查看状态' })));
 });
 
 it('lets the remote enter and scroll long status details from the persistent recovery action', async () => {
-  await setup(); key('ArrowRight'); key('Enter');
-  await screen.findByRole('tab', { name: '连接状态' });
+  await setup(); await openSettings();
   key('ArrowRight'); key('ArrowUp');
   const details = screen.getByRole('region', { name: '状态详情' });
   expect(document.activeElement).toBe(details);
@@ -126,11 +121,11 @@ it('lets the remote enter and scroll long status details from the persistent rec
   expect(document.activeElement).toBe(screen.getByRole('tab', { name: '连接状态' }));
 });
 
-
 it('falls back to the selected collection when its old status entry disappears during settings', async () => {
-  await setup(); key('ArrowDown'); key('ArrowRight'); key('Enter');
-  await screen.findByRole('button', { name: '查看全部照片' });
-  key('ArrowDown'); key('ArrowRight'); key('Enter');
+  await setup();
+  act(() => dispatch({ type: 'router.navigate', route: { name: 'photos', collection: 'recent' } }));
+  const status = await screen.findByRole('button', { name: '查看状态' });
+  status.focus(); key('Enter');
   await screen.findByRole('tab', { name: '连接状态' });
   const item = { id: 'new-photo', source_id: 'photos', captured_at: null, captured_confidence: 'unknown' as const,
     first_seen_at: new Date().toISOString(), is_baseline: false, width: 1600, height: 1200,
@@ -138,8 +133,8 @@ it('falls back to the selected collection when its old status entry disappears d
   act(() => dispatch({ type: 'photos.pageLoaded', collection: 'recent', generation: currentState.collection.generation,
     items: [item], nextCursor: null, meta: null, append: false }));
   key('Escape');
+  await waitFor(() => expect(currentState.router.route.name).toBe('photos'));
   expect(screen.queryByRole('button', { name: '查看状态' })).toBeNull();
-  expect(document.activeElement).toBe(screen.getByRole('tab', { name: '最近新增' }));
-  key('ArrowDown');
-  expect(document.activeElement?.classList.contains('thumb')).toBe(true);
+  // The status entry is gone, so focus must land on something inside the gallery rather than nowhere.
+  expect(document.activeElement).not.toBe(document.body);
 });

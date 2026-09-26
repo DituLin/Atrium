@@ -2,12 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApp } from '../app/context';
 import { nasWidget, photoWidget } from '../app/homeSelect';
 import type { ScreenSelfResponse } from '../types/api';
-import { Masthead, PrimaryNav, focusPrimaryNav } from '../ui/PrimaryNav';
-import { mapRemoteKey } from '../ui/keys';
 import { RemoteButton } from '../ui/RemoteButton';
+import { TopNav, focusTopNav } from '../ui/TopNav';
 import { indexProgressText, nasStatusText, relativeTime, shareFreeText } from '../ui/statusText';
+import { StatusRow } from './info/StatusRow';
+import { onReadingKey } from './info/readingRegion';
 
 const TABS = ['连接状态', '照片来源', '关于 Atrium'] as const;
+const NAS_TONE = { online: 'ok', degraded: 'warn', offline: 'warn', unknown: 'none' } as const;
 
 /** Only existing Core APIs; recovery rechecks without moving route or focus. */
 export function SettingsScreen() {
@@ -38,65 +40,62 @@ export function SettingsScreen() {
     void Promise.resolve().then(() => { if (active) void check(); });
     return () => { active = false; currentRequest.current += 1; };
   }, [check, state.router.restoreFocus]);
-  const sources = nasWidget(state.home)?.sources ?? [];
+  const nas = nasWidget(state.home);
+  const sources = nas?.sources ?? [];
   const photo = photoWidget(state.home);
-  return <div className="screen screen--settings">
-    <Masthead />
-    <h1 className="photos__title">设置与状态</h1>
-    <main className="settings__layout">
-      <div className="settings__tabs" role="tablist" aria-label="设置分类" aria-orientation="vertical">
-        {TABS.map((label, index) => <RemoteButton key={label} role="tab" id={`settings-tab-${index}`}
+  const online = state.connection.status === 'online';
+  const indexing = indexProgressText(photo);
+  return <div className="page info-settings">
+    <TopNav onDown={() => tabs.current[selected]?.focus()} />
+    <div className="page__heading"><h1 className="page__title">设置</h1><span className="page__subtitle">状态与信息</span></div>
+    <main className="page__body info-settings__grid">
+      <div className="info-settings__tabs" role="tablist" aria-label="设置分类" aria-orientation="vertical">
+        {TABS.map((label, index) => <RemoteButton key={label} role="tab" id={`settings-tab-${index}`} className="info-settings__tab"
           aria-selected={selected === index} aria-controls="settings-panel" ref={element => { tabs.current[index] = element; }}
           onClick={() => setSelected(index)} onDirection={key => {
-            if (key === 'up') tabs.current[Math.max(0, index - 1)]?.focus();
-            if (key === 'down') { if (index < 2) tabs.current[index + 1]?.focus(); else focusPrimaryNav('settings'); }
+            if (key === 'up') { if (index > 0) tabs.current[index - 1]?.focus(); else focusTopNav(); }
+            if (key === 'down' && index < TABS.length - 1) tabs.current[index + 1]?.focus();
             if (key === 'right') action.current?.focus();
           }}>{label}</RemoteButton>)}
       </div>
-      <section className="settings__panel" id="settings-panel" role="tabpanel" aria-labelledby={`settings-tab-${selected}`}>
-        <div className="settings__body" ref={details} role="region" aria-label="状态详情" tabIndex={0} onKeyDown={event => {
-          const key = mapRemoteKey(event);
-          if (!key || key === 'back' || key === 'enter') return;
-          event.preventDefault(); event.stopPropagation();
-          if (key === 'left') tabs.current[selected]?.focus();
-          if (key === 'right') action.current?.focus();
-          if (key === 'up') event.currentTarget.scrollTop = Math.max(0, event.currentTarget.scrollTop - event.currentTarget.clientHeight * .7);
-          if (key === 'down') {
-            if (event.currentTarget.scrollTop + event.currentTarget.clientHeight >= event.currentTarget.scrollHeight - 1) action.current?.focus();
-            else event.currentTarget.scrollTop += event.currentTarget.clientHeight * .7;
-          }
-        }}>
-        <h2>{TABS[selected]}</h2>
-        {selected === 0 ? <>
-          <dl className="settings__facts">
-            <div><dt>家庭服务</dt><dd>{state.connection.status === 'online' ? '已连接' : '连接未确认'}</dd></div>
-            <div><dt>家庭</dt><dd>{state.home?.home.name ?? '尚未取得'}</dd></div>
-            <div><dt>此屏幕</dt><dd>{self?.name ?? '尚未取得'}</dd></div>
-            <div><dt>屏幕授权</dt><dd>{self?.status === 'active' ? '有效' : self?.status === 'revoked' ? '已撤销' : '尚未取得'}</dd></div>
-            <div><dt>快照时间</dt><dd>{relativeTime(state.home?.server_time, state.nowMs)}</dd></div>
-          </dl>
-          <p>中枢连接状态仅表示家庭服务连接，不代表房屋设备状态。</p>
-        </> : selected === 1 ? <>
-          {sources.length ? sources.map(source => <div className="settings__source" key={source.id}>
-            <h3>{source.name}</h3><p>{nasStatusText([source], state.nowMs).value}</p>
-            <p>{nasStatusText([source], state.nowMs).detail}{shareFreeText([source]) ? ` · 共享空间${shareFreeText([source])}` : ''}</p>
-          </div>) : <p>{nasWidget(state.home) ? '未配置照片来源' : '照片来源尚未取得'}</p>}
-          <p>{photo ? `${photo.totals.ready} 张可展示 · ${photo.totals.pending_preview} 项预览待生成` : '照片数量尚未取得'}</p>
-          {indexProgressText(photo) ? <p>{indexProgressText(photo)}</p> : null}
-        </> : <>
-          <p>留一方光景。</p>
-          <dl className="settings__facts"><div><dt>客户端版本</dt><dd>{clientVersion}</dd></div></dl>
-          <p>使用遥控器方向键移动，确认打开，返回上一级。</p>
-        </>}
+      <section className="info-settings__panel" id="settings-panel" role="tabpanel" aria-labelledby={`settings-tab-${selected}`}>
+        <div className="info-settings__body" ref={details} role="region" aria-label="状态详情" tabIndex={0} onKeyDown={event => onReadingKey(event, {
+          left: () => tabs.current[selected]?.focus(), right: () => action.current?.focus(),
+          top: () => focusTopNav(), bottom: () => action.current?.focus(),
+        })}>
+          <h2 className="page__section-title">{TABS[selected]}</h2>
+          {selected === 0 ? <div className="row-list">
+            <StatusRow tone={online ? 'ok' : 'none'} label="家庭服务" help="仅表示家庭服务连接，不代表房屋设备状态" value={online ? '已连接' : '连接未确认'} />
+            <StatusRow tone={state.home ? 'ok' : 'none'} label="家庭" value={state.home?.home.name ?? '尚未取得'} />
+            <StatusRow tone={self ? 'ok' : 'none'} label="此屏幕" value={self?.name ?? '尚未取得'} />
+            <StatusRow tone={self?.status === 'active' ? 'ok' : self?.status === 'revoked' ? 'warn' : 'none'} label="屏幕授权"
+              value={self?.status === 'active' ? '有效' : self?.status === 'revoked' ? '已撤销' : '尚未取得'} />
+            <StatusRow tone={state.home ? 'ok' : 'none'} label="快照时间" value={relativeTime(state.home?.server_time, state.nowMs)} />
+            <StatusRow label="更改服务地址" help="回到首页，在照片上按返回，选择「连接设置」" value="" />
+          </div> : selected === 1 ? <div className="row-list">
+            {sources.length ? sources.map(source => {
+              const text = nasStatusText([source], state.nowMs);
+              const free = shareFreeText([source]);
+              return <StatusRow key={source.id} tone={NAS_TONE[text.health]} label={source.name} help={`${text.detail}${free ? ` · 共享空间${free}` : ''}`} value={text.value} />;
+            }) : <StatusRow tone="none" label="照片来源" value={nas ? '未配置照片来源' : '照片来源尚未取得'} />}
+            <StatusRow tone={photo ? 'ok' : 'none'} label="照片数量" help={photo ? `${photo.totals.pending_preview} 项预览待生成` : undefined}
+              value={photo ? `${photo.totals.ready} 张可展示` : '照片数量尚未取得'} />
+            {indexing ? <StatusRow tone="warn" label="索引" value={indexing} /> : null}
+          </div> : <div className="row-list">
+            <p className="info-settings__motto serif">留一方光景。</p>
+            <StatusRow tone="ok" label="客户端版本" value={clientVersion} />
+            <StatusRow label="遥控器" help="方向键移动，确认打开，返回上一级" value="" />
+          </div>}
         </div>
-        <div className="settings__recovery">
-          <RemoteButton className="button" ref={action} onClick={() => { setNotice('正在检查…'); void check(); dispatch({ type: 'connection.retry' }); }}
-            onDirection={key => { if (key === 'left') tabs.current[selected]?.focus(); if (key === 'up') details.current?.focus(); if (key === 'down') focusPrimaryNav('settings'); }}>重新检查</RemoteButton>
-          <p className="settings__notice" role="status">{notice}</p>
-          <p className="settings__help">↑ 查看详情，可上下滚动 · ← 返回分类。更改地址：在首页照片处按返回，选择「连接设置」。</p>
+        <div className="info-actions">
+          <RemoteButton className="btn" ref={action} onClick={() => { setNotice('正在检查…'); void check(); dispatch({ type: 'connection.retry' }); }}
+            onDirection={key => { if (key === 'left') tabs.current[selected]?.focus(); if (key === 'up') details.current?.focus(); }}>重新检查</RemoteButton>
         </div>
       </section>
     </main>
-    <PrimaryNav onUp={() => tabs.current[selected]?.focus()} />
+    <footer className="hints">
+      <span>↑↓ 选分类</span><span>→ 查看详情</span><span>返回 回到首页</span>
+      <span className="hints__end" role="status">{notice}</span>
+    </footer>
   </div>;
 }

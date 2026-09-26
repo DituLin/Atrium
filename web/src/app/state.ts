@@ -28,7 +28,7 @@ import { initialRouterState, routerReducer } from './router';
 import type { SlideshowAction, SlideshowState } from './slideshow';
 import { initialSlideshowState, slideshowReducer } from './slideshow';
 
-export type ScreenName = 'videos' | 'video' | 'pair' | 'connect' | 'dashboard' | 'photos' | 'photo' | 'house' | 'briefing' | 'calendar' | 'settings';
+export type ScreenName = 'videos' | 'video' | 'pair' | 'connect' | 'dashboard' | 'photos' | 'photo' | 'house' | 'briefing' | 'settings';
 
 export interface AppState {
   router: RouterState;
@@ -234,7 +234,6 @@ export function selectScreen(state: AppState): ScreenName {
   if (state.authExpired) return 'connect';
   if (state.connection.stopReason === 'superseded') return 'connect';
   if (state.router.route.name === 'house') return 'house';
-  if (state.router.route.name === 'calendar') return 'calendar';
   if (state.router.route.name === 'briefing') return 'briefing';
   if (needsConnectScreen(state.connection)) return 'connect';
   return state.router.route.name;

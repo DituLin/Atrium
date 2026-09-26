@@ -2,11 +2,13 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useApp } from '../app/context';
 import { ApiError } from '../core/api';
 import type { VideoItem } from '../types/api';
-import { Masthead, PrimaryNav, focusPrimaryNav } from '../ui/PrimaryNav';
 import { RemoteButton } from '../ui/RemoteButton';
 import type { RemoteKey } from '../ui/keys';
+import { TopNav, focusTopNav } from '../ui/TopNav';
 import { VideoPlayer } from '../video/VideoPlayer';
-import './videos.css';
+import { MediaRail, focusMediaRail } from './media/MediaRail';
+import type { MediaEntry } from './media/MediaRail';
+import { videoFacts } from './media/videoFacts';
 
 const validID = (id: string) => /^[A-Za-z0-9_-]{1,64}$/.test(id);
 const durationLabel = (item: VideoItem) => {
@@ -14,6 +16,8 @@ const durationLabel = (item: VideoItem) => {
   const seconds = Math.max(0, Math.floor(item.metadata.duration_ms / 1000));
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 };
+
+const Play = () => <svg className="tile__glyph" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>;
 
 /** Keep the list mounted beneath its preview so Back restores the same DOM and scroll. */
 export function VideosScreen() {
@@ -165,55 +169,78 @@ export function VideosScreen() {
     cards.current.get(item.id)?.focus();
     cards.current.get(item.id)?.scrollIntoView?.({ block: 'nearest' });
   };
+  const screenRef = useRef<HTMLDivElement>(null);
+  const focusRail = () => focusMediaRail(screenRef.current);
+  const focusContent = () => {
+    const index = items.findIndex(item => item.id === focusId.current);
+    if (items.length) focusCard(index < 0 ? 0 : index); else recovery.current?.focus();
+  };
+  const selectEntry = (entry: MediaEntry) => {
+    if (entry === 'videos') focusContent();
+    else dispatch({ type: 'router.navigate', route: { name: 'photos', collection: entry } });
+  };
   const direction = (key: RemoteKey, index: number) => {
     if (key === 'up') { if (index < columns) recovery.current?.focus(); else focusCard(index - columns); }
     if (key === 'down') {
       if (index + columns < items.length) focusCard(index + columns);
       else if (cursor) loadMore.current?.focus();
-      else focusPrimaryNav('videos');
     }
-    if (key === 'left') focusCard(index - 1);
-    if (key === 'right') focusCard(index + 1);
+    if (key === 'left') { if (index % columns === 0) focusRail(); else focusCard(index - 1); }
+    if (key === 'right' && (index + 1) % columns !== 0) focusCard(index + 1);
   };
   const refreshList = () => { setListStatus('loading'); setRequest(previous => ({ cursor: null, generation: previous.generation + 1 })); };
   const playable = selected && detail?.id === selected && detailStatus === 'ready' && detail.status === 'ready';
+  const selectedIndex = selected ? items.findIndex(item => item.id === selected) : -1;
+  const facts = videoFacts(detail, selectedIndex, cursor === null ? items.length : null);
   return <>
-    <div className="screen screen--videos" style={selected ? { display: 'none' } : undefined}>
-      <Masthead />
-      <header className="videos__heading"><div><p>家庭影像</p><h1>把光阴，留在家里</h1></div>
-        <RemoteButton ref={recovery} className="button" onClick={refreshList} onDirection={key => {
-          if (key === 'down') { if (items.length) focusCard(0); else focusPrimaryNav('videos'); }
-        }}>{listStatus === 'error' ? '重试' : '刷新'}</RemoteButton>
-      </header>
-      {listStatus === 'error' && <p role="status">暂时无法读取视频列表</p>}
-      {listStatus === 'loading' && <p role="status">正在读取视频…</p>}
-      {listStatus === 'ready' && !items.length && <p role="status">还没有视频</p>}
-      <div className="videos__scroll" ref={grid} role="region" aria-label="视频列表">
-        <div className="videos__grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
-          {items.map((item, index) => <RemoteButton key={item.id} className="videos__card" aria-label={`视频 ${index + 1}`}
-            ref={element => { if (element) cards.current.set(item.id, element); else cards.current.delete(item.id); }}
-            onFocus={() => { focusId.current = item.id; }} onDirection={key => direction(key, index)}
-            onClick={() => { focusId.current = item.id; dispatch({ type: 'router.navigate', route: { name: 'video', videoId: item.id } }); }}>
-            <span className="videos__cover">{item.status === 'ready' && <img src={`/api/v1/media/videos/${item.id}/cover`} alt="" loading="lazy" />}
-              <span className="videos__play" aria-hidden="true">▷</span><span className="videos__duration">{durationLabel(item)}</span></span>
-            <span className="videos__label">影像 {String(index + 1).padStart(2, '0')}</span>
-          </RemoteButton>)}
-        </div>
-        {cursor && <RemoteButton ref={loadMore} className="button videos__more" disabled={listStatus === 'loading'}
-          onClick={() => { pageFocus.current = items.length; setListStatus('loading'); setRequest(previous => ({ cursor, generation: previous.generation + 1 })); }}
-          onDirection={key => { if (key === 'up') focusCard(items.length - 1); if (key === 'down') focusPrimaryNav('videos'); }}>加载更多</RemoteButton>}
+    <div ref={screenRef} className="screen library surface--ink screen--videos" style={selected ? { display: 'none' } : undefined}>
+      <TopNav onDown={focusRail} />
+      <div className="library__body">
+        <MediaRail selected="videos" onSelect={selectEntry} onRight={focusContent} />
+        <section className="library__content" aria-label="视频">
+          <header className="library__bar">
+            <RemoteButton ref={recovery} className="btn btn--ghost-ink library__refresh" onClick={refreshList} onDirection={key => {
+              if (key === 'down' && items.length) focusCard(0);
+              if (key === 'up') focusTopNav();
+              if (key === 'left') focusRail();
+            }}>{listStatus === 'error' ? '重试' : '刷新'}</RemoteButton>
+            <p className="library__count">{listStatus === 'loading' ? '正在读取…' : listStatus === 'error' ? '数量暂不可用' : `已载入 ${items.length}${cursor ? '+' : ''} 段 · 按加入时间`}</p>
+          </header>
+          {listStatus === 'error' && <p className="library__note" role="status">暂时无法读取视频列表</p>}
+          {listStatus === 'loading' && <p className="library__note" role="status">正在读取视频…</p>}
+          {listStatus === 'ready' && !items.length && <div className="library__empty"><p className="library__empty-text serif" role="status">还没有视频</p></div>}
+          <div className="videos__scroll" ref={grid} role="region" aria-label="视频列表">
+            <div className="media-grid videos__grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+              {items.map((item, index) => <RemoteButton key={item.id} className="videos__card tile" aria-label={`视频 ${index + 1}`}
+                ref={element => { if (element) cards.current.set(item.id, element); else cards.current.delete(item.id); }}
+                onFocus={() => { focusId.current = item.id; }} onDirection={key => direction(key, index)}
+                onClick={() => { focusId.current = item.id; dispatch({ type: 'router.navigate', route: { name: 'video', videoId: item.id } }); }}>
+                <span className="tile__frame">{item.status === 'ready' && <img className="tile__image" src={`/api/v1/media/videos/${item.id}/cover`} alt="" loading="lazy" />}
+                  <span className="tile__badge"><Play /><span>{durationLabel(item)}</span></span>
+                  <span className="tile__caption">影像 {String(index + 1).padStart(2, '0')}</span></span>
+              </RemoteButton>)}
+            </div>
+            {cursor && <RemoteButton ref={loadMore} className="btn btn--ghost-ink videos__more" disabled={listStatus === 'loading'}
+              onClick={() => { pageFocus.current = items.length; setListStatus('loading'); setRequest(previous => ({ cursor, generation: previous.generation + 1 })); }}
+              onDirection={key => { if (key === 'up') focusCard(items.length - 1); if (key === 'left') focusRail(); }}>加载更多</RemoteButton>}
+          </div>
+        </section>
       </div>
-      <PrimaryNav onUp={() => items.length ? focusCard(items.findIndex(item => item.id === focusId.current)) : recovery.current?.focus()} />
+      <footer className="hints">
+        <span>方向键 选择</span><span>OK 播放</span><span>← 回到分类</span><span className="hints__end">返回 回到上一页</span>
+      </footer>
     </div>
-    {selected && (playable ? <VideoPlayer id={detail.id} revision={detail.revision} onBack={goBack} /> :
-      <section className="screen videos__unavailable" aria-label="视频预览">
-        <h1>家庭影像</h1>
+    {selected && (playable ? <VideoPlayer id={detail.id} revision={detail.revision} onBack={goBack} {...facts} /> :
+      <section className="screen library surface--ink videos__unavailable" aria-label="视频预览">
+        <h1 className="serif">家庭影像</h1>
         <p role="status">{detailStatus === 'loading' ? '正在读取视频…' : detailStatus === 'gone' ? '此视频已不可用' : detailStatus === 'error' ? '暂时无法读取此视频' : detail?.status === 'pending' ? '视频正在整理，请稍后再试' : '此视频格式暂不支持'}</p>
-        <RemoteButton className="button" onClick={() => setDetailRetry(value => value + 1)} onDirection={key => { if (key === 'down') previewBack.current?.focus(); }}>重新检查</RemoteButton>
-        <RemoteButton ref={previewBack} className="button" onClick={goBack} onDirection={key => {
-          const previous = previewBack.current?.previousElementSibling;
-          if (key === 'up' && previous instanceof HTMLButtonElement) previous.focus();
-        }}>返回视频</RemoteButton>
+        <div className="videos__unavailable-actions">
+          <RemoteButton className="btn btn--ghost-ink" onClick={() => setDetailRetry(value => value + 1)} onDirection={key => { if (key === 'down' || key === 'right') previewBack.current?.focus(); }}>重新检查</RemoteButton>
+          <RemoteButton ref={previewBack} className="btn btn--moon" onClick={goBack} onDirection={key => {
+            const previous = previewBack.current?.previousElementSibling;
+            if ((key === 'up' || key === 'left') && previous instanceof HTMLButtonElement) previous.focus();
+          }}>返回视频</RemoteButton>
+        </div>
       </section>)}
   </>;
 }

@@ -1,0 +1,96 @@
+/* Home (ambient photo + menu). Chrome 66 baseline: no flex gap, no min()/max(), no inset. */
+
+.screen-home { position: relative; width: 100%; height: 100%; overflow: hidden; }
+
+/* ------------------------------------------------------------ ambient photo */
+
+.ambient { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: var(--ink); outline: none; }
+.ambient__slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.ambient__slide--cover { object-fit: cover; }
+.ambient__slide--contain { object-fit: contain; }
+.ambient__slide--in { opacity: 1; transition: opacity 800ms ease; }
+.ambient__slide--out { opacity: 0; transition: opacity 800ms ease; }
+.ambient__empty { position: absolute; top: 45%; left: 0; right: 0; margin: 0; text-align: center; font-size: calc(36 * var(--u)); color: var(--moon-dim); }
+.ambient__scrim { position: absolute; left: 0; right: 0; pointer-events: none; }
+.ambient__scrim--top { top: 0; height: calc(240 * var(--u)); background: linear-gradient(180deg, rgba(10, 13, 11, 0.55), rgba(10, 13, 11, 0)); }
+.ambient__scrim--bottom { bottom: 0; height: calc(620 * var(--u)); background: linear-gradient(0deg, rgba(10, 13, 11, 0.86), rgba(10, 13, 11, 0.35) 55%, rgba(10, 13, 11, 0)); }
+.ambient__caption {
+  position: absolute; right: calc(96 * var(--u)); bottom: calc(150 * var(--u)); margin: 0;
+  display: flex; flex-direction: column; align-items: flex-end;
+  font-size: calc(32 * var(--u)); color: var(--moon);
+}
+.ambient__estimated { margin-top: calc(8 * var(--u)); font-size: calc(26 * var(--u)); color: var(--moon-muted); }
+.ambient__notes { position: absolute; left: calc(96 * var(--u)); top: calc(140 * var(--u)); margin: 0; font-size: calc(26 * var(--u)); color: var(--moon-dim); }
+/* A visible focus ring on a full-screen photo would frame the whole TV; the
+   hint row and OK behaviour carry the affordance instead. */
+.ambient:focus { outline: none; }
+
+/* ------------------------------------------------------------ overlays */
+
+.home__top {
+  position: absolute; left: calc(96 * var(--u)); right: calc(96 * var(--u)); top: calc(72 * var(--u));
+  display: flex; justify-content: space-between; align-items: center; pointer-events: none;
+}
+.home__brand { font-size: calc(28 * var(--u)); letter-spacing: 0.32em; color: var(--moon); }
+.home__brand-cn { margin-left: calc(16 * var(--u)); font-size: calc(26 * var(--u)); letter-spacing: 0; color: var(--moon-dim); }
+.home__hint { display: flex; align-items: center; font-size: calc(26 * var(--u)); color: var(--moon-dim); }
+.home__key {
+  margin-right: calc(14 * var(--u)); padding: calc(2 * var(--u)) calc(12 * var(--u));
+  border: 1px solid rgba(238, 233, 222, 0.4); border-radius: calc(6 * var(--u)); font-size: calc(22 * var(--u)); letter-spacing: 0.08em;
+}
+.home__sep { display: inline-block; width: 1px; height: calc(22 * var(--u)); margin: 0 calc(16 * var(--u)); background: rgba(238, 233, 222, 0.3); }
+.home__top-clock { display: flex; align-items: baseline; font-size: calc(28 * var(--u)); color: var(--moon-dim); }
+.home__top-time { margin-left: calc(28 * var(--u)); font-size: calc(56 * var(--u)); color: var(--moon); }
+
+.home__reconnect {
+  position: absolute; top: calc(72 * var(--u)); left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; white-space: nowrap;
+  padding: calc(18 * var(--u)) calc(34 * var(--u)); border-radius: calc(999 * var(--u));
+  background: rgba(18, 23, 20, 0.88); border: 1px solid rgba(217, 154, 126, 0.5);
+  font-size: calc(30 * var(--u)); color: var(--moon);
+}
+.home__reconnect .dot { margin-right: calc(16 * var(--u)); }
+.home__reconnect .muted { font-size: calc(26 * var(--u)); }
+
+.home__clock { position: absolute; left: calc(96 * var(--u)); bottom: calc(104 * var(--u)); width: calc(1000 * var(--u)); color: var(--moon); pointer-events: none; }
+.home__date { font-size: calc(38 * var(--u)); letter-spacing: 0.06em; }
+.home__time { margin-top: calc(6 * var(--u)); font-size: calc(208 * var(--u)); line-height: 1; letter-spacing: -0.02em; color: #f4f0e6; }
+.home__unverified { margin-top: calc(12 * var(--u)); font-size: calc(26 * var(--u)); color: var(--ochre-light); }
+.home__notice {
+  display: flex; align-items: baseline; margin-top: calc(28 * var(--u)); padding-top: calc(20 * var(--u));
+  border-top: 1px solid rgba(238, 233, 222, 0.32); max-width: calc(900 * var(--u));
+  font-size: calc(32 * var(--u));
+}
+.home__notice-label { flex: 0 0 auto; margin-right: calc(20 * var(--u)); color: var(--celadon-light); }
+
+.home__status {
+  position: absolute; right: calc(96 * var(--u)); bottom: calc(104 * var(--u)); margin: 0;
+  display: flex; align-items: center; font-size: calc(26 * var(--u)); color: var(--moon-dim); pointer-events: none;
+}
+.home__status .dot { margin-right: calc(12 * var(--u)); }
+
+/* ------------------------------------------------------------ menu */
+
+.screen-home--menu .ambient::after {
+  content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(12, 15, 13, 0.58);
+}
+.screen-home--menu .ambient__caption, .screen-home--menu .ambient__notes { display: none; }
+.home-menu { position: absolute; left: calc(96 * var(--u)); right: calc(96 * var(--u)); bottom: calc(64 * var(--u)); }
+.home-menu__cards { display: flex; align-items: flex-end; }
+.home-menu__card {
+  appearance: none; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start;
+  width: calc(300 * var(--u)); height: calc(212 * var(--u)); padding: calc(28 * var(--u)); margin-right: calc(28 * var(--u));
+  border-radius: calc(8 * var(--u)); border: 1px solid rgba(238, 233, 222, 0.18); background: rgba(238, 233, 222, 0.08);
+  color: var(--moon); font: inherit; text-align: left; cursor: pointer;
+  transition: transform 160ms ease, background-color 160ms ease;
+}
+.home-menu__card:focus {
+  background: var(--moon); border-color: var(--moon); color: var(--ink-raised);
+  transform: translateY(calc(-18 * var(--u)));
+  outline: var(--focus-width) solid var(--celadon-light); outline-offset: var(--focus-offset);
+  box-shadow: 0 calc(24 * var(--u)) calc(48 * var(--u)) rgba(0, 0, 0, 0.45);
+}
+.home-menu__icon { width: calc(44 * var(--u)); height: calc(44 * var(--u)); }
+.home-menu__name { font-size: calc(40 * var(--u)); line-height: 1.2; }
+.home-menu__meta { font-size: calc(26 * var(--u)); opacity: 0.8; }
+.home-menu .hints { margin-top: calc(40 * var(--u)); }

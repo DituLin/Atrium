@@ -1,20 +1,29 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from '../app/context';
 import { clockOptions } from '../app/homeSelect';
 import { GRID_COLUMNS, emptyKind, focusedItem } from '../app/photoList';
 import type { PhotoCollection } from '../types/api';
 import type { RemoteKey } from '../ui/keys';
 import { mapRemoteKey } from '../ui/keys';
-import { Masthead, PrimaryNav, focusPrimaryNav } from '../ui/PrimaryNav';
 import { RemoteButton } from '../ui/RemoteButton';
+import { TopNav, focusTopNav } from '../ui/TopNav';
 import { PhotoGrid } from './PhotoGrid';
 import { usePhotoList } from './usePhotoList';
+import { gridSections, moveInSections } from './media/libraryLayout';
+import { MediaRail, focusMediaRail } from './media/MediaRail';
+import type { MediaEntry } from './media/MediaRail';
 
-const COLLECTIONS = [['recent', '最近新增'], ['captured_today', '今天拍摄'], ['random', '随心看看'], ['all', '全部照片']] as const;
 const EMPTY_TEXT: Readonly<Record<string, string>> = {
   recent_baseline_only: '暂无首次导入后新增的可展示照片。',
   captured_today: '暂无可展示的今日照片。',
   generic: '这个合集暂时没有照片。',
+};
+/** Orders as documented by the API (openapi `Collection`). */
+const ORDER_TEXT: Readonly<Record<PhotoCollection, string>> = {
+  recent: '按加入时间，最新在前',
+  captured_today: '今天拍摄，按家庭时区',
+  random: '随机排列，本轮不重复',
+  all: '按拍摄时间，最新在前',
 };
 type Region = 'grid' | 'tabs' | 'nav' | 'recovery';
 
@@ -29,7 +38,6 @@ export function PhotosScreen() {
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
   }, []);
-  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const recovery = useRef<HTMLButtonElement>(null);
   const screenRef = useRef<HTMLDivElement>(null);
   const awaitingCollection = useRef<PhotoCollection | null>(null);
@@ -37,8 +45,10 @@ export function PhotosScreen() {
   const empty = readyForRoute ? emptyKind(list) : 'none';
   const failed = readyForRoute && list.status === 'error';
   const hasRecovery = empty !== 'none' || failed;
-  const activeTab = COLLECTIONS.findIndex(([id]) => id === collection);
-  const focusTab = useCallback(() => { setRegion('tabs'); tabs.current[activeTab]?.focus(); }, [activeTab]);
+  const options = useMemo(() => clockOptions(state.home), [state.home]);
+  const sections = useMemo(() => gridSections(list.items, collection, options), [list.items, collection, options]);
+  const focusTab = useCallback(() => { setRegion('tabs'); focusMediaRail(screenRef.current); }, []);
+  const focusNav = useCallback(() => { setRegion('nav'); focusTopNav(); }, []);
   const focusContent = () => {
     if (hasRecovery) { setRegion('recovery'); recovery.current?.focus(); }
     else setRegion('grid');
@@ -86,13 +96,16 @@ export function PhotosScreen() {
     setRegion('tabs');
     dispatch({ type: 'router.navigate', route: { name: 'photos', collection: next } });
   };
+  const selectEntry = (entry: MediaEntry) => {
+    if (entry === 'videos') { awaitingCollection.current = null; dispatch({ type: 'router.navigate', route: { name: 'videos' } }); }
+    else applyCollection(entry);
+  };
   const onDirection = useCallback((direction: RemoteKey): boolean => {
-    if (direction === 'up' && list.focusIndex < columns) { focusTab(); return true; }
-    if (direction === 'down' && list.focusIndex >= Math.floor((list.items.length - 1) / columns) * columns) {
-      setRegion('nav'); focusPrimaryNav('photos'); return true;
-    }
-    dispatch({ type: 'photos.move', direction, columns }); return true;
-  }, [dispatch, list.focusIndex, list.items.length, focusTab, columns]);
+    const target = moveInSections(sections, list.focusIndex, direction, columns);
+    if (target < 0) { if (direction === 'up') focusNav(); else focusTab(); return true; }
+    if (target !== list.focusIndex) dispatch({ type: 'photos.focus', index: target });
+    return true;
+  }, [dispatch, sections, list.focusIndex, columns, focusNav, focusTab]);
   const onActivate = useCallback((index: number) => {
     const item = list.items[index] ?? focusedItem(list);
     if (item) {
@@ -103,52 +116,56 @@ export function PhotosScreen() {
   }, [dispatch, list, collection]);
   const onFocusIndex = useCallback((index: number) => dispatch({ type: 'photos.focus', index }), [dispatch]);
   const unknownCount = list.meta?.unknown_captured_count ?? 0;
+  const total = readyForRoute && typeof list.meta?.total === 'number' ? list.meta.total : null;
 
-  return <div ref={screenRef} className="screen screen--photos" style={{ '--photo-columns': columns } as React.CSSProperties} onFocusCapture={event => {
-    if ((event.target as HTMLElement).closest('.primary-nav')) { awaitingCollection.current = null; setRegion('nav'); }
-    else if ((event.target as HTMLElement).closest('.photogrid')) setRegion('grid');
-    else if ((event.target as HTMLElement).closest('.photos__recovery')) setRegion('recovery');
+  return <div ref={screenRef} className="screen library surface--ink screen--photos" style={{ '--photo-columns': columns } as React.CSSProperties} onFocusCapture={event => {
+    const target = event.target as HTMLElement;
+    if (target.closest('.topnav')) { awaitingCollection.current = null; setRegion('nav'); }
+    else if (target.closest('.media-rail')) setRegion('tabs');
+    else if (target.closest('.photogrid')) setRegion('grid');
+    else if (target.closest('.photos__recovery')) setRegion('recovery');
   }}>
-    <Masthead />
-    <header className="photos__header"><h1 className="photos__title">照片</h1><p className="photos__count">
-      {!readyForRoute || list.status === 'loading' || list.status === 'idle' ? '正在加载…'
-        : failed ? '数量暂不可用' : `已载入 ${list.items.length}${list.cursor ? '+' : ''} 张`}
-    </p></header>
-    <div className="collection-tabs" role="tablist" aria-label="照片合集">
-      {COLLECTIONS.map(([id, label], index) => <RemoteButton key={id} role="tab" aria-selected={id === collection}
-        className="collection-tabs__tab" ref={element => { tabs.current[index] = element; }}
-        onFocus={() => setRegion('tabs')} onClick={() => applyCollection(id)}
-        onDirection={key => {
-          awaitingCollection.current = null;
-          if (key === 'left' || key === 'right') tabs.current[Math.max(0, Math.min(3, index + (key === 'left' ? -1 : 1)))]?.focus();
-          if (key === 'down') focusContent();
-          if (key === 'up') { setRegion('nav'); focusPrimaryNav('photos'); }
-        }}>{label}</RemoteButton>)}
+    <TopNav onDown={focusTab} />
+    <div className="library__body">
+      <MediaRail selected={collection} count={total === null ? null : total.toLocaleString('en-US')}
+        onSelect={selectEntry} onRight={focusContent} onKey={() => { awaitingCollection.current = null; }} />
+      <section className="library__content" aria-label="照片">
+        <header className="library__bar">
+          <p className="library__order">{ORDER_TEXT[collection]}</p>
+          <p className="library__count photos__count">
+            {!readyForRoute || list.status === 'loading' || list.status === 'idle' ? '正在加载…'
+              : failed ? '数量暂不可用' : total !== null ? `共 ${total.toLocaleString('en-US')} 张` : `已载入 ${list.items.length}${list.cursor ? '+' : ''} 张`}
+          </p>
+        </header>
+        {list.returnNotice ? <p className="library__note" role="status">{list.returnNotice}</p> : null}
+        {collection === 'captured_today' && readyForRoute && unknownCount > 0 ? <p className="library__note" role="status">{unknownCount} 张照片缺少拍摄时间，未列入此合集。</p> : null}
+        {hasRecovery ? <div className="library__empty">
+          <p className="library__empty-text serif" role="status">{failed ? '暂时无法加载此合集。' : EMPTY_TEXT[empty]}</p>
+          <div className="photos__recovery library__actions" onKeyDown={event => {
+            // Each action owns its activation. Horizontal movement stays within recovery.
+            const key = mapRemoteKey(event);
+            if (key === 'up' || key === 'down') { event.preventDefault(); event.stopPropagation(); if (key === 'up') focusNav(); }
+            if (key === 'left' || key === 'right') {
+              event.preventDefault(); event.stopPropagation();
+              const buttons = Array.from(event.currentTarget.querySelectorAll('button'));
+              const index = buttons.indexOf(event.target as HTMLButtonElement);
+              if (key === 'left' && index <= 0) { focusTab(); return; }
+              buttons[Math.max(0, Math.min(buttons.length - 1, index + (key === 'left' ? -1 : 1)))]?.focus();
+            }
+          }}>
+            <RemoteButton ref={recovery} className="btn btn--moon" onClick={() => {
+              if (collection === 'all' && failed) { dispatch({ type: 'photos.reset' }); dispatch({ type: 'photos.open', collection }); setRegion('grid'); }
+              else applyCollection('all');
+            }}>{collection === 'all' && failed ? '重试' : '查看全部照片'}</RemoteButton>
+            <RemoteButton className="btn btn--ghost-ink" data-return-focus="photos-status" onClick={() => dispatch({ type: 'router.navigate', sourceFocus: 'photos-status', route: { name: 'settings' } })}>查看状态</RemoteButton>
+          </div>
+        </div> : readyForRoute && list.items.length > 0 ? <PhotoGrid items={list.items} sections={sections} focusIndex={list.focusIndex} active={region === 'grid'}
+          columns={columns} options={options} onDirection={onDirection} onActivate={onActivate} onFocusIndex={onFocusIndex} />
+          : <div className="library__empty"><p className="library__note" role="status">正在加载照片…</p></div>}
+      </section>
     </div>
-    {list.returnNotice ? <p className="photos__note" role="status">{list.returnNotice}</p> : null}
-    {collection === 'captured_today' && readyForRoute && unknownCount > 0 ? <p className="photos__note" role="status">{unknownCount} 张照片缺少拍摄时间，未列入此合集。</p> : null}
-    {hasRecovery ? <div className="photos__emptystate">
-      <p className="photos__empty" role="status">{failed ? '暂时无法加载此合集。' : EMPTY_TEXT[empty]}</p>
-      <div className="photos__recovery" onKeyDown={event => {
-        // Each action owns its activation. Horizontal movement stays within recovery.
-        const key = mapRemoteKey(event);
-        if (key === 'up') { event.preventDefault(); event.stopPropagation(); focusTab(); }
-        if (key === 'down') { event.preventDefault(); event.stopPropagation(); setRegion('nav'); focusPrimaryNav('photos'); }
-        if (key === 'left' || key === 'right') {
-          event.preventDefault(); event.stopPropagation();
-          const buttons = Array.from(event.currentTarget.querySelectorAll('button'));
-          buttons[Math.max(0, Math.min(buttons.length - 1, buttons.indexOf(event.target as HTMLButtonElement) + (key === 'left' ? -1 : 1)))]?.focus();
-        }
-      }}>
-        <RemoteButton ref={recovery} className="button" onClick={() => {
-          if (collection === 'all' && failed) { dispatch({ type: 'photos.reset' }); dispatch({ type: 'photos.open', collection }); setRegion('grid'); }
-          else applyCollection('all');
-        }}>{collection === 'all' && failed ? '重试' : '查看全部照片'}</RemoteButton>
-        <RemoteButton className="button" data-return-focus="photos-status" onClick={() => dispatch({ type: 'router.navigate', sourceFocus: 'photos-status', route: { name: 'settings' } })}>查看状态</RemoteButton>
-      </div>
-    </div> : readyForRoute && list.items.length > 0 ? <PhotoGrid items={list.items} focusIndex={list.focusIndex} active={region === 'grid'}
-      columns={columns} options={clockOptions(state.home)} onDirection={onDirection} onActivate={onActivate} onFocusIndex={onFocusIndex} />
-      : <div className="photos__emptystate"><p className="photos__note" role="status">正在加载照片…</p></div>}
-    <PrimaryNav onUp={focusTab} />
+    <footer className="hints">
+      <span>方向键 选择</span><span>OK 打开</span><span>← 回到分类</span><span className="hints__end">返回 回到上一页</span>
+    </footer>
   </div>;
 }

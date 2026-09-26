@@ -71,6 +71,8 @@ function stubApi(items: PhotoItem[]): void {
           item: items.find(item => input.split('?')[0]?.endsWith(`/${item.id}`)) ?? items[0],
           neighbors: { previous_id: null, next_id: items[1]?.id ?? null },
         };
+      } else if (input.startsWith('/api/v1/videos')) {
+        body = { items: [], next_cursor: null };
       } else if (input.startsWith('/api/v1/media/')) {
         return Promise.resolve(new Response('', { status: 200 }));
       }
@@ -155,7 +157,7 @@ describe('collection browser (W-202)', () => {
     await waitFor(() => expect(screen.getByText(/暂无首次导入后新增的可展示照片/)).toBeDefined());
     expect(screen.getByRole('button', { name: '查看全部照片' })).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: '查看状态' }));
-    await waitFor(() => expect(screen.getByRole('heading', { name: '设置与状态' })).toBeDefined());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: /设置/ })).toBeDefined());
   });
   it('focuses tabs without applying, then Enter applies once and focuses the first loaded photo', async () => {
     stubApi(Array.from({ length: 8 }, (_, i) => photo(i)));
@@ -163,7 +165,7 @@ describe('collection browser (W-202)', () => {
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('tab', { name: '最近新增' })));
     const recent = screen.getByRole('tab', { name: '最近新增' });
     expect(document.activeElement).toBe(recent);
-    fireEvent.keyDown(recent, { key: 'ArrowRight' });
+    fireEvent.keyDown(recent, { key: 'ArrowDown' });
     const today = screen.getByRole('tab', { name: '今天拍摄' });
     expect(document.activeElement).toBe(today);
     expect(recent.getAttribute('aria-selected')).toBe('true');
@@ -171,8 +173,9 @@ describe('collection browser (W-202)', () => {
     fireEvent.keyDown(today, { key: 'OK' });
     await waitFor(() => expect(today.getAttribute('aria-selected')).toBe('true'));
     await waitFor(() => expect(document.activeElement).toBe(document.querySelector('.thumb')));
-    fireEvent.keyDown(document.activeElement!, { key: 'ArrowUp' });
-    fireEvent.keyDown(today, { key: 'ArrowRight' });
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' });
+    expect(document.activeElement).toBe(today);
+    fireEvent.keyDown(today, { key: 'ArrowDown' });
     expect(screen.getByRole('tab', { name: '随心看看' })).toBe(document.activeElement);
     expect(today.getAttribute('aria-selected')).toBe('true');
   });
@@ -183,9 +186,9 @@ describe('collection browser (W-202)', () => {
     await waitFor(() => expect(document.querySelector('.thumb')).not.toBeNull());
     const settings = screen.getByRole('button', { name: '设置' });
     settings.focus();
-    expect(screen.queryByRole('heading', { name: '设置与状态' })).toBeNull();
+    expect(screen.queryByRole('heading', { level: 1, name: /设置/ })).toBeNull();
     fireEvent.keyDown(settings, { key: 'Select' });
-    await waitFor(() => expect(screen.getByRole('heading', { name: '设置与状态' })).toBeDefined());
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: /设置/ })).toBeDefined());
     fireEvent.click(screen.getByRole('tab', { name: '关于 Atrium' }));
     expect(screen.getByText('客户端版本')).toBeDefined();
     expect(screen.getByText('0.0.0+test')).toBeDefined();
@@ -202,7 +205,7 @@ describe('collection browser (W-202)', () => {
       ? new Promise<Response>(resolve => { finish = resolve; }) : originalFetch(input)));
     renderAt({ name: 'photos', collection: 'recent' });
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('tab', { name: '最近新增' })));
-    fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
     fireEvent.keyDown(document.activeElement!, { key: 'Enter' });
     await waitFor(() => expect(finish).toBeDefined());
     expect(document.querySelector('.thumb')).toBeNull();
@@ -213,11 +216,12 @@ describe('collection browser (W-202)', () => {
     expect(document.querySelector('.thumb img')?.getAttribute('src')).toBe('/t/ph_7');
   });
 
-  it('enters the selected collection tab from primary navigation and waits for confirmation', async () => {
+  it('enters a collection from the shared rail on the video page and waits for confirmation', async () => {
     stubApi([photo(0)]);
-    renderAt({ name: 'dashboard' });
-    await waitFor(() => expect(screen.getByRole('button', { name: '照片' })).toBeDefined());
-    fireEvent.click(screen.getByRole('button', { name: '照片' }));
+    renderAt({ name: 'videos' });
+    const rail = await screen.findByRole('tab', { name: '视频' });
+    expect(rail.getAttribute('aria-selected')).toBe('true');
+    fireEvent.click(screen.getByRole('tab', { name: '最近新增' }));
     const recent = await screen.findByRole('tab', { name: '最近新增' });
     expect(document.activeElement).toBe(recent);
     await waitFor(() => expect(document.querySelector('.thumb')).not.toBeNull());
@@ -275,11 +279,13 @@ describe('collection browser (W-202)', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: '查看状态' }));
     fireEvent.keyDown(document.activeElement!, left);
     expect(document.activeElement).toBe(all);
-    fireEvent.keyDown(all, up);
+    fireEvent.keyDown(all, left);
     expect(document.activeElement).toBe(tab);
     fireEvent.keyDown(tab, { key: 'Enter' });
     fireEvent.keyDown(document.activeElement!, down);
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: '照片' }));
+    expect(document.activeElement).toBe(all);
+    fireEvent.keyDown(all, up);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: '影像' }));
   });
 
 });
@@ -322,7 +328,7 @@ it('uses the responsive column count for both the grid and short-tail navigation
   fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
   expect(document.activeElement).toBe(document.querySelectorAll('.thumb')[4]);
   fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
-  expect(document.activeElement).toBe(screen.getByRole('button', { name: '照片' }));
+  expect(document.activeElement).toBe(document.querySelectorAll('.thumb')[4]);
   vi.stubGlobal('innerWidth', 1920);
   fireEvent(window, new Event('resize'));
   expect((document.querySelector('.screen--photos') as HTMLElement).style.getPropertyValue('--photo-columns')).toBe('4');
@@ -371,4 +377,55 @@ it('retains a rendered image on failure and only skips on an explicit direction'
   expect(document.querySelector('.viewer__image--retained')).toBeNull();
   fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' });
   await waitFor(() => expect(document.querySelector('.viewer__image:not(.viewer__image--retained)')?.getAttribute('src')).toContain('ph_0'));
+});
+
+it('groups the capture-ordered collection by month and leaves the grid through its edges', async () => {
+  const items = [1, 2, 3, 4, 5].map(i => ({ ...photo(i), captured_at: i <= 2 ? `2026-09-0${i}T10:00:00+08:00` : `2026-08-2${i}T10:00:00+08:00` }));
+  stubApi([...items, photo(0)]);
+  renderAt({ name: 'photos', collection: 'all' });
+  await waitFor(() => expect(document.querySelectorAll('.thumb')).toHaveLength(6));
+  expect(Array.from(document.querySelectorAll('.media-grid__month')).map(el => el.textContent)).toEqual(['2026年9月', '2026年8月', '拍摄时间未知']);
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+  const thumbs = () => document.querySelectorAll<HTMLElement>('.thumb');
+  await waitFor(() => expect(document.activeElement).toBe(thumbs()[0]));
+  // Down from September's second tile enters August at the same column.
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+  await waitFor(() => expect(document.activeElement).toBe(thumbs()[3]));
+  // Down again crosses into the one-photo section and clamps to it.
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+  await waitFor(() => expect(document.activeElement).toBe(thumbs()[5]));
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' });
+  expect(document.activeElement).toBe(screen.getByRole('tab', { name: '全部照片' }));
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+  await waitFor(() => expect(document.activeElement).toBe(thumbs()[5]));
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowUp' });
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowUp' });
+  await waitFor(() => expect(document.activeElement).toBe(thumbs()[0]));
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowUp' });
+  const media = screen.getByRole('button', { name: '影像' });
+  expect(document.activeElement).toBe(media);
+  expect(media.getAttribute('aria-current')).toBe('page');
+  fireEvent.keyDown(media, { key: 'ArrowDown' });
+  expect(document.activeElement).toBe(screen.getByRole('tab', { name: '全部照片' }));
+});
+
+it('keeps recent and random ungrouped and reaches the top navigation from the first rail entry', async () => {
+  stubApi(Array.from({ length: 3 }, (_, i) => photo(i)));
+  renderAt({ name: 'photos', collection: 'recent' });
+  await waitFor(() => expect(document.querySelectorAll('.thumb')).toHaveLength(3));
+  expect(document.querySelector('.media-grid__month')).toBeNull();
+  fireEvent.keyDown(document.activeElement!, { key: 'ArrowUp' });
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: '影像' }));
+});
+
+it('opens videos from the rail without adding a return layer', async () => {
+  stubApi([photo(0)]);
+  renderAt({ name: 'photos', collection: 'recent' });
+  const videos = await screen.findByRole('tab', { name: '视频' });
+  fireEvent.click(videos);
+  await waitFor(() => expect(screen.getByRole('tab', { name: '视频' }).getAttribute('aria-selected')).toBe('true'));
+  expect(screen.getByRole('region', { name: '视频列表' })).toBeDefined();
+  fireEvent.keyDown(document.body, { key: 'Escape' });
+  await waitFor(() => expect(document.querySelector('.library')).toBeNull());
 });

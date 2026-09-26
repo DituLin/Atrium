@@ -1,5 +1,4 @@
 import { VideosScreen } from './screens/VideosScreen';
-import { CalendarScreen } from './screens/CalendarScreen';
 import { BriefingScreen } from './screens/BriefingScreen';
 /**
  * Screen switch plus the global error boundary. A crash anywhere below lands
@@ -27,8 +26,6 @@ export function CurrentScreen(): ReactElement {
       return <PairScreen />;
     case 'connect':
       return <ConnectScreen />;
-    case 'calendar':
-      return <CalendarScreen />;
     case 'briefing':
       return <BriefingScreen />;
     case 'house':
@@ -50,15 +47,10 @@ export function CurrentScreen(): ReactElement {
 
 function GlobalFallback(props: { error: Error; reset: () => void }): ReactElement {
   return (
-    <div className="screen screen--connect">
-      <h1 className="connect__title">Atrium</h1>
-      <p className="connect__lead" role="status">
-        <span aria-hidden="true">■</span> The screen stopped rendering
-      </p>
-      <p className="connect__detail">{props.error.message}</p>
-      <button type="button" className="button" onClick={props.reset}>
-        Retry
-      </button>
+    <div className="page surface--ink app-fallback">
+      <p className="app-fallback__lead" role="status"><span className="dot dot--warn" /> 画面暂时无法显示</p>
+      <p className="app-fallback__detail muted">{props.error.message}</p>
+      <button type="button" className="btn btn--moon" onClick={props.reset}>重试</button>
     </div>
   );
 }

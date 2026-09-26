@@ -2,15 +2,21 @@ import { useEffect, useRef, useState } from 'react';
 import { RemoteButton } from '../ui/RemoteButton';
 import { mapRemoteKey } from '../ui/keys';
 import type { RemoteKey } from '../ui/keys';
-import './video-player.css';
 
 export interface VideoPlayerProps {
   id: string;
   revision: number;
   onBack: () => void;
+  /** Header and info line; each is shown only when the caller knows it. */
+  title?: string;
+  subtitle?: string;
+  info?: string;
 }
 type Phase = 'preview' | 'loading' | 'playing' | 'paused' | 'ended' | 'error' | 'unsupported';
 interface Session { toggle: () => void; stop: () => void; release: () => void }
+const PLAY = 'M8 5v14l11-7z';
+const PAUSE = 'M7 5h4v14H7z M13 5h4v14h-4z';
+const REPLAY = 'M12 5V2L7 6l5 4V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z';
 const time = (seconds: number) => {
   const n = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0;
   return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, '0')}`;
@@ -20,7 +26,7 @@ const time = (seconds: number) => {
 export function VideoPlayer(props: VideoPlayerProps) {
   return <PlayerSession key={`${props.id}:${props.revision}`} {...props} />;
 }
-function PlayerSession({ id, onBack }: VideoPlayerProps) {
+function PlayerSession({ id, onBack, title, subtitle, info }: VideoPlayerProps) {
   const media = useRef<HTMLVideoElement>(null);
   const playButton = useRef<HTMLButtonElement>(null);
   const backButton = useRef<HTMLButtonElement>(null);
@@ -142,7 +148,9 @@ function PlayerSession({ id, onBack }: VideoPlayerProps) {
     preview: '按确认，展开这一刻', loading: '正在读取视频…', playing: '', paused: '已暂停',
     ended: '这一刻，已放映完毕', error: '视频读取失败，请重试', unsupported: '当前设备无法播放此视频',
   }[phase];
-  return <section className="video-player" aria-label="视频预览" onKeyDown={event => {
+  const known = Number.isFinite(duration) && duration > 0;
+  const percent = known ? Math.min(100, Math.max(0, (position / duration) * 100)) : 0;
+  return <section className="video-player surface--ink" aria-label="视频预览" onKeyDown={event => {
     if (mapRemoteKey(event) === 'back') {
       event.preventDefault(); event.stopPropagation();
       if (!event.repeat) back();
@@ -152,18 +160,35 @@ function PlayerSession({ id, onBack }: VideoPlayerProps) {
       onLoadedMetadata={() => setDuration(media.current!.duration)}
       onDurationChange={() => setDuration(media.current!.duration)}
       onTimeUpdate={() => setPosition(media.current!.currentTime)} />
-    <div className="video-player__caption"><span>ATRIUM · 家庭影像</span><h1>光阴有声</h1></div>
-    {message && <p className="video-player__status" role="status">{message}</p>}
+    <header className="video-player__header">
+      <div className="video-player__heading">
+        <h1 className="video-player__title serif">{title ?? '家庭影像'}</h1>
+        {subtitle ? <p className="video-player__subtitle">{subtitle}</p> : null}
+      </div>
+      <p className="video-player__volume">音量请用遥控器调节</p>
+    </header>
+    {message && <p className="video-player__status serif" role="status">{message}</p>}
+    <div className="video-player__scrim" aria-hidden="true" />
     <div className="video-player__controls">
       <div className="video-player__timeline">
-        <span>{time(position)}</span>
-        <progress aria-label="播放进度" max={Number.isFinite(duration) && duration > 0 ? duration : 1} value={position} />
-        <span>{time(duration)}</span>
+        <span className="video-player__time">{time(position)}</span>
+        <div className="video-player__track" role="progressbar" aria-label="播放进度"
+          aria-valuemin={0} aria-valuemax={known ? Math.floor(duration) : 0} aria-valuenow={Math.floor(position)}>
+          <span className="video-player__played" style={{ width: `${percent}%` }} />
+          <span className="video-player__thumb" style={{ left: `${percent}%` }} />
+        </div>
+        <span className="video-player__time video-player__time--end">{time(duration)}</span>
       </div>
       <div className="video-player__actions">
-        <RemoteButton ref={playButton} disabled={!valid} onClick={() => session.current?.toggle()} onDirection={direction}>{label}</RemoteButton>
-        <span className="video-player__hint">左右跳转 10 秒 · 上下选择</span>
-        <RemoteButton ref={backButton} onClick={back} onDirection={direction}>返回视频</RemoteButton>
+        <p className="video-player__hint">← → 跳转 10 秒 · OK {label} · ↓ 返回按钮</p>
+        <RemoteButton ref={playButton} className="video-player__play" aria-label={label} disabled={!valid}
+          onClick={() => session.current?.toggle()} onDirection={direction}>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={active ? PAUSE : phase === 'ended' ? REPLAY : PLAY} /></svg>
+        </RemoteButton>
+        <div className="video-player__end">
+          {info ? <span className="video-player__info">{info}</span> : null}
+          <RemoteButton ref={backButton} className="btn btn--ghost-ink" onClick={back} onDirection={direction}>返回视频</RemoteButton>
+        </div>
       </div>
     </div>
   </section>;

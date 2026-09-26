@@ -32,6 +32,20 @@
   --photo-line: #717c74;
   --photo-focus: #a7c6b9;
 
+  /* 墨夜 (ink) surfaces for photos, video and the home screen. */
+  --ink: #121714;
+  --ink-deep: #0e1210;
+  --ink-raised: #1b221e;
+  --ink-line: rgba(238, 233, 222, 0.18);
+  --moon: #eee9de;
+  --moon-dim: #c9d0c8;
+  --moon-muted: #a9b2aa;
+  --celadon-light: #a9cdbe;
+  --ochre-light: #d99a7e;
+  /* 纸白 (paper) hairline and raised surface used by information pages. */
+  --hairline: #cfc6b6;
+  --silk: #e9e2d5;
+
   --font-title: 'Atrium Noto Serif SC', 'Songti SC', 'STSong', serif;
   --font-body: 'Atrium Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
 
@@ -45,6 +59,8 @@
   --safe-margin: calc(72 * var(--design-pixel));
   --focus-width: calc(5 * var(--design-pixel));
   --focus-offset: calc(7 * var(--design-pixel));
+  /* Short alias for layout arithmetic: calc(96 * var(--u)) = 96 design pixels. */
+  --u: var(--design-pixel);
 
   /* Existing presentation selectors consume aliases during the staged rollout. */
   --bg: var(--paper);

@@ -117,7 +117,7 @@ export function createRefetchers(ports: RefetchPorts): Refetchers {
       await ports.videos.load(target); return;
     }
     if (target.name === 'briefing') { await overview(); return; }
-    if (target.name === 'house' || target.name === 'calendar') { await house(); return; }
+    if (target.name === 'house') { await house(); return; }
     const jobs: Array<Promise<void>> = [home()];
     switch (target.name) {
       case 'dashboard':

@@ -149,3 +149,18 @@ describe('VideoPlayer explicit playback lifecycle', () => {
     expect(screen.getByRole('button', { name: '暂停' })).toBeTruthy();
   });
 });
+
+it('draws progress from the media clock and falls back to a neutral header', () => {
+  const { video } = mount();
+  expect(screen.getByRole('heading', { name: '家庭影像' })).toBeTruthy();
+  Object.defineProperty(video, 'duration', { value: 200, configurable: true });
+  fireEvent.loadedMetadata(video);
+  video.currentTime = 50;
+  fireEvent.timeUpdate(video);
+  const bar = screen.getByRole('progressbar', { name: '播放进度' });
+  expect(bar.getAttribute('aria-valuenow')).toBe('50');
+  expect(bar.getAttribute('aria-valuemax')).toBe('200');
+  expect((bar.querySelector('.video-player__thumb') as HTMLElement).style.left).toBe('25%');
+  expect(screen.getByText('0:50')).toBeTruthy();
+  expect(screen.getByText('3:20')).toBeTruthy();
+});

@@ -1,0 +1,137 @@
+/*
+ * Shared primitives for the Song redesign (docs: Atrium TV 设计 canvas).
+ *
+ * Chrome 66 (TCL TV, OnePlus WebView) baseline:
+ *   - no `gap` on flex containers  -> spacing via margins or CSS grid
+ *   - no min() / max() / clamp()    -> sizes in calc(N * var(--u))
+ *   - no `inset`                    -> top/right/bottom/left
+ * One design unit (--u) is one pixel of the 1920×1080 composition.
+ */
+
+.serif { font-family: var(--font-title); font-weight: 400; }
+
+/* ------------------------------------------------------------ surfaces */
+
+.surface--ink { background: var(--ink); color: var(--moon); }
+.surface--paper { background: var(--paper); color: var(--text); }
+
+/* ------------------------------------------------------------ paper page */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: calc(64 * var(--u)) calc(96 * var(--u)) calc(56 * var(--u));
+  background: var(--paper);
+  color: var(--text);
+  overflow: hidden;
+}
+.page__heading { display: flex; align-items: baseline; margin-top: calc(52 * var(--u)); }
+.page__heading > * + * { margin-left: calc(28 * var(--u)); }
+.page__title { margin: 0; font-family: var(--font-title); font-weight: 400; font-size: calc(88 * var(--u)); line-height: 1; }
+.page__subtitle { font-family: var(--font-title); font-size: calc(40 * var(--u)); color: var(--muted); }
+.page__aside { margin-left: auto !important; font-size: calc(26 * var(--u)); color: var(--muted); }
+.page__body { flex: 1 1 auto; min-height: 0; margin-top: calc(44 * var(--u)); }
+.page__section-title { margin: 0 0 calc(8 * var(--u)); font-family: var(--font-title); font-weight: 400; font-size: calc(40 * var(--u)); }
+
+/* ------------------------------------------------------------ top navigation */
+
+.topnav { display: flex; align-items: center; height: calc(56 * var(--u)); flex: 0 0 auto; }
+.topnav__brand { font-family: var(--font-title); font-size: calc(26 * var(--u)); letter-spacing: 0.32em; margin-right: calc(56 * var(--u)); }
+.topnav__items { display: flex; align-items: center; }
+.topnav__item {
+  appearance: none;
+  border: 0;
+  border-bottom: calc(3 * var(--u)) solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: calc(30 * var(--u));
+  line-height: 1.2;
+  padding: calc(6 * var(--u)) calc(6 * var(--u)) calc(8 * var(--u));
+  margin-right: calc(38 * var(--u));
+  border-radius: 0;
+  cursor: pointer;
+}
+.topnav__item[aria-current='page'] { color: var(--text); border-bottom-color: var(--celadon); }
+.topnav__item:focus {
+  outline: var(--focus-width) solid var(--celadon);
+  outline-offset: var(--focus-offset);
+  color: var(--text);
+  background: var(--silk);
+}
+.topnav__clock { margin-left: auto; font-family: var(--font-title); font-size: calc(40 * var(--u)); }
+
+/* ------------------------------------------------------------ footer hints */
+
+.hints { display: flex; align-items: center; flex: 0 0 auto; margin-top: calc(28 * var(--u)); font-size: calc(26 * var(--u)); color: var(--muted); }
+.hints > * + * { margin-left: calc(40 * var(--u)); }
+.hints__end { margin-left: auto !important; }
+.surface--ink .hints, .hints--ink { color: var(--moon-muted); }
+
+/* ------------------------------------------------------------ buttons */
+
+.btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(64 * var(--u));
+  padding: 0 calc(28 * var(--u));
+  border: 1px solid var(--hairline);
+  border-radius: calc(6 * var(--u));
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: calc(28 * var(--u));
+  line-height: 1;
+  cursor: pointer;
+}
+.btn--primary { background: var(--celadon); border-color: var(--celadon); color: var(--paper); }
+.btn--moon { background: var(--moon); border-color: var(--moon); color: var(--ink-raised); }
+.btn--ghost-ink { border-color: rgba(238, 233, 222, 0.35); color: var(--moon); }
+.btn:focus { outline: var(--focus-width) solid var(--celadon); outline-offset: var(--focus-offset); }
+.surface--ink .btn:focus, .btn--moon:focus, .btn--ghost-ink:focus { outline-color: var(--celadon-light); }
+.btn[disabled] { opacity: 0.45; }
+
+/* ------------------------------------------------------------ status dots */
+
+.dot { display: inline-block; flex: 0 0 auto; width: calc(12 * var(--u)); height: calc(12 * var(--u)); border-radius: 50%; }
+.dot--ok { background: var(--celadon); }
+.surface--ink .dot--ok { background: var(--celadon-light); }
+.dot--warn { background: var(--warning); }
+.surface--ink .dot--warn { background: var(--ochre-light); }
+.dot--none { border: calc(2 * var(--u)) solid #9aa39b; }
+
+/* ------------------------------------------------------------ rows and cards */
+
+.row-list { display: flex; flex-direction: column; }
+.row { display: flex; align-items: center; padding: calc(22 * var(--u)) 0; border-bottom: 1px solid var(--hairline); font-size: calc(30 * var(--u)); }
+.row > * + * { margin-left: calc(18 * var(--u)); }
+.row__value { margin-left: auto !important; font-size: calc(28 * var(--u)); }
+.row__value--muted { color: var(--muted); }
+
+.card { padding: calc(36 * var(--u)) calc(40 * var(--u)); background: var(--silk); border: 1px solid var(--hairline); border-radius: calc(6 * var(--u)); }
+.card--warn { background: #efe3d6; border-color: #d8b9a6; }
+.card:focus, .card.is-focused { outline: var(--focus-width) solid var(--celadon); outline-offset: calc(8 * var(--u)); }
+
+.eyebrow { font-size: calc(26 * var(--u)); letter-spacing: 0.12em; color: var(--celadon); }
+.surface--ink .eyebrow { color: var(--celadon-light); }
+.muted { color: var(--muted); }
+.surface--ink .muted { color: var(--moon-muted); }
+
+/* Motion budget from the spec board; users who ask for less get none. */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* Top navigation on ink pages (影像). */
+.surface--ink .topnav__item { color: var(--moon-muted); }
+.surface--ink .topnav__item[aria-current='page'] { color: var(--moon); border-bottom-color: var(--celadon-light); }
+.surface--ink .topnav__item:focus { color: var(--ink-raised); background: var(--moon); outline-color: var(--celadon-light); }
+
+/* Global crash fallback (App.tsx): never a white page. */
+.app-fallback { justify-content: center; align-items: flex-start; background: var(--ink); color: var(--moon); }
+.app-fallback__lead { display: flex; align-items: center; margin: 0; font-family: var(--font-title); font-size: calc(48 * var(--u)); }
+.app-fallback__lead .dot { margin-right: calc(18 * var(--u)); }
+.app-fallback__detail { margin: calc(20 * var(--u)) 0 calc(40 * var(--u)); font-size: calc(26 * var(--u)); }

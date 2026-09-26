@@ -146,7 +146,7 @@ it('does not replace newer local navigation with a late missing-video result', a
  vi.spyOn(h.api, 'getVideo').mockImplementation(() => new Promise((_resolve, reject) => { finish = () => reject(new ApiError(404, 'not_found', 'gone')); }));
  const sync = syncSnapshot({ api: h.api, dispatch: h.dispatch, getState: h.get });
  await vi.waitFor(() => expect(h.api.getVideo).toHaveBeenCalled());
- h.dispatch({ type: 'router.navigate', route: { name: 'calendar' } });
+ h.dispatch({ type: 'router.navigate', route: { name: 'house' } });
  finish(); await sync;
- expect(h.get().router.route).toEqual({ name: 'calendar' });
+ expect(h.get().router.route).toEqual({ name: 'house' });
 });

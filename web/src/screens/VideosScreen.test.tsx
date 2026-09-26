@@ -115,3 +115,28 @@ it('keeps the same playing media element when a remote detail refresh is unchang
  expect(view.container.querySelector('video')).toBe(video);
  expect(screen.getByRole('button',{name:'暂停'})).toBeTruthy();
 });
+it('shares the 影像 rail: Left from the first column reaches it, Right returns, Up leaves for the top navigation', async () => {
+ render(<Harness />);
+ const first = await screen.findByRole('button', { name: '视频 1' });
+ await waitFor(() => expect(document.activeElement).toBe(first));
+ const rail = screen.getByRole('tab', { name: '视频' });
+ expect(rail.getAttribute('aria-selected')).toBe('true');
+ fireEvent.keyDown(first, { key: 'ArrowLeft' });
+ expect(document.activeElement).toBe(rail);
+ fireEvent.keyDown(rail, { key: 'ArrowRight' });
+ expect(document.activeElement).toBe(first);
+ fireEvent.keyDown(first, { key: 'ArrowUp' });
+ expect(document.activeElement).toBe(screen.getByRole('button', { name: '刷新' }));
+ fireEvent.keyDown(document.activeElement!, { key: 'ArrowUp' });
+ expect(document.activeElement).toBe(screen.getByRole('button', { name: '影像' }));
+ fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+ expect(document.activeElement).toBe(rail);
+});
+it('titles the player from the list position and the metadata the API returned', async () => {
+ getVideo.mockImplementation(async (id: string) => ({ item: { ...item(id), metadata: { container: 'mp4', video_codec: 'h264', audio_codec: 'aac', width: 1920, height: 1080, duration_ms: 72000, rotation: 0 } } }));
+ render(<Harness />);
+ fireEvent.click(await screen.findByRole('button', { name: '视频 2' }));
+ expect(await screen.findByRole('heading', { name: '影像 02' })).toBeTruthy();
+ expect(screen.getByText('视频 · 第 2 / 2 段')).toBeTruthy();
+ expect(screen.getByText('1080p · H.264')).toBeTruthy();
+});
