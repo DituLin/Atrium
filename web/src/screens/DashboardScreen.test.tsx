@@ -46,6 +46,18 @@ describe('home remote navigation', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'router.navigate', sourceFocus: 'home-media', route: { name: 'photos', collection: 'recent' } });
   });
 
+  it('recovers when the engine leaves focus on the body: a direction opens the menu, OK opens the photo', () => {
+    const dispatch = setup();
+    (document.activeElement as HTMLElement).blur();
+    expect(document.activeElement).toBe(document.body);
+    fireEvent.keyDown(window, { key: 'ArrowDown', keyCode: 40 });
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: /^影像/ }));
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowUp' });
+    (document.activeElement as HTMLElement).blur();
+    fireEvent.keyDown(window, { key: 'Enter', keyCode: 13 });
+    expect(dispatch).toHaveBeenCalledWith({ type: 'router.navigate', route: { name: 'photo', photoId: 'actually_visible' } });
+  });
+
   it('reopens the menu on the card a page was entered from', () => {
     setup('home-today');
     expect(screen.getByRole('navigation', { name: '主菜单' })).toBeDefined();

@@ -12,6 +12,7 @@ import { showsReconnectingBanner } from '../app/connection';
 import { useApp } from '../app/context';
 import { clockOptions, nasWidget, photoWidget } from '../app/homeSelect';
 import { DEFAULT_COLLECTION } from '../app/router';
+import { useRemoteKeys } from '../app/useTick';
 import type { AppRoute } from '../app/router';
 import { formatClock, isTimeUnverified, serverNow } from '../core/clock';
 import { WidgetBoundary } from '../ui/ErrorBoundary';
@@ -38,6 +39,21 @@ export function DashboardScreen(): ReactElement {
     setMenu(current => ({ ...current, open: false }));
     document.querySelector<HTMLElement>('[data-home-hero]')?.focus();
   }, []);
+
+  // TV WebViews may leave focus on <body> after load or after the app returns
+  // to the foreground. A remote key that no element consumed then lands here:
+  // give it to the photo exactly as if the photo had been focused.
+  useRemoteKeys(useCallback((key) => {
+    if (key === 'back') return false;
+    const photo = document.querySelector<HTMLElement>('[data-home-hero]');
+    if (!photo) return false;
+    const screen = photo.closest('.screen-home');
+    if (screen && document.activeElement && screen.contains(document.activeElement) && document.activeElement !== photo) return false;
+    photo.focus();
+    if (key === 'enter') photo.click();
+    else setMenu({ open: true, index: 1 });
+    return true;
+  }, []));
 
   useEffect(() => {
     if (!hint || menu.open) return;
