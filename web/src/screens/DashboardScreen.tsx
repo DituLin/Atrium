@@ -66,7 +66,7 @@ export function DashboardScreen(): ReactElement {
   return (
     <div className={`screen-home surface--ink${menu.open ? ' screen-home--menu' : ''}`}>
       <WidgetBoundary name="photo">
-        <PhotoPane payload={photo} interactive
+        <PhotoPane payload={photo} interactive autoFocus={!menu.open}
           onFocus={() => { if (menu.open) setMenu(current => ({ ...current, open: false })); setHint(true); hero.current = document.querySelector<HTMLElement>('[data-home-hero]'); }}
           onDirection={() => setMenu({ open: true, index: 1 })} />
       </WidgetBoundary>

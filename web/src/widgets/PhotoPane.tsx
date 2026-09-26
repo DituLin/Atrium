@@ -29,6 +29,8 @@ export interface PhotoPaneProps {
   onDirection?: (key: RemoteKey) => void;
   /** Fired when the pane receives focus (the menu closes). */
   onFocus?: () => void;
+  /** Take focus on mount; false while home reopens its menu. */
+  autoFocus?: boolean;
 }
 
 function indexLabel(payload: PhotoWidgetPayload): string | null {
@@ -36,9 +38,8 @@ function indexLabel(payload: PhotoWidgetPayload): string | null {
   if (index.state === 'baseline_import' || baseline.status === 'importing') {
     return `首次导入 · ${index.progress.indexed} / ${index.progress.seen} 项`;
   }
-  if (index.state === 'scanning') {
-    return `扫描中 · 已索引 ${index.progress.indexed} 项，${index.progress.pending_preview} 项预览待生成`;
-  }
+  // Routine minute-level rescans are not news on an ambient screen; pending
+  // previews are reported separately below when there is real work left.
   return null;
 }
 
@@ -49,7 +50,10 @@ function slideClass(image: DecodedImage, layer: 'in' | 'out'): string {
 export function PhotoPane(props: PhotoPaneProps): ReactElement {
   const { state, dispatch } = useApp();
   const pane = useRef<HTMLElement>(null);
-  useEffect(() => { if (props.interactive) pane.current?.focus(); }, [props.interactive]);
+  const autoFocus = props.autoFocus !== false;
+  // Mount-time only: later menu changes move focus themselves.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (props.interactive && autoFocus) pane.current?.focus(); }, [props.interactive]);
   const slideshow = useSlideshow();
   const { payload } = props;
   const progress = payload ? indexLabel(payload) : null;
