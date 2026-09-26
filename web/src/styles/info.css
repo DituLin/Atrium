@@ -27,13 +27,12 @@
 
 /* ------------------------------------------------------------ 今日 */
 
-.info-today__grid {
-  display: grid;
-  grid-template-columns: calc(640 * var(--u)) minmax(0, 1fr) calc(520 * var(--u));
-  grid-template-rows: minmax(0, 1fr);
-  grid-column-gap: calc(56 * var(--u));
-  margin-top: calc(48 * var(--u));
-}
+/* Flex columns (see 设置): Chrome 66 sizes a `minmax(0, 1fr)` grid row to its content. */
+.info-today__grid { display: flex; align-items: stretch; min-height: 0; margin-top: calc(48 * var(--u)); }
+.info-today__grid > * { min-width: 0; min-height: 0; }
+.info-today__grid > :nth-child(1) { flex: 0 0 calc(640 * var(--u)); }
+.info-today__grid > :nth-child(2) { flex: 1 1 auto; margin-left: calc(56 * var(--u)); }
+.info-today__grid > :nth-child(3) { flex: 0 0 calc(520 * var(--u)); margin-left: calc(56 * var(--u)); }
 .info-today__notices, .info-today__home { display: flex; flex-direction: column; min-height: 0; }
 /* Keep text clear of the focus ring without shifting it off the column edge. */
 .info-today__reading { margin: 0 calc(-16 * var(--u)); padding: 0 calc(16 * var(--u)); }
@@ -65,13 +64,10 @@
 /* ------------------------------------------------------------ 房屋 */
 
 .info-house__headline { font-size: calc(32 * var(--u)); }
-.info-house__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) calc(600 * var(--u));
-  grid-template-rows: minmax(0, 1fr);
-  grid-column-gap: calc(72 * var(--u));
-  margin-top: calc(48 * var(--u));
-}
+.info-house__grid { display: flex; align-items: stretch; min-height: 0; margin-top: calc(48 * var(--u)); }
+.info-house__grid > * { min-width: 0; min-height: 0; }
+.info-house__grid > :nth-child(1) { flex: 1 1 auto; }
+.info-house__grid > :nth-child(2) { flex: 0 0 calc(600 * var(--u)); margin-left: calc(72 * var(--u)); }
 .info-house__hub, .info-house__side { display: flex; flex-direction: column; min-height: 0; }
 .info-house__hub .page__section-title, .info-house__side .page__section-title { margin-bottom: calc(20 * var(--u)); }
 .info-house__reading { padding: calc(10 * var(--u)); margin: calc(-10 * var(--u)); }
@@ -95,14 +91,15 @@
 
 /* ------------------------------------------------------------ 设置 */
 
+/* Flex, not grid: Chrome 66 (TCL TV) sizes a `minmax(0, 1fr)` grid row to its
+   content here, pushing the panel and its button below the screen. */
 .info-settings__grid {
-  display: grid;
-  grid-template-columns: calc(420 * var(--u)) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr);
-  grid-column-gap: calc(72 * var(--u));
+  display: flex;
+  align-items: stretch;
+  min-height: 0;
   margin-top: calc(48 * var(--u));
 }
-.info-settings__tabs { display: flex; flex-direction: column; }
+.info-settings__tabs { display: flex; flex-direction: column; flex: 0 0 calc(420 * var(--u)); margin-right: calc(72 * var(--u)); }
 .info-settings__tabs > * + * { margin-top: calc(8 * var(--u)); }
 .info-settings__tab {
   appearance: none;
@@ -121,7 +118,7 @@
 }
 .info-settings__tab[aria-selected='true'] { background: var(--silk); color: var(--text); box-shadow: inset 0 0 0 1px var(--hairline); }
 .info-settings__tab:focus { outline: var(--focus-width) solid var(--celadon); outline-offset: var(--focus-offset); color: var(--text); }
-.info-settings__panel { display: flex; flex-direction: column; min-height: 0; }
+.info-settings__panel { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; min-height: 0; }
 .info-settings__body { padding: 0 calc(8 * var(--u)); }
 .info-settings__body .row { min-height: calc(120 * var(--u)); padding: calc(20 * var(--u)) calc(24 * var(--u)); font-size: calc(32 * var(--u)); }
 .info-settings__body .row__value { font-size: calc(32 * var(--u)); }
