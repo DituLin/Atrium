@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"crypto/rand"
 	"log/slog"
 	"net/http"
 	"time"
@@ -85,10 +86,12 @@ type Sessions interface {
 
 // API holds the routed handler and its dependencies.
 type API struct {
-	deps    Deps
-	mux     *http.ServeMux
-	handler http.Handler
-	limits  rateLimits
+	deps                 Deps
+	mux                  *http.ServeMux
+	handler              http.Handler
+	limits               rateLimits
+	integrationLimits    *auth.Limiter
+	integrationCursorKey []byte
 }
 
 // rateLimits holds the per-route limiters from design §6.8.
@@ -115,8 +118,10 @@ func New(deps Deps) *API {
 		})
 	}
 	a := &API{
-		deps: deps,
-		mux:  http.NewServeMux(),
+		deps:                 deps,
+		mux:                  http.NewServeMux(),
+		integrationCursorKey: []byte(rand.Text()),
+		integrationLimits:    auth.NewLimiter(auth.LimiterOptions{PerMinute: 600, Burst: 100, Now: deps.Now}),
 		limits: rateLimits{
 			pairStartIP:     auth.NewLimiter(auth.LimiterOptions{PerMinute: PairStartPerMinutePerIP, Now: deps.Now}),
 			pairStartGlobal: auth.NewLimiter(auth.LimiterOptions{PerMinute: PairStartPerMinuteTotal, Now: deps.Now}),
@@ -124,6 +129,8 @@ func New(deps Deps) *API {
 		},
 	}
 	a.routes()
+	a.integrationRoutes()
+	a.adminIntegrationRoutes()
 	a.handler = Chain(a.mux,
 		WithRequestID(),
 		WithLogger(deps.Logger),

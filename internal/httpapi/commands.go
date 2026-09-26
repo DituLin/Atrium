@@ -144,5 +144,8 @@ func actorOf(r *http.Request) string {
 	if id.AdminTokenID != "" {
 		return "admin:" + id.AdminTokenID
 	}
+	if id.Integration != nil {
+		return "integration:" + id.Integration.ID
+	}
 	return string(id.Scope)
 }

@@ -47,6 +47,45 @@ security:
   - adminBearer: []
 
 paths:
+  /api/v1/integrations/home:
+    $ref: "./integrations.openapi.json#/paths/~1api~1v1~1integrations~1home"
+
+  /api/v1/integrations/nas/status:
+    $ref: "./integrations.openapi.json#/paths/~1api~1v1~1integrations~1nas~1status"
+
+  /api/v1/integrations/screens:
+    $ref: "./integrations.openapi.json#/paths/~1api~1v1~1integrations~1screens"
+
+  /api/v1/integrations/screens/{id}:
+    $ref: "./integrations.openapi.json#/paths/~1api~1v1~1integrations~1screens~1{id}"
+
+  /api/v1/integrations/photos:
+    $ref: "./integrations.openapi.json#/paths/~1api~1v1~1integrations~1photos"
+
+  /api/v1/integrations/photos/{id}:
+    $ref: "./integrations.openapi.json#/paths/~1api~1v1~1integrations~1photos~1{id}"
+
+  /api/v1/integrations/commands/{id}:
+    $ref: "./integrations.openapi.json#/paths/~1api~1v1~1integrations~1commands~1{id}"
+
+  /api/v1/integrations/operations/{id}:
+    $ref: "./integrations.openapi.json#/paths/~1api~1v1~1integrations~1operations~1{id}"
+
+  /api/v1/integrations/screens/{id}/commands:
+    $ref: "./integrations.openapi.json#/paths/~1api~1v1~1integrations~1screens~1{id}~1commands"
+
+  /api/v1/admin/integrations:
+    $ref: "./integrations.openapi.json#/paths/~1api~1v1~1admin~1integrations"
+
+  /api/v1/admin/integrations/{id}/rotate:
+    $ref: "./integrations.openapi.json#/paths/~1api~1v1~1admin~1integrations~1{id}~1rotate"
+
+  /api/v1/admin/integrations/{id}/policy:
+    $ref: "./integrations.openapi.json#/paths/~1api~1v1~1admin~1integrations~1{id}~1policy"
+
+  /api/v1/admin/integrations/{id}:
+    $ref: "./integrations.openapi.json#/paths/~1api~1v1~1admin~1integrations~1{id}"
+
   /health/live:
     get:
       tags: [health]
@@ -1031,6 +1070,10 @@ paths:
 
 components:
   securitySchemes:
+    integrationBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: atr_int_ service credential
     screenBearer:
       type: http
       scheme: bearer
@@ -1126,6 +1169,8 @@ components:
       type: string
       description: Stable error identifiers from design §8.
       enum:
+        - idempotency_conflict
+        - operation_expired
         - unauthorized
         - forbidden
         - not_found

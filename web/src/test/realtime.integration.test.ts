@@ -178,7 +178,7 @@ describe('V0.3 realtime, end to end (W-301..W-304)', () => {
       neighbors: detail.neighbors ?? null,
     });
     expect(classifyMediaStatus(await screen.api.probeMedia(photoId))).toBe('ready');
-    screen.dispatch({ type: 'viewer.rendered', id: photoId });
+    screen.dispatch({ type: 'viewer.rendered', id: photoId, generation: screen.state().viewer.generation });
 
     const ack = await ackFor(issued.command_id);
     expect(ack.status).toBe('applied');

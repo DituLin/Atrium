@@ -1,0 +1,6 @@
+# Copy to a private local configuration. No Core admin config is read by home-mcp.
+core_url: https://localhost:8443
+ca_file: /absolute/path/to/household-ca.crt
+# A dedicated restricted service identity token; regular file, mode exactly 0600.
+token_file: /absolute/path/to/home-mcp.token
+request_timeout_ms: 5000

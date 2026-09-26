@@ -46,7 +46,7 @@ export const initialPhotoViewerState: PhotoViewerState = {
 };
 
 export type PhotoViewerAction =
-  | { type: 'viewer.open'; photoId: string; collection: PhotoCollection | null }
+  | { type: 'viewer.open'; photoId: string; collection: PhotoCollection | null; freshRender?: boolean }
   | {
       type: 'viewer.loaded';
       generation: number;
@@ -54,7 +54,7 @@ export type PhotoViewerAction =
       neighbors: PhotoNeighbors | null;
     }
   | { type: 'viewer.loadFailed'; generation: number; gone: boolean }
-  | { type: 'viewer.rendered'; id: string }
+  | { type: 'viewer.rendered'; id: string; generation: number }
   | { type: 'viewer.mediaProcessing'; id: string }
   | { type: 'viewer.mediaGone'; id: string }
   | { type: 'viewer.mediaUnavailable'; id: string }
@@ -66,7 +66,7 @@ export function photoViewerReducer(
 ): PhotoViewerState {
   switch (action.type) {
     case 'viewer.open':
-      if (state.photoId === action.photoId && state.status !== 'idle') return state;
+      if (!action.freshRender && state.photoId === action.photoId && state.status !== 'idle') return state;
       return {
         ...initialPhotoViewerState,
         photoId: action.photoId,
@@ -86,7 +86,7 @@ export function photoViewerReducer(
       if (action.generation !== state.generation) return state;
       return { ...state, status: action.gone ? 'missing' : 'error' };
     case 'viewer.rendered':
-      if (action.id !== state.photoId) return state;
+      if (action.id !== state.photoId || action.generation !== state.generation) return state;
       return { ...state, status: 'ready', renderedId: action.id };
     case 'viewer.mediaProcessing': {
       if (action.id !== state.photoId) return state;

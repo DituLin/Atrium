@@ -56,8 +56,8 @@ export function PhotoScreen(): ReactElement {
             className="viewer__image"
             src={api.mediaUrl(viewer.item.id, 'preview')}
             alt=""
-            key={viewer.item.id}
-            onLoad={() => dispatch({ type: 'viewer.rendered', id: viewer.item?.id ?? '' })}
+            key={`${viewer.generation}:${viewer.item.id}`}
+            onLoad={() => dispatch({ type: 'viewer.rendered', id: viewer.item?.id ?? '', generation: viewer.generation })}
           />
         ) : null}
         {isWaiting(viewer) ? (

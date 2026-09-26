@@ -1,6 +1,7 @@
 package httpapi_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -38,6 +39,19 @@ func TestEveryDocumentedRouteIsRegistered(t *testing.T) {
 	h := newHarness(t)
 	checked := 0
 	for path, ops := range doc.Paths {
+		if ref, ok := ops["$ref"].(string); ok {
+			file, pointer, found := strings.Cut(ref, "#/paths/")
+			require.True(t, found, "unsupported path reference %s", ref)
+			require.Equal(t, path, strings.NewReplacer("~1", "/", "~0", "~").Replace(pointer))
+			external, err := os.ReadFile(filepath.Join("..", "..", "docs", "api", file))
+			require.NoError(t, err)
+			var linked struct {
+				Paths map[string]map[string]any `json:"paths"`
+			}
+			require.NoError(t, json.Unmarshal(external, &linked))
+			ops = linked.Paths[path]
+			require.NotEmpty(t, ops, "missing referenced path %s", ref)
+		}
 		if unguardedPaths[path] {
 			continue
 		}

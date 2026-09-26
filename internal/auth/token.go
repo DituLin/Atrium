@@ -15,8 +15,9 @@ import (
 
 // Token prefixes (technical design §6.8).
 const (
-	ScreenPrefix = "atr_scr_"
-	AdminPrefix  = "atr_adm_"
+	IntegrationPrefix = "atr_int_"
+	ScreenPrefix      = "atr_scr_"
+	AdminPrefix       = "atr_adm_"
 	// SecretBytes is the entropy behind every token: 32 bytes rendered as 43
 	// base64url characters without padding.
 	SecretBytes = 32
@@ -32,13 +33,17 @@ type Scope string
 
 // Scopes.
 const (
-	ScopeNone   Scope = ""
-	ScopeScreen Scope = "screen"
-	ScopeAdmin  Scope = "admin"
+	ScopeIntegration Scope = "integration"
+	ScopeNone        Scope = ""
+	ScopeScreen      Scope = "screen"
+	ScopeAdmin       Scope = "admin"
 )
 
 // NewScreenToken returns a fresh screen credential.
 func NewScreenToken() (string, error) { return newToken(ScreenPrefix) }
+
+// NewIntegrationToken returns a fresh integration credential.
+func NewIntegrationToken() (string, error) { return newToken(IntegrationPrefix) }
 
 // NewAdminToken returns a fresh admin credential.
 func NewAdminToken() (string, error) { return newToken(AdminPrefix) }
@@ -61,6 +66,8 @@ func HashToken(token string) string {
 // ScopeOf reports the scope a well-formed token grants, or ScopeNone.
 func ScopeOf(token string) Scope {
 	switch {
+	case ValidToken(token, IntegrationPrefix):
+		return ScopeIntegration
 	case ValidToken(token, ScreenPrefix):
 		return ScopeScreen
 	case ValidToken(token, AdminPrefix):

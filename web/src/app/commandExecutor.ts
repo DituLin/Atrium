@@ -92,6 +92,11 @@ export function createCommandExecutor(ports: ExecutorPorts): CommandExecutor {
           const pending = pendingAckFor(decision);
           if (pending) {
             held = pending;
+            // Every show needs this image generation's load, even when a
+            // previous visit decoded the same photo. Old callbacks are ignored.
+            if (decision.route.name === 'photo') {
+              dispatch({ type: 'viewer.open', photoId: decision.route.photoId, collection: decision.route.collection ?? null, freshRender: true });
+            }
             dispatch({
               type: 'router.commandStarted',
               route: decision.route,

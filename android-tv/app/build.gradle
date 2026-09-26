@@ -1,0 +1,28 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'io.atrium.tv'
+    compileSdk 35
+    defaultConfig { applicationId 'io.atrium.tv'; minSdk 26; targetSdk 35; versionCode 1; versionName '0.1.0' }
+    buildFeatures { buildConfig true }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    sourceSets.main.res.srcDir layout.buildDirectory.dir('generated/household/res')
+}
+// Public CA is an explicit local input. No keys or household addresses are committed.
+tasks.register('provisionTrust') {
+    def caPath = providers.gradleProperty('atriumCa')
+    inputs.property('caPath', caPath.orElse(''))
+    if (caPath.isPresent()) inputs.file(caPath)
+    outputs.dir(layout.buildDirectory.dir('generated/household/res'))
+    doLast {
+        if (!caPath.isPresent()) throw new GradleException('Supply -PatriumCa=/absolute/path/to/exported/ca.crt')
+        def caFile = file(caPath.get())
+        def cert = java.security.cert.CertificateFactory.getInstance('X.509').generateCertificate(new ByteArrayInputStream(caFile.bytes))
+        if (cert.basicConstraints < 0) throw new GradleException('atriumCa must be a CA certificate')
+        cert.checkValidity()
+        def root = layout.buildDirectory.dir('generated/household/res').get().asFile
+        new File(root, 'raw').mkdirs()
+        new File(root, 'raw/atrium_ca.crt').bytes = caFile.bytes
+    }
+}
+tasks.named('preBuild').configure { dependsOn 'provisionTrust' }
+dependencies { testImplementation 'junit:junit:4.13.2' }

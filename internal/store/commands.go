@@ -23,34 +23,29 @@ const commandColumns = `id, screen_id, sequence, kind, payload, issued_by, issue
 // Issue allocates the next sequence for the screen and stores the command in
 // one transaction (design §6.5).
 func (c *Commands) Issue(ctx context.Context, cmd *domain.Command) error {
+	return c.db.InWriteTx(ctx, func(tx *sql.Tx) error { return c.IssueInTx(ctx, tx, cmd) })
+}
+
+// IssueInTx allocates a sequence and inserts in the caller's transaction.
+func (c *Commands) IssueInTx(ctx context.Context, tx *sql.Tx, cmd *domain.Command) error {
 	if cmd.ID == "" {
 		cmd.ID = domain.NewID()
 	}
 	payload, err := json.Marshal(cmd.Payload)
 	if err != nil {
-		return fmt.Errorf("store: encode command payload: %w", err)
+		return err
 	}
-	return c.db.InWriteTx(ctx, func(tx *sql.Tx) error {
-		seq, err := c.db.Screens().NextSequence(ctx, tx, cmd.ScreenID)
-		if err != nil {
-			return err
-		}
-		cmd.Sequence = seq
-		result, err := marshalResult(cmd.Result)
-		if err != nil {
-			return err
-		}
-		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO screen_commands (`+commandColumns+`)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			cmd.ID, cmd.ScreenID, cmd.Sequence, string(cmd.Kind), string(payload), cmd.IssuedBy,
-			FormatTime(cmd.IssuedAt), FormatTime(cmd.ExpiresAt), string(cmd.Status),
-			FormatTimePtr(cmd.DeliveredAt), FormatTimePtr(cmd.ResolvedAt),
-			nullString(cmd.ErrorCode), result); err != nil {
-			return fmt.Errorf("store: insert command: %w", err)
-		}
-		return nil
-	})
+	seq, err := c.db.Screens().NextSequence(ctx, tx, cmd.ScreenID)
+	if err != nil {
+		return err
+	}
+	cmd.Sequence = seq
+	result, err := marshalResult(cmd.Result)
+	if err != nil {
+		return err
+	}
+	_, err = tx.ExecContext(ctx, `INSERT INTO screen_commands (`+commandColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, cmd.ID, cmd.ScreenID, cmd.Sequence, string(cmd.Kind), string(payload), cmd.IssuedBy, FormatTime(cmd.IssuedAt), FormatTime(cmd.ExpiresAt), string(cmd.Status), FormatTimePtr(cmd.DeliveredAt), FormatTimePtr(cmd.ResolvedAt), nullString(cmd.ErrorCode), result)
+	return err
 }
 
 // Get returns one command by ID.
@@ -288,8 +283,13 @@ func (c *Commands) SetResult(ctx context.Context, id string, result *domain.Comm
 
 // DeleteOlderThan removes resolved commands past the retention window.
 func (c *Commands) DeleteOlderThan(ctx context.Context, cutoff time.Time) (int64, error) {
+	return c.DeleteOlderThanAt(ctx, cutoff, time.Now())
+}
+
+// DeleteOlderThanAt prunes history while retaining operation mappings for seven days.
+func (c *Commands) DeleteOlderThanAt(ctx context.Context, cutoff, now time.Time) (int64, error) {
 	res, err := c.db.sql.ExecContext(ctx,
-		`DELETE FROM screen_commands WHERE issued_at < ?`, FormatTime(cutoff))
+		`DELETE FROM screen_commands WHERE issued_at < ? AND NOT EXISTS (SELECT 1 FROM integration_operations o WHERE o.command_id=screen_commands.id AND o.created_at >= ?)`, FormatTime(cutoff), FormatTime(now.Add(-HistoryRetention)))
 	if err != nil {
 		return 0, fmt.Errorf("store: prune commands: %w", err)
 	}

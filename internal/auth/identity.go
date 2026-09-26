@@ -15,7 +15,8 @@ const ScreenCookieName = "atrium_screen"
 
 // Identity is the authenticated caller of a request.
 type Identity struct {
-	Scope Scope
+	Scope       Scope
+	Integration *domain.IntegrationPrincipal
 	// Screen is set for the screen scope.
 	Screen *domain.Screen
 	// AdminTokenID is set for the admin scope.

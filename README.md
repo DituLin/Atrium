@@ -2,7 +2,7 @@
 
 Atrium is a local-first home hub: a Mac mini runs the core service, a NAS holds the family photo library (read-only), and a TV shows an always-on dashboard with the clock, photo slideshow and device status. Everything works on the home LAN without cloud accounts, and a maintainer can change what the TV shows from the command line.
 
-> Status: **pre-release, not yet hardware-verified**. The V1 base (V0.1 Screen → V0.2 NAS → V0.3 Realtime) is being implemented against the design documents below. Hardware verification (G0) with the real Mac mini, NAS and TV has not happened yet, so nothing here is a promise about a particular TV or NAS.
+> Status: **pre-release, hardware validation in progress**. V0.1–V0.3 and the standalone Android TV host are implemented. Mac mini, NAS and OnePlus 6T have live smoke-test evidence; full TV hardware, reboot and 24-hour/seven-day acceptance remain separate gates. See `docs/ops/android-tv-results-2026-09-06.md`.
 
 ## What it does
 
@@ -12,7 +12,7 @@ Atrium is a local-first home hub: a Mac mini runs the core service, a NAS holds 
 - **Recovery by design**: the TV reconnects with backoff, the service survives restarts under launchd, the NAS being offline never blocks the dashboard, and scans never mass-delete on failure.
 - **Security on an untrusted LAN**: paired screens and the admin use separate credentials; TLS with a locally generated CA; no NAS credentials or paths ever reach the TV; previews are re-encoded so EXIF/GPS is stripped.
 
-AI integration (`home-mcp`) is a later, optional increment; the base system does not depend on it.
+AI integration (`home-mcp`) is an optional increment. The integration branch includes scoped Core APIs, an MCP server, a bounded Brain host and an OpenClaw adapter using the configured DeepSeek provider. Real-device results and remaining limits are recorded in the integration results. The base system does not depend on AI.
 
 ## Architecture in one picture
 
@@ -23,7 +23,11 @@ atrium admin / scripts  -- Bearer -->    |
 ```
 
 - `docs/prd/2026-09/atrium-home-hub/prd.md` — product requirements (Chinese)
+- [TV visual and interaction design](docs/plans/2026-09-06-song-tv-experience-design.md) — Song-inspired design discussion: photos, video, briefing, home information and calendar (Chinese; draft)
 - `docs/tech/2026-09/atrium-home-hub/tech-design.md` — technical design: stack, data model, HTTP/WebSocket contracts, pipelines, security, deployment
+- [AI integration results](docs/ops/ai-brain-mcp-results.md) — implementation, model validation and device evidence
+- [AI integration runbook](docs/ops/ai-brain-mcp-runbook.md) — build, service credentials, MCP configuration and recovery
+- [AI Brain and home-mcp design](docs/tech/2026-09/atrium-home-hub/ai-brain-home-mcp-design.md) — proposed Agent integration, scoped service identity, tools and command idempotency (Chinese; draft)
 - `docs/plan/2026-09/atrium-home-hub/dev-plan.md` — task-level development plan and decision log
 - `docs/api/` — OpenAPI and WebSocket protocol
 - `docs/ops/` — runbook, acceptance procedure, G0 record template
@@ -76,3 +80,11 @@ docs/               prd, tech design, plan, api, ops
 ## License
 
 MIT — see `LICENSE`.
+
+## Android TV application
+
+`android-tv/` contains a standalone Android TV/mobile APK host. It uses the system
+WebView, supports D-pad and Android Back, and trusts an explicitly provisioned
+household CA without browser certificate exceptions. No Chrome installation or
+Google account is needed. See [Android TV build and usage](android-tv/README.md)
+and the [implementation plan](docs/plans/2026-09-06-android-tv.md).

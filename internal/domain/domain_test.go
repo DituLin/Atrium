@@ -16,13 +16,15 @@ func TestErrorCodeTableIsCompleteAndMapped(t *testing.T) {
 		"unauthorized", "forbidden", "not_found", "invalid_request", "invalid_command",
 		"screen_offline", "screen_revoked", "pairing_expired", "pairing_claimed",
 		"rate_limited", "preview_processing", "preview_unavailable", "source_offline",
-		"identity_mismatch", "conflict", "internal",
+		"identity_mismatch", "conflict", "internal", "idempotency_conflict", "operation_expired",
 	}
 	require.ElementsMatch(t, expected, domain.AllErrorCodes())
 
 	for _, c := range domain.AllErrorCodes() {
 		require.GreaterOrEqual(t, c.HTTPStatus(), 200, "code %q must map to a status", c)
 	}
+	require.Equal(t, http.StatusConflict, domain.CodeIdempotencyConflict.HTTPStatus())
+	require.Equal(t, http.StatusBadRequest, domain.CodeOperationExpired.HTTPStatus())
 	require.Equal(t, http.StatusUnauthorized, domain.CodeUnauthorized.HTTPStatus())
 	require.Equal(t, http.StatusForbidden, domain.CodeForbidden.HTTPStatus())
 	require.Equal(t, http.StatusConflict, domain.CodeScreenOffline.HTTPStatus())
