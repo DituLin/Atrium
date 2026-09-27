@@ -96,6 +96,8 @@ export interface VideoListResponse {
 
 export interface VideoDetailResponse { item: VideoItem }
 
+export interface VideoTicketResponse { ticket: string; header: string; expires_at: string }
+
 export interface NasSourceStatus {
   id: string;
   name: string;

@@ -15,6 +15,7 @@ type Authenticator struct {
 	db      *store.DB
 	origins *OriginPolicy
 	fails   *FailureLimiter
+	tickets *MediaTickets
 	now     func() time.Time
 }
 
@@ -33,6 +34,7 @@ func NewAuthenticator(db *store.DB, origins *OriginPolicy, now func() time.Time)
 		db:      db,
 		origins: origins,
 		fails:   NewFailureLimiter(AuthFailuresPerMinute, AuthBlockDuration, now),
+		tickets: NewMediaTickets(now),
 		now:     now,
 	}
 }
@@ -85,6 +87,43 @@ func (a *Authenticator) Authenticate(ctx context.Context, r *http.Request, requi
 	}
 
 	return nil, a.fail(ip, domain.Errorf(domain.CodeUnauthorized, "no credential presented"))
+}
+
+// IssueMediaTicket grants the screen behind id a playback ticket for videoID.
+func (a *Authenticator) IssueMediaTicket(id *Identity, videoID string) (string, time.Time, error) {
+	if id == nil || id.Scope != ScopeScreen || id.Screen == nil {
+		return "", time.Time{}, domain.Errorf(domain.CodeForbidden, "media tickets are issued to screens only")
+	}
+	ticket, expires := a.tickets.Issue(id.Screen.ID, videoID)
+	return ticket, expires, nil
+}
+
+// AuthenticateVideo authorizes a stream of videoID: a screen credential, or a
+// media ticket for exactly this video whose screen is still active.
+func (a *Authenticator) AuthenticateVideo(ctx context.Context, r *http.Request, videoID string) (*Identity, error) {
+	ticket := r.Header.Get(MediaTicketHeader)
+	if ticket == "" {
+		return a.Authenticate(ctx, r, ScopeScreen)
+	}
+	ip := ClientIP(r)
+	if blocked, retry := a.Blocked(ip); blocked {
+		return nil, rateLimited(retry)
+	}
+	screenID, err := a.tickets.Verify(ticket, videoID)
+	if err != nil {
+		return nil, a.fail(ip, err)
+	}
+	sc, err := a.db.Screens().Get(ctx, screenID)
+	if errors.Is(err, domain.ErrNotFound) {
+		return nil, a.fail(ip, domain.Errorf(domain.CodeUnauthorized, "unknown screen"))
+	}
+	if err != nil {
+		return nil, err
+	}
+	if sc.Status != domain.ScreenActive {
+		return nil, domain.Errorf(domain.CodeScreenRevoked, "screen %q is revoked", sc.ID)
+	}
+	return &Identity{Scope: ScopeScreen, Screen: sc}, nil
 }
 
 // AuthenticateWebSocket resolves credentials for a handshake. A browser always

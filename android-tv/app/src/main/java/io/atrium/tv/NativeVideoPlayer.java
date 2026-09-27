@@ -50,13 +50,17 @@ final class NativeVideoPlayer {
 
     boolean isOpen() { return player != null; }
 
-    void open(String url, String origin, String title, String subtitle) {
+    /** ticket may be null; hosts then rely on the screen cookie. */
+    void open(String url, String origin, String ticket, String title, String subtitle) {
         if (isOpen()) close();
         ended = false;
         error = null;
         Map<String, String> headers = new HashMap<>();
         String cookie = CookieManager.getInstance().getCookie(origin);
         if (cookie != null) headers.put("Cookie", cookie);
+        // WebView 66 withholds the SameSite screen cookie from getCookie(); the
+        // page obtains a ticket for this one video and hands it over instead.
+        if (ticket != null) headers.put(VideoRequest.TICKET_HEADER, ticket);
         // Cookie credentials must prove their origin to Core (design §6.8).
         headers.put("Origin", origin);
         headers.put("Referer", origin + "/");

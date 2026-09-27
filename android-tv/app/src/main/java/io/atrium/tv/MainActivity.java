@@ -214,11 +214,18 @@ public final class MainActivity extends Activity {
     private void destroyWeb(){keyGuard.invalidate();if(video!=null)video.close();handler.removeCallbacks(checkBoot);if(web!=null){web.stopLoading();root.removeView(web);web.destroy();web=null;}}
     /** Page-facing API. Calls arrive on a binder thread; all work runs on the UI thread. */
     private final class Bridge {
-        @JavascriptInterface public int version() { return 1; }
+        @JavascriptInterface public int version() { return 2; }
         @JavascriptInterface public void play(String path, String title, String subtitle) {
+            open(path, null, title, subtitle);
+        }
+        @JavascriptInterface public void playWithTicket(String path, String title, String subtitle, String ticket) {
+            String valid = VideoRequest.ticket(ticket);
+            if (valid != null) open(path, valid, title, subtitle);
+        }
+        private void open(String path, String ticket, String title, String subtitle) {
             handler.post(() -> {
                 String url = VideoRequest.resolve(origin, path);
-                if (url != null && web != null && resumed) video.open(url, origin, title, subtitle);
+                if (url != null && web != null && resumed) video.open(url, origin, ticket, title, subtitle);
             });
         }
         @JavascriptInterface public void stop() { handler.post(() -> video.close()); }

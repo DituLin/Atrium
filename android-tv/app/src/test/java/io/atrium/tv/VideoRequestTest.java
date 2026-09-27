@@ -23,6 +23,16 @@ public class VideoRequestTest {
         assertNull(VideoRequest.resolve(ORIGIN, null));
     }
 
+    @Test public void acceptsOnlyWellFormedTickets() {
+        String sig = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJ0123456";
+        assertEquals("amt1.bGl2aW5n." + sig, VideoRequest.ticket("amt1.bGl2aW5n." + sig));
+        assertNull(VideoRequest.ticket(null));
+        assertNull(VideoRequest.ticket(""));
+        assertNull(VideoRequest.ticket("amt1.bGl2aW5n." + sig + "\r\nX-Evil: 1"));
+        assertNull(VideoRequest.ticket("amt2.bGl2aW5n." + sig));
+        assertNull(VideoRequest.ticket("amt1.bGl2aW5n.short"));
+    }
+
     @Test public void labelsAreTrimmedAndBounded() {
         assertEquals("家庭影像", VideoRequest.label("  ", "家庭影像"));
         assertEquals("影像 01", VideoRequest.label(" 影像 01 ", "x"));

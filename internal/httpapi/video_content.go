@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DituLin/Atrium/internal/auth"
 	"github.com/DituLin/Atrium/internal/domain"
 	"github.com/DituLin/Atrium/internal/source"
 	"github.com/DituLin/Atrium/internal/video"
@@ -43,7 +42,7 @@ func (a *API) handleVideoContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	guard := func(ctx context.Context) error {
-		if _, err := a.deps.Auth.Authenticate(ctx, r, auth.ScopeScreen); err != nil {
+		if _, err := a.deps.Auth.AuthenticateVideo(ctx, r, v.ID); err != nil {
 			return video.ErrStale
 		}
 		scopes, err := a.videoScopes(ctx)

@@ -59,10 +59,52 @@ func (a *API) videoScopes(ctx context.Context) ([]store.VideoScope, error) {
 
 func (a *API) videoRoutes() {
 	a.mux.HandleFunc("POST "+APIPrefix+"/videos/{id}/retry", a.requireScope(auth.ScopeAdmin, a.handleVideoRetry))
-	a.mux.HandleFunc("GET "+APIPrefix+"/media/videos/{id}/content", a.requireScope(auth.ScopeScreen, a.handleVideoContent))
+	a.mux.HandleFunc("GET "+APIPrefix+"/media/videos/{id}/content", a.requireVideoStream(a.handleVideoContent))
+	a.mux.HandleFunc("GET "+APIPrefix+"/media/videos/{id}/ticket", a.requireScope(auth.ScopeScreen, a.handleVideoTicket))
 	a.mux.HandleFunc("GET "+APIPrefix+"/media/videos/{id}/cover", a.requireScope(auth.ScopeScreen, a.handleVideoCover))
 	a.mux.HandleFunc("GET "+APIPrefix+"/videos", a.requireScope(auth.ScopeScreen, a.handleVideosList))
 	a.mux.HandleFunc("GET "+APIPrefix+"/videos/{id}", a.requireScope(auth.ScopeScreen, a.handleVideoGet))
+}
+
+// requireVideoStream accepts a screen credential or, for native players that
+// cannot send the screen cookie, a media ticket bound to this very video.
+func (a *API) requireVideoStream(next func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := a.deps.Auth.AuthenticateVideo(r.Context(), r, r.PathValue("id"))
+		if err != nil {
+			WriteError(w, r, err)
+			return
+		}
+		next(w, r.WithContext(auth.WithIdentity(r.Context(), id)))
+	}
+}
+
+type videoTicketDTO struct {
+	Ticket    string `json:"ticket"`
+	Header    string `json:"header"`
+	ExpiresAt string `json:"expires_at"`
+}
+
+func (a *API) handleVideoTicket(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store")
+	ctx, cancel := timeoutContext(r, 5*time.Second)
+	defer cancel()
+	scopes, err := a.videoScopes(ctx)
+	if err != nil {
+		WriteError(w, r, err)
+		return
+	}
+	v, err := a.deps.DB.Videos().GetVisible(ctx, scopes, r.PathValue("id"))
+	if err != nil {
+		WriteError(w, r, notFoundAs(err, "video"))
+		return
+	}
+	ticket, expires, err := a.deps.Auth.IssueMediaTicket(auth.FromContext(ctx), v.ID)
+	if err != nil {
+		WriteError(w, r, err)
+		return
+	}
+	WriteJSON(w, http.StatusOK, videoTicketDTO{Ticket: ticket, Header: auth.MediaTicketHeader, ExpiresAt: expires.UTC().Format(time.RFC3339)})
 }
 
 func (a *API) handleVideosList(w http.ResponseWriter, r *http.Request) {

@@ -202,6 +202,47 @@ describe('VideoPlayer native playback on the Android TV host', () => {
     expect(screen.getByRole('status').textContent).toBe('当前设备无法播放此视频');
   });
 
+  it('fetches a playback ticket for hosts that take one, then hands it over', async () => {
+    const bridge = { play: vi.fn(), playWithTicket: vi.fn(), stop: vi.fn() };
+    (window as unknown as { AtriumNative?: unknown }).AtriumNative = bridge;
+    let grant!: (value: string) => void;
+    const ticket = vi.fn((_id: string, _signal: AbortSignal) => new Promise<string>(resolve => { grant = resolve; }));
+    render(<VideoPlayer id="video_01" revision={1} onBack={vi.fn()} ticket={ticket} />);
+    fireEvent.keyDown(document.activeElement!, { key: 'OK' });
+    fireEvent.keyDown(document.activeElement!, { key: 'OK' });
+    expect(ticket).toHaveBeenCalledTimes(1);
+    expect(ticket.mock.calls[0]?.[0]).toBe('video_01');
+    expect(screen.getByRole('status').textContent).toBe('正在读取视频…');
+    await act(async () => { grant('amt1.payload.sig'); });
+    expect(bridge.playWithTicket).toHaveBeenCalledExactlyOnceWith('/api/v1/media/videos/video_01/content', '家庭影像', '', 'amt1.payload.sig');
+    expect(bridge.play).not.toHaveBeenCalled();
+    expect(play).not.toHaveBeenCalled();
+  });
+
+  it('reports a failed ticket request and never opens the host player', async () => {
+    const bridge = { play: vi.fn(), playWithTicket: vi.fn(), stop: vi.fn() };
+    (window as unknown as { AtriumNative?: unknown }).AtriumNative = bridge;
+    render(<VideoPlayer id="video_01" revision={1} onBack={vi.fn()} ticket={() => Promise.reject(new Error('offline'))} />);
+    await act(async () => { fireEvent.keyDown(document.activeElement!, { key: 'OK' }); });
+    expect(screen.getByRole('status').textContent).toBe('视频读取失败，请重试');
+    expect(bridge.playWithTicket).not.toHaveBeenCalled();
+  });
+
+  it('abandons a pending ticket when the page is left', async () => {
+    const bridge = { play: vi.fn(), playWithTicket: vi.fn(), stop: vi.fn() };
+    (window as unknown as { AtriumNative?: unknown }).AtriumNative = bridge;
+    let signal!: AbortSignal;
+    let grant!: (value: string) => void;
+    const view = render(<VideoPlayer id="video_01" revision={1} onBack={vi.fn()}
+      ticket={(_id, s) => { signal = s; return new Promise<string>(resolve => { grant = resolve; }); }} />);
+    fireEvent.keyDown(document.activeElement!, { key: 'OK' });
+    view.unmount();
+    expect(signal.aborted).toBe(true);
+    await act(async () => { grant('late'); });
+    expect(bridge.playWithTicket).not.toHaveBeenCalled();
+    expect(bridge.stop).not.toHaveBeenCalled();
+  });
+
   it('stops native playback when the page is left, and ignores a stale close', () => {
     const bridge = withBridge();
     const view = mount();

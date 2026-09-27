@@ -18,6 +18,7 @@ import type {
   ScreenSelfResponse,
   VideoDetailResponse,
   VideoListResponse,
+  VideoTicketResponse,
 } from '../types/api';
 import type { AuthTransport } from './auth';
 import { authTransport as defaultTransport } from './auth';
@@ -210,6 +211,13 @@ export class ApiClient {
 
   getVideo(id: string, signal?: AbortSignal): Promise<VideoDetailResponse> {
     return this.request<VideoDetailResponse>(`${API_BASE}/videos/${encodeURIComponent(id)}`, {
+      method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-store', ...(signal ? { signal } : {}),
+    }, true);
+  }
+
+  /** A short-lived credential the TV host's native player sends as a header. */
+  videoTicket(id: string, signal?: AbortSignal): Promise<VideoTicketResponse> {
+    return this.request<VideoTicketResponse>(`${API_BASE}/media/videos/${encodeURIComponent(id)}/ticket`, {
       method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-store', ...(signal ? { signal } : {}),
     }, true);
   }

@@ -13,6 +13,8 @@ export interface VideoPlayerProps {
   title?: string;
   subtitle?: string;
   info?: string;
+  /** Fetches a playback ticket for hosts whose native player needs one. */
+  ticket?: (id: string, signal: AbortSignal) => Promise<string>;
 }
 type Phase = 'preview' | 'loading' | 'playing' | 'paused' | 'ended' | 'error' | 'unsupported' | 'native';
 interface Session { toggle: () => void; stop: () => void; release: () => void }
@@ -28,7 +30,7 @@ const time = (seconds: number) => {
 export function VideoPlayer(props: VideoPlayerProps) {
   return <PlayerSession key={`${props.id}:${props.revision}`} {...props} />;
 }
-function PlayerSession({ id, onBack, title, subtitle, info }: VideoPlayerProps) {
+function PlayerSession({ id, onBack, title, subtitle, info, ticket }: VideoPlayerProps) {
   const media = useRef<HTMLVideoElement>(null);
   const playButton = useRef<HTMLButtonElement>(null);
   const backButton = useRef<HTMLButtonElement>(null);
@@ -45,6 +47,7 @@ function PlayerSession({ id, onBack, title, subtitle, info }: VideoPlayerProps) 
     let generation = 0;
     let failed = false;
     let nativeOpen = false;
+    let ticketRequest: AbortController | null = null;
     const visible = () => document.visibilityState === 'visible';
     const stop = () => {
       intent = false;
@@ -53,6 +56,8 @@ function PlayerSession({ id, onBack, title, subtitle, info }: VideoPlayerProps) 
       if (!disposed) setPhase('paused');
     };
     const release = () => {
+      ticketRequest?.abort();
+      ticketRequest = null;
       if (native && nativeOpen) { nativeOpen = false; native.stop(); }
       stop();
       disposed = true;
@@ -64,9 +69,26 @@ function PlayerSession({ id, onBack, title, subtitle, info }: VideoPlayerProps) 
       if (disposed || !valid || !visible()) return;
       if (native) {
         // The host covers the page with its own player until Back.
-        native.play(`/api/v1/media/videos/${id}/content`, title ?? '家庭影像', subtitle ?? '');
-        nativeOpen = true;
-        setPhase('native');
+        const path = `/api/v1/media/videos/${id}/content`;
+        const open = (start: () => void) => { start(); nativeOpen = true; setPhase('native'); };
+        if (!native.playWithTicket || !ticket) {
+          open(() => native.play(path, title ?? '家庭影像', subtitle ?? ''));
+          return;
+        }
+        if (ticketRequest) return;
+        const request = new AbortController();
+        ticketRequest = request;
+        setPhase('loading');
+        ticket(id, request.signal).then(value => {
+          if (disposed || ticketRequest !== request) return;
+          ticketRequest = null;
+          if (!visible()) { setPhase('paused'); return; }
+          open(() => native.playWithTicket!(path, title ?? '家庭影像', subtitle ?? '', value));
+        }, () => {
+          if (disposed || ticketRequest !== request) return;
+          ticketRequest = null;
+          setPhase('error');
+        });
         return;
       }
       if (intent) { stop(); return; }
@@ -149,7 +171,7 @@ function PlayerSession({ id, onBack, title, subtitle, info }: VideoPlayerProps) 
       video.removeEventListener('error', error);
       video.removeEventListener('pause', paused);
     };
-    // Title and subtitle are labels for the native layer, read at press time.
+    // Title, subtitle and the ticket loader are read at press time.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, valid]);
 

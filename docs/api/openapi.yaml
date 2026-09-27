@@ -323,10 +323,13 @@ paths:
         At most four streams are active per Core. I/O and output chunks have
         ten-second deadlines; canceled blocked I/O retains capacity until cleanup.
         Failure after response bytes have started truncates the stream.
+        Native players that cannot send the screen cookie present a media
+        ticket for this video instead (see `/ticket`).
       security:
         - screenBearer: []
         - screenCookie: []
         - adminBearer: []
+        - mediaTicket: []
       parameters:
         - name: Range
           in: header
@@ -373,6 +376,40 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "416": { description: Invalid or multiple ranges. }
         "503": { description: Video unavailable. }
+
+  /api/v1/media/videos/{id}/ticket:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [screen]
+      summary: Issue a playback ticket for one video to the calling screen
+      description: |
+        For the TV shell's native player, which cannot reuse the screen cookie.
+        The ticket authorizes only `GET`/`HEAD` of this video's `/content`, only
+        in the `X-Atrium-Media-Ticket` header (never in a URL), for six hours,
+        while the screen stays active. Tickets are signed with a per-process key,
+        so a Core restart voids them. Admin credentials are refused.
+      security:
+        - screenBearer: []
+        - screenCookie: []
+      responses:
+        "200":
+          description: A ticket and the header that carries it.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ticket, header, expires_at]
+                properties:
+                  ticket: { type: string }
+                  header: { type: string, example: X-Atrium-Media-Ticket }
+                  expires_at: { type: string, format: date-time }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /api/v1/media/videos/{id}/cover:
     parameters:
@@ -1399,6 +1436,13 @@ components:
       description: |
         Only honoured on GET routes and only when the `Origin` header is in
         `server.allowed_origins`.
+    mediaTicket:
+      type: apiKey
+      in: header
+      name: X-Atrium-Media-Ticket
+      description: |
+        A short-lived ticket from `/api/v1/media/videos/{id}/ticket`, accepted
+        only on that video's `/content` route.
 
   parameters:
     PairingID:

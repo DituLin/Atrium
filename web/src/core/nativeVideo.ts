@@ -7,6 +7,11 @@
 
 export interface NativeVideoBridge {
   play(path: string, title: string, subtitle: string): void;
+  /**
+   * Hosts from 0.2.1 send a media ticket instead of the screen cookie, which
+   * WebView 66 withholds from native code (SameSite). Older hosts lack it.
+   */
+  playWithTicket?(path: string, title: string, subtitle: string, ticket: string): void;
   stop(): void;
 }
 

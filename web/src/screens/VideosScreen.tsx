@@ -24,6 +24,7 @@ export function VideosScreen() {
   const { state, dispatch, api, videos, goBack } = useApp();
   const route = state.router.route;
   const selected = route.name === 'video' ? route.videoId : null;
+  const videoTicket = (id: string, signal: AbortSignal) => api.videoTicket(id, signal).then(result => result.ticket);
   const [items, setItems] = useState<VideoItem[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [listStatus, setListStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -230,7 +231,7 @@ export function VideosScreen() {
         <span>方向键 选择</span><span>OK 播放</span><span>← 回到分类</span><span className="hints__end">返回 回到上一页</span>
       </footer>
     </div>
-    {selected && (playable ? <VideoPlayer id={detail.id} revision={detail.revision} onBack={goBack} {...facts} /> :
+    {selected && (playable ? <VideoPlayer id={detail.id} revision={detail.revision} onBack={goBack} ticket={videoTicket} {...facts} /> :
       <section className="screen library surface--ink videos__unavailable" aria-label="视频预览">
         <h1 className="serif">家庭影像</h1>
         <p role="status">{detailStatus === 'loading' ? '正在读取视频…' : detailStatus === 'gone' ? '此视频已不可用' : detailStatus === 'error' ? '暂时无法读取此视频' : detail?.status === 'pending' ? '视频正在整理，请稍后再试' : '此视频格式暂不支持'}</p>
