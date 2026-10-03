@@ -342,6 +342,9 @@ func (p *parser) readXML(b []byte) (*xmlNode, error) {
 			return nil, err
 		}
 		b = []byte(decoded)
+	} else {
+		// A UTF-8 signature is encoding metadata, not character data before root.
+		b = bytes.TrimPrefix(b, []byte{239, 187, 191})
 	}
 	d := xml.NewDecoder(bytes.NewReader(b))
 	d.CharsetReader = func(charset string, input io.Reader) (io.Reader, error) {

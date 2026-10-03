@@ -50,11 +50,11 @@ func TestDOCXMergesNestedTablesRunsAndSkippedContent(t *testing.T) {
 		t.Fatalf("%+v", r)
 	}
 	anchor := r.Segments[1]
-	if anchor.Text != "合并标题" || anchor.DOCXMerge == nil || *anchor.DOCXMerge != (DOCXMerge{1, 1, 2, 2, false}) {
+	if anchor.Text != "合并标题" || anchor.DOCXMerge == nil || *anchor.DOCXMerge != (DOCXMerge{AnchorRow: 1, AnchorColumn: 1, ColumnSpan: 2, RowSpan: 2}) {
 		t.Fatalf("anchor %+v", anchor)
 	}
 	cont := r.Segments[3]
-	if cont.Text != "" || cont.DOCXMerge == nil || *cont.DOCXMerge != (DOCXMerge{1, 1, 2, 2, true}) {
+	if cont.Text != "" || cont.DOCXMerge == nil || *cont.DOCXMerge != (DOCXMerge{AnchorRow: 1, AnchorColumn: 1, ColumnSpan: 2, RowSpan: 2, Continuation: true}) {
 		t.Fatalf("continuation %+v", cont)
 	}
 	nested := r.Segments[5]
@@ -525,7 +525,7 @@ func TestFiniteNumberDisplayFormats(t *testing.T) {
 		raw, format, want     string
 		date1904, ok, phantom bool
 	}{
-		{"128.10", "General", "128.10", false, true, false}, {"128.1", "0.00", "128.10", false, true, false}, {"12.4", "0", "12", false, true, false}, {"0.125", "0%", "12%", false, true, false}, {"0.125", "0.00%", "12.50%", false, true, false}, {"60", "mm-dd-yy", "02-29-00", false, true, true}, {"0", "yyyy-mm-dd", "1904-01-01", true, true, false}, {"61", "yyyy-mm-dd", "1900-03-01", false, true, false}, {"61.5", "yyyy-mm-dd", "", false, false, false}, {"1", "unrecognized", "", false, false, false}, {"10000000000000000", "0.00", "", false, false, false},
+		{"128.10", "General", "128.10", false, true, false}, {"128.1", "0.00", "128.10", false, true, false}, {"12.4", "0", "12", false, true, false}, {"0.125", "0%", "13%", false, true, false}, {"0.125", "0.00%", "12.50%", false, true, false}, {"60", "mm-dd-yy", "02-29-00", false, true, true}, {"0", "yyyy-mm-dd", "1904-01-01", true, true, false}, {"61", "yyyy-mm-dd", "1900-03-01", false, true, false}, {"61.5", "yyyy-mm-dd", "", false, false, false}, {"1", "unrecognized", "", false, false, false}, {"10000000000000000", "0.00", "", false, false, false},
 	} {
 		n, _ := strconv.ParseFloat(c.raw, 64)
 		got, ok, phantom := formatNumber(n, c.raw, c.format, c.date1904)

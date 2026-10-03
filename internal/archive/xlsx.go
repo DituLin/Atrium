@@ -545,12 +545,14 @@ func formatNumber(n float64, raw, code string, date1904 bool) (string, bool, boo
 		if math.Abs(n) > 1e15 {
 			return "", false, false
 		}
-		return strconv.FormatFloat(n, 'f', 0, 64), true, false
+		display, ok := decimalDisplay(raw, 0, 0)
+		return display, ok, false
 	case "0.00":
 		if math.Abs(n) > 1e15 {
 			return "", false, false
 		}
-		return strconv.FormatFloat(n, 'f', 2, 64), true, false
+		display, ok := decimalDisplay(raw, 2, 0)
+		return display, ok, false
 	case "0%", "0.00%":
 		if math.Abs(n) > 1e13 {
 			return "", false, false
@@ -559,7 +561,11 @@ func formatNumber(n float64, raw, code string, date1904 bool) (string, bool, boo
 		if code == "0.00%" {
 			decimals = 2
 		}
-		return strconv.FormatFloat(n*100, 'f', decimals, 64) + "%", true, false
+		display, ok := decimalDisplay(raw, decimals, 2)
+		if !ok {
+			return "", false, false
+		}
+		return display + "%", true, false
 	case "yyyy-mm-dd", "mm-dd-yy":
 		if n < 0 || n > 2957003 || math.Trunc(n) != n {
 			return "", false, false
@@ -585,4 +591,82 @@ func formatNumber(n float64, raw, code string, date1904 bool) (string, bool, boo
 		return fmt.Sprintf("%04d-%02d-%02d", date.Year(), date.Month(), date.Day()), true, false
 	}
 	return "", false, false
+}
+
+// decimalDisplay rounds the original decimal spelling, not its float64
+// approximation. Moving the decimal point implements percent scaling exactly.
+// The finite formats have at most two decimals and at most 18 scaled digits;
+// exponents are bounded before arithmetic or padding, including tiny underflows.
+func decimalDisplay(raw string, places, percentShift int) (string, bool) {
+	negative := strings.HasPrefix(raw, "-")
+	if strings.HasPrefix(raw, "-") || strings.HasPrefix(raw, "+") {
+		raw = raw[1:]
+	}
+	exponent := 0
+	if e := strings.IndexAny(raw, "eE"); e >= 0 {
+		var err error
+		exponent, err = strconv.Atoi(raw[e+1:])
+		if err != nil || exponent < -1000000 || exponent > 1000000 {
+			return "", false
+		}
+		raw = raw[:e]
+	}
+	whole := len(raw)
+	if dot := strings.IndexByte(raw, '.'); dot >= 0 {
+		whole = dot
+		raw = raw[:dot] + raw[dot+1:]
+	}
+	if raw == "" {
+		return "", false
+	}
+	for _, digit := range raw {
+		if digit < '0' || digit > '9' {
+			return "", false
+		}
+	}
+	digits := strings.TrimLeft(raw, "0")
+	cut := whole + exponent + places + percentShift - (len(raw) - len(digits))
+	units := "0"
+	if digits != "" {
+		if cut > 18 {
+			return "", false
+		}
+		roundUp := cut >= 0 && cut < len(digits) && digits[cut] >= '5'
+		if cut > 0 {
+			if cut <= len(digits) {
+				units = digits[:cut]
+			} else {
+				units = digits + strings.Repeat("0", cut-len(digits))
+			}
+		}
+		if roundUp {
+			bytes := []byte(units)
+			carry := true
+			for i := len(bytes) - 1; i >= 0; i-- {
+				if bytes[i] == '9' {
+					bytes[i] = '0'
+				} else {
+					bytes[i]++
+					carry = false
+					break
+				}
+			}
+			units = string(bytes)
+			if carry {
+				units = "1" + units
+			}
+		}
+	}
+	nonzero := units != "0"
+	if places > 0 {
+		if len(units) <= places {
+			units = strings.Repeat("0", places+1-len(units)) + units
+		}
+		split := len(units) - places
+		units = units[:split] + "." + units[split:]
+	}
+	if negative && nonzero {
+		units = "-" + units
+	}
+	return units, true
 }

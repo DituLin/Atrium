@@ -139,11 +139,14 @@ type XLSXLocation struct {
 	Cell      string `json:"cell"`
 }
 type DOCXMerge struct {
-	AnchorRow    int  `json:"anchor_row"`
-	AnchorColumn int  `json:"anchor_column"`
-	ColumnSpan   int  `json:"column_span"`
-	RowSpan      int  `json:"row_span"`
-	Continuation bool `json:"continuation"`
+	// Revisions can leave vertical topology unknown. In that case anchors and
+	// RowSpan are zero, but the physical ColumnSpan and continuation marker survive.
+	VerticalUnresolved bool `json:"vertical_unresolved"`
+	AnchorRow          int  `json:"anchor_row"`
+	AnchorColumn       int  `json:"anchor_column"`
+	ColumnSpan         int  `json:"column_span"`
+	RowSpan            int  `json:"row_span"`
+	Continuation       bool `json:"continuation"`
 }
 type FormulaEvidence struct {
 	Text         string            `json:"text"`
@@ -331,7 +334,7 @@ func (p *parser) run() error {
 		p.out.DetectedFormat = "pdf"
 		return reject(ParseUnsupported, "unsupported_pdf", "PDF parsing belongs to the page parser")
 	}
-	if bytes.HasPrefix(data, []byte("PK")) {
+	if hasZIPSignature(data) || officeFormatHint(p.source.FormatHint) {
 		return p.parseOffice(data)
 	}
 	switch strings.ToLower(p.source.FormatHint) {
@@ -355,4 +358,24 @@ func (p *parser) run() error {
 		return nil
 	}
 	return p.add(Segment{Text: decoded, Locator: Locator{Kind: "text", Text: &TextLocation{0, len([]rune(decoded)), "unicode_scalar"}}})
+}
+
+// Prose can begin with the letters PK. ZIP detection requires a complete record
+// signature; an explicit Office hint still routes malformed packages to invalid.
+func hasZIPSignature(data []byte) bool {
+	if len(data) < 4 {
+		return false
+	}
+	switch string(data[:4]) {
+	case "PK\x03\x04", "PK\x05\x06", "PK\x07\x08", "PK\x01\x02", "PK\x06\x06", "PK\x06\x07":
+		return true
+	}
+	return false
+}
+func officeFormatHint(hint string) bool {
+	switch strings.ToLower(hint) {
+	case "docx", "xlsx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+		return true
+	}
+	return false
 }

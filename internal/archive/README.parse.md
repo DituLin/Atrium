@@ -35,7 +35,13 @@ parser version, and locator; they are stable within a version, not across versio
   table ordinal. Grid spans and vertical merges retain anchors, row/column spans
   and continuation flags; merged values are not copied. Each cell paragraph is
   emitted once with its cell locator, never additionally as a flattened cell fact.
-  Deleted/moved-from revision text is excluded; insertion text is marked partial.
+  Deleted/moved-from revision text and directly deleted table rows/cells are
+  excluded, including their nested content; insertion/property revisions remain
+  partial. Row/grid-column locators keep physical source positions, including
+  gaps occupied by deleted cells. In a table with revised row/cell/grid properties,
+  vertical merge links are conservatively unresolved: `vertical_unresolved=true`,
+  zero unknown anchors/row span, and retained physical column span/continuation
+  marker. Unrevised nested tables resolve their own merges independently.
   Headers/footers, notes, comments, images, textboxes, fields, legacy horizontal
   merge markup and unknown content are explicitly skipped/partial.
 - XLSX: workbook sheet IDs/names/state and r:id relationships, sparse A1 cells,
@@ -48,7 +54,10 @@ parser version, and locator; they are stable within a version, not across versio
   refreshed, expanded, executed or fetched.
   Cell style index, xf attributes, numFmt ID/code survive. Displays only support
   `General`, `@`, `0`, `0.00`, `0%`, `0.00%`, `yyyy-mm-dd`, `mm-dd-yy` under bounded
-  numeric ranges. Date displays accept whole serial days, use the workbook's
+  numeric ranges. Decimal fixed/percent displays round exact source decimal
+  digits half away from zero, with exact decimal percent scaling; raw values and
+  historical caches are never rewritten. Exponent processing/padding is bounded.
+  Date displays accept whole serial days, use the workbook's
   1900/1904 system without adding a timezone, and explicitly warn that serial 60
   in the 1900 system is fictional `1900-02-29`. Serial zero maps to the system's
   arithmetic epoch. Fractional/negative/out-of-range dates, unknown formats, and
@@ -66,7 +75,10 @@ unsupported claim that the file is encrypted. ZIP encryption flags produce
 `encrypted_zip`; this detects declared ZIP encryption, not cipher correctness.
 Worksheet protection is not file encryption. PDF/OCR is a later parser.
 
-Before archive/zip allocation, bounded directory bytes/entry counts are checked.
+ZIP detection requires a complete ZIP record signature, so ordinary text beginning
+with `PK` remains text/CSV. Explicit DOCX/XLSX hints route malformed packages to
+`invalid` rather than falling back to text. Before archive/zip allocation, bounded
+directory bytes/entry counts are checked.
 Directories, symlinks/nonregular entries, duplicate or normalized-colliding names,
 traversal, escaping relationships and corrupt metadata are rejected. Internal
 `../` relationships are allowed when they resolve inside the package. External
@@ -113,3 +125,9 @@ visited items, including an item that triggers a limit. XML decoded text counts
 retained character-data and attribute-value bytes; emitted text counts segment
 text. XML is materialized only inside the bounded package/XML budgets. The parser
 is synchronous, uses standard-library codecs, and adds no dependencies.
+
+Revision handling follows the [WordprocessingML cell-deletion definition](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.celldeletion?view=openxml-3.0.1).
+Initial UTF-8 BOM removal follows [XML 1.0 encoding detection](https://www.w3.org/TR/xml/#charencoding),
+while counts still include the original expanded BOM bytes. The finite numeric
+display policy uses the half-up/away-from-zero convention documented by
+[Apache POI DataFormatter](https://poi.apache.org/apidocs/dev/org/apache/poi/ss/usermodel/DataFormatter.html).

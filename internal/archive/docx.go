@@ -26,6 +26,9 @@ func (pkg *officePackage) parseDOCX(main string) error {
 			pkg.skip("docx_comments", r.target)
 		}
 	}
+	if docxHasRevision(body) {
+		pkg.skip("docx_revisions", main)
+	}
 	return pkg.docxBlocks(body, main, nil, 0, 0, nil)
 }
 func (pkg *officePackage) docxBlocks(parent *xmlNode, part string, tablePath []int, row, column int, merge *DOCXMerge) error {
@@ -149,10 +152,21 @@ func (pkg *officePackage) docxTable(table *xmlNode, part string, tablePath []int
 	active := map[int]*mergeGroup{}
 	var groups []*mergeGroup
 	rows := table.all(nsWord, "tr")
+	// Source grid coordinates remain physical. Revising rows/cells can change
+	// merge topology, so do not invent current vertical links across that grid.
+	// Nested tables decide independently from their own immediate properties.
+	revisedGrid := docxHasRevision(table.child(nsWord, "tblGrid")) || docxHasRevision(table.child(nsWord, "tblPr"))
+	for _, tr := range rows {
+		revisedGrid = revisedGrid || docxHasRevision(tr.child(nsWord, "trPr"))
+		for _, tc := range tr.all(nsWord, "tc") {
+			revisedGrid = revisedGrid || docxHasRevision(tc.child(nsWord, "tcPr"))
+		}
+	}
 	for rowIndex, tr := range rows {
 		row := rowIndex + 1
 		column := 1
 		next := map[int]*mergeGroup{}
+		deletedRow := tr.child(nsWord, "trPr").child(nsWord, "del") != nil
 		if pr := tr.child(nsWord, "trPr"); pr != nil {
 			if before := pr.child(nsWord, "gridBefore"); before != nil {
 				v, e := strconv.Atoi(before.attr(nsWord, "val"))
@@ -167,6 +181,9 @@ func (pkg *officePackage) docxTable(table *xmlNode, part string, tablePath []int
 			if pkg.p.out.Counts.Cells > pkg.p.limits.Cells {
 				return limit("cells")
 			}
+			if deletedRow {
+				continue
+			}
 			props := tc.child(nsWord, "tcPr")
 			span, err := docxPositive(props, "gridSpan", 1)
 			if err != nil {
@@ -175,25 +192,34 @@ func (pkg *officePackage) docxTable(table *xmlNode, part string, tablePath []int
 			if column+span-1 > 16384 {
 				return invalid("invalid_docx_grid")
 			}
+			if props.child(nsWord, "cellDel") != nil {
+				column += span
+				continue
+			}
 			merge := &DOCXMerge{AnchorRow: row, AnchorColumn: column, ColumnSpan: span, RowSpan: 1}
 			if vm := props.child(nsWord, "vMerge"); vm != nil {
-				switch vm.attr(nsWord, "val") {
-				case "restart":
-					g := &mergeGroup{anchor: merge, members: []*DOCXMerge{merge}}
-					next[column] = g
-					groups = append(groups, g)
-				case "", "continue":
-					g := active[column]
-					if g == nil || g.anchor.ColumnSpan != span {
+				if revisedGrid {
+					merge = &DOCXMerge{ColumnSpan: span, Continuation: vm.attr(nsWord, "val") != "restart", VerticalUnresolved: true}
+					pkg.skip("docx_revision_merge", part)
+				} else {
+					switch vm.attr(nsWord, "val") {
+					case "restart":
+						g := &mergeGroup{anchor: merge, members: []*DOCXMerge{merge}}
+						next[column] = g
+						groups = append(groups, g)
+					case "", "continue":
+						g := active[column]
+						if g == nil || g.anchor.ColumnSpan != span {
+							return invalid("invalid_docx_merge")
+						}
+						g.anchor.RowSpan++
+						merge.AnchorRow = g.anchor.AnchorRow
+						merge.Continuation = true
+						g.members = append(g.members, merge)
+						next[column] = g
+					default:
 						return invalid("invalid_docx_merge")
 					}
-					g.anchor.RowSpan++
-					merge.AnchorRow = g.anchor.AnchorRow
-					merge.Continuation = true
-					g.members = append(g.members, merge)
-					next[column] = g
-				default:
-					return invalid("invalid_docx_merge")
 				}
 			}
 			if props.child(nsWord, "hMerge") != nil {
@@ -223,4 +249,27 @@ func (pkg *officePackage) docxTable(table *xmlNode, part string, tablePath []int
 		}
 	}
 	return nil
+}
+
+// Property containers can hold tracked revisions even when no revision wrapper
+// surrounds their text. Inspect them for coverage; never extract old properties.
+func docxHasRevision(n *xmlNode) bool {
+	if n == nil {
+		return false
+	}
+	if n.name.Space == nsWord {
+		switch n.name.Local {
+		case "del", "ins", "moveFrom", "moveTo", "cellDel", "cellIns", "cellMerge", "moveFromRangeStart", "moveFromRangeEnd", "moveToRangeStart", "moveToRangeEnd":
+			return true
+		}
+		if strings.HasSuffix(n.name.Local, "Change") {
+			return true
+		}
+	}
+	for _, child := range n.children {
+		if docxHasRevision(child) {
+			return true
+		}
+	}
+	return false
 }

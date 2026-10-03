@@ -31,3 +31,10 @@ parts, bad shared indexes, duplicate XML attributes/value containers, unsupporte
 style inheritance, UTF-16 XML, unused footnotes and nested packages, arbitrary
 main-part extension, and every configurable resource class. Tests assert exact
 segments, locations, raw values, cache/merge/missing states and warning codes.
+
+`parse_review_test.go` adds in-memory revision/BOM/dispatch/rounding regressions:
+deleted rows/cells with surviving physical coordinates; revised outer merges and
+unrevised nested merges; property revision coverage; BOM-bearing identity,
+relationship, main and worksheet parts; `PK` prose versus corrupt ZIP signatures;
+and exact positive/negative decimal ties, exponent/percent scaling and untouched
+formula cache/raw values.
