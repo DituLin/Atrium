@@ -85,6 +85,8 @@ T04 开发期先对接受控 CLI/测试接收；T13 接入实际 IM。T01–T04 
 
 根下各层使用目录 fd + `Openat(O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC)`，文件 no-follow 并验证 regular file；严格组件验证。临时文件以随机名/0600 独占创建，流写和校验后 Sync，再用 `Linkat` 原子无覆盖发布。目标存在必须重验 size/hash，一致复用、损坏报错；同步最终目录和新目录的父级，再报告发布。不能用会覆盖目标的 Rename，也不能单凭允许根内 symlink 的 os.Root 声称拒绝符号链接。Layout 只提供 Archives 路径，安全初始化不沿用 MkdirAll+Chmod 的跟随链接流程。维持 macOS 构建与现有 Linux CI 可编译。
 
+文件系统家庭组件编码精确 ID 字节为小写、无 padding 的 base32，不直接使用可含大小写的 ID，也不改变数据库身份。这样 macOS 大小写不敏感卷上的 `home-a` / `HOME-A` 仍隔离；最长 128 字节合法 ID 编码为至多 205 字节，满足单组件限制。布局为 `archives/<encoded-household>/blobs/<hash-prefix>/<hash>`；验收覆盖大小写变体物理对象不同、最长 ID 及编码后所有层级的符号链接拒绝。
+
 文件发布不持有 SQLite 事务。T03 最小表为 household+sha256 唯一的 archive_blobs 与有复合家庭外键的 archive_documents；原始文件名/消息键留 T04 sources。文档不强加 blob_hash 唯一约束，以支持同文不同文本事件。store 包内 metadata/doc 方法供 T04 在同一事务重新授权并建立 source/document/task；DB 失败不能删除可能已有别的引用的 blob。OpenVerified 只接收经上层文档授权得到的内部引用，裸哈希不构成下载权限。孤儿 GC/NAS/解析器暂不在 T03 实现。
 
 故障验收补充：同家庭并发同内容、跨家庭隔离、每层 symlink、FIFO/目录冒充文件、已有 blob 损坏、短读与 Reader 错误、写入/同步/链接失败、发布后 DB 回滚重试及已有引用不被失败清理删除。当前承诺进程崩溃恢复；现有 SQLite synchronous=NORMAL 与普通 fsync 不足以宣称整条接收具备断电硬件缓存耐久。

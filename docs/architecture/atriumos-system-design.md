@@ -144,7 +144,8 @@ IM 收到的所有聊天不自动成为档案。明确提交的文件、报告�
 
 | 接口族（计划） | 调用者 | 行为 |
 | --- | --- | --- |
-| `/integrations/archives/intakes` | 可信接入适配器 | 接收有界文本/字节，返回 document_id/task_id 与持久状态 |
+| `/integrations/archives/intakes` | 可信接入适配器 | 接收单槽有界文本/字节，返回自有 receipt/task ID；有 read 权限才附文档引用 |
+| `/integrations/archives/intakes/lookup` | 原接入 principal | 用来源 metadata 查询已提交回执，无须重传内容 |
 | `/integrations/archives/tasks/{id}` | 获授权 IM / Agent | 查询阶段、结果和需要用户补充的问题 |
 | `/integrations/archives/search` | IM / Agent | 返回片段、实体、类别、日期与原件引用 |
 | `/integrations/archives/documents/{id}` | IM / Agent | 当前提取、事实、来源定位、历史版本 |
