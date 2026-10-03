@@ -19,7 +19,7 @@
 | T03 原件存储 | 已完成任务级验收 | `c147a88` + `e40c9c7` + `474c0c1`；独立需求与质量审查批准，race/全量 Go/跨平台编译通过；未部署 |
 | T04 接收 API | 已完成任务级验收 | `6fa1592` + `256aa88` + `8cbad4c`；独立需求/质量复审批准，真实临时 Core、相关 race、全量 Go 回归通过；默认关闭，未部署 |
 | T05 解析器 | 已完成任务级验收 | `20bfed1` + `6c17f41` + `ab21659` + `c75659a`；最终提交独立需求/质量双审批准，全量 Go/race/Linux 编译及原失败复验通过；未接生产消费者 |
-| T06 图片/PDF | 独立需求审查中 | `280fb4c`；33 个实际夹具、266 项字段/位置对照、PDF 变换及进程残留回归通过；实现端全量 Go/race/Linux 编译通过，独立双审待完成 |
+| T06 图片/PDF | 修复需求审查发现 | `280fb4c` 基础夹具通过；独立复现截断 JPEG/PNG 被误报完整，已交实施者修复；未获需求/质量批准 |
 | T07–T18 | 未开始 | 理解、归属、发布、检索、分析、渠道、TV 和恢复契约已预审；不将设计文档或旧 family 记录作为新能力通过证据 |
 
 ## 基线核对
@@ -155,6 +155,8 @@ T16/T17 独立预检补充完整恢复点/证据引用闭包、历史身份而�
 原件在 `/tmp/atriumos-t06-fixtures/`，Go 解析结果在 `/tmp/atriumos-t06-evidence/`，实际 raster 与红色 native/蓝色 OCR 框叠图在 `/tmp/atriumos-t06-visual/`，代表性合成原件/叠图/结果已提交至 `adapters/macos-archive-parser/evidence/`。根任务已查看报告原图、EXIF 7、geometry PDF 第 2 页和 crop-intersection 第 1 页：方向、各列框和裁切边界符合预期，四条部分裁切 native 行保持待核对；数字 9.80/9.30 冲突保留同组两个读数且不选择首选文字。实现端进程回归曾复现 leader 退出后子进程仍持有 pipe；增加 Wait 后的进程组清理后取消/leader 退出两种场景通过。最终协议收尾覆盖必需字段/null/数组长度、孤立 UTF-16 escape、覆盖计数矛盾、首选文字与 alternatives 合计上限，以及能力缺失时读取计数为零且返回 parser_unavailable。
 
 最终 helper 指纹 `170fbb014fb3582957b6e40b4f5d36ee7d46b3a32e59ab58c2e64af31c6c8c7a`，OS `24C101`、Vision revision 3、Accurate、zh-Hans/en-US。暖启动 helper-only 的 33 个小样本耗时中位数 0.302 秒、最大 0.446 秒，不是 Core 端到端或复杂百页资料性能保证。实现端 fresh `go test ./...`、`go test -race ./internal/archive -count=1`、Linux archive 测试编译和差异检查通过；根任务已核对 clean 提交与最终 33/266 结果摘要。新独立需求审查已启动，之后才进行质量审查，当前尚未完成任务级验收；本轮未接生产或模型。
+
+独立需求审查未批准 `280fb4c`：将合成 report.jpg / report.png 截为一半字节，ImageIO 仍返回缩略图，helper 与公开 Go API 都给出 parsed/coverage.complete=true，原 19 个字段只剩 8 / 4 个。根任务分别重跑正式 helper 和 `/tmp/atriumos-t06-spec-probes/overlay.json` 的 `TestSpecReviewTruncatedImage`，均复现。该 macOS 上 ImageIO source/frame status 在截断样本解码前后仍为 0，单加状态判断不能证明修复，需有界、可实证的完整性检查并保留正常格式支持。实施者已收到唯一已验证阻断及回归输入，修复和复审待完成。审查另 fresh 运行带实际环境的全部 TestNative（33 个结果及 266 个位置对照）和 focused race 均通过，额外截断 PDF 探针返回 invalid；这些通过不抵消图片完整性缺口。
 
 新实施者已完成首轮 Go 进程边界与证据分组的 RED→GREEN：未链接路径的原件通过 FD3 定位读取，调用者句柄/当前偏移保持；稳定片段 ID、未知/重复/截断/多份 JSON、坐标和计数、空白差异与数值/标点冲突、一对多分组、挂起/输出洪泛/异常退出/取消的 `TestNative` 实现端通过。测试 helper 使用 ReadAt，不以 cat 当前偏移迫使生产代码 Seek/reopen。实际 Objective-C helper 和完整合成格式矩阵正在实现，本轮不代表真实 OCR/PDF 验收。
 
