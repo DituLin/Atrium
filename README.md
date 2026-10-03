@@ -16,6 +16,12 @@ Atrium is a local-first home hub: a Mac mini runs the core service, a NAS holds 
 
 AI integration (`home-mcp`) is an optional increment. The integration branch includes scoped Core APIs, an MCP server, a bounded Brain host and an OpenClaw adapter using the configured DeepSeek provider. Real-device results and remaining limits are recorded in the integration results. The base system does not depend on AI.
 
+## AtriumOS design and implementation
+
+- [Overall system design](docs/architecture/atriumos-system-design.md) — Mac mini, NAS, TV, IM, knowledge and task architecture.
+- [Detailed development plan](docs/plans/2026-10-03-atriumos-development-plan.md) — staged implementation and requirement-by-requirement acceptance.
+- [Implementation status](docs/ops/atriumos-implementation-status.md) — verified work and remaining gates.
+
 ## Architecture in one picture
 
 ```
