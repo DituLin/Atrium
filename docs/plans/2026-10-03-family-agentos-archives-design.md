@@ -182,7 +182,7 @@ NAS 原件存储与现有只读照片目录隔离。先在本机持久保存并�
 
 ## 实施契约补充：时间、数值与证据
 
-日期结构固定为 `{"precision":"unknown|year|month|date|datetime","value":"..."}`。unknown 的 value 为空；year 为四位年份、month 为 YYYY-MM、date 为真实 YYYY-MM-DD、datetime 为带时区 RFC3339。收到日期另存 received_at；无资料日期不能以 received_at 填充事实日期。
+日期结构固定为 `{"precision":"unknown|year|month|date|datetime","value":"..."}`。unknown 的 value 为空；year 为四位年份、month 为 YYYY-MM、date 为真实 YYYY-MM-DD、datetime 为带时区 RFC3339，小时/分/秒为两位，小数秒保留 1–9 位；超过该精度保留原文并标为需核对，不能静默截断。收到日期另存 received_at；无资料日期不能以 received_at 填充事实日期。
 
 数值保存 `raw_value` 字符串、可选 `decimal_value` 十进制字符串、`raw_unit` 与可选 canonical_unit。金额保留原币种，不用 float64 做金额累计；没有转换来源时不合并不同币种。值“<0.1”保留比较符，不能当成精确 0.1；阴性/未检出/缺测与数字零分开。
 
