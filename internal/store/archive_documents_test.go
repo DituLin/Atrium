@@ -208,3 +208,20 @@ func TestArchiveMetadataValidationAndDatabaseConstraints(t *testing.T) {
 	})
 	require.Error(t, err)
 }
+
+func TestArchiveBlobDatabaseRejectsNULWithin64ByteHash(t *testing.T) {
+	db := archiveDocumentsDB(t)
+	for _, tc := range []struct {
+		name     string
+		position int
+	}{{"first", 0}, {"second", 1}, {"middle", 31}, {"last", 63}} {
+		t.Run(tc.name, func(t *testing.T) {
+			hash := strings.Repeat("a", tc.position) + "\x00" + strings.Repeat("a", 63-tc.position)
+			require.Len(t, hash, 64)
+			_, err := db.sql.Exec(`INSERT INTO archive_blobs(household_id,sha256,size_bytes,mime,storage_version,created_at) VALUES('home-1',?,1,'text/plain',1,?)`, hash, FormatTime(documentsNow))
+			require.Error(t, err, "a 64-byte value containing NUL is not a canonical SHA-256")
+		})
+	}
+	_, err := db.sql.Exec(`INSERT INTO archive_blobs(household_id,sha256,size_bytes,mime,storage_version,created_at) VALUES('home-1',?,1,'text/plain',1,?)`, strings.Repeat("a", 64), FormatTime(documentsNow))
+	require.NoError(t, err, "a canonical 64-character hexadecimal hash remains valid")
+}

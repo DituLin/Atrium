@@ -3,7 +3,7 @@
 -- never deletes an original: the next acceptance can verify and reuse it.
 CREATE TABLE archive_blobs (
  household_id TEXT NOT NULL REFERENCES households(id),
- sha256 TEXT NOT NULL CHECK (typeof(sha256)='text' AND length(CAST(sha256 AS BLOB))=64 AND sha256 NOT GLOB '*[^0-9a-f]*'),
+ sha256 TEXT NOT NULL CHECK (typeof(sha256)='text' AND length(sha256)=64 AND length(CAST(sha256 AS BLOB))=64 AND sha256 NOT GLOB '*[^0-9a-f]*'),
  size_bytes INTEGER NOT NULL CHECK (typeof(size_bytes)='integer' AND size_bytes>0),
  mime TEXT NOT NULL CHECK (length(mime) BETWEEN 1 AND 255),
  storage_version INTEGER NOT NULL CHECK (storage_version=1),
