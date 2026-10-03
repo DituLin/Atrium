@@ -63,6 +63,15 @@ T04 开发期先对接受控 CLI/测试接收；T13 接入实际 IM。T01–T04 
 
 实现 archive.read/ingest/organize/analyze 与 household_ids；任务记录接入 principal 和 policy_version；每阶段提交重新授权。自动建实体不修改集成策略。CLI 更新完整策略并保留旧已授权权限。验证：`go test -race ./internal/auth ./internal/httpapi ./internal/domain ./internal/cli`。
 
+实现边界（独立架构审阅补充）：
+
+- 持久随机家庭 ID 与本机默认家庭引用，重开库、改显示名不改变 ID；只读管理员接口和 `admin household show` 用于发现。旧集成不自动获新权限。
+- `archive.ingest` 委托自动解析、分类、建立实体和提交接收任务；`archive.organize` 用于人工改归属/合并/私密修订。读取另需 `archive.read`，分析需 read + analyze。权限均须命中家庭白名单。
+- HTTP 身份保留 principal 和 credential ID。写事务内重新检查凭据与 principal；后台任务只绑定 stable principal + policy_version，正常凭据轮换不取消已接受任务，principal 撤销/过期或策略代次变化拒绝后续提交。
+- 授权、租约和状态条件在同一个仓库事务检查，使用锁后时间；不得在 service 先检查再另开写事务。供后续 T04/T09 使用的事务内辅助方法留在 store 包内，使来源/事实/任务状态可原子提交；不新增通用 callback 框架。
+- Get/Events 在同一数据库快照检查当前身份并读取限定家庭的数据；越家庭与不存在资源统一 not_found，失效凭据 unauthorized。幂等重放先重新授权。接收回执只暴露本次接收必要状态，不授予其他档案读取权。
+- 保留 CLI `policy` 完整替换语义，增加 `grant-archives` 与 expected_policy_version 条件，在服务端原子合并明确的 archive 权限/household_ids 并保留全部旧 allowlist；版本冲突不自动覆盖。加入稳定 ID、撤销竞争、策略变化、凭据轮换、跨 principal 重放及完整策略保留测试。
+
 ### T03 — 不可变原件存储
 
 新增：`internal/archive/blob.go`、`blob_test.go`、`internal/store/archive_documents.go` 及测试/迁移；修改 `internal/app/datadir.go`。
@@ -127,7 +136,7 @@ T04 开发期先对接受控 CLI/测试接收；T13 接入实际 IM。T01–T04 
 
 实现实体/类别/日期过滤与原文检索；原件/片段/事实/关联先授权后排名。中文两字姓名和短词必须有别名及有界子串路径；分页稳定、字面查询参数化，不允许任意 SQL/FTS 语法注入。索引只含有效可读版本，撤回与重建一致。
 
-合成四领域检索集 ≥ 30 个问题，每条预期档案和证据点可检查；测试姓名别名、多主体、未知日期、零结果、私密/撤销、分页和同文件多来源。记录召回不足，必要时再增语义检索，不以加入向量库作为验收。
+合成四领域检索集 ≥ 30 个问题，每条预期档案和证据点可检查；测试姓名别名、多主体、未知日期、零结果、私密/撤销、分页和同文件多来源。具体样本与 42 项预期见[综合档案合成验收集](2026-10-03-atriumos-archive-acceptance.md)，它是待执行契约，不是通过报告。记录召回不足，必要时再增语义检索，不以加入向量库作为验收。
 
 ### T11 — 自然语言查询工具与来源回答
 
