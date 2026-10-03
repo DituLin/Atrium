@@ -1,6 +1,6 @@
 # Entity resolution (T08)
 
-`ResolveEntities` is a deterministic, database-free Core function. It accepts
+`ResolveEntities` uses rule `entity-resolution/2` and is a deterministic, database-free Core function. It accepts
 validated document-local mentions, each with a literal name, role, explicit
 archive-subject classification, identity evidence references, date precision and
 OCR/review flags. It does not accept global IDs from model output. A subject is
@@ -39,7 +39,21 @@ and rule version, preserving zeros, with at most 1,024 protected facts per
 comparison. Unknown kinds, missing issuers, unsupported versions and overflow
 return incomplete/unsupported. Those results cannot authorize empty-family
 creation. Peer references express equality of incoming protected values without
-passing the values to the resolver.
+passing the values to the resolver. The comparison also returns candidate-scoped
+negative entity/peer references for unequal national IDs and birth-certificate
+IDs within the same issuer and exact rule. They block a contradictory identity
+link without making unrelated household candidates a global conflict. Passport
+numbers can change at renewal, so unequal passport values are not an exclusive
+negative proof under this rule. Both kinds of references are free of raw values
+and hashes. Same-batch negative peer references also fence temporary plan IDs.
+
+Before emitting any create decision, the resolver checks the whole connected
+strong-identity peer group for date-component, type, OCR, capability and identity
+conflicts. Every affected mention stays unresolved; a member without a birthday
+cannot hide contradictions between two other members. This aggregation does not
+fill any mention's missing birthday. Every successful link updates the temporary
+candidate's evidenced dates and adds previously unseen names only as display
+aliases, so later same-batch mentions see them without promoting alias authority.
 
 The store's package-private `archiveEntitySnapshotIn`,
 `archiveApplyResolutionIn`, `archiveProtectedIdentityPutIn` and related helpers

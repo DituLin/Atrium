@@ -278,11 +278,16 @@ func archiveEntitySnapshotIn(ctx context.Context, tx *sql.Tx, h string, probes m
 			return s, e
 		}
 		for other, q := range probes {
-			if other != ref && supportedIdentity(p) && supportedIdentity(q) && p.Kind == q.Kind && p.Issuer == q.Issuer && p.RuleVersion == q.RuleVersion && p.Value == q.Value {
-				r.PeerRefs = append(r.PeerRefs, other)
+			if other != ref && supportedIdentity(p) && supportedIdentity(q) && p.Kind == q.Kind && p.Issuer == q.Issuer && p.RuleVersion == q.RuleVersion {
+				if p.Value == q.Value {
+					r.PeerRefs = append(r.PeerRefs, other)
+				} else if exclusiveIdentity(p.Kind) {
+					r.ConflictingPeerRefs = append(r.ConflictingPeerRefs, other)
+				}
 			}
 		}
 		sort.Strings(r.PeerRefs)
+		sort.Strings(r.ConflictingPeerRefs)
 		s.Strong[ref] = r
 	}
 	return s, nil
@@ -786,9 +791,9 @@ func archiveCompareIdentityIn(ctx context.Context, tx *sql.Tx, h string, p Ident
 		return r, e
 	}
 	type match struct {
-		id       string
-		evidence []string
-		conflict bool
+		id              string
+		evidence        []string
+		conflict, equal bool
 	}
 	matches := []match{}
 	count := 0
@@ -809,13 +814,16 @@ func archiveCompareIdentityIn(ctx context.Context, tx *sql.Tx, h string, p Ident
 			r.Supported = false
 			continue
 		}
-		if value == p.Value {
+		// National IDs and birth-certificate IDs are single-valued within
+		// an issuer under this rule. Passport renewals may have new numbers;
+		// unequal passports are not treated as negative identity proof.
+		if value == p.Value || exclusiveIdentity(p.Kind) {
 			var ev []string
 			if e = json.Unmarshal([]byte(evidence), &ev); e != nil {
 				rows.Close()
 				return r, e
 			}
-			matches = append(matches, match{id, ev, conflict})
+			matches = append(matches, match{id, ev, conflict, value == p.Value})
 		}
 	}
 	e = rows.Err()
@@ -831,11 +839,16 @@ func archiveCompareIdentityIn(ctx context.Context, tx *sql.Tx, h string, p Ident
 		if e != nil {
 			return r, e
 		}
-		r.EntityIDs = appendUnique(r.EntityIDs, id)
+		if m.equal {
+			r.EntityIDs = appendUnique(r.EntityIDs, id)
+			r.Conflict = r.Conflict || m.conflict
+		} else {
+			r.ConflictingEntityIDs = appendUnique(r.ConflictingEntityIDs, id)
+		}
 		r.Evidence = append(r.Evidence, m.evidence...)
-		r.Conflict = r.Conflict || m.conflict
 	}
 	sort.Strings(r.EntityIDs)
+	sort.Strings(r.ConflictingEntityIDs)
 	sort.Strings(r.Evidence)
 	return r, nil
 }
@@ -945,3 +958,5 @@ func archiveInvalidateMergeBindingsIn(ctx context.Context, tx *sql.Tx, h, merge,
 	}
 	return nil
 }
+
+func exclusiveIdentity(kind string) bool { return kind == "national_id" || kind == "birth_certificate" }

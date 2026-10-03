@@ -206,3 +206,81 @@ func TestResolutionRelativeNeedsExplicitScopedReferent(t *testing.T) {
 	m.BindingKey = "other#a"
 	require.Equal(t, "needs_resolution", decision(t, m, s).Action)
 }
+
+func TestResolutionReviewStrongGroupChecksAllMembersBeforeCreate(t *testing.T) {
+	for _, order := range [][]int{{0, 1, 2}, {2, 0, 1}, {1, 2, 0}} {
+		for _, fault := range []string{"birthday", "kind", "ocr", "identity", "incomplete"} {
+			source := []ResolutionMention{subject("a", "A", ""), subject("b", "B", "1988-03-12"), subject("c", "C", "1988-03-12")}
+			switch fault {
+			case "birthday":
+				source[2].Birth.Value = "1991-03-12"
+			case "kind":
+				source[2].Kind = "property"
+			case "ocr":
+				source[2].OCRConflict = true
+			}
+			s := snapshot()
+			s.Strong = map[string]StrongIdentityMatch{}
+			for i := range source {
+				source[i].HasStrongIdentity = true
+				s.Strong[source[i].Ref] = StrongIdentityMatch{Supported: true, Complete: true}
+			}
+			// A non-clique peer graph still denotes one complete connected group.
+			a := s.Strong["a"]
+			a.PeerRefs = []string{"b"}
+			s.Strong["a"] = a
+			b := s.Strong["b"]
+			b.PeerRefs = []string{"c"}
+			s.Strong["b"] = b
+			c := s.Strong["c"]
+			if fault == "identity" {
+				c.Conflict = true
+			}
+			if fault == "incomplete" {
+				c.Complete = false
+			}
+			s.Strong["c"] = c
+			ms := []ResolutionMention{source[order[0]], source[order[1]], source[order[2]]}
+			p, e := ResolveEntities(ResolutionInput{HouseholdID: "h", DocumentID: "d", Mentions: ms}, s)
+			require.NoError(t, e)
+			for i, d := range p.Decisions {
+				require.Equal(t, ms[i].Ref, d.MentionRef)
+				require.Equal(t, "needs_resolution", d.Action, fault)
+			}
+		}
+	}
+}
+func TestResolutionReviewGroupDoesNotInventMissingBirth(t *testing.T) {
+	a := subject("a", "A", "")
+	b := subject("b", "B", "1988-03-12")
+	c := subject("c", "C", "1988-03-12")
+	a.HasStrongIdentity = true
+	b.HasStrongIdentity = true
+	c.HasStrongIdentity = true
+	s := snapshot()
+	s.Strong = map[string]StrongIdentityMatch{"a": {Supported: true, Complete: true, PeerRefs: []string{"b"}}, "b": {Supported: true, Complete: true, PeerRefs: []string{"c"}}, "c": {Supported: true, Complete: true}}
+	in := ResolutionInput{HouseholdID: "h", DocumentID: "d", Mentions: []ResolutionMention{a, c, b}}
+	p, e := ResolveEntities(in, s)
+	require.NoError(t, e)
+	require.Equal(t, "create_entity", p.Decisions[0].Action)
+	for _, d := range p.Decisions[1:] {
+		require.Equal(t, "link_existing", d.Action)
+		require.Equal(t, p.Decisions[0].PlanRef, d.PlanRef)
+	}
+	require.Empty(t, in.Mentions[0].Birth.Value)
+	require.Empty(t, in.Mentions[0].Birth.Precision)
+}
+func TestResolutionReviewLinkedBirthUpdatesOnlyTemporaryCandidate(t *testing.T) {
+	c := candidate("one", "Primary", "")
+	s := snapshot(c)
+	s.Bindings = []ConfirmedBinding{{Scope: "document_mention", ScopeKey: "doc#a", EntityID: "one", Version: 1, Evidence: []string{"confirmed"}}}
+	a := subject("a", "Alias", "2000-01-02")
+	a.BindingScope = "document_mention"
+	a.BindingKey = "doc#a"
+	b := subject("b", "Primary", "2000-01-02")
+	p, e := ResolveEntities(ResolutionInput{HouseholdID: "h", DocumentID: "doc", Mentions: []ResolutionMention{a, b}}, s)
+	require.NoError(t, e)
+	require.Equal(t, "link_existing", p.Decisions[1].Action)
+	require.Empty(t, s.Candidates[0].Birth.Value)
+	require.Len(t, s.Candidates[0].Names, 1)
+}

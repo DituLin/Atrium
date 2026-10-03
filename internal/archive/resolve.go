@@ -11,7 +11,7 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-const ResolutionRuleVersion = "entity-resolution/1"
+const ResolutionRuleVersion = "entity-resolution/2"
 const NameKeyVersion = "nfc-space-ascii/1-xtext-0.31.0"
 
 // NameKey preserves punctuation, word boundaries and all non-ASCII case.
@@ -70,8 +70,9 @@ type ConfirmedBinding struct {
 // StrongIdentityMatch deliberately has no raw identity value or hash. The store
 // compares bounded protected facts and supplies only these match conclusions.
 type StrongIdentityMatch struct {
-	Supported, Complete, Conflict bool
-	EntityIDs, Evidence, PeerRefs []string
+	Supported, Complete, Conflict             bool
+	EntityIDs, Evidence, PeerRefs             []string
+	ConflictingEntityIDs, ConflictingPeerRefs []string
 }
 type CandidateSnapshot struct {
 	HouseholdID string
@@ -189,6 +190,8 @@ func ResolveEntities(in ResolutionInput, s CandidateSnapshot) (ResolutionPlan, e
 		}
 		p.Dependencies[c.ID] = c.Version
 	}
+	groups := resolutionIdentityGroups(in, s)
+	resolvedTargets := map[string]string{}
 	for _, m := range in.Mentions {
 		if !m.Subject {
 			p.LocalRoles = append(p.LocalRoles, m)
@@ -196,7 +199,36 @@ func ResolveEntities(in ResolutionInput, s CandidateSnapshot) (ResolutionPlan, e
 		}
 		d := ResolutionDecision{MentionRef: m.Ref, Action: "needs_resolution", Reason: "insufficient_identity", Evidence: append([]string(nil), m.Evidence...)}
 		d.Evidence = append(d.Evidence, m.Birth.Evidence...)
-		finish := func() { p.Decisions = append(p.Decisions, d) }
+		finish := func() {
+			if d.Action == "link_existing" {
+				for i := range candidates {
+					c := &candidates[i]
+					if !(d.EntityID != "" && c.ID == d.EntityID || d.PlanRef != "" && c.PlanRef == d.PlanRef) {
+						continue
+					}
+					// Every linked spelling becomes a candidate for subsequent
+					// mentions, but an alias never upgrades itself to primary.
+					found := false
+					for _, n := range c.Names {
+						if NameKey(n.Value) == NameKey(m.Name) {
+							found = true
+						}
+					}
+					if !found {
+						c.Names = append(append([]CandidateName(nil), c.Names...), CandidateName{Value: m.Name, Alias: true, Evidence: append([]string(nil), m.Evidence...)})
+					}
+					c.Birth = CombineIdentityDates(c.Birth, m.Birth)
+				}
+			}
+			if d.Action == "create_entity" || d.Action == "link_existing" {
+				target := d.EntityID
+				if target == "" {
+					target = d.PlanRef
+				}
+				resolvedTargets[m.Ref] = target
+			}
+			p.Decisions = append(p.Decisions, d)
+		}
 		if m.OCRConflict || m.Birth.Conflict || !validIdentityDate(m.Birth) {
 			d.Reason = "conflicting_evidence"
 			finish()
@@ -204,6 +236,12 @@ func ResolveEntities(in ResolutionInput, s CandidateSnapshot) (ResolutionPlan, e
 		}
 		if !s.Complete {
 			d.Reason = "incomplete_snapshot"
+			finish()
+			continue
+		}
+		if g := groups[m.Ref]; g.Conflict {
+			d.Reason = "identity_group_conflict"
+			d.Evidence = append(d.Evidence, g.Evidence...)
 			finish()
 			continue
 		}
@@ -221,6 +259,15 @@ func ResolveEntities(in ResolutionInput, s CandidateSnapshot) (ResolutionPlan, e
 			finish()
 			continue
 		}
+		identityConflicts := map[string]bool{}
+		for _, id := range s.Strong[m.Ref].ConflictingEntityIDs {
+			identityConflicts[id] = true
+		}
+		for _, ref := range s.Strong[m.Ref].ConflictingPeerRefs {
+			if target := resolvedTargets[ref]; target != "" {
+				identityConflicts[target] = true
+			}
+		}
 		targets := map[string]bool{}
 		conflict := false
 		if m.HasStrongIdentity {
@@ -232,28 +279,12 @@ func ResolveEntities(in ResolutionInput, s CandidateSnapshot) (ResolutionPlan, e
 				continue
 			}
 			conflict = r.Conflict
-			for _, ref := range r.PeerRefs {
-				found := false
-				for _, peer := range in.Mentions {
-					if peer.Ref == ref {
-						found = true
-						conflict = conflict || peer.Kind != m.Kind || peer.OCRConflict || birthConflict(m.Birth, peer.Birth)
-					}
-				}
-				if !found {
-					conflict = true
-				}
-				for _, prior := range p.Decisions {
-					if prior.MentionRef == ref && (prior.Action == "create_entity" || prior.Action == "link_existing") {
-						if prior.EntityID != "" {
-							targets[prior.EntityID] = true
-						} else if prior.PlanRef != "" {
-							targets[prior.PlanRef] = true
-						}
-					}
+			for _, ref := range groups[m.Ref].Refs {
+				if target := resolvedTargets[ref]; target != "" {
+					targets[target] = true
 				}
 			}
-			for _, id := range r.EntityIDs {
+			for _, id := range groups[m.Ref].TargetIDs {
 				targets[id] = true
 			}
 		}
@@ -280,7 +311,7 @@ func ResolveEntities(in ResolutionInput, s CandidateSnapshot) (ResolutionPlan, e
 				for _, c := range candidates {
 					if (targets[c.ID] || targets[c.PlanRef]) && c.Kind == m.Kind {
 						found = true
-						if !c.Conflict && !birthConflict(m.Birth, c.Birth) {
+						if !(identityConflicts[c.ID] || identityConflicts[c.PlanRef]) && !c.Conflict && !birthConflict(m.Birth, c.Birth) {
 							reason := "strong_identity"
 							if binding {
 								reason = "confirmed_binding"
@@ -318,7 +349,7 @@ func ResolveEntities(in ResolutionInput, s CandidateSnapshot) (ResolutionPlan, e
 			}
 			if nameMatch {
 				named = append(named, c)
-				if proven && !c.Conflict && !birthConflict(m.Birth, c.Birth) && (m.Kind == "property" || fullBirth(m.Birth) && fullBirth(c.Birth) && m.Birth.Value == c.Birth.Value) {
+				if proven && !(identityConflicts[c.ID] || identityConflicts[c.PlanRef]) && !c.Conflict && !birthConflict(m.Birth, c.Birth) && (m.Kind == "property" || fullBirth(m.Birth) && fullBirth(c.Birth) && m.Birth.Value == c.Birth.Value) {
 					eligible = append(eligible, c)
 				}
 			}
@@ -327,7 +358,7 @@ func ResolveEntities(in ResolutionInput, s CandidateSnapshot) (ResolutionPlan, e
 		// the birthday match. Explicitly different full birthdays are distinguishable.
 		competing := false
 		for _, c := range named {
-			if c.Conflict || c.Birth.Conflict || m.Kind == "person" && (!fullBirth(c.Birth) || !fullBirth(m.Birth)) {
+			if c.Conflict || c.Birth.Conflict || m.Kind == "person" && (!fullBirth(c.Birth) || !fullBirth(m.Birth)) || (identityConflicts[c.ID] || identityConflicts[c.PlanRef]) && (!fullBirth(c.Birth) || !fullBirth(m.Birth) || c.Birth.Value == m.Birth.Value) {
 				competing = true
 			}
 		}
@@ -363,4 +394,88 @@ func ResolveEntities(in ResolutionInput, s CandidateSnapshot) (ResolutionPlan, e
 		sort.Strings(p.Decisions[i].Evidence)
 	}
 	return p, nil
+}
+
+// Inspect each complete peer component before emitting any create decision.
+// A member with no birthday cannot mask a conflict between two other members.
+// No aggregated date is assigned back to a mention or used as matching proof.
+type resolutionIdentityGroup struct {
+	Conflict                  bool
+	Evidence, Refs, TargetIDs []string
+}
+
+func resolutionIdentityGroups(in ResolutionInput, s CandidateSnapshot) map[string]resolutionIdentityGroup {
+	mentions := map[string]ResolutionMention{}
+	adj := map[string][]string{}
+	for _, m := range in.Mentions {
+		mentions[m.Ref] = m
+		if m.HasStrongIdentity {
+			for _, peer := range s.Strong[m.Ref].PeerRefs {
+				adj[m.Ref] = append(adj[m.Ref], peer)
+				adj[peer] = append(adj[peer], m.Ref)
+			}
+		}
+	}
+	result := map[string]resolutionIdentityGroup{}
+	seen := map[string]bool{}
+	for _, start := range in.Mentions {
+		if !start.HasStrongIdentity || seen[start.Ref] {
+			continue
+		}
+		refs := []string{start.Ref}
+		seen[start.Ref] = true
+		for i := 0; i < len(refs); i++ {
+			for _, ref := range adj[refs[i]] {
+				if !seen[ref] {
+					seen[ref] = true
+					refs = append(refs, ref)
+				}
+			}
+		}
+		g := resolutionIdentityGroup{Refs: refs}
+		birth := IdentityDate{}
+		targets := map[string]bool{}
+		negative := map[string]bool{}
+		for _, ref := range refs {
+			m, exists := mentions[ref]
+			r, reported := s.Strong[ref]
+			g.Conflict = g.Conflict || !exists || !m.HasStrongIdentity || !reported || !r.Supported || !r.Complete || r.Conflict || m.Kind != start.Kind || m.OCRConflict
+			birth = CombineIdentityDates(birth, m.Birth)
+			g.Evidence = append(g.Evidence, m.Evidence...)
+			g.Evidence = append(g.Evidence, m.Birth.Evidence...)
+			g.Evidence = append(g.Evidence, r.Evidence...)
+			for _, id := range r.EntityIDs {
+				targets[id] = true
+			}
+			for _, id := range r.ConflictingEntityIDs {
+				negative[id] = true
+			}
+			if m.BindingScope == "legacy_member" || m.BindingScope == "document_mention" && m.BindingKey == in.DocumentID+"#"+m.Ref {
+				for _, b := range s.Bindings {
+					if b.Scope == m.BindingScope && b.ScopeKey == m.BindingKey {
+						targets[b.EntityID] = true
+						g.Conflict = g.Conflict || b.Conflict
+						g.Evidence = append(g.Evidence, b.Evidence...)
+					}
+				}
+			}
+		}
+		g.Conflict = g.Conflict || birth.Conflict || len(targets) > 1
+		for id := range targets {
+			g.TargetIDs = append(g.TargetIDs, id)
+			found := false
+			for _, c := range s.Candidates {
+				if c.ID == id {
+					found = true
+					g.Conflict = g.Conflict || c.Kind != start.Kind || c.Conflict || birthConflict(birth, c.Birth)
+				}
+			}
+			g.Conflict = g.Conflict || !found || negative[id]
+		}
+		sort.Strings(g.TargetIDs)
+		for _, ref := range refs {
+			result[ref] = g
+		}
+	}
+	return result
 }
