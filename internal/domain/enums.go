@@ -215,6 +215,7 @@ const (
 	RouteConnect   RouteName = "connect"
 	RouteSettings  RouteName = "settings"
 	RouteHouse     RouteName = "house"
+	RouteFamily    RouteName = "family"
 	RouteBriefing  RouteName = "briefing"
 	RouteCalendar  RouteName = "calendar"
 )
@@ -222,14 +223,16 @@ const (
 // Valid reports whether the value is a known route.
 func (r RouteName) Valid() bool {
 	switch r {
-	case RouteVideos, RouteVideo, RouteDashboard, RoutePhotos, RoutePhoto, RoutePair, RouteConnect, RouteSettings, RouteHouse, RouteBriefing, RouteCalendar:
+	case RouteVideos, RouteVideo, RouteDashboard, RoutePhotos, RoutePhoto, RoutePair, RouteConnect, RouteSettings, RouteHouse, RouteFamily, RouteBriefing, RouteCalendar:
 		return true
 	}
 	return false
 }
 
 // NavigableRoute reports whether a navigate command may target the route.
-func (r RouteName) NavigableRoute() bool { return r == RouteDashboard || r == RoutePhotos }
+func (r RouteName) NavigableRoute() bool {
+	return r == RouteDashboard || r == RoutePhotos || r == RouteFamily
+}
 
 // Collection is a photo query set.
 type Collection string

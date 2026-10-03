@@ -1,4 +1,4 @@
-const fields={home_get_status:[],home_list_screens:[],home_get_screen:['screen_id'],home_get_nas_status:[],home_list_photos:['collection','limit','cursor'],home_get_photo:['photo_id'],home_get_command:['command_id'],home_navigate_screen:['screen_id','route','collection'],home_show_photo:['screen_id','photo_id'],home_refresh_screen:['screen_id']};
+const fields={home_list_family_members: [], home_list_family_records: ['member_id','limit','cursor'], home_record_family_entry: ['member_id','category','occurred_at','title','notes','measurements','display_on_tv','supersedes_id','revision_reason','retracted'],home_get_status:[],home_list_screens:[],home_get_screen:['screen_id'],home_get_nas_status:[],home_list_photos:['collection','limit','cursor'],home_get_photo:['photo_id'],home_get_command:['command_id'],home_navigate_screen:['screen_id','route','collection'],home_show_photo:['screen_id','photo_id'],home_refresh_screen:['screen_id']};
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const ulid=v=>typeof v==='string'&&/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/.test(v);
 const id=v=>typeof v==='string'&&/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(v)?v:'未知';
@@ -29,6 +29,11 @@ export function readReceiptPrefix(raw,invocation){
   try{receipts.push(...validateReceipts(line+'\n',invocation));}catch{invalid=true;break;}
  }
  return {receipts,invalid};
+}
+const safeText=v=>typeof v==='string'?v.replace(/[\x00-\x1f\x7f]/g,' ').slice(0,16000):'';
+function familyRecord(r){
+ const status=r?.retracted===true?'已撤回，历史内容':r?.superseded_by?'已被更正，历史内容':r?.supersedes_id?'当前更正记录':'记录';
+ return `${status} ${id(r?.id)} · 成员 ${id(r?.member_id)} · ${safeText(r?.title)} · ${stamp(r?.occurred_at)??'时间未知'}${Array.isArray(r?.measurements)?r.measurements.filter(m=>Number.isFinite(m.value)).map(m=>`；${safeText(m.metric)} ${m.value} ${safeText(m.unit)}`).join(''):''}${r?.notes?'；'+safeText(r.notes):''}${r?.revision_reason?'；原因：'+safeText(r.revision_reason):''}${r?.superseded_by?'；后续记录 '+id(r.superseded_by):''}`;
 }
 const boundary='当前支持家庭状态、NAS、屏幕和照片查询，以及指定屏幕的页面切换、照片展示和刷新。视频、人物搜索与日历尚未接入。';
 function actionLabel(c){
@@ -65,6 +70,11 @@ export function renderReceipts(receipts,{failed=false,timedOut=false}={}){
   if(r.error||r.tool_result?.isError||!object(env)||env.schema_version!=='1'||!stamp(env.observed_at)){lines.push(`${r.tool}：未取得可核实结果。`);continue;}
   const d=env.data,when=`观察时间 ${env.observed_at}；availability=${fixed(env.availability,['available','unavailable','unknown','partial'])}。`;
   switch(r.tool){
+   case 'home_list_family_members':lines.push(...(Array.isArray(d?.members)?d.members.map(m=>`家庭成员：${safeText(m.name)}（${id(m.id)}）。`):['成员查询未返回有效数据。']));break;
+   case 'home_list_family_records':lines.push(`家庭记录：本页 ${Array.isArray(d?.records)?d.records.length:0} 条，不代表全部历史。`,...(Array.isArray(d?.records)?d.records.map(familyRecord):[]));break;
+   case 'home_record_family_entry':
+    if(!object(d?.record)||!ulid(d.record.id)||!['pending','synced'].includes(d.nas_status)){lines.push('家庭记录：无法确认保存结果。');break;}
+    lines.push(`${d.record.retracted===true?'已保存撤回记录':d.record.supersedes_id?'已保存更正记录':'已记录'}：${familyRecord(d.record)}。NAS ${d.nas_status==='synced'?'已同步':'待同步'}。${d.replayed?'本次为原记录回执，未重复新增。':''}`);break;
    case 'home_get_status':lines.push(`家庭中枢：core=${fixed(d?.core,['reachable','unreachable','unknown'])}。${when}`,...nas(d?.nas),...screens(d?.screens));break;
    case 'home_get_nas_status':lines.push(when,...nas(d));break;
    case 'home_list_screens':candidates=Math.max(candidates,Array.isArray(d)?d.length:0);lines.push(when,...screens(d));break;
@@ -76,7 +86,7 @@ export function renderReceipts(receipts,{failed=false,timedOut=false}={}){
  }
  lines.push(...[...actions.values()].map(a=>a.text+(a.conflict?' 后续回执与该终态不一致，未能核实新证据；保留上述原观察结论。':'')));
  if(candidates>1&&actions.size===0)lines.push('有多个可选屏幕，请指定目标屏幕。');
- if(actions.size===0)lines.push(boundary+'本轮回执没有屏幕动作；如需控制，请指定目标与动作。');
+ if(actions.size===0&&!receipts.some(r=>r.tool.startsWith('home_list_family_')||r.tool==='home_record_family_entry'))lines.push(boundary+'本轮回执没有屏幕动作；如需控制，请指定目标与动作。');
  if(failed||timedOut)lines.push('本轮未完整取得可核实结果；以上仅为已取得的可信回执。可能还有未取得回执的动作，请使用宿主 --recover 查询账本，不要重发。');
  return lines.join('\n');
 }

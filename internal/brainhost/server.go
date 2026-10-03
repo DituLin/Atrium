@@ -113,6 +113,12 @@ func Serve(parent context.Context, input io.ReadCloser, output io.WriteCloser, r
 		switch req.Method {
 		case "tools":
 			send(response{ID: req.ID, Result: tools})
+		case "ingress":
+			if runtime == nil {
+				return errors.New("runtime unavailable")
+			}
+			claimed, err := runtime.ClaimIngress(ctx, req.RunID)
+			send(response{ID: req.ID, Result: map[string]bool{"claimed": claimed}, Error: safeError(err)})
 		case "start":
 			if runtime == nil {
 				return errors.New("runtime unavailable")

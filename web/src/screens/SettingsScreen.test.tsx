@@ -69,7 +69,7 @@ describe('settings and Back ownership', () => {
   });
   it('returns from photos to the top navigation entry that opened them', async () => {
     await setup(); await openSettings();
-    key('ArrowUp'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft');
+    key('ArrowUp'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft');
     expect(document.activeElement).toBe(nav('影像')); key('Enter');
     await waitFor(() => expect(currentState.router.route.name).toBe('photos'));
     key('Escape');

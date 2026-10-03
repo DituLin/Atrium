@@ -4,6 +4,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { Host } from './host.js';
 
 export const TOOL_FIELDS = Object.freeze({
+ home_list_family_members: [], home_list_family_records: ['member_id','limit','cursor'], home_record_family_entry: ['member_id','category','occurred_at','title','notes','measurements','display_on_tv','supersedes_id','revision_reason','retracted'],
  home_get_status: [], home_list_screens: [], home_get_screen: ['screen_id'],
  home_get_nas_status: [], home_list_photos: ['collection', 'limit', 'cursor'],
  home_get_photo: ['photo_id'], home_get_command: ['command_id'],
@@ -39,7 +40,7 @@ function loadTools(path) {
  for (const tool of tools) {
   const schema = tool?.inputSchema, name = tool?.name;
   if (!Object.hasOwn(TOOL_FIELDS, name) || seen.has(name) || !object(schema) || schema.type !== 'object' || schema.additionalProperties !== false || !object(schema.properties)) throw new Error('invalid_tools_inventory');
-  if (Object.keys(schema.properties).some(key => !TOOL_FIELDS[name].includes(key)) || /"(?:operation_id|wait_ms)"/.test(JSON.stringify(schema))) throw new Error('invalid_tools_schema');
+  if (Object.keys(schema.properties).some(key => !TOOL_FIELDS[name].includes(key)) || /"(?:operation_id|wait_ms|request_id)"/.test(JSON.stringify(schema))) throw new Error('invalid_tools_schema');
   if (typeof tool.description !== 'string' || !Array.isArray(schema.required) || schema.required.some(key => !Object.hasOwn(schema.properties, key))) throw new Error('invalid_tools_schema');
   seen.add(name);
  }
@@ -78,7 +79,28 @@ function createController(api, options, config, tools) {
  host.onCrash = () => { for (const run of runs.values()) terminal(run); };
  function scope(ctx) { const id = identity(ctx); return !disabled && id && id[0] === config.agentId ? id : null; }
  function lookup(event, ctx) { const id = scope(ctx), runId = eventId(event, ctx, 'runId'); return id && runId ? { id, key: hash([...id, runId]), runId } : null; }
- api.on('before_agent_start', async (event, ctx) => {
+ // The same registry event may reach multiple attachments of this shared
+ // controller. Reuse only the identical event object, never a new delivery.
+ const ingressEvents = new WeakMap();
+ api.on('before_dispatch', (event, ctx) => {
+  const channel = ctx?.channelId;
+  if (!['discord','openclaw-weixin'].includes(channel) || !opaque(ctx?.sessionKey) || !ctx.sessionKey.startsWith(`agent:${config.agentId}:`)) return undefined;
+  const fingerprint = hash([ctx.sessionKey,ctx.channelId,ctx.accountId,ctx.conversationId,ctx.senderId,ctx.messageId,event?.messageId,event?.channel,event?.sessionKey]);
+  if (object(event) && ingressEvents.has(event)) { const cached=ingressEvents.get(event); return cached.fingerprint===fingerprint ? cached.result : {handled:true,text:'消息身份不一致，未启动新的操作。'}; }
+  const admit = async () => {
+   const deniedIngress = {handled:true,text:'本条消息暂时无法核实接收身份，未启动新的家庭操作。请检查连接后再查询记录。'};
+   const id = eventId(event,ctx,'messageId');
+   if (disabled || !id || !opaque(ctx.accountId) || !opaque(ctx.conversationId) || !opaque(ctx.senderId) || (event?.channel !== undefined && event.channel !== channel) || (event?.sessionKey !== undefined && event.sessionKey !== ctx.sessionKey) || (channel === 'openclaw-weixin' && id.startsWith('openclaw-weixin')) || (channel === 'discord' && !/^[0-9]{10,24}$/.test(id))) return deniedIngress;
+   try {
+    const result = await host.rpc({method:'ingress',run_id:hash(['ingress-v1',config.agentId,channel,ctx.accountId,ctx.conversationId,ctx.senderId,id])});
+    if (result?.claimed === true) return undefined;
+    if (result?.claimed === false) return {handled:true,text:'这条消息此前已接收，本次不会重复执行。此前是否完成仍需核实；请发送一条新的查询消息查看记录或命令结果。'};
+    return deniedIngress;
+   } catch { return deniedIngress; }
+  };
+  const result = admit(); if (object(event)) ingressEvents.set(event,{fingerprint,result}); return result;
+ });
+ api.on('before_agent_run', async (event, ctx) => {
   const info = lookup(event, ctx); diagnostic('start', ctx, event, {scope_valid: !!info}); if (!info || runs.has(info.key)) return;
   if (runs.size >= maxRuns) { disableForCapacity(); return; }
   const run = { active: false, key: info.key }; runs.set(info.key, run);
@@ -150,7 +172,7 @@ function createController(api, options, config, tools) {
 // OpenClaw may build independent hook and tool registries in one process.
 // Share only identical maintainer configuration + validated inventory, never
 // session/model parameters. Tests opt into sharing with an explicit Map.
-const registrySymbol = Symbol.for('io.atrium.openclaw.controllers.v1');
+const registrySymbol = Symbol.for('io.atrium.openclaw.controllers.v2');
 export function registerPlugin(api, options = {}) {
  const config = validateConfig(api.pluginConfig);
  let inventory;

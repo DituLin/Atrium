@@ -39,6 +39,7 @@ function reject(
 function parseNavigate(payload: unknown): AppRoute | null {
   if (typeof payload !== 'object' || payload === null) return null;
   const record = payload as { route?: unknown; collection?: unknown };
+  if (record.route === 'family') return record.collection === undefined ? { name: 'family' } : null;
   if (record.route === 'dashboard') return { name: 'dashboard' };
   if (record.route === 'photos') {
     if (record.collection === undefined || record.collection === null) {

@@ -130,3 +130,48 @@ func TestRuntimeModelCommandPollUpdatesOriginalAction(t *testing.T) {
 	require.Empty(t, pending)
 	require.Equal(t, []string{"home_refresh_screen", "home_get_command"}, caller.names)
 }
+
+func TestIngressClaimSurvivesRuntimeRestart(t *testing.T) {
+	ledger, path := executorLedger(t)
+	r := NewRuntime(NewExecutor(&fakeCaller{}, ledger))
+	first, err := r.ClaimIngress(context.Background(), "canonical-message")
+	require.NoError(t, err)
+	require.True(t, first)
+	second, err := r.ClaimIngress(context.Background(), "canonical-message")
+	require.NoError(t, err)
+	require.False(t, second)
+	r.Close()
+	require.NoError(t, ledger.Close())
+	reopened, err := OpenLedger(path, "test", nil)
+	require.NoError(t, err)
+	defer reopened.Close()
+	next := NewRuntime(NewExecutor(&fakeCaller{}, reopened))
+	defer next.Close()
+	second, err = next.ClaimIngress(context.Background(), "canonical-message")
+	require.NoError(t, err)
+	require.False(t, second)
+	first, err = next.ClaimIngress(context.Background(), "new-message")
+	require.NoError(t, err)
+	require.True(t, first)
+}
+
+func TestIngressClaimConcurrentOwners(t *testing.T) {
+	ledger, _ := executorLedger(t)
+	a := NewRuntime(NewExecutor(&fakeCaller{}, ledger))
+	b := NewRuntime(NewExecutor(&fakeCaller{}, ledger))
+	defer a.Close()
+	defer b.Close()
+	results := make(chan bool, 2)
+	errs := make(chan error, 2)
+	for _, r := range []*Runtime{a, b} {
+		go func(r *Runtime) {
+			claimed, err := r.ClaimIngress(context.Background(), "one-message")
+			results <- claimed
+			errs <- err
+		}(r)
+	}
+	first, second := <-results, <-results
+	require.NotEqual(t, first, second)
+	require.NoError(t, <-errs)
+	require.NoError(t, <-errs)
+}

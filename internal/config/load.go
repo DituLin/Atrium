@@ -128,6 +128,11 @@ func (c *Config) normalize() error {
 	}
 	c.Storage.DataDir = expanded
 
+	if c.FamilyArchive.Dir != "" {
+		if c.FamilyArchive.Dir, err = ExpandPath(c.FamilyArchive.Dir); err != nil {
+			return err
+		}
+	}
 	if c.Backup.Dir != "" {
 		if c.Backup.Dir, err = ExpandPath(c.Backup.Dir); err != nil {
 			return err

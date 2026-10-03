@@ -1328,7 +1328,9 @@
                 "photos.read",
                 "screens.read",
                 "screens.control",
-                "commands.read"
+                "commands.read",
+                "family.read",
+                "family.write"
               ]
             },
             "description": "Omitted, null and empty arrays all grant no access."
@@ -1356,6 +1358,14 @@
               "type": "string"
             },
             "description": "Omitted, null and empty arrays all grant no access."
+          },
+          "member_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 128,
+            "description": "Explicit family member allowlist. Empty grants no family record access."
           }
         },
         "required": []
@@ -1714,7 +1724,8 @@
           "route": {
             "enum": [
               "dashboard",
-              "photos"
+              "photos",
+              "family"
             ]
           },
           "collection": {
@@ -1824,7 +1835,7 @@
           "kind",
           "payload"
         ],
-        "description": "Kind-specific validation: navigate dashboard accepts no collection; navigate photos requires collection; show requires only photo_id; refresh requires empty payload. The same principal and operation_id reuse the command without restarting TTL. New IDs must be within -24 hours / +5 minutes; persisted IDs remain queryable for seven days."
+        "description": "Kind-specific validation: navigate dashboard/family accepts no collection; navigate photos requires collection; show requires only photo_id; refresh requires empty payload. The same principal and operation_id reuse the command without restarting TTL. New IDs must be within -24 hours / +5 minutes; persisted IDs remain queryable for seven days."
       },
       "Error": {
         "type": "object",

@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/DituLin/Atrium/internal/domain"
 	"github.com/DituLin/Atrium/internal/integration"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -228,6 +229,12 @@ func receiptResult(tool string, args map[string]any, result *mcp.CallToolResult)
 	}
 	var data any
 	switch tool {
+	case "home_list_family_members":
+		data = &integration.FamilyMembers{}
+	case "home_list_family_records":
+		data = &integration.FamilyRecords{}
+	case "home_record_family_entry":
+		data = &integration.FamilyRecordResult{}
 	case "home_get_status":
 		data = &integration.Home{}
 	case "home_list_screens":
@@ -247,6 +254,48 @@ func receiptResult(tool string, args map[string]any, result *mcp.CallToolResult)
 		return nil, ErrInvalidOutcome
 	}
 	switch value := data.(type) {
+	case *integration.FamilyMembers:
+		if len(value.Members) > 128 {
+			return nil, ErrInvalidOutcome
+		}
+		for _, m := range value.Members {
+			if m.Validate() != nil {
+				return nil, ErrInvalidOutcome
+			}
+		}
+	case *integration.FamilyRecords:
+		if len(value.Records) > 50 {
+			return nil, ErrInvalidOutcome
+		}
+		for _, r := range value.Records {
+			if r.MemberID != args["member_id"] || r.Validate() != nil || !identifier.MatchString(r.ID) || r.CreatedAt.IsZero() {
+				return nil, ErrInvalidOutcome
+			}
+		}
+	case *integration.FamilyRecordResult:
+		record := value.Record
+		if record.Validate() != nil || !identifier.MatchString(record.ID) || record.CreatedAt.IsZero() {
+			return nil, ErrInvalidOutcome
+		}
+		if value.NASStatus != "pending" && value.NASStatus != "synced" {
+			return nil, ErrInvalidOutcome
+		}
+		if (value.NASStatus == "synced") != (record.ExportedAt != nil) {
+			return nil, ErrInvalidOutcome
+		}
+		raw, _ := json.Marshal(args)
+		var requested domain.FamilyRecordInput
+		if json.Unmarshal(raw, &requested) != nil {
+			return nil, ErrInvalidOutcome
+		}
+		requested.OccurredAt = requested.OccurredAt.UTC()
+		record.OccurredAt = record.OccurredAt.UTC()
+		if requested.Measurements == nil {
+			requested.Measurements = []domain.FamilyMeasurement{}
+		}
+		if !reflect.DeepEqual(requested, record.FamilyRecordInput) {
+			return nil, ErrInvalidOutcome
+		}
 	case *integration.Home:
 		if value.Core != "reachable" || value.Day == "" || value.Timezone == "" {
 			return nil, ErrInvalidOutcome
@@ -437,6 +486,12 @@ func receiptRequiredFields(raw []byte, shape reflect.Type) bool {
 		}
 		for i := 0; i < shape.NumField(); i++ {
 			field := shape.Field(i)
+			if field.Anonymous && field.Tag.Get("json") == "" {
+				if !receiptRequiredFields(raw, field.Type) {
+					return false
+				}
+				continue
+			}
 			tag := strings.Split(field.Tag.Get("json"), ",")
 			name := tag[0]
 			if name == "-" {

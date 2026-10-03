@@ -13,6 +13,7 @@ const APIPrefix = "/api/v1"
 // and the path parameters, so no third-party router is needed.
 func (a *API) routes() {
 	a.videoRoutes()
+	a.familyRecordRoutes()
 	m := a.mux
 
 	// Unauthenticated.

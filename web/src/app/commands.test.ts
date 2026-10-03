@@ -137,3 +137,10 @@ it('rejects remote Briefing navigate while allowing a refresh to retain the loca
   expect(refresh).toMatchObject({ kind: 'refresh' });
   expect(router.route.name).toBe('briefing');
 });
+
+it('opens family records on remote navigation and rejects photo-only arguments',()=>{
+ const good=decideCommand(initialRouterState,command({payload:{route:'family'}}));
+ expect(good.kind==='apply'&&good.route).toEqual({name:'family'});
+ const bad=decideCommand(initialRouterState,command({payload:{route:'family',collection:'all'}}));
+ expect(bad.kind).toBe('reject');
+});

@@ -29,7 +29,7 @@ func (s *Service) Validate(ctx context.Context, kind domain.CommandKind, payload
 func (s *Service) validateNavigate(payload *domain.CommandPayload) error {
 	if !payload.Route.NavigableRoute() {
 		return domain.Errorf(domain.CodeInvalidCommand,
-			"navigate accepts route dashboard or photos, got %q", payload.Route)
+			"navigate accepts route dashboard, photos or family, got %q", payload.Route)
 	}
 	if payload.Collection != "" {
 		if !domain.Collection(payload.Collection).Valid() {

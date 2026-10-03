@@ -13,7 +13,10 @@
       "home_get_command",
       "home_navigate_screen",
       "home_show_photo",
-      "home_refresh_screen"
+      "home_refresh_screen",
+      "home_list_family_members",
+      "home_list_family_records",
+      "home_record_family_entry"
     ]
   },
   "activation": {
@@ -48,6 +51,15 @@
       "optional": true
     },
     "home_refresh_screen": {
+      "optional": true
+    },
+    "home_list_family_members": {
+      "optional": true
+    },
+    "home_list_family_records": {
+      "optional": true
+    },
+    "home_record_family_entry": {
       "optional": true
     }
   },

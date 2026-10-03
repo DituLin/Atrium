@@ -92,13 +92,14 @@ func TestIntegrationMCPActualCoreContract(t *testing.T) {
 	require.NoError(t, err)
 	modelTools, err := brain.ModelTools(inventory.Tools)
 	require.NoError(t, err)
-	require.Len(t, modelTools, 10)
+	require.Len(t, modelTools, 13)
 	for _, tool := range modelTools {
 		require.NotEqual(t, "home_get_operation", tool.Name)
 		raw, err := json.Marshal(tool.InputSchema)
 		require.NoError(t, err)
 		require.NotContains(t, string(raw), "operation_id")
 		require.NotContains(t, string(raw), "wait_ms")
+ require.NotContains(t,string(raw),"request_id")
 	}
 	executor := brain.NewExecutorWithLogger(client, ledger, slog.New(slog.NewJSONHandler(&brainLogs, nil)))
 	turn := executor.StartTurn(context.Background())

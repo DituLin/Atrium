@@ -15,9 +15,9 @@ const integrationAdminPath = "/api/v1/admin/integrations"
 
 func newAdminIntegrationsCmd(f *adminFlags) *cobra.Command {
 	root := &cobra.Command{Use: "integrations", Short: "Manage scoped service identities (credentials are written only to files)"}
-	var label, permissions, screens, sources, expiry, outPath string
+	var label, permissions, screens, sources, members, expiry, outPath string
 	policy := func() domain.IntegrationPolicy {
-		return domain.IntegrationPolicy{Permissions: splitPolicy(permissions), ScreenIDs: splitPolicy(screens), SourceIDs: splitPolicy(sources)}
+		return domain.IntegrationPolicy{Permissions: splitPolicy(permissions), ScreenIDs: splitPolicy(screens), SourceIDs: splitPolicy(sources), MemberIDs: splitPolicy(members)}
 	}
 	issue := &cobra.Command{Use: "issue", Args: cobra.NoArgs, Short: "Issue a scoped identity and write its credential to a new file", RunE: func(cmd *cobra.Command, _ []string) error {
 		expires, err := time.Parse(time.RFC3339, expiry)
@@ -37,6 +37,7 @@ func newAdminIntegrationsCmd(f *adminFlags) *cobra.Command {
 	issue.Flags().StringVar(&permissions, "permissions", "", "comma-separated permissions; empty denies all")
 	issue.Flags().StringVar(&screens, "screens", "", "comma-separated allowed screen IDs")
 	issue.Flags().StringVar(&sources, "sources", "", "comma-separated allowed source IDs")
+	issue.Flags().StringVar(&members, "members", "", "comma-separated allowed family member IDs")
 	issue.Flags().StringVar(&expiry, "expires-at", "", "required RFC3339 principal expiry")
 	issue.Flags().StringVar(&outPath, "out", "", "required NEW token file (mode 0600; never overwritten)")
 	var rotateOut, rotateExpiry string
@@ -75,12 +76,12 @@ func newAdminIntegrationsCmd(f *adminFlags) *cobra.Command {
 		_, err = fmt.Fprintln(cmd.OutOrStdout(), "revoked", args[0])
 		return err
 	}}
-	var updatePermissions, updateScreens, updateSources string
+	var updatePermissions, updateScreens, updateSources, updateMembers string
 	update := &cobra.Command{Use: "policy <principal-id>", Args: cobra.ExactArgs(1), Short: "Replace the complete permission policy; omitted allowlists grant no access", RunE: func(cmd *cobra.Command, args []string) error {
 		if !cmd.Flags().Changed("permissions") {
 			return fmt.Errorf("--permissions is required (use an empty value to revoke all permissions)")
 		}
-		p := domain.IntegrationPolicy{Permissions: splitPolicy(updatePermissions), ScreenIDs: splitPolicy(updateScreens), SourceIDs: splitPolicy(updateSources)}
+		p := domain.IntegrationPolicy{Permissions: splitPolicy(updatePermissions), ScreenIDs: splitPolicy(updateScreens), SourceIDs: splitPolicy(updateSources), MemberIDs: splitPolicy(updateMembers)}
 		if err := p.Validate(); err != nil {
 			return err
 		}
@@ -97,6 +98,7 @@ func newAdminIntegrationsCmd(f *adminFlags) *cobra.Command {
 	update.Flags().StringVar(&updatePermissions, "permissions", "", "complete permission list")
 	update.Flags().StringVar(&updateScreens, "screens", "", "complete screen allowlist")
 	update.Flags().StringVar(&updateSources, "sources", "", "complete source allowlist")
+	update.Flags().StringVar(&updateMembers, "members", "", "complete family member allowlist")
 	root.AddCommand(issue, rotate, list, revoke, update)
 	return root
 }

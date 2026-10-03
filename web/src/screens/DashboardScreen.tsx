@@ -75,6 +75,7 @@ export function DashboardScreen(): ReactElement {
     { id: 'photo', name: '这张照片', meta: '全屏查看', icon: ICONS.photo, onOpen: () => hero.current?.click() },
     { id: 'media', name: '影像', meta: photo ? `${photo.totals.ready} 张照片` : '照片与视频', icon: ICONS.media, onOpen: go('media', { name: 'photos', collection: DEFAULT_COLLECTION }) },
     { id: 'today', name: '今日', meta: notices.length ? `${notices.length} 条家庭提示` : lunar ?? '家庭概览', icon: ICONS.today, onOpen: go('today', { name: 'briefing' }) },
+    { id: 'family', name: '家人', meta: '成长 · 健康 · 饮食', icon: ICONS.family, onOpen: go('family', { name: 'family' }) },
     { id: 'house', name: '房屋', meta: status.tone === 'ok' ? '中枢正常' : '需要留意', icon: ICONS.house, onOpen: go('house', { name: 'house' }) },
     { id: 'settings', name: '设置', meta: '连接与照片来源', icon: ICONS.settings, onOpen: go('settings', { name: 'settings' }) },
   ];
@@ -122,5 +123,5 @@ export function DashboardScreen(): ReactElement {
   );
 }
 
-const CARD_IDS = ['photo', 'media', 'today', 'house', 'settings'] as const;
+const CARD_IDS = ['photo', 'media', 'today', 'family', 'house', 'settings'] as const;
 type CardId = typeof CARD_IDS[number];

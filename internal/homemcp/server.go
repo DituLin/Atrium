@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/DituLin/Atrium/internal/domain"
 	"github.com/DituLin/Atrium/internal/integration"
 	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -34,15 +35,26 @@ type adapter struct {
 	busy          map[string]bool
 }
 type args struct {
-	ScreenID    string `json:"screen_id"`
-	PhotoID     string `json:"photo_id"`
-	CommandID   string `json:"command_id"`
-	OperationID string `json:"operation_id"`
-	Route       string `json:"route"`
-	Collection  string `json:"collection"`
-	Cursor      string `json:"cursor"`
-	Limit       int    `json:"limit"`
-	WaitMS      *int   `json:"wait_ms"`
+	MemberID       string                     `json:"member_id"`
+	RequestID      string                     `json:"request_id"`
+	Category       string                     `json:"category"`
+	OccurredAt     time.Time                  `json:"occurred_at"`
+	Title          string                     `json:"title"`
+	Notes          string                     `json:"notes"`
+	Measurements   []domain.FamilyMeasurement `json:"measurements"`
+	DisplayOnTV    bool                       `json:"display_on_tv"`
+	SupersedesID   string                     `json:"supersedes_id"`
+	RevisionReason string                     `json:"revision_reason"`
+	Retracted      bool                       `json:"retracted"`
+	ScreenID       string                     `json:"screen_id"`
+	PhotoID        string                     `json:"photo_id"`
+	CommandID      string                     `json:"command_id"`
+	OperationID    string                     `json:"operation_id"`
+	Route          string                     `json:"route"`
+	Collection     string                     `json:"collection"`
+	Cursor         string                     `json:"cursor"`
+	Limit          int                        `json:"limit"`
+	WaitMS         *int                       `json:"wait_ms"`
 }
 type toolDef struct {
 	name     string
@@ -52,14 +64,37 @@ type toolDef struct {
 }
 
 var definitions = []toolDef{
+	{"home_list_family_members", nil, nil, false},
+	{"home_list_family_records", []string{"member_id"}, []string{"limit", "cursor"}, false},
+	{"home_record_family_entry", []string{"member_id", "request_id", "category", "occurred_at", "title", "display_on_tv"}, []string{"notes", "measurements", "supersedes_id", "revision_reason", "retracted"}, true},
 	{"home_get_status", nil, nil, false}, {"home_list_screens", nil, nil, false}, {"home_get_screen", []string{"screen_id"}, nil, false}, {"home_get_nas_status", nil, nil, false}, {"home_list_photos", nil, []string{"collection", "limit", "cursor"}, false}, {"home_get_photo", []string{"photo_id"}, nil, false},
 	{"home_navigate_screen", []string{"screen_id", "route", "operation_id"}, []string{"collection", "wait_ms"}, true}, {"home_show_photo", []string{"screen_id", "photo_id", "operation_id"}, []string{"wait_ms"}, true}, {"home_refresh_screen", []string{"screen_id", "operation_id"}, []string{"wait_ms"}, true}, {"home_get_command", []string{"command_id"}, nil, false}, {"home_get_operation", []string{"operation_id"}, nil, false},
 }
 
 func field(name string) map[string]any {
 	switch name {
+	case "request_id":
+		return map[string]any{"type": "string", "minLength": 1, "maxLength": 256}
+	case "category":
+		return map[string]any{"type": "string", "enum": []string{"growth", "health", "checkup", "meal", "note"}}
+	case "occurred_at":
+		return map[string]any{"type": "string", "format": "date-time", "description": "Actual observation or planned meal time with timezone; ask if ambiguous."}
+	case "title":
+		return map[string]any{"type": "string", "minLength": 1, "maxLength": 300}
+	case "notes":
+		return map[string]any{"type": "string", "maxLength": 16000}
+	case "supersedes_id":
+		return map[string]any{"type": "string", "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$", "description": "Exact current record ID from a prior query, only when the user requests a correction or retraction. Never guess."}
+	case "revision_reason":
+		return map[string]any{"type": "string", "minLength": 1, "maxLength": 2000, "description": "User-supplied correction or retraction reason; required with supersedes_id."}
+	case "retracted":
+		return map[string]any{"type": "boolean", "description": "True only for an explicitly requested retraction; requires supersedes_id, revision_reason, display_on_tv=false. History remains archived."}
+	case "display_on_tv":
+		return map[string]any{"type": "boolean", "description": "True only when this record is intended for household TV display."}
+	case "measurements":
+		return map[string]any{"type": "array", "maxItems": 32, "items": map[string]any{"type": "object", "additionalProperties": false, "required": []string{"metric", "value", "unit"}, "properties": map[string]any{"metric": map[string]any{"type": "string", "pattern": safeID.String()}, "value": map[string]any{"type": "number"}, "unit": map[string]any{"type": "string", "minLength": 1, "maxLength": 32}}}}
 	case "route":
-		return map[string]any{"type": "string", "enum": []string{"dashboard", "photos"}}
+		return map[string]any{"type": "string", "enum": []string{"dashboard", "photos", "family"}}
 	case "collection":
 		return map[string]any{"type": "string", "enum": []string{"recent", "captured_today", "random", "all"}}
 	case "operation_id":
@@ -75,7 +110,7 @@ func field(name string) map[string]any {
 	}
 }
 
-// NewServer builds the eleven-tool MCP server without opening a listener.
+// NewServer builds the household MCP server without opening a listener.
 func NewServer(c Config) (*mcp.Server, error) {
 	return NewServerWithLogger(c, slog.New(slog.NewJSONHandler(os.Stderr, nil)))
 }
@@ -133,6 +168,15 @@ func NewServerWithLogger(c Config, logger *slog.Logger) (*mcp.Server, error) {
 	return s, nil
 }
 func description(d toolDef) string {
+	switch d.name {
+	case "home_list_family_members":
+		return "List authorized household members and stable IDs. Use these IDs for family record tools; do not guess which person a measurement belongs to."
+	case "home_list_family_records":
+		return "Read authorized family record history, including corrections and retractions. Only records without superseded_by and with retracted=false are current observations; never count historical revisions as additional measurements. Use next_cursor for older history; this is a bounded page, not all history. Ask for limit=1 if the response is too large."
+	case "home_record_family_entry":
+		return "Persist one user-supplied growth, health, checkup, meal plan or note record. To correct/retract, query first and supply the current same-member supersedes_id and revision_reason plus the complete corrected record. Retraction requires retracted=true and display_on_tv=false; preserve prior content and explain the withdrawal. Originals stay in history; stale targets fail. Never invent values, units, dates, diagnoses or member identity. Host supplies request identity. NAS pending means saved locally, not archived. Never reissue after uncertain transport; query first."
+	}
+
 	if d.mutation {
 		return "Control an authorized screen. Reuse the same operation_id for the same action. accepted means pending; only applied confirms completion. Cancellation does not cancel an accepted action."
 	}
@@ -171,6 +215,21 @@ func (a *adapter) call(ctx context.Context, d toolDef, in args) *mcp.CallToolRes
 	default:
 		return failure("busy", "Too many concurrent tool calls; retry later.", in.OperationID)
 	}
+
+	if d.name == "home_record_family_entry" {
+		body := struct {
+			domain.FamilyRecordInput
+			RequestID string `json:"request_id"`
+		}{domain.FamilyRecordInput{MemberID: in.MemberID, Category: in.Category, OccurredAt: in.OccurredAt, Title: in.Title, Notes: in.Notes, Measurements: in.Measurements, DisplayOnTV: in.DisplayOnTV, SupersedesID: in.SupersedesID, RevisionReason: in.RevisionReason, Retracted: in.Retracted}, in.RequestID}
+		if err := body.Validate(); err != nil {
+			return failure("invalid_arguments", "Invalid family record.", "")
+		}
+		b, status, err := a.request(ctx, "POST", "family/records", body)
+		if err != nil {
+			return failure("outcome_unknown", "Family record outcome unconfirmed. Query this member's records before recording again.", "")
+		}
+		return decode(d.name, b, status)
+	}
 	if d.mutation {
 		a.mu.Lock()
 		busy := a.busy[in.ScreenID]
@@ -186,6 +245,13 @@ func (a *adapter) call(ctx context.Context, d toolDef, in args) *mcp.CallToolRes
 	}
 	path := ""
 	switch d.name {
+	case "home_list_family_members":
+		path = "family/members"
+	case "home_list_family_records":
+		if in.Limit == 0 {
+			in.Limit = 10
+		}
+		path = "family/records?" + url.Values{"member_id": {in.MemberID}, "limit": {jsonNumber(in.Limit)}, "cursor": {in.Cursor}}.Encode()
 	case "home_get_status":
 		path = "home"
 	case "home_list_screens":
@@ -280,6 +346,12 @@ func transportFailure(e error, op string) *mcp.CallToolResult {
 }
 func decode(name string, b []byte, status int) *mcp.CallToolResult {
 	switch name {
+	case "home_list_family_members":
+		return typed[integration.FamilyMembers](b, status)
+	case "home_list_family_records":
+		return typed[integration.FamilyRecords](b, status)
+	case "home_record_family_entry":
+		return typed[integration.FamilyRecordResult](b, status)
 	case "home_get_status":
 		return typed[integration.Home](b, status)
 	case "home_list_screens":
@@ -343,8 +415,8 @@ func (a *adapter) control(ctx context.Context, d toolDef, in args) *mcp.CallTool
 	if in.Route == "photos" && in.Collection == "" {
 		return failure("invalid_arguments", "A photos action requires an explicit collection.", in.OperationID)
 	}
-	if in.Route == "dashboard" && in.Collection != "" {
-		return failure("invalid_arguments", "A dashboard action does not accept a collection.", in.OperationID)
+	if (in.Route == "dashboard" || in.Route == "family") && in.Collection != "" {
+		return failure("invalid_arguments", "This route does not accept a collection.", in.OperationID)
 	}
 	b, status, e := a.request(ctx, "POST", "screens/"+in.ScreenID+"/commands", map[string]any{"operation_id": in.OperationID, "kind": kind, "payload": payload})
 	if e != nil {

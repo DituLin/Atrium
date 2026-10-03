@@ -55,7 +55,7 @@ func (a Action) validate() error {
 		if a.PhotoID != "" {
 			break
 		}
-		if a.Route == "dashboard" && a.Collection == "" {
+		if (a.Route == "dashboard" || a.Route == "family") && a.Collection == "" {
 			return nil
 		}
 		if a.Route == "photos" {
@@ -143,7 +143,8 @@ func OpenLedger(path, scope string, now func() time.Time) (*Ledger, error) {
 	}
 	_, err = tx.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS brain_meta (singleton INTEGER PRIMARY KEY CHECK(singleton=1),scope TEXT NOT NULL,version INTEGER NOT NULL);
  CREATE TABLE IF NOT EXISTS brain_actions (operation_id TEXT PRIMARY KEY,turn_id TEXT NOT NULL,call_id TEXT NOT NULL,action_json TEXT NOT NULL,command_id TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'unconfirmed',created_at INTEGER NOT NULL,UNIQUE(turn_id,call_id));
- CREATE TABLE IF NOT EXISTS brain_runtime_runs (run_key TEXT PRIMARY KEY,turn_id TEXT UNIQUE);`)
+ CREATE TABLE IF NOT EXISTS brain_runtime_runs (run_key TEXT PRIMARY KEY,turn_id TEXT UNIQUE);
+ CREATE TABLE IF NOT EXISTS brain_inbound_messages (message_key TEXT PRIMARY KEY,claimed_at INTEGER NOT NULL);`)
 	if err != nil {
 		return fail(err)
 	}

@@ -195,6 +195,25 @@ func (c *Config) Validate() error {
 		}
 	}
 
+	if c.FamilyArchive.Enabled {
+		if !filepath.IsAbs(c.FamilyArchive.Dir) {
+			add("family_archive.dir must be absolute")
+		}
+		if strings.TrimSpace(c.FamilyArchive.Identity) == "" || len(c.FamilyArchive.Identity) > 128 {
+			add("family_archive.identity is required and must be at most 128 bytes")
+		}
+	}
+	if c.FamilyArchive.Dir != "" {
+		overlaps := func(a, b string) bool { return isWithin(a, b) || isWithin(b, a) }
+		if overlaps(c.FamilyArchive.Dir, c.Storage.DataDir) {
+			add("family_archive.dir must not overlap storage.data_dir")
+		}
+		for _, s := range c.Sources {
+			if overlaps(c.FamilyArchive.Dir, s.Root) {
+				add("family_archive.dir must not overlap a read-only source root")
+			}
+		}
+	}
 	return errors.Join(errs...)
 }
 

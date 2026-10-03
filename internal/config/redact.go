@@ -9,6 +9,12 @@ import (
 // disclose the NAS layout are replaced with a stable placeholder.
 func (c *Config) Redacted() *Config {
 	cp := *c
+	if cp.FamilyArchive.Dir != "" {
+		cp.FamilyArchive.Dir = "<redacted>"
+	}
+	if cp.FamilyArchive.Identity != "" {
+		cp.FamilyArchive.Identity = "<redacted>"
+	}
 	cp.Sources = make([]Source, len(c.Sources))
 	copy(cp.Sources, c.Sources)
 	for i := range cp.Sources {

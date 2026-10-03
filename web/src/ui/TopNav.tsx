@@ -1,5 +1,5 @@
 /**
- * Top navigation for paper information pages (首页 · 影像 · 今日 · 房屋 · 设置).
+ * Top navigation for paper information pages (首页 · 影像 · 今日 · 家人 · 房屋 · 设置).
  * It sits above the content so page controls can never collide with it.
  *
  * Remote: Left/Right move between entries and stop at the edges, Down hands
@@ -17,12 +17,13 @@ import type { AppRoute } from '../app/router';
 import { formatClock, serverNow } from '../core/clock';
 import { RemoteButton } from './RemoteButton';
 
-export type TopNavEntry = 'dashboard' | 'media' | 'briefing' | 'house' | 'settings';
+export type TopNavEntry = 'dashboard' | 'media' | 'briefing' | 'family' | 'house' | 'settings';
 
 const ENTRIES: readonly { id: TopNavEntry; label: string; route: AppRoute }[] = [
   { id: 'dashboard', label: '首页', route: { name: 'dashboard' } },
   { id: 'media', label: '影像', route: { name: 'photos', collection: DEFAULT_COLLECTION } },
   { id: 'briefing', label: '今日', route: { name: 'briefing' } },
+  { id: 'family', label: '家人', route: { name: 'family' } },
   { id: 'house', label: '房屋', route: { name: 'house' } },
   { id: 'settings', label: '设置', route: { name: 'settings' } },
 ];
@@ -33,6 +34,7 @@ export function topNavEntryFor(route: AppRoute): TopNavEntry | null {
     case 'dashboard': return 'dashboard';
     case 'photos': case 'photo': case 'videos': case 'video': return 'media';
     case 'briefing': return 'briefing';
+    case 'family': return 'family';
     case 'house': return 'house';
     case 'settings': return 'settings';
     default: return null;

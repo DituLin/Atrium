@@ -1,3 +1,4 @@
+import type { FamilyMember, FamilyRecordPage } from '../types/family';
 /**
  * HTTP client for `/api/v1` (design §8). All auth transport goes through
  * `AuthTransport`; no credential ever appears in a URL.
@@ -177,6 +178,15 @@ export class ApiClient {
 
   getHome(): Promise<HomeResponse> {
     return this.get<HomeResponse>(`${API_BASE}/home`);
+  }
+
+  getFamilyMembers(signal?: AbortSignal): Promise<{members: FamilyMember[]}> {
+    return this.request(`${API_BASE}/family/members`, {method:'GET',headers:{Accept:'application/json'},cache:'no-store',...(signal?{signal}:{})},true);
+  }
+  getFamilyRecords(memberId: string, cursor = '', signal?: AbortSignal): Promise<FamilyRecordPage> {
+    const query = new URLSearchParams({member_id:memberId,limit:'100'});
+    if(cursor) query.set('cursor',cursor);
+    return this.request(`${API_BASE}/family/records?${query}`, {method:'GET',headers:{Accept:'application/json'},cache:'no-store',...(signal?{signal}:{})},true);
   }
 
   getHouse(signal?: AbortSignal): Promise<HouseResponse> {

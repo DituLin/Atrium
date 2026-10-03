@@ -106,6 +106,16 @@ func (r *Integrations) validateReferences(ctx context.Context, p domain.Integrat
 			}
 		}
 	}
+
+	for _, id := range p.MemberIDs {
+		var n int
+		if err := r.ex.QueryRowContext(ctx, `SELECT COUNT(*) FROM family_members WHERE id=?`, id).Scan(&n); err != nil {
+			return err
+		}
+		if n != 1 {
+			return domain.Errorf(domain.CodeInvalidRequest, "policy references an unknown family member")
+		}
+	}
 	return nil
 }
 

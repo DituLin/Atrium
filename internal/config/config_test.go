@@ -203,3 +203,19 @@ func TestParseDayTime(t *testing.T) {
 		require.Error(t, err, bad)
 	}
 }
+
+func TestFamilyArchiveConfiguration(t *testing.T) {
+	p, _ := writeConfig(t, minimal+"\nfamily_archive:\n  enabled: true\n  dir: /Volumes/home/AtriumFamily\n  identity: home-family\n")
+	cfg, err := config.Load(p)
+	require.NoError(t, err)
+	require.True(t, cfg.FamilyArchive.Enabled)
+	require.False(t, cfg.FamilyArchive.AllowLocal)
+	require.Equal(t, "<redacted>", cfg.Redacted().FamilyArchive.Dir)
+	for _, dir := range []string{cfg.Storage.DataDir, cfg.Sources[0].Root, filepath.Dir(cfg.Sources[0].Root)} {
+		cfg.FamilyArchive.Dir = dir
+		require.Error(t, cfg.Validate())
+	}
+	cfg.FamilyArchive.Dir = "/Volumes/home/AtriumFamily"
+	cfg.FamilyArchive.Identity = ""
+	require.Error(t, cfg.Validate())
+}

@@ -19,8 +19,8 @@ function fixture(t, overrides={}) {
 test('exact optional tools, trusted hooks and deterministic report',async t=>{
  const f=fixture(t);assert.equal(f.factories.length,1);assert.equal(f.factories[0].opts.optional,true);
  assert.equal(f.factories[0].fn({agentId:'other'}),null);
- const tools=f.factories[0].fn(f.ctx);assert.equal(tools.length,10);
- await f.hooks.before_agent_start({runId:'run'},f.ctx);
+ const tools=f.factories[0].fn(f.ctx);assert.equal(tools.length,13);
+ await f.hooks.before_agent_run({runId:'run'},f.ctx);
  await f.hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},f.ctx);
  const result=await tools.find(x=>x.name==='home_get_status').execute('call',{});
  assert.deepEqual(result.content,[{type:'text',text:'safe result'},{type:'text',text:'已显示'}]);
@@ -29,33 +29,33 @@ test('exact optional tools, trusted hooks and deterministic report',async t=>{
 test('execute fails closed without hooks and parameter identity cannot be injected',async t=>{
  const f=fixture(t);const tool=f.factories[0].fn(f.ctx).find(x=>x.name==='home_get_status');
  assert.equal((await tool.execute('missing',{})).isError,true);assert.equal(f.requests.length,0);
- await f.hooks.before_agent_start({runId:'run'},f.ctx);
+ await f.hooks.before_agent_run({runId:'run'},f.ctx);
  await f.hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:tool.name},f.ctx);
  assert.equal((await tool.execute('call',{operation_id:'injected'})).isError,true);
  assert.equal(f.requests.length,1);
 });
 test('ambiguous run context and failed start cannot authorize tools',async t=>{
  const f=fixture(t,{host:{async rpc(){throw new Error('secret');},close(){}}});
- await f.hooks.before_agent_start({runId:'run'},f.ctx);
+ await f.hooks.before_agent_run({runId:'run'},f.ctx);
  const blocked=await f.hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},f.ctx);
  assert.equal(blocked.block,true);
  const tool=f.factories[0].fn(f.ctx)[0];assert.equal((await tool.execute('call',{})).isError,true);
 });
 test('timeout cannot be revived by a late start response',async t=>{
  let resolveStart;const f=fixture(t,{runTimeoutMs:10,host:{rpc(req){return req.method==='start'?new Promise(resolve=>{resolveStart=resolve;}):Promise.resolve({});},close(){}}});
- const start=f.hooks.before_agent_start({runId:'run'},f.ctx);await new Promise(r=>setTimeout(r,30));resolveStart({});await start;
+ const start=f.hooks.before_agent_run({runId:'run'},f.ctx);await new Promise(r=>setTimeout(r,30));resolveStart({});await start;
  assert.equal((await f.hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},f.ctx)).block,true);
 });
 test('crash invalidates old run and only a new run can start',async t=>{
  const host={async rpc(req){return req.method==='end'?{closed:true}:{};},close(){}};const f=fixture(t,{host});
- await f.hooks.before_agent_start({runId:'old'},f.ctx);host.onCrash();
- await f.hooks.before_agent_start({runId:'old'},f.ctx);
+ await f.hooks.before_agent_run({runId:'old'},f.ctx);host.onCrash();
+ await f.hooks.before_agent_run({runId:'old'},f.ctx);
  assert.equal((await f.hooks.before_tool_call({runId:'old',toolCallId:'call',toolName:'home_get_status'},f.ctx)).block,true);
- await f.hooks.before_agent_start({runId:'new'},f.ctx);
+ await f.hooks.before_agent_run({runId:'new'},f.ctx);
  assert.equal(await f.hooks.before_tool_call({runId:'new',toolCallId:'newcall',toolName:'home_get_status'},f.ctx),undefined);
 });
 test('agent end, mismatched event context, foreign session fail closed',async t=>{
- const f=fixture(t);await f.hooks.before_agent_start({runId:'run'},f.ctx);
+ const f=fixture(t);await f.hooks.before_agent_run({runId:'run'},f.ctx);
  assert.equal((await f.hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},{...f.ctx,runId:'different'})).block,true);
  await f.hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},f.ctx);
  const other=f.factories[0].fn({...f.ctx,sessionId:'other'})[0];assert.equal((await other.execute('call',{})).isError,true);
@@ -71,16 +71,16 @@ test('inventory rejects widened schemas and credential fields',t=>{
 test('end before start tombstones the run and prevents delayed start',async t=>{
  const f=fixture(t);
  await f.hooks.agent_end({runId:'ended'},f.ctx);
- await f.hooks.before_agent_start({runId:'ended'},f.ctx);
+ await f.hooks.before_agent_run({runId:'ended'},f.ctx);
  assert.deepEqual(f.requests.map(x=>x.method),['end']);
  assert.equal((await f.hooks.before_tool_call({runId:'ended',toolCallId:'call',toolName:'home_get_status'},f.ctx)).block,true);
 });
 test('tool call reference cannot be rebound across runs and late execute stays denied',async t=>{
  const f=fixture(t);const tool=f.factories[0].fn(f.ctx).find(x=>x.name==='home_get_status');
- await f.hooks.before_agent_start({runId:'old'},f.ctx);
+ await f.hooks.before_agent_run({runId:'old'},f.ctx);
  await f.hooks.before_tool_call({runId:'old',toolCallId:'shared-call',toolName:tool.name},f.ctx);
  await f.hooks.agent_end({runId:'old'},f.ctx);
- await f.hooks.before_agent_start({runId:'new'},f.ctx);
+ await f.hooks.before_agent_run({runId:'new'},f.ctx);
  assert.equal((await f.hooks.before_tool_call({runId:'new',toolCallId:'shared-call',toolName:tool.name},f.ctx)).block,true);
  assert.equal((await tool.execute('shared-call',{})).isError,true);
  assert.equal(f.requests.some(x=>x.method==='call'),false);
@@ -88,39 +88,39 @@ test('tool call reference cannot be rebound across runs and late execute stays d
 test('failed or unconfirmed early end disables all future runs',async t=>{
  for(const outcome of ['throw','false']){
  let closed=false;const requests=[];const host={async rpc(req){requests.push(req);if(outcome==='throw')throw new Error('private-secret');return {closed:false};},close(){closed=true;}};
- const f=fixture(t,{host});await f.hooks.agent_end({runId:'ended'},f.ctx);await f.hooks.before_agent_start({runId:'new'},f.ctx);
+ const f=fixture(t,{host});await f.hooks.agent_end({runId:'ended'},f.ctx);await f.hooks.before_agent_run({runId:'new'},f.ctx);
  assert.equal(closed,true);assert.deepEqual(requests.map(x=>x.method),['end']);assert.equal(f.factories[0].fn(f.ctx),null);
  }
 });
 test('run capacity closes plugin without evicting historical ownership',async t=>{
  let closed=false;const requests=[];const host={async rpc(req){requests.push(req);return {closed:true};},close(){closed=true;}};
- const f=fixture(t,{host,maxRuns:1});await f.hooks.before_agent_start({runId:'first'},f.ctx);await f.hooks.agent_end({runId:'first'},f.ctx);
- await f.hooks.before_agent_start({runId:'second'},f.ctx);assert.equal(closed,true);assert.equal(f.factories[0].fn(f.ctx),null);assert.deepEqual(requests.map(x=>x.method),['start','end']);
+ const f=fixture(t,{host,maxRuns:1});await f.hooks.before_agent_run({runId:'first'},f.ctx);await f.hooks.agent_end({runId:'first'},f.ctx);
+ await f.hooks.before_agent_run({runId:'second'},f.ctx);assert.equal(closed,true);assert.equal(f.factories[0].fn(f.ctx),null);assert.deepEqual(requests.map(x=>x.method),['start','end']);
 });
 test('call capacity closes plugin and cannot recycle closed run references',async t=>{
  let closed=false;const host={async rpc(){return {};},close(){closed=true;}};const f=fixture(t,{host,maxCalls:1});
- await f.hooks.before_agent_start({runId:'run'},f.ctx);await f.hooks.before_tool_call({runId:'run',toolCallId:'first',toolName:'home_get_status'},f.ctx);
+ await f.hooks.before_agent_run({runId:'run'},f.ctx);await f.hooks.before_tool_call({runId:'run',toolCallId:'first',toolName:'home_get_status'},f.ctx);
  assert.equal((await f.hooks.before_tool_call({runId:'run',toolCallId:'second',toolName:'home_get_status'},f.ctx)).block,true);
  assert.equal(closed,true);assert.equal(f.factories[0].fn(f.ctx),null);
 });
 test('unknown end at capacity still attempts a tombstone before closing host',async t=>{
  let closed=false;const requests=[];const host={async rpc(req){assert.equal(closed,false);requests.push(req);return {closed:true};},close(){closed=true;}};
- const f=fixture(t,{host,maxRuns:1});await f.hooks.before_agent_start({runId:'first'},f.ctx);await f.hooks.agent_end({runId:'unknown'},f.ctx);
+ const f=fixture(t,{host,maxRuns:1});await f.hooks.before_agent_run({runId:'first'},f.ctx);await f.hooks.agent_end({runId:'unknown'},f.ctx);
  assert.deepEqual(requests.map(x=>x.method),['start','end']);assert.equal(closed,true);assert.equal(f.factories[0].fn(f.ctx),null);
 });
 test('idle host release waits for starting runs and confirmed end',async t=>{
  let releases=0,startCount=0,resolveSecond;
  const host={rpc(req){if(req.method==='start'&&++startCount===2)return new Promise(resolve=>{resolveSecond=resolve;});return Promise.resolve({closed:true});},releaseIdle(){releases++;},close(){}};
- const f=fixture(t,{host});await f.hooks.before_agent_start({runId:'first'},f.ctx);
- const starting=f.hooks.before_agent_start({runId:'second'},f.ctx);
+ const f=fixture(t,{host});await f.hooks.before_agent_run({runId:'first'},f.ctx);
+ const starting=f.hooks.before_agent_run({runId:'second'},f.ctx);
  await f.hooks.agent_end({runId:'first'},f.ctx);assert.equal(releases,0);
  resolveSecond({});await starting;assert.equal(releases,0);
  await f.hooks.agent_end({runId:'second'},f.ctx);assert.equal(releases,1);
- await f.hooks.before_agent_start({runId:'third'},f.ctx);assert.equal(releases,1);
+ await f.hooks.before_agent_run({runId:'third'},f.ctx);assert.equal(releases,1);
 });
 test('identity diagnostics expose only stage hashes and presence flags',async t=>{
  const f=fixture(t);const logs=[];f.api.logger={info(line){logs.push(line);}};f.ctx.sessionId='private-session-secret';f.ctx.sessionKey='private-key-secret';
- const tools=f.factories[0].fn(f.ctx);await f.hooks.before_agent_start({runId:'private-run-secret',prompt:'private-prompt-secret'},f.ctx);
+ const tools=f.factories[0].fn(f.ctx);await f.hooks.before_agent_run({runId:'private-run-secret',prompt:'private-prompt-secret'},f.ctx);
  await f.hooks.before_tool_call({runId:'private-run-secret',toolCallId:'private-call-secret',toolName:'home_get_status'},f.ctx);
  await tools.find(x=>x.name==='home_get_status').execute('private-call-secret',{secret:'private-argument-secret'});
  const output=logs.join('\n');assert.equal(output.includes('private-'),false);assert.equal(output.includes('execute'),true);assert.equal(output.includes('mapping_found'),true);
@@ -130,7 +130,7 @@ test('separate OpenClaw registries share trusted controller and old stop cannot 
  const sharedRegistry=new Map();const f=fixture(t,{sharedRegistry});const hooks={},factories=[];
  const secondApi={...f.api,on(n,fn){hooks[n]=fn;},registerTool(fn,opts){factories.push({fn,opts});}};
  const second=registerPlugin(secondApi,{sharedRegistry});t.after(()=>second.close());
- await f.hooks.before_agent_start({runId:'run'},f.ctx);await f.hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},f.ctx);
+ await f.hooks.before_agent_run({runId:'run'},f.ctx);await f.hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},f.ctx);
  const tool=factories[0].fn(f.ctx).find(x=>x.name==='home_get_status');
  assert.equal((await tool.execute('call',{})).isError,undefined);
  f.plugin.close();assert.equal(await f.hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},f.ctx),undefined);assert.equal((await tool.execute('call',{})).isError,undefined);
@@ -140,14 +140,14 @@ test('different trusted ledger configuration cannot reuse controller mappings',a
  const sharedRegistry=new Map();const f=fixture(t,{sharedRegistry});const factories=[];
  const api={...f.api,pluginConfig:{...f.api.pluginConfig,hostArgs:['--ledger','/different/ledger']},on(){},registerTool(fn){factories.push(fn);}};
  const second=registerPlugin(api,{sharedRegistry,host:{async rpc(){return {};},close(){}}});t.after(()=>second.close());
- await f.hooks.before_agent_start({runId:'run'},f.ctx);await f.hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},f.ctx);
+ await f.hooks.before_agent_run({runId:'run'},f.ctx);await f.hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},f.ctx);
  assert.equal((await factories[0](f.ctx).find(x=>x.name==='home_get_status').execute('call',{})).isError,true);
 });
 test('all registrations revalidate config and stops are idempotent',async t=>{
  const sharedRegistry=new Map();const f=fixture(t,{sharedRegistry});
  assert.throws(()=>registerPlugin({...f.api,pluginConfig:{...f.api.pluginConfig,unexpected:true}},{sharedRegistry}),/invalid_atrium_config/);
  const hooks={},factories=[];const second=registerPlugin({...f.api,on(n,fn){hooks[n]=fn;},registerTool(fn){factories.push(fn);}},{sharedRegistry});t.after(()=>second.close());
- await hooks.before_agent_start({runId:'run'},f.ctx);await hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},f.ctx);
+ await hooks.before_agent_run({runId:'run'},f.ctx);await hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},f.ctx);
  const oldTool=f.factories[0].fn(f.ctx).find(x=>x.name==='home_get_status');f.plugin.close();f.plugin.close();
  assert.equal((await oldTool.execute('call',{})).isError,true);assert.equal((await factories[0](f.ctx).find(x=>x.name==='home_get_status').execute('call',{})).isError,undefined);
  second.close();second.close();assert.equal(sharedRegistry.size,0);
@@ -158,7 +158,32 @@ test('independent module copies share production global controller with real hos
  const a=await import('./index.js?registry-a');const b=await import('./index.js?registry-b');
  const one=a.registerPlugin({...f.api,pluginConfig:config,on(n,fn){hooks[n]=fn;},registerTool(){}});
  const two=b.registerPlugin({...f.api,pluginConfig:config,on(){},registerTool(fn){factories.push(fn);}});t.after(()=>{one.close();two.close();});
- await hooks.before_agent_start({runId:'run'},f.ctx);await hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},f.ctx);
+ await hooks.before_agent_run({runId:'run'},f.ctx);await hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},f.ctx);
  const result=await factories[0](f.ctx).find(x=>x.name==='home_get_status').execute('call',{});assert.deepEqual(result.content,[{type:'text',text:'shared controller'}]);
  await hooks.agent_end({runId:'run'},f.ctx);
+});
+test('manifest declares the complete registered tool inventory',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const manifest=JSON.parse(await readFile(new URL('./openclaw.plugin.json',import.meta.url),'utf8'));
+ assert.deepEqual([...manifest.contracts.tools].sort(),Object.keys(TOOL_FIELDS).sort());
+ assert.deepEqual(Object.keys(manifest.toolMetadata).sort(),Object.keys(TOOL_FIELDS).sort());
+});
+test('canonical IM message claim blocks replay and fails closed on absent identity',async t=>{
+ const claimed=new Set();const requests=[];
+ const f=fixture(t,{host:{async rpc(r){requests.push(r);if(r.method==='ingress'){const first=!claimed.has(r.run_id);claimed.add(r.run_id);return {claimed:first};}return {};},close(){}}});
+ const ctx={channelId:'openclaw-weixin',accountId:'account',conversationId:'peer',senderId:'sender',sessionKey:'agent:home:weixin:peer',messageId:'provider-message-1'};
+ const event={channel:'openclaw-weixin',messageId:ctx.messageId};
+ assert.equal(await f.hooks.before_dispatch(event,ctx),undefined);
+ assert.equal((await f.hooks.before_dispatch({...event},ctx)).handled,true);
+ assert.equal(await f.hooks.before_dispatch({channel:'openclaw-weixin',messageId:'new'}, {...ctx,messageId:'new'}),undefined);
+ assert.equal((await f.hooks.before_dispatch({channel:'openclaw-weixin'}, {...ctx,messageId:undefined})).handled,true);
+ assert.equal((await f.hooks.before_dispatch({channel:'openclaw-weixin',messageId:'openclaw-weixin-local'}, {...ctx,messageId:'openclaw-weixin-local'})).handled,true);
+ assert.equal(await f.hooks.before_dispatch(event,{...ctx,sessionKey:'agent:other:weixin:peer'}),undefined);
+ assert.equal(requests.length,3);assert.match(requests[0].run_id,/^[0-9a-f]{64}$/);assert.equal(JSON.stringify(requests).includes('sender'),false);
+});
+test('ingress identity disagreement and ledger failure prevent dispatch',async t=>{
+ const f=fixture(t,{host:{async rpc(){throw Error('unavailable');},close(){}}});
+ const ctx={channelId:'discord',accountId:'default',conversationId:'peer',senderId:'owner',sessionKey:'agent:home:discord:peer',messageId:'123456789012345678'};
+ assert.equal((await f.hooks.before_dispatch({channel:'discord',messageId:ctx.messageId},ctx)).handled,true);
+ assert.equal((await f.hooks.before_dispatch({channel:'discord',messageId:'223456789012345678'},ctx)).handled,true);
 });

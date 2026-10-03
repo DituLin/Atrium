@@ -18,6 +18,7 @@ export type AppRoute =
   | { name: 'dashboard' }
   | { name: 'settings' }
   | { name: 'house' }
+  | { name: 'family' }
   | { name: 'briefing' }
   | { name: 'videos' }
   | { name: 'video'; videoId: string }
@@ -55,6 +56,8 @@ export function parseRoutePath(path: string): AppRoute | null {
       return segments.length === 1 ? { name: 'connect' } : null;
     case 'briefing':
       return segments.length === 1 ? { name: 'briefing' } : null;
+    case 'family':
+      return segments.length === 1 ? { name: 'family' } : null;
     case 'house':
       return segments.length === 1 ? { name: 'house' } : null;
     case 'settings':
@@ -124,6 +127,7 @@ export function backRoute(route: AppRoute): AppRoute {
         : { name: 'dashboard' };
     case 'photos':
     case 'briefing':
+    case 'family':
     case 'house':
     case 'settings':
       return { name: 'dashboard' };

@@ -28,6 +28,9 @@ func (a *API) integrationRoutes() {
 		path, permission string
 		handler          http.HandlerFunc
 	}{
+		{"GET /family/members", "family.read", a.integrationFamilyMembers},
+		{"GET /family/records", "family.read", a.integrationFamilyRecords},
+		{"POST /family/records", "family.write", a.integrationFamilyRecord},
 		{"GET /home", "home.read", a.integrationHome},
 		{"GET /nas/status", "nas.read", a.integrationNAS},
 		{"GET /photos", "photos.read", a.integrationPhotos},

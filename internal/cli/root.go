@@ -40,6 +40,7 @@ func NewRoot() *cobra.Command {
 		newTokenCmd(g),
 		newBackupCmd(g),
 		newRestoreCmd(g),
+		newFamilyCmd(),
 		newAdminCmd(),
 	)
 	return root

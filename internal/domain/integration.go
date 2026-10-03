@@ -11,6 +11,7 @@ type IntegrationPolicy struct {
 	Permissions []string `json:"permissions"`
 	ScreenIDs   []string `json:"screen_ids"`
 	SourceIDs   []string `json:"source_ids"`
+	MemberIDs   []string `json:"member_ids,omitempty"`
 }
 
 // Allows reports explicit permission membership.
@@ -24,10 +25,12 @@ func (p IntegrationPolicy) AllowsScreen(id string) bool { return slices.Contains
 // AllowsSource reports explicit source membership.
 func (p IntegrationPolicy) AllowsSource(id string) bool { return slices.Contains(p.SourceIDs, id) }
 
+func (p IntegrationPolicy) AllowsMember(id string) bool { return slices.Contains(p.MemberIDs, id) }
+
 // Validate rejects ambiguous, duplicate, wildcard and oversized entries.
 func (p IntegrationPolicy) Validate() error {
-	valid := []string{"home.read", "nas.read", "photos.read", "screens.read", "screens.control", "commands.read"}
-	for _, list := range [][]string{p.Permissions, p.ScreenIDs, p.SourceIDs} {
+	valid := []string{"home.read", "nas.read", "photos.read", "screens.read", "screens.control", "commands.read", "family.read", "family.write"}
+	for _, list := range [][]string{p.Permissions, p.ScreenIDs, p.SourceIDs, p.MemberIDs} {
 		if len(list) > 128 {
 			return Errorf(CodeInvalidRequest, "policy allowlist exceeds 128 entries")
 		}

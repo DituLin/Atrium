@@ -127,6 +127,8 @@ func TestValidationMatrix(t *testing.T) {
 		wantErr bool
 	}{
 		{"navigate dashboard", domain.CommandNavigate, domain.CommandPayload{Route: domain.RouteDashboard}, false},
+		{"navigate family", domain.CommandNavigate, domain.CommandPayload{Route: domain.RouteFamily}, false},
+		{"navigate family collection", domain.CommandNavigate, domain.CommandPayload{Route: domain.RouteFamily, Collection: "all"}, true},
 		{"navigate photos", domain.CommandNavigate, domain.CommandPayload{Route: domain.RoutePhotos}, false},
 		{"navigate photo route", domain.CommandNavigate, domain.CommandPayload{Route: domain.RoutePhoto}, true},
 		{"navigate settings route", domain.CommandNavigate, domain.CommandPayload{Route: "settings"}, true},

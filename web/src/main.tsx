@@ -17,3 +17,5 @@ if (container) {
     </StrictMode>,
   );
 }
+
+import './styles/family.css';

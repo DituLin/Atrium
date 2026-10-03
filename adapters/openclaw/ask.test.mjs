@@ -75,3 +75,20 @@ test('completed OpenClaw turn omits toolSummary when no tools were called',async
  const result=await runAsk({config:'/private/config.json',openclawBin:file,agent:'atrium-home',message:'播放视频'});
  assert.equal(result.failed,false);assert.equal(result.receipts.length,0);assert.match(result.text,/视频、人物搜索与日历尚未接入/);assert.doesNotMatch(result.text,/视频已播放/);
 });
+
+test('family write distinguishes persisted record from NAS sync and reads values',()=>{
+ const record={id:'01ARZ3NDEKTSV4RRFFQ69G5FAV',member_id:'abu',category:'growth',occurred_at:'2026-10-03T00:00:00Z',title:'身高',notes:'',measurements:[{metric:'height',value:70,unit:'cm'}],display_on_tv:true,created_at:'2026-10-03T00:00:00Z'};
+ const text=renderReceipts([receipt('home_record_family_entry',{record,replayed:false,nas_status:'pending'})]);
+ assert.match(text,/已记录/);assert.match(text,/NAS.*待同步/);assert.doesNotMatch(text,/如需控制/);
+ const read=renderReceipts([receipt('home_list_family_records',{records:[record]})]);assert.match(read,/70 cm/);assert.match(read,/身高/);
+});
+
+test('family history labels superseded and retracted measurements, with exact IDs',()=>{
+ const old='01ARZ3NDEKTSV4RRFFQ69G5FAV', next='01ARZ3NDEKTSV4RRFFQ69G5FAW';
+ const record={id:old,member_id:'abu',occurred_at:'2026-10-03T00:00:00Z',title:'身高',measurements:[{metric:'height',value:70,unit:'cm'}],superseded_by:next};
+ const history=renderReceipts([receipt('home_list_family_records',{records:[record]})]);
+ assert.match(history,/已被更正，历史内容/);assert.ok(history.includes(old));assert.ok(history.includes(next));
+ const withdrawn={...record,id:next,superseded_by:undefined,supersedes_id:old,retracted:true,revision_reason:'误记'};
+ const result=renderReceipts([receipt('home_record_family_entry',{record:withdrawn,replayed:false,nas_status:'pending'})]);
+ assert.match(result,/已保存撤回记录/);assert.match(result,/已撤回，历史内容/);assert.match(result,/原因：误记/);assert.match(result,/NAS 待同步/);
+});

@@ -216,3 +216,18 @@ func TestReceiptInvalidPollCannotRetainAppliedReport(t *testing.T) {
 	require.Len(t, lines, 2)
 	require.NotContains(t, lines[1], `"Status":"applied"`)
 }
+
+func TestFamilyReceiptMatchesRecordAndNASState(t *testing.T) {
+	args := map[string]any{"member_id": "abu", "category": "growth", "occurred_at": "2026-10-03T08:00:00+08:00", "title": "身高", "display_on_tv": true}
+	data := map[string]any{"record": map[string]any{"id": "01ARZ3NDEKTSV4RRFFQ69G5FAV", "member_id": "abu", "category": "growth", "occurred_at": "2026-10-03T00:00:00Z", "title": "身高", "notes": "", "measurements": []any{}, "display_on_tv": true, "created_at": "2026-10-03T00:00:00Z"}, "replayed": false, "nas_status": "pending"}
+	result := &mcp.CallToolResult{StructuredContent: map[string]any{"schema_version": "1", "observed_at": "2026-10-03T00:00:00Z", "availability": "available", "data": data}}
+	_, err := receiptResult("home_record_family_entry", args, result)
+	require.NoError(t, err)
+	data["nas_status"] = "synced"
+	_, err = receiptResult("home_record_family_entry", args, result)
+	require.Error(t, err)
+	data["nas_status"] = "pending"
+	data["record"].(map[string]any)["member_id"] = "parent"
+	_, err = receiptResult("home_record_family_entry", args, result)
+	require.Error(t, err)
+}
