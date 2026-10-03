@@ -169,6 +169,8 @@ type CellEvidence struct {
 	MergeAnchor      string            `json:"merge_anchor"`
 	RowHidden        bool              `json:"row_hidden"`
 	ColumnHidden     bool              `json:"column_hidden"`
+	// Conflicting source ranges have no resolved hidden value; consult Columns.
+	ColumnHiddenUnresolved bool `json:"column_hidden_unresolved"`
 }
 type SheetEvidence struct {
 	ID      string           `json:"id"`

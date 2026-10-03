@@ -38,3 +38,10 @@ unrevised nested merges; property revision coverage; BOM-bearing identity,
 relationship, main and worksheet parts; `PK` prose versus corrupt ZIP signatures;
 and exact positive/negative decimal ties, exponent/percent scaling and untouched
 formula cache/raw values.
+
+`xlsx_quality_test.go` derives exact-date fraction/sign/range regressions with
+untouched formula caches, integer decimal/exponent controls in both date systems,
+repeated column groups and conflicting versus agreeing overlaps, duplicate
+recognized singleton containers, and incompatible inline cell representations.
+Invalid structural cases assert status before looking for cell evidence; rejected
+ambiguous containers must not manufacture a selected value.

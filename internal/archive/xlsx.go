@@ -1,6 +1,7 @@
 package archive
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -18,6 +19,9 @@ type cellStyle struct {
 func (pkg *officePackage) parseXLSX(main string) error {
 	root, err := pkg.root(main, nsSheet, "workbook")
 	if err != nil {
+		return err
+	}
+	if err := xlsxSingletons(root, "workbookPr", "sheets", "bookViews", "calcPr", "fileVersion", "workbookProtection", "definedNames"); err != nil {
 		return err
 	}
 	date1904, err := xmlBool(root.child(nsSheet, "workbookPr").attr("", "date1904"))
@@ -112,6 +116,18 @@ func (pkg *officePackage) parseXLSX(main string) error {
 	}
 	return nil
 }
+
+// Validate recognized singleton containers before selecting a child. This is
+// intentionally not a complete schema validator; repeated worksheet cols are legal.
+func xlsxSingletons(root *xmlNode, names ...string) error {
+	for _, name := range names {
+		if len(root.all(nsSheet, name)) > 1 {
+			return invalid("duplicate_xlsx_container")
+		}
+	}
+	return nil
+}
+
 func xmlBool(s string) (bool, error) {
 	switch s {
 	case "", "0", "false":
@@ -167,6 +183,9 @@ var builtinFormats = map[int]string{0: "General", 1: "0", 2: "0.00", 9: "0%", 10
 func (pkg *officePackage) readStyles(part string) ([]cellStyle, error) {
 	root, err := pkg.root(part, nsSheet, "styleSheet")
 	if err != nil {
+		return nil, err
+	}
+	if err := xlsxSingletons(root, "numFmts", "cellXfs", "cellStyleXfs"); err != nil {
 		return nil, err
 	}
 	formats := map[int]string{}
@@ -263,6 +282,9 @@ func (pkg *officePackage) readSheet(part string, sheet *SheetEvidence, shared []
 	if err != nil {
 		return err
 	}
+	if err := xlsxSingletons(root, "sheetData", "mergeCells", "dimension", "sheetViews", "sheetFormatPr", "pageMargins", "pageSetup", "printOptions", "sheetPr", "sheetProtection", "autoFilter"); err != nil {
+		return err
+	}
 	if len(root.all(nsSheet, "sheetData")) != 1 {
 		return invalid("invalid_sheet_data")
 	}
@@ -283,20 +305,56 @@ func (pkg *officePackage) readSheet(part string, sheet *SheetEvidence, shared []
 		merges = append(merges, m)
 		sheet.Merges = append(sheet.Merges, m.ref)
 	}
-	for _, n := range root.child(nsSheet, "cols").all(nsSheet, "col") {
-		first, e := positiveInt(n.attr("", "min"), 16384)
-		if e != nil {
-			return e
+	// Difference counts bound work by the number of declarations plus the fixed
+	// XLSX column domain, even when many ranges cover the whole sheet.
+	var visibleDelta, hiddenDelta [16386]int
+	for _, cols := range root.all(nsSheet, "cols") {
+		for _, n := range cols.all(nsSheet, "col") {
+			if err := pkg.p.ctx.Err(); err != nil {
+				return err
+			}
+			first, e := positiveInt(n.attr("", "min"), 16384)
+			if e != nil {
+				return e
+			}
+			last, e := positiveInt(n.attr("", "max"), 16384)
+			if e != nil || last < first {
+				return invalid("invalid_column_range")
+			}
+			hidden, e := xmlBool(n.attr("", "hidden"))
+			if e != nil {
+				return e
+			}
+			sheet.Columns = append(sheet.Columns, ColumnEvidence{first, last, hidden})
+			delta := &visibleDelta
+			if hidden {
+				delta = &hiddenDelta
+			}
+			delta[first]++
+			delta[last+1]--
 		}
-		last, e := positiveInt(n.attr("", "max"), 16384)
-		if e != nil || last < first {
-			return invalid("invalid_column_range")
+	}
+	var visibility [16385]uint8 // 0 visible/default, 1 hidden, 2 conflicting
+	visible, hidden := 0, 0
+	conflict := false
+	for col := 1; col <= 16384; col++ {
+		if col%1024 == 0 {
+			if err := pkg.p.ctx.Err(); err != nil {
+				return err
+			}
 		}
-		hidden, e := xmlBool(n.attr("", "hidden"))
-		if e != nil {
-			return e
+		visible += visibleDelta[col]
+		hidden += hiddenDelta[col]
+		if hidden > 0 {
+			visibility[col] = 1
+			if visible > 0 {
+				visibility[col] = 2
+				conflict = true
+			}
 		}
-		sheet.Columns = append(sheet.Columns, ColumnEvidence{first, last, hidden})
+	}
+	if conflict {
+		pkg.skip("conflicting_column_visibility", part)
 	}
 	previousRow := 0
 	data := root.child(nsSheet, "sheetData")
@@ -355,11 +413,8 @@ func (pkg *officePackage) readSheet(part string, sheet *SheetEvidence, shared []
 			}
 			segment.Locator = Locator{Kind: "xlsx", XLSX: &XLSXLocation{sheet.ID, sheet.Name, sheet.PartURI, ref}}
 			segment.Cell.RowHidden = hidden
-			for _, col := range sheet.Columns {
-				if point.col >= col.First && point.col <= col.Last {
-					segment.Cell.ColumnHidden = col.Hidden
-				}
-			}
+			segment.Cell.ColumnHidden = visibility[point.col] == 1
+			segment.Cell.ColumnHiddenUnresolved = visibility[point.col] == 2
 			for _, m := range merges {
 				if point.row >= m.first.row && point.row <= m.last.row && point.col >= m.first.col && point.col <= m.last.col {
 					segment.Cell.MergeRange = m.ref
@@ -400,6 +455,9 @@ func (pkg *officePackage) readCell(n *xmlNode, shared []string, styles []cellSty
 	cell := &CellEvidence{Type: n.attr("", "t"), State: "blank"}
 	if cell.Type == "" {
 		cell.Type = "n"
+	}
+	if n.child(nsSheet, "is") != nil && cell.Type != "inlineStr" {
+		return Segment{}, invalid("invalid_inline_string")
 	}
 	s := Segment{Cell: cell}
 	v := n.child(nsSheet, "v")
@@ -495,7 +553,10 @@ func (pkg *officePackage) readCell(n *xmlNode, shared []string, styles []cellSty
 		s.Text = cell.RawValue
 		if v != nil && v.text != "" {
 			num, e := strconv.ParseFloat(v.text, 64)
-			if e != nil || math.IsNaN(num) || math.IsInf(num, 0) {
+			// Decimal date bounds are checked from raw below, including values
+			// outside float64's range. Syntax errors and nonfinite literals remain invalid.
+			dateRange := (style.code == "yyyy-mm-dd" || style.code == "mm-dd-yy") && errors.Is(e, strconv.ErrRange)
+			if !dateRange && (e != nil || math.IsNaN(num) || math.IsInf(num, 0)) {
 				return s, invalid("invalid_numeric_cell")
 			}
 			display, ok, phantom := formatNumber(num, v.text, style.code, date1904)
@@ -567,10 +628,11 @@ func formatNumber(n float64, raw, code string, date1904 bool) (string, bool, boo
 		}
 		return display + "%", true, false
 	case "yyyy-mm-dd", "mm-dd-yy":
-		if n < 0 || n > 2957003 || math.Trunc(n) != n {
+		days, ok := decimalWholeDays(raw)
+		if !ok {
 			return "", false, false
 		}
-		phantom := !date1904 && n == 60
+		phantom := !date1904 && days == 60
 		if phantom {
 			if code == "mm-dd-yy" {
 				return "02-29-00", true, true
@@ -578,7 +640,6 @@ func formatNumber(n float64, raw, code string, date1904 bool) (string, bool, boo
 			return "1900-02-29", true, true
 		}
 		base := time.Date(1899, 12, 31, 0, 0, 0, 0, time.UTC)
-		days := int(n)
 		if date1904 {
 			base = time.Date(1904, 1, 1, 0, 0, 0, 0, time.UTC)
 		} else if days > 60 {
@@ -593,11 +654,15 @@ func formatNumber(n float64, raw, code string, date1904 bool) (string, bool, boo
 	return "", false, false
 }
 
-// decimalDisplay rounds the original decimal spelling, not its float64
-// approximation. Moving the decimal point implements percent scaling exactly.
-// The finite formats have at most two decimals and at most 18 scaled digits;
-// exponents are bounded before arithmetic or padding, including tiny underflows.
-func decimalDisplay(raw string, places, percentShift int) (string, bool) {
+type sourceDecimal struct {
+	negative bool
+	digits   string // Leading zeroes removed; empty denotes zero.
+	point    int    // Decimal point position relative to digits.
+}
+
+// Read the exact decimal without expanding an exponent or losing tiny nonzero
+// fractions to float64 underflow. Source string length is bounded by XML limits.
+func parseSourceDecimal(raw string) (sourceDecimal, bool) {
 	negative := strings.HasPrefix(raw, "-")
 	if strings.HasPrefix(raw, "-") || strings.HasPrefix(raw, "+") {
 		raw = raw[1:]
@@ -607,7 +672,7 @@ func decimalDisplay(raw string, places, percentShift int) (string, bool) {
 		var err error
 		exponent, err = strconv.Atoi(raw[e+1:])
 		if err != nil || exponent < -1000000 || exponent > 1000000 {
-			return "", false
+			return sourceDecimal{}, false
 		}
 		raw = raw[:e]
 	}
@@ -617,15 +682,51 @@ func decimalDisplay(raw string, places, percentShift int) (string, bool) {
 		raw = raw[:dot] + raw[dot+1:]
 	}
 	if raw == "" {
-		return "", false
+		return sourceDecimal{}, false
 	}
 	for _, digit := range raw {
 		if digit < '0' || digit > '9' {
-			return "", false
+			return sourceDecimal{}, false
 		}
 	}
 	digits := strings.TrimLeft(raw, "0")
-	cut := whole + exponent + places + percentShift - (len(raw) - len(digits))
+	return sourceDecimal{negative, digits, whole + exponent - (len(raw) - len(digits))}, true
+}
+
+func decimalWholeDays(raw string) (int, bool) {
+	d, ok := parseSourceDecimal(raw)
+	if !ok {
+		return 0, false
+	}
+	if d.digits == "" {
+		return 0, true
+	}
+	// At most seven whole digits are needed for the supported serial range.
+	// Removing trailing zeroes allows exact integer spellings such as 610e-1.
+	if d.negative || d.point <= 0 || d.point > 7 || len(strings.TrimRight(d.digits, "0")) > d.point {
+		return 0, false
+	}
+	days := 0
+	for i := 0; i < d.point; i++ {
+		days *= 10
+		if i < len(d.digits) {
+			days += int(d.digits[i] - '0')
+		}
+	}
+	return days, days <= 2957003
+}
+
+// decimalDisplay rounds the original decimal spelling, not its float64
+// approximation. Moving the decimal point implements percent scaling exactly.
+// The finite formats have at most two decimals and at most 18 scaled digits;
+// exponents are bounded before arithmetic or padding, including tiny underflows.
+func decimalDisplay(raw string, places, percentShift int) (string, bool) {
+	d, ok := parseSourceDecimal(raw)
+	if !ok {
+		return "", false
+	}
+	digits := d.digits
+	cut := d.point + places + percentShift
 	units := "0"
 	if digits != "" {
 		if cut > 18 {
@@ -665,7 +766,7 @@ func decimalDisplay(raw string, places, percentShift int) (string, bool) {
 		split := len(units) - places
 		units = units[:split] + "." + units[split:]
 	}
-	if negative && nonzero {
+	if d.negative && nonzero {
 		units = "-" + units
 	}
 	return units, true

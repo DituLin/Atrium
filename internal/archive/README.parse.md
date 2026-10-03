@@ -52,12 +52,22 @@ parser version, and locator; they are stable within a version, not across versio
   attributes (including shared-formula group IDs) are retained verbatim after
   XML decoding, along with historical raw caches. Nothing is calculated,
   refreshed, expanded, executed or fetched.
+  All repeated column groups retain their ranges in document order. Conflicting
+  overlapping hidden flags produce partial coverage and
+  `conflicting_column_visibility`; affected cells have
+  `column_hidden_unresolved=true` and no resolved `column_hidden` value (false
+  is a placeholder). Consult the preserved ranges for the source declarations.
+  Agreeing overlaps remain resolved. Duplicate recognized singleton containers
+  and inline-string payloads on other cell types are invalid before selecting
+  values; the parser does not silently choose one conflicting representation.
   Cell style index, xf attributes, numFmt ID/code survive. Displays only support
   `General`, `@`, `0`, `0.00`, `0%`, `0.00%`, `yyyy-mm-dd`, `mm-dd-yy` under bounded
   numeric ranges. Decimal fixed/percent displays round exact source decimal
   digits half away from zero, with exact decimal percent scaling; raw values and
   historical caches are never rewritten. Exponent processing/padding is bounded.
-  Date displays accept whole serial days, use the workbook's
+  Date displays check whole serial days against the exact source decimal,
+  including sign, fractional digits and bounded exponents, before conversion.
+  They use the workbook's
   1900/1904 system without adding a timezone, and explicitly warn that serial 60
   in the 1900 system is fictional `1900-02-29`. Serial zero maps to the system's
   arithmetic epoch. Fractional/negative/out-of-range dates, unknown formats, and
