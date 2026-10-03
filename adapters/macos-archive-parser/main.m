@@ -206,6 +206,12 @@ static void imageData(NSData *data) {
         CFRelease(source);
         return;
     }
+    // Only these formats have an independent compressed-completion check below.
+    // Recovery thumbnails from every other allowlisted codec remain useful, but
+    // cannot prove source completeness (including a thumbnail with no letters).
+    BOOL integrityVerified =
+        [(@[ @"public.png", @"public.jpeg",
+             @"org.webmproject.webp" ]) containsObject:(__bridge NSString *)type];
     NSDictionary *properties = CFBridgingRelease(
         CGImageSourceCopyPropertiesAtIndex(source, 0, (__bridge CFDictionaryRef)noCache));
     double w = [properties[(id)kCGImagePropertyPixelWidth] doubleValue],
@@ -316,6 +322,8 @@ static void imageData(NSData *data) {
     CGImageRelease(image);
     page[@"ocr_complete"] = @(ok);
     coverage[@"processed_pages"] = @(ok ? 1 : 0);
+    if (ok && !integrityVerified && [result[@"status"] isEqual:@"parsed"])
+        outcome(@"partial", @"image_integrity_unverified");
 }
 static void pdfData(NSData *data) {
     result[@"format"] = @"pdf";

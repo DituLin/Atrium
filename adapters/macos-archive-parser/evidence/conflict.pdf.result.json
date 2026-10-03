@@ -2,7 +2,7 @@
   "native": {
     "engine": {
       "helper": "atrium-native/1",
-      "build": "bcd463b9318ea0ee7ff17884fc46c8d46d1d02140798e4cab105877331cef390",
+      "build": "9c9c4ac321b6debbf9909e42469671f4ee6f726f557a7712afb6e657828cdf1c",
       "os_build": "24C101",
       "vision_revision": 3,
       "languages": [
@@ -45,7 +45,7 @@
     "allows_copying": true
   },
   "detected_format": "pdf",
-  "parser_version": "archive-native/1/465c2748ef6e8d096a0ea47b49ee3e11c265730beb3559d1fe58cba488d3758d",
+  "parser_version": "archive-native/1/714d0cb859975bdec262adb379fcae6b19c7ea44aefdc76421986a36d12189fe",
   "status": "parsed",
   "segments": [
     {
@@ -86,7 +86,7 @@
           }
         ]
       },
-      "id": "77c52a24aa9fae7cbe40eb017b2464541d8ee9655ce0a5dfac3ffc1b152f15be",
+      "id": "12b647cd71ac62a50e1a76e665cc613fbaee3f8ee502d027312c2759656673d8",
       "text": "",
       "locator": {
         "page": {

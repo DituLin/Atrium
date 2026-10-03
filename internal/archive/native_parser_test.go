@@ -119,6 +119,49 @@ func TestNativeProtocolRejectsPoison(t *testing.T) {
 		})
 	}
 }
+
+func TestNativeUnverifiedImageCoverageAndReview(t *testing.T) {
+	for _, empty := range []bool{false, true} {
+		w := nativeFixtureWire()
+		w.Status, w.Code, w.Coverage.Complete = ParsePartial, "image_integrity_unverified", false
+		if empty {
+			w.Segments = []nativeObservation{}
+			w.Counts.TextBytes = 0
+			w.Counts.Segments = 0
+		}
+		b, _ := json.Marshal(w)
+		decoded, err := decodeNative(b, 4)
+		if err != nil {
+			t.Fatalf("coherent partial coverage rejected: %v", err)
+		}
+		r, err := nativeResult(context.Background(), decoded, strings.Repeat("a", 64))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if r.Status != ParsePartial || r.Coverage.Complete || !warning(r, "image_integrity_unverified") || len(r.Coverage.SkippedFeatures) != 1 || r.Coverage.SkippedFeatures[0] != "image_integrity_validation" {
+			t.Fatal("incomplete image reason lost")
+		}
+		for _, s := range r.Segments {
+			if !s.Visual.RequiresReview || s.Text == "" {
+				t.Fatal("usable evidence lost review inheritance")
+			}
+		}
+		if !empty {
+			complete, err := nativeResult(context.Background(), nativeFixtureWire(), strings.Repeat("a", 64))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if complete.Segments[0].Visual.RequiresReview || complete.Segments[0].ID == r.Segments[0].ID {
+				t.Fatal("integrity review policy did not participate in evidence identity")
+			}
+		}
+		w.Status = ParseUnsupported
+		b, _ = json.Marshal(w)
+		if _, err := decodeNative(b, 4); err == nil {
+			t.Fatal("unverified image code accepted outside partial workflow")
+		}
+	}
+}
 func TestNativeGeometryGrouping(t *testing.T) {
 	obs := []nativeObservation{{Page: 1, Text: "金额 12.34", Origin: "native", Rect: Rect{.1, .1, .7, .1}}, {Page: 1, Text: "金额12.34", Origin: "ocr", Rect: Rect{.1, .1, .7, .1}}, {Page: 1, Text: "TOTAL 9.80", Origin: "native", Rect: Rect{.1, .4, .7, .1}}, {Page: 1, Text: "TOTAL 9.30", Origin: "ocr", Rect: Rect{.1, .4, .7, .1}}, {Page: 1, Text: "other", Origin: "ocr", Rect: Rect{.1, .8, .7, .1}}}
 	groups := mustNativeGroups(t, obs)

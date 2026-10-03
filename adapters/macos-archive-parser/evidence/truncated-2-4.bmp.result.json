@@ -1,0 +1,362 @@
+{
+  "native": {
+    "engine": {
+      "helper": "atrium-native/1",
+      "build": "9c9c4ac321b6debbf9909e42469671f4ee6f726f557a7712afb6e657828cdf1c",
+      "os_build": "24C101",
+      "vision_revision": 3,
+      "languages": [
+        "zh-Hans",
+        "en-US"
+      ],
+      "recognition": "accurate",
+      "language_correction": false
+    },
+    "pages": [
+      {
+        "page": 1,
+        "width": 1800,
+        "height": 1600,
+        "orientation": 1,
+        "rotation": 0,
+        "effective_crop": null,
+        "transform": null,
+        "ocr_complete": true,
+        "native_complete": false
+      }
+    ],
+    "total_pages": 1,
+    "processed_pages": 1,
+    "annotations": "not_applicable",
+    "forms": "not_applicable",
+    "encrypted": false,
+    "allows_copying": true
+  },
+  "detected_format": "image",
+  "parser_version": "archive-native/1/714d0cb859975bdec262adb379fcae6b19c7ea44aefdc76421986a36d12189fe",
+  "status": "partial",
+  "segments": [
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": true,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "费用 Amount",
+            "rect": [
+              0.058087059398843906,
+              0.535610621105946,
+              0.13963983323838977,
+              0.028451960086822492
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "2cd26d92b3246a3b787192e59214c816f294ca24821dbe35f427fcc046327bf1",
+      "text": "费用 Amount",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.058087059398843906,
+            0.535610621105946,
+            0.13963983323838977,
+            0.028451960086822492
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": true,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "1234.50",
+            "rect": [
+              0.3603775707729618,
+              0.5388786188742543,
+              0.08883788214789495,
+              0.030085899829864537
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 1
+          }
+        ]
+      },
+      "id": "011f3e9e76e70b0d67a40b38aa9fedaf09b8562575c2a8c001e0513b50c6d760",
+      "text": "1234.50",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.3603775707729618,
+            0.5388786188742543,
+            0.08883788214789495,
+            0.030085899829864537
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": true,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "CNY",
+            "rect": [
+              0.5435080318565244,
+              0.5389625032911102,
+              0.05397230784098306,
+              0.02665015697479245
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 1
+          }
+        ]
+      },
+      "id": "393cd172374531d2b27955ae7a654e980940c3aac3b91de94d3e1bd22710cbe8",
+      "text": "CNY",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.5435080318565244,
+            0.5389625032911102,
+            0.05397230784098306,
+            0.02665015697479245
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": true,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "变化 Delta",
+            "rect": [
+              0.05509509327735679,
+              0.6234891932111616,
+              0.1151005130343967,
+              0.030799390077590916
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "3811e4b1015c4bb41075fd021031caa02a277cf85e3a9f64b9bd8a53a30fda5a",
+      "text": "变化 Delta",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.05509509327735679,
+            0.6234891932111616,
+            0.1151005130343967,
+            0.030799390077590916
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": true,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "-2.75",
+            "rect": [
+              0.3573854042153304,
+              0.6237711726961288,
+              0.061391983032226594,
+              0.033503406047821094
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 1
+          }
+        ]
+      },
+      "id": "e6cf4e24a9781c12635f356214306ba5fbf4046a9342fa8e053f375be7a197b0",
+      "text": "-2.75",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.3573854042153304,
+            0.6237711726961288,
+            0.061391983032226594,
+            0.033503406047821094
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": true,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "mmol/L",
+            "rect": [
+              0.5434152361993247,
+              0.6250368589676609,
+              0.08322766621907551,
+              0.027704060077667125
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 1
+          }
+        ]
+      },
+      "id": "8102bde4259c7542c8d9af3c0a042d4160a2ced335620cd27523a46b5edb13ef",
+      "text": "mmol/L",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.5434152361993247,
+            0.6250368589676609,
+            0.08322766621907551,
+            0.027704060077667125
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": true,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "医生：王华 Dr Wang",
+            "rect": [
+              0.05523256192238977,
+              0.7237500005668841,
+              0.22674418131510418,
+              0.032785947322845455
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "32e0463e8cb49b63f29696ed4bda6af9da617d4e756e7f4d6025679b8e435c16",
+      "text": "医生：王华 Dr Wang",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.05523256192238977,
+            0.7237500005668841,
+            0.22674418131510418,
+            0.032785947322845455
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    }
+  ],
+  "warnings": [
+    {
+      "code": "image_integrity_unverified",
+      "message": "image_integrity_unverified",
+      "part_uri": ""
+    }
+  ],
+  "counts": {
+    "decoded_text_bytes": 69,
+    "source_bytes": 4320027,
+    "expanded_bytes": 0,
+    "text_bytes": 138,
+    "zip_entries": 0,
+    "parts_read": 0,
+    "xml_nodes": 0,
+    "strings": 0,
+    "cells": 0,
+    "segments": 7,
+    "relationships": 0
+  },
+  "coverage": {
+    "complete": false,
+    "encoding": "",
+    "offset_unit": "page_rect",
+    "notes": [
+      "geometry_order_is_not_reading_order",
+      "parsed_is_not_ocr_accuracy"
+    ],
+    "read_parts": null,
+    "skipped_parts": null,
+    "skipped_features": [
+      "image_integrity_validation"
+    ]
+  },
+  "sheets": null
+}

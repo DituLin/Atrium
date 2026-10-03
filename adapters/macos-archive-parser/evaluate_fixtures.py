@@ -54,4 +54,13 @@ for source in sorted((fixtures/'integrity').iterdir()):
  (folder/'wire.json').write_text(json.dumps(wire,ensure_ascii=False,indent=2))
  integrity['files'].append({'file':source.name,'sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'source_bytes':source.stat().st_size,'status':wire['status'],'complete':wire['coverage']['complete'],'expected_complete':expected_complete,'observations':len(wire['segments']),'seconds':round(seconds,3)})
 (output/'integrity-summary.json').write_text(json.dumps(integrity,ensure_ascii=False,indent=2))
-(output/'summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2));print(json.dumps({'files':len(summary['files']),'timing':summary['timing'],'field_checks':sum(len(x.get('field_locations',[])) for x in summary['files']),'matched':sum(x.get('matched_fields',0) for x in summary['files']),'integrity_cases':len(integrity['files']),'valid_integrity_cases':sum(x['complete'] for x in integrity['files'])},indent=2))
+unvalidated={'engine':summary['engine'],'files':[]}
+for source in sorted((fixtures/'unvalidated').iterdir()):
+ wire,seconds=run(helper,source)
+ expected={'bad.bmp':('invalid','invalid_input'),'multi.gif':('unsupported','multiframe_image')}.get(source.name,('partial','image_integrity_unverified'))
+ assert (wire['status'],wire['code'])==expected and not wire['coverage']['complete'],source.name
+ folder=output/'unvalidated'/source.name;folder.mkdir(parents=True,exist_ok=True)
+ (folder/'wire.json').write_text(json.dumps(wire,ensure_ascii=False,indent=2))
+ unvalidated['files'].append({'file':source.name,'sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'source_bytes':source.stat().st_size,'status':wire['status'],'code':wire['code'],'complete':wire['coverage']['complete'],'observations':len(wire['segments']),'seconds':round(seconds,3)})
+(output/'unvalidated-summary.json').write_text(json.dumps(unvalidated,ensure_ascii=False,indent=2))
+(output/'summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2));print(json.dumps({'files':len(summary['files']),'timing':summary['timing'],'field_checks':sum(len(x.get('field_locations',[])) for x in summary['files']),'matched':sum(x.get('matched_fields',0) for x in summary['files']),'integrity_cases':len(integrity['files']),'valid_integrity_cases':sum(x['complete'] for x in integrity['files']),'unvalidated_cases':len(unvalidated['files'])},indent=2))

@@ -449,3 +449,72 @@ func TestNativeActualRelocatedCodecBundle(t *testing.T) {
 		})
 	}
 }
+
+func TestNativeActualUnvalidatedImages(t *testing.T) {
+	helper, dir := os.Getenv("ATRIUM_NATIVE_HELPER"), os.Getenv("ATRIUM_NATIVE_FIXTURES")
+	if helper == "" || dir == "" {
+		t.Skip("native fixture environment required")
+	}
+	for _, name := range []string{"report.bmp", "report.gif", "report.tiff", "report.heic", "blank.bmp", "truncated-1-4.bmp", "truncated-2-4.bmp", "bad.bmp", "multi.gif"} {
+		t.Run(name, func(t *testing.T) {
+			path := filepath.Join(dir, "unvalidated", name)
+			bytes, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			f, err := os.Open(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer f.Close()
+			sum := sha256.Sum256(bytes)
+			r, err := (NativeParser{HelperPath: helper}).Parse(context.Background(), NativeSource{f, hex.EncodeToString(sum[:])})
+			if err != nil {
+				t.Fatal(err)
+			}
+			want, code := ParsePartial, "image_integrity_unverified"
+			switch name {
+			case "bad.bmp":
+				want, code = ParseInvalid, "invalid_input"
+			case "multi.gif":
+				want, code = ParseUnsupported, "multiframe_image"
+			}
+			if r.Status != want || r.Coverage.Complete || !warning(r, code) {
+				t.Fatalf("unvalidated source claimed completion: %s %+v", r.Status, r.Coverage)
+			}
+			if evidence := os.Getenv("ATRIUM_NATIVE_EVIDENCE"); evidence != "" {
+				destination := filepath.Join(evidence, "unvalidated")
+				if err := os.MkdirAll(destination, 0700); err != nil {
+					t.Fatal(err)
+				}
+				bytes, _ := json.MarshalIndent(r, "", "  ")
+				if err := os.WriteFile(filepath.Join(destination, name+".result.json"), bytes, 0600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if want != ParsePartial {
+				if len(r.Segments) != 0 {
+					t.Fatal("unsupported or invalid source produced evidence")
+				}
+				return
+			}
+			if r.Native.ProcessedPages != 1 || len(r.Native.Pages) != 1 || !r.Native.Pages[0].OCRComplete {
+				t.Fatal("completed raster OCR coverage was lost")
+			}
+			for _, segment := range r.Segments {
+				if segment.Visual == nil || !segment.Visual.RequiresReview {
+					t.Fatal("unverified source did not inherit review")
+				}
+			}
+			if strings.HasPrefix(name, "report.") && len(r.Segments) < 10 {
+				t.Fatal("usable original OCR was discarded")
+			}
+			if name == "blank.bmp" && len(r.Segments) != 0 {
+				t.Fatal("blank source invented evidence")
+			}
+			if _, err := f.ReadAt(make([]byte, 1), 0); err != nil {
+				t.Fatal("original lost")
+			}
+		})
+	}
+}

@@ -154,3 +154,18 @@ for kind,path in [('lossless',out/'report.webp'),('lossy',integrity/'valid-lossy
  cut=bytearray(source[:20+n]+(b'\x00' if n%2 else b''))
  cut[16:20]=struct.pack('<I',n);cut[4:8]=struct.pack('<I',len(cut)-8)
  (integrity/f'truncated-reframed-{kind}.webp').write_bytes(cut)
+
+# ImageIO can recover plausible thumbnails from damaged unvalidated codecs.
+# Preserve useful OCR, but none of these formats may claim complete coverage.
+unvalidated=out/'unvalidated';unvalidated.mkdir(exist_ok=True)
+im.save(unvalidated/'report.bmp')
+im.save(unvalidated/'report.gif')
+im.save(unvalidated/'report.tiff',compression='tiff_lzw')
+(unvalidated/'bad.bmp').write_bytes(b'BMbroken')
+im.save(unvalidated/'multi.gif',save_all=True,append_images=[im.transpose(Image.Transpose.FLIP_LEFT_RIGHT)])
+Image.new('RGB',(600,400),'white').save(unvalidated/'blank.bmp')
+bmp=(unvalidated/'report.bmp').read_bytes()
+for n in [1,2]: (unvalidated/f'truncated-{n}-4.bmp').write_bytes(bmp[:len(bmp)*n//4])
+# Existing macOS ImageIO encoder, not a Python/production codec dependency.
+import subprocess
+subprocess.run(['/usr/bin/sips','-s','format','heic',str(out/'report.png'),'--out',str(unvalidated/'report.heic')],check=True,stdout=subprocess.DEVNULL)

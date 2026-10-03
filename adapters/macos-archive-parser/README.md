@@ -135,10 +135,17 @@ finite, integral dimensions and division-based pixel limits precede thumbnail
 decode. ImageIO applies EXIF transforms and Vision receives Up. Multiframe formats
 are unsupported; the helper never calls the first frame a complete document.
 The allowlist is PNG, JPEG, WebP, single-page TIFF, GIF, HEIC/HEIF and BMP as ImageIO
-provides them. Actual format validation here covers PNG/JPEG/WebP and multi-TIFF
-rejection; other allowlisted codecs are not claimed tested or independently
-validated for compressed completeness. Traditional Chinese has not been validated
-and is not a configured language.
+provides them. PNG/JPEG/WebP have independent compressed-completion validation.
+BMP/GIF/single-TIFF/HEIC/HEIF keep usable OCR but report
+`partial/image_integrity_unverified`, `coverage.complete=false`, and
+`coverage.skipped_features=["image_integrity_validation"]`. Every retained segment
+from these unverified images has `visual.requires_review=true`, included before its
+stable ID is hashed. T07 consumers must inherit that flag; model output cannot
+clear it. Blank or recovered no-letter images in these formats remain partial,
+never `empty/complete`. Structural failures and multiframe inputs retain their
+invalid/unsupported outcomes. Actual BMP/GIF/TIFF/HEIC extraction fixtures exercise
+this policy; HEIF shares the conservative path but has no separate fixture.
+Traditional Chinese has not been validated and is not a configured language.
 
 A nonnil ImageIO thumbnail or a “complete” ImageIO status does not establish
 compressed completeness. Before thumbnail/OCR, PNG validation checks chunk CRCs,
@@ -152,8 +159,8 @@ with a four-byte, 1×1 external scaled output. Reframing truncated VP8/VP8L data
 therefore cannot make ImageIO recovery count as complete. These checks establish
 codec completion, not authenticity or absence of every possible pixel alteration.
 
-Malformed compressed data returns `invalid/invalid_input`, with incomplete coverage
-and no OCR evidence. JPEG allocation/backing-store or scan limits return
+Detected malformed JPEG/PNG/WebP data returns `invalid/invalid_input`, with
+incomplete coverage and no OCR evidence. JPEG allocation/backing-store or scan limits return
 `limit_exceeded/jpeg_resources`; WebP allocation errors return
 `limit_exceeded/webp_resources`. Unsupported JPEG precision/components return
 `unsupported/unsupported_jpeg_precision`. The original descriptor remains owned
@@ -171,7 +178,8 @@ parse, never a successful empty result. The initial benchmark below supports the
 ## Reproduce native verification (synthetic data only)
 
 Use the bundled Python, with Pillow/pypdf/reportlab, solely to generate/evaluate
-fixtures. It is not a Go runtime dependency. On this host:
+fixtures, plus the existing `/usr/bin/sips` ImageIO encoder for a synthetic HEIC
+positive. These are not Go runtime dependencies. On this host:
 
 ```sh
 PY=/Users/ditu/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
@@ -202,7 +210,7 @@ and recorded summary. PDF generation uses invariant mode except pypdf encryption
 whose salt may vary. Full OCR snapshots are diagnostic evidence, not golden tests.
 
 The committed `evidence/` contains bounded representative originals, selected
-actual overlays, public results, the run summary and integrity-case summary; the
+actual overlays, public results, the run summary and integrity/policy summaries; the
 complete local run remains under the paths above. Availability-gated tests skip without both environment variables;
 that skip is not native verification. Run them on an actual supported Mac.
 
@@ -221,22 +229,31 @@ repaired. The relocation test copies the helper plus all three libraries into an
 isolated directory, parses JPEG and WebP, and verifies typed unavailability when
 each dependency is removed or modified. The C resource test distinguishes the
 same valid progressive JPEG failing at 64 MiB from succeeding at 512 MiB; it also
-checks the ABI error maps to unavailability without diagnostic text.
+checks the ABI error maps to unavailability without diagnostic text. Nine additional
+unvalidated-format policy fixtures cover valid BMP/GIF/single-TIFF/HEIC extraction,
+blank and quarter/half-truncated BMPs, a broken BMP header and animated GIF. The
+Go protocol test covers partial results with zero evidence, explicit limitation
+metadata, review inheritance and its effect on stable evidence identity.
 
 ## Recorded run — 2026-10-04
 
 Final helper build fingerprint:
-`bcd463b9318ea0ee7ff17884fc46c8d46d1d02140798e4cab105877331cef390`.
+`9c9c4ac321b6debbf9909e42469671f4ee6f726f557a7712afb6e657828cdf1c`.
 OS build `24C101`, Vision revision 3, zh-Hans/en-US, Accurate, language correction
 off. Fixture generator versions: Pillow 12.3.0, pypdf 6.10.0, reportlab 4.4.9.
+The HEIC positive uses the existing `sips-311` encoder; its encoded bytes may vary
+with the OS. Actual original hashes are recorded in `unvalidated-summary.json`.
 
 - 33/33 actual native document outcomes passed, including partial-page coverage,
   excluded annotation/widget coverage, copy restrictions, and blank/no-text PDF.
 - 38/38 additional integrity cases passed: 26 damaged JPEG/PNG/WebP inputs
   returned invalid with incomplete coverage; all 12 valid variants remained complete.
-  The 36 MP progressive JPEG completed as a blank image in 0.559s. Original
+  The 36 MP progressive JPEG completed as a blank image in 0.701s. Original
   half-JPEG/half-PNG review probes and fully reframed VP8/VP8L truncations were
   independently reproduced as RED before their respective repairs, then GREEN.
+- 9/9 unvalidated-format policy cases passed: seven retain partial coverage
+  (including zero-evidence blank/recovered BMPs), broken BMP remains invalid and
+  animated GIF remains unsupported. Useful OCR stays present with review required.
 - 266/266 exact whitespace-only field matches passed their original-region IoU
   test across 14 image variants; minimum measured IoU 0.459 (threshold 0.4).
 - Four rotated nonzero-crop pages and the crop-beyond-media intersection passed
@@ -245,8 +262,8 @@ off. Fixture generator versions: Pillow 12.3.0, pypdf 6.10.0, reportlab 4.4.9.
   lines remained `native_unconfirmed`. The separate invisible-native `9.80` versus
   raster `9.30` fixture returned one review group, no preferred text, both readings.
 - Repeated actual report parses produced identical evidence IDs.
-- Helper-only 33-file run: median 0.307s, maximum 0.462s, total 7.982s. The
-  separate 38-case integrity run took 3.862s of helper execution. This
+- Helper-only 33-file run: median 0.308s, maximum 0.454s, total 8.023s. The
+  separate 38-case integrity run took 4.669s of helper execution. This
   excludes Go startup, fixture generation and overlay rendering; no cold-cache,
   full 100-page workload or hard-memory claim is made.
 - Visually inspected report original, EXIF7 overlay, rotated PDF 90-degree overlay,
@@ -256,31 +273,33 @@ off. Fixture generator versions: Pillow 12.3.0, pypdf 6.10.0, reportlab 4.4.9.
 Fresh verification completed successfully after the integrity repair:
 
 ```sh
-# Repository regressions including real fixtures, public API and process failures:
+# Real fixtures, public API and process failures:
 ATRIUM_NATIVE_HELPER=/tmp/atriumos-native-helper \
 ATRIUM_NATIVE_FIXTURES=/tmp/atriumos-t06-fixtures \
 ATRIUM_NATIVE_EVIDENCE=/tmp/atriumos-t06-evidence \
+go test ./internal/archive -run TestNative -count=1
+# Repository regressions, race coverage and cross-platform compile:
 go test ./... -count=1
-# Race coverage and cross-platform compile:
 go test -race ./internal/archive -count=1
 GOOS=linux GOARCH=amd64 go test -c ./internal/archive -o /tmp/atriumos-t06-linux.test
 git diff --check
 ```
 
-The full repository run passed, including actual archive fixtures in 32.682s;
-the separate archive race run passed in 11.985s. After adding packaged license
-notices, the final bundle passed the complete native/process suite again in
-26.743s, with its fingerprint and evidence regenerated below the same paths. The unchanged external review
-probe also passed using its hardcoded `/tmp/atriumos-native-helper-spec-review`
-(rebuilt with the full sibling codec bundle):
+The final native/process suite passed in 25.938s, covering all 80 actual fixture
+outcomes. Repository regressions passed separately; the archive race run passed
+in 12.314s. Both unchanged external review probes passed using their hardcoded
+`/tmp/atriumos-native-helper-spec-review`, rebuilt with the complete sibling bundle:
 
 ```sh
 go test -overlay=/tmp/atriumos-t06-spec-probes/overlay.json ./internal/archive \
   -run TestSpecReviewTruncatedImage -count=1 -v
+go test -overlay=/tmp/atriumos-t06-spec-probes/repair/bmp-overlay.json ./internal/archive \
+  -run TestSpecReviewBMPCoverage -count=1 -v
 ```
 
-The permanent regressions live in `TestNativeActualImageIntegrity`; that external
-review overlay is not required to reproduce them. The resource/ABI test above
+The permanent regressions live in `TestNativeActualImageIntegrity` and
+`TestNativeActualUnvalidatedImages`; external review overlays are not needed to
+reproduce them. The resource/ABI test above
 passed, as did isolated relocation and each missing/modified dependency case.
 The process tests verified no surviving child PID after timeout or after
 an exited leader left a descendant holding its pipes. No production configuration,

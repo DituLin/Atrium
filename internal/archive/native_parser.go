@@ -416,7 +416,7 @@ func decodeNative(b []byte, size int64) (nativeWire, error) {
 	if _, err := hex.DecodeString(w.Engine.Build); err != nil {
 		return bad()
 	}
-	allowedCodes := map[string]bool{"": true, "no_text_detected": true, "invalid_input": true, "unsupported_image": true, "multiframe_image": true, "source_bytes": true, "image_dimensions": true, "jpeg_resources": true, "webp_resources": true, "unsupported_jpeg_precision": true, "page_limit": true, "text_limit": true, "segment_limit": true, "page_failed": true, "locked_pdf": true, "parser_unavailable": true, "annotations_forms_excluded": true}
+	allowedCodes := map[string]bool{"": true, "no_text_detected": true, "invalid_input": true, "unsupported_image": true, "multiframe_image": true, "source_bytes": true, "image_dimensions": true, "jpeg_resources": true, "webp_resources": true, "unsupported_jpeg_precision": true, "image_integrity_unverified": true, "page_limit": true, "text_limit": true, "segment_limit": true, "page_failed": true, "locked_pdf": true, "parser_unavailable": true, "annotations_forms_excluded": true}
 	if !allowedCodes[w.Code] || (w.Counts.SourceBytes != size && !(w.Code == "parser_unavailable" && w.Counts.SourceBytes == 0)) || w.Counts.Segments != len(w.Segments) || len(w.Segments) > 20000 || w.Counts.TextBytes > nativeTextLimit || w.Counts.TextBytes < 0 || w.Coverage.TotalPages < 0 || w.Coverage.TotalPages > 2147483647 || w.Coverage.ProcessedPages < 0 || w.Coverage.ProcessedPages > w.Coverage.TotalPages || len(w.Pages) > 100 {
 		return bad()
 	}
@@ -430,6 +430,9 @@ func decodeNative(b []byte, size int64) (nativeWire, error) {
 		return bad()
 	}
 	if w.Status == ParseParsed && w.Code != "" || w.Status == ParseEmpty && w.Code != "no_text_detected" {
+		return bad()
+	}
+	if w.Code == "image_integrity_unverified" && (w.Format != "image" || w.Status != ParsePartial) {
 		return bad()
 	}
 	complete := w.Status == ParseParsed || w.Status == ParseEmpty
@@ -523,12 +526,21 @@ func nativeResult(ctx context.Context, w nativeWire, source string) (ParseResult
 	if w.Format == "pdf" {
 		r.Coverage.SkippedFeatures = []string{"annotations", "form_values"}
 	}
+	if w.Code == "image_integrity_unverified" {
+		r.Coverage.SkippedFeatures = []string{"image_integrity_validation"}
+	}
 	kept := r.Segments[:0]
 	for i := range r.Segments {
 		if err := ctx.Err(); err != nil {
 			return ParseResult{}, err
 		}
 		s := &r.Segments[i]
+		// A recovered or otherwise incomplete image cannot supply automatically
+		// confirmed facts. Carry this requirement into downstream evidence before
+		// hashing its identity; retain its actual OCR text and source rectangles.
+		if w.Format == "image" && !w.Coverage.Complete {
+			s.Visual.RequiresReview = true
+		}
 		n := int64(len(s.Text))
 		for _, a := range s.Visual.Alternatives {
 			n += int64(len(a.Text))

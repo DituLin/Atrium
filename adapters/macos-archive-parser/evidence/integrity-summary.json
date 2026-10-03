@@ -1,6 +1,6 @@
 {
   "engine": {
-    "build": "bcd463b9318ea0ee7ff17884fc46c8d46d1d02140798e4cab105877331cef390",
+    "build": "9c9c4ac321b6debbf9909e42469671f4ee6f726f557a7712afb6e657828cdf1c",
     "helper": "atrium-native/1",
     "language_correction": false,
     "languages": [
@@ -40,7 +40,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.015
+      "seconds": 0.016
     },
     {
       "file": "excess-inflate.png",
@@ -60,7 +60,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.013
+      "seconds": 0.014
     },
     {
       "file": "missing-iend.png",
@@ -70,7 +70,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.015
+      "seconds": 0.016
     },
     {
       "file": "missing-riff-padding.webp",
@@ -80,7 +80,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.013
+      "seconds": 0.014
     },
     {
       "file": "short-inflate.png",
@@ -100,7 +100,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.015
+      "seconds": 0.016
     },
     {
       "file": "truncated-1-4.jpg",
@@ -110,7 +110,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.014
+      "seconds": 0.013
     },
     {
       "file": "truncated-1-4.png",
@@ -120,7 +120,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.013
+      "seconds": 0.012
     },
     {
       "file": "truncated-1-4.webp",
@@ -130,7 +130,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.013
+      "seconds": 0.011
     },
     {
       "file": "truncated-2-4.jpg",
@@ -140,7 +140,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.014
+      "seconds": 0.015
     },
     {
       "file": "truncated-2-4.png",
@@ -150,7 +150,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.014
+      "seconds": 0.015
     },
     {
       "file": "truncated-2-4.webp",
@@ -160,7 +160,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.013
+      "seconds": 0.015
     },
     {
       "file": "truncated-3-4.jpg",
@@ -170,7 +170,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.014
+      "seconds": 0.016
     },
     {
       "file": "truncated-3-4.png",
@@ -180,7 +180,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.015
+      "seconds": 0.016
     },
     {
       "file": "truncated-3-4.webp",
@@ -190,7 +190,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.013
+      "seconds": 0.015
     },
     {
       "file": "truncated-95-100.jpg",
@@ -200,7 +200,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.014
+      "seconds": 0.016
     },
     {
       "file": "truncated-95-100.png",
@@ -210,7 +210,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.015
+      "seconds": 0.016
     },
     {
       "file": "truncated-95-100.webp",
@@ -220,7 +220,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.013
+      "seconds": 0.015
     },
     {
       "file": "truncated-appended-eoi.jpg",
@@ -230,7 +230,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.014
+      "seconds": 0.016
     },
     {
       "file": "truncated-reframed-idat.png",
@@ -240,7 +240,7 @@
       "complete": false,
       "expected_complete": false,
       "observations": 0,
-      "seconds": 0.014
+      "seconds": 0.015
     },
     {
       "file": "truncated-reframed-lossless.webp",
@@ -280,7 +280,7 @@
       "complete": true,
       "expected_complete": true,
       "observations": 0,
-      "seconds": 0.154
+      "seconds": 0.156
     },
     {
       "file": "valid-alpha.webp",
@@ -290,7 +290,7 @@
       "complete": true,
       "expected_complete": true,
       "observations": 19,
-      "seconds": 0.304
+      "seconds": 0.309
     },
     {
       "file": "valid-cmyk.jpg",
@@ -300,7 +300,7 @@
       "complete": true,
       "expected_complete": true,
       "observations": 19,
-      "seconds": 0.32
+      "seconds": 0.329
     },
     {
       "file": "valid-comment-eoi.jpg",
@@ -310,7 +310,7 @@
       "complete": true,
       "expected_complete": true,
       "observations": 19,
-      "seconds": 0.313
+      "seconds": 0.311
     },
     {
       "file": "valid-gray1.png",
@@ -320,7 +320,7 @@
       "complete": true,
       "expected_complete": true,
       "observations": 0,
-      "seconds": 0.157
+      "seconds": 0.158
     },
     {
       "file": "valid-gray16.png",
@@ -330,7 +330,7 @@
       "complete": true,
       "expected_complete": true,
       "observations": 0,
-      "seconds": 0.162
+      "seconds": 0.159
     },
     {
       "file": "valid-grayscale.jpg",
@@ -340,7 +340,7 @@
       "complete": true,
       "expected_complete": true,
       "observations": 19,
-      "seconds": 0.3
+      "seconds": 0.312
     },
     {
       "file": "valid-large-progressive.jpg",
@@ -350,7 +350,7 @@
       "complete": true,
       "expected_complete": true,
       "observations": 0,
-      "seconds": 0.559
+      "seconds": 0.701
     },
     {
       "file": "valid-lossy.webp",
@@ -360,7 +360,7 @@
       "complete": true,
       "expected_complete": true,
       "observations": 19,
-      "seconds": 0.304
+      "seconds": 0.667
     },
     {
       "file": "valid-odd-chunk.webp",
@@ -370,7 +370,7 @@
       "complete": true,
       "expected_complete": true,
       "observations": 19,
-      "seconds": 0.305
+      "seconds": 0.518
     },
     {
       "file": "valid-progressive.jpg",
@@ -380,7 +380,7 @@
       "complete": true,
       "expected_complete": true,
       "observations": 19,
-      "seconds": 0.31
+      "seconds": 0.326
     },
     {
       "file": "valid-split-idat.png",
@@ -390,7 +390,7 @@
       "complete": true,
       "expected_complete": true,
       "observations": 19,
-      "seconds": 0.308
+      "seconds": 0.339
     }
   ]
 }
