@@ -191,7 +191,7 @@ native bounds 四角用相同 T 变换，包围矩形 b 转为 `[minX(b)/W,1-max
 - T07 提供 PlanChunks/UnderstandChunk/ValidateChunk/MergeChunks 和进程适配，生产调度在 T09 接入。Task.StateJSON 上限 64 KiB，只存版本/产物引用/进度/预算；T09 另外持久化不可变 parse/chunk products、typed view 版本/组件 origin/范围映射与 chunk ownership manifest。产物键绑定 task/extraction、evidence view/chunker/prompt/schema、证据 digest 和模型配置指纹；保存产物与推进 checkpoint 同一事务。view ID 只标识本版本证据，不能代替持久 event/observation ID。
 - T09 Core 单 worker 先短事务 Claim/准备授权输入，事务外调用，后短事务校验 lease/principal/policy/StateVersion/extraction 并提交产物；调用中续租，撤销/取消/续租失败终止子进程。重启同一 task，只复用已提交且版本匹配的 chunk，缺失部分重做；不能承诺 provider exactly-once 计费。有限网络退避/schema 最多一次修正，次数/预算持久化；理解完成仅推进 understood，正式发布前不把整个任务称 succeeded。
 - 验收增加有效 JSON 但 length、实际模型错配、chunk 漏覆盖、OCR 冲突被擅自清除、输出洪泛/取消；T09 增加模型返回后提交前中断、checkpoint 后中断、租约重领、模型调用时 SQLite 可写、超过 64 KiB 的全产物恢复。T07 实际 DeepSeek 四领域验证记录 provider/responseModel、字段/角色/引用/覆盖质量和零工具证据；本次预审不计作模型验证。
-- 事件输出为 extraction-local event_proposals，包含临时 ID、事件类型、成员字段引用与区段证据；字段的分组和引用同样验证。模型临时 ID 不具有跨版本含义，不接受模型指定现有 event_id/observation_id。Core 在 T09 持久分配并核对事件区段与观测身份；一份报告可以是 document-root 事件，交易表可逐行分组，不能每个 OCR 片段生成一次事件。
+- 事件输出为 extraction-local event_proposals，包含临时 ID、事件类型、成员字段引用与区段证据；字段的分组和引用同样验证。 每个字段另有经过验证的文档内 subject_refs（或等价的类型化归属），允许无个人归属或多个共同主体；事件级 subject_refs 不能代替字段归属。两人同一报告/保单的生日、指标必须分别可追溯到对应 mention，共同地址可以关联多个房主，医生等相关角色不因出现在同一事件就成为所有字段的所有者。模型临时 ID 不具有跨版本含义，不接受模型指定现有 event_id/observation_id。Core 在 T09 持久分配并核对事件区段与观测身份；一份报告可以是 document-root 事件，交易表可逐行分组，不能每个 OCR 片段生成一次事件。
 
 解析到理解的交接夹具覆盖：256 KiB 中文/emoji/CRLF 父组件的完整分块与实际 JSON 大小、数字处于块边界及重复真实事件、raw `151.234` 与显示 `151.23` 的精度区别、两套日期系统/两位年份/serial 60、SUM 历史缓存及 absent/empty、shared-string 索引和布尔不是金额。T09 验证重启复用同版本产物、view 版本变化使旧 checkpoint 失效，以及改变分块边界不增加业务事件。以上为实现契约，尚非模型或流水线验收。
 
