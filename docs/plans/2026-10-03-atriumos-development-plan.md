@@ -156,6 +156,7 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 - stdout 仅一个版本化 JSON，复用 T05 status/segments/coverage，加 engine 指纹（helper/OS build/Vision revision/languages/settings）、页几何、origin/alternatives/requires_review。页码从 1 开始，图片视为一页。矩形统一为显示方向、左上原点、归一化 `[x,y,width,height]`；Vision 下左原点转为 `(x,1-y-h,w,h)`。PDF native 与 raster OCR 共用 crop box、旋转、平移变换，避免二次旋转。若保留 NSRange 标明 utf16_code_unit，最低只承诺页和矩形，不冒充字符或原件字节偏移。
 - 每个允许处理的 PDF 页面都渲染 OCR，不能因存在文本层或字符阈值而跳过。原生文本按行定位；只有位置匹配明确且除空白外文本一致，才组成同一证据组，保留 native 原文与 OCR alternative。不能先规范数字、负号、小数点或日期再当一致。重叠冲突/一对多不明确是一个 requires_review 组，不是两条独立事实候选；native 无视觉对应标 native_unconfirmed，OCR 独有区域保留。几何排序只用于稳定输出，不把数组顺序当行列、主体、单位关系。segment 标识不使用 Vision UUID，版本包含引擎/设置指纹，不承诺 OS 升级后 OCR 不变。
 - ImageIO 关闭预解码缓存，先查实际类型/帧数/尺寸/EXIF 1–8，校验有限正尺寸和乘法溢出，再受限 thumbnail 解码。若 thumbnail 已应用方向变换，Vision 按 Up 处理。初始限额为图片 60 MP/最长边 16,384、单页 raster 16 MP/最长边 4,096、PDF 100 页、文本 2 MiB、20,000 segments、stdout 8 MiB；alternatives 也计入。多帧首期可明确 unsupported，不能只取首帧称完整。101 页预检 limit_exceeded，逐页释放对象；先一个并发 helper，性能验收后再调整。输入/raster 限额不是 PDFKit 内部解码的硬内存上限。
+- 损坏图片的完整性必须独立于“生成了缩略图”验证。已实证本机 ImageIO 会恢复截断 JPEG/PNG，source/frame status 仍为 complete；不能仅据这些信号把漏字结果标为完整。PNG 用有界 chunk/CRC、流式解压结束与校验、精确行/交错 pass 字节预算验证；JPEG 使用固定版本的成熟公开 codec 接口完整消费扫描并将损坏警告视为失败，覆盖伪造 EOI 与正常渐进式/灰度/CMYK。不能为绕开校验，把所有正常手机 JPEG/WebP 统一降为待核对。需要本机 codec 依赖时，固定版本、来源、许可、哈希和 ABI，随 helper 自包含打包并纳入引擎指纹；不依赖 Codex runtime 绝对路径或文档提供的库位置。依赖缺失/不兼容返回 parser_unavailable，不回退为未经验证的完整解析。新增 codec 的扫描/虚拟缓冲限额单独记录并验证资源失败状态，不能把 advisory memory budget 或缩小输出说成总内存硬上限。
 - Accurate、明确 revision 与语言配置，预检实际支持 zh-Hans/en-US，不静默降至英文/Fast；繁体另做实际夹具后宣称支持。parsed 只表示目标页文本提取流程完成，不等于 OCR 零错误；部分页失败为 partial，全部已处理但未识字为 empty/no_text_detected。PDF isLocked 才表示当前密码阻止读取，isEncrypted 不足以判断；首版不接收密码。复制限制记录为限制元数据，按实际可读取/渲染能力报告，不能仅因 allowsCopying=false 就误称损坏/加密。平台/helper/语言缺失返回类型化 parser_unavailable，保留原件。
 - 解析专属总 deadline 初以 120 秒做基准，不沿用视频 15 秒；不能把总超时说成硬每页超时。CommandContext、有界 stdout/stderr（stderr 64 KiB）、超限取消、WaitDelay；Start 成功后一次 Wait 并在回收前持有并发槽。进程组取消若采用须实测，Process.Kill 不代表杀整个组。只接受成功退出和唯一完整 JSON，严格校验版本/页码/有限矩形/字符串数组/覆盖计数。生产错误仅固定码，不传播 NSError、原始 stderr、参数或识别文字；崩溃/超时/坏协议不能变成 empty/parsed。
 - 实际夹具覆盖中英姓名/日期/金额/小数/负号/单位/区间、物理旋转与 EXIF 镜像、双栏表格、纯文本 PDF/扫描 PDF/扫描正文+文字页脚/多页混合、native/OCR 数字冲突、非零 crop box 与 90/180/270 度页旋转、非 BMP 字符、空白/损坏/锁定/101 页/超像素/多帧。Go helper 夹具覆盖挂起/取消/输出洪泛/半截或多份 JSON/坏版本/NaN 或越界框/退出异常与无残留进程。保存引擎指纹、原图与框叠加图，比较字段和框覆盖范围，不以整段 OCR 快照或仅字符串出现代替证据关系验证。
@@ -348,7 +349,7 @@ native bounds 四角用相同 T 变换，包围矩形 b 转为 `[minX(b)/W,1-max
 
 准备匹配版本的签名发布包→核验实际 schema 并一致备份/隔离升级演练→flag 关闭下原子部署→迁移与旧六条记录及更正历史核对→事务 outbox 回填/增量追平和权限核验→旧接口新增/修订/隐藏/撤回验证→最后启用新功能 flag→健康/IM/TV验收。schema 8 是已记录生产基线，不能代替部署时核验。回滚应用前核对 schema 兼容，必要时用备份恢复到独立目录，不能让旧二进制直接写新库。
 
-回填与实时 outbox 复用同一 legacy 映射/当前修订规则并记录可恢复进度，重启或乱序不能新增事件。旧二进制及维护工具遇未知新 schema 要明确拒绝，不能只数 migration 数量。回滚前保全升级后的 DB、原件和 Brain 操作状态；只退回升级前 DB 会丢掉升级后已接收但尚未 NAS 同步的资料。发布包包含匹配的 Core/维护 CLI、Brain/MCP、渠道补丁、原生 helper 和 Web，保留既有签名身份；不顺带改挂载或自动登录配置。通用整机备份与 T16 档案恢复范围分别记入 runbook。
+回填与实时 outbox 复用同一 legacy 映射/当前修订规则并记录可恢复进度，重启或乱序不能新增事件。旧二进制及维护工具遇未知新 schema 要明确拒绝，不能只数 migration 数量。回滚前保全升级后的 DB、原件和 Brain 操作状态；只退回升级前 DB 会丢掉升级后已接收但尚未 NAS 同步的资料。发布包包含匹配的 Core/维护 CLI、Brain/MCP、渠道补丁、原生 helper 及其固定版本 codec 依赖/许可和 Web，保留既有签名身份；须验证 helper 与依赖包独立搬移后仍能运行、依赖缺失时安全失败，不引用开发机 Codex runtime。不得顺带改挂载或自动登录配置。通用整机备份与 T16 档案恢复范围分别记入 runbook。
 
 跑一万份合成文档检索与队列竞争，报告硬件、样本大小、P50/P95、错误率及占用；OCR/模型吞吐另计。一小时持续接收/查询故障恢复通过，真实 TV 长稳验收如未覆盖明确保留，不写成通过。
 
