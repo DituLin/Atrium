@@ -1,0 +1,23 @@
+{
+  "synthetic_only": true,
+  "configuration_fingerprint": "0fd2243da057e295d4b430caeadf7b4aca4f6d8e07dfc194ca1083e7cbcac72b",
+  "prompt_sha256": "c07ebb7f9d0d93b96d1c4a506ee0ccc573a0eb138a96d0130bfd41016e040b23",
+  "schema_sha256": "3d7e7b787ad37bc1510fb19f10f815eb2d039353b13f6f004281f0d386cb4e83",
+  "files": {
+    "README.md": "e2aa6e2cbe16c57969f8b7152e5d9b8ec5db96f1e59206935ec366a741dd14a9",
+    "final-live.log": "410413412efe42c3ecde2ca11fe70a7b53370e6aaf8ed2d41f3eae2ca0290da2",
+    "finance.json": "fc8a6f7172ea3234da932f511f6a87d2b7befee26d912b5e4d3b01cafb612754",
+    "finance.validated.json": "a9c7fc2f3d434213e72e90ddc10b5885160e224fdc36e6b7b7e7bb3dbb733b56",
+    "finance_explicit_control.json": "921d44bbf5996c42dcfb1883867d9d1a34b5e60e0689ffa32fd1d61a2d40d141",
+    "health-harness-retry.log": "f4846dc30c924e28e8510b5cb4f508bcb9ddad0e2a296b1a9bbbb318902b9026",
+    "health.json": "064b9f988853bcb2d15b65084d396016ce2867c7f6a7ba762bc5402d73b89695",
+    "health.validated.json": "195dcaa8d498d014573cf2f2c3f3fa5e132217549f7111777d0568ee2e780a1c",
+    "native-report-chunk-0.json": "0718cde104675c6f3368f12e71a4d8f9ce08e1e43a6836cdcb9166a21e42f7d2",
+    "native-report-chunk-1.json": "a19eb581ff77d96145c38baa79fa98e3eb09ea68b6555ee356b306726d12ffb3",
+    "native-report-chunk-2.json": "aae24d5cf75f5176059046d9b38d2741b95da2fc08eae7c6d3a18f191909c921",
+    "native-report.validated.json": "4918158065e6a4b7c42200701e5f5714df02f6a3bd5976a5f677d1bd9170bde1",
+    "property.json": "2333bd9d96892e8873015a4253c529727f17e8231b0940cda7ed35ba26971c08",
+    "property.validated.json": "b98bd9866eda60f1e62ce68a6a306794199d3f018595b529bc960fa78d8a4d19",
+    "synthetic-native-report.parse.json": "5ee18ac277639e1c8f24d94d7924178a52f6a3de12c96037c2ed68122482555d"
+  }
+}

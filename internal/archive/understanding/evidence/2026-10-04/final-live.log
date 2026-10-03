@@ -1,0 +1,23 @@
+=== RUN   TestUnderstandingLivePublicWorker
+=== RUN   TestUnderstandingLivePublicWorker/health
+    understand_live_test.go:50: synthetic evidence write
+=== RUN   TestUnderstandingLivePublicWorker/education
+    understand_live_test.go:44: archive: understand_worker_schema_unknown
+=== RUN   TestUnderstandingLivePublicWorker/finance
+    understand_live_test.go:111: domain=finance subjects=2 fields=4 events=1 complete=true exact_value_date_dimension_binding=true route=direct-provider/deepseek
+=== RUN   TestUnderstandingLivePublicWorker/finance_explicit_control
+    understand_live_test.go:91: missing field/event
+=== RUN   TestUnderstandingLivePublicWorker/property
+    understand_live_test.go:111: domain=property subjects=2 fields=2 events=1 complete=true exact_value_date_dimension_binding=true route=direct-provider/deepseek
+--- FAIL: TestUnderstandingLivePublicWorker (43.14s)
+    --- FAIL: TestUnderstandingLivePublicWorker/health (8.75s)
+    --- FAIL: TestUnderstandingLivePublicWorker/education (9.44s)
+    --- PASS: TestUnderstandingLivePublicWorker/finance (15.54s)
+    --- FAIL: TestUnderstandingLivePublicWorker/finance_explicit_control (4.54s)
+    --- PASS: TestUnderstandingLivePublicWorker/property (4.87s)
+=== RUN   TestUnderstandingLiveNativeReport
+    understand_live_test.go:278: actual_native_segments=19 chunks=3 merged_report_events=1 delta_unit_bound=true
+--- PASS: TestUnderstandingLiveNativeReport (81.59s)
+FAIL
+FAIL	github.com/DituLin/Atrium/internal/archive	124.977s
+FAIL

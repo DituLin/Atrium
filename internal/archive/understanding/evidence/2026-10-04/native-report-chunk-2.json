@@ -1,0 +1,152 @@
+{
+  "configuration_fingerprint": "0fd2243da057e295d4b430caeadf7b4aca4f6d8e07dfc194ca1083e7cbcac72b",
+  "usage": {
+    "input_tokens": 4948,
+    "output_tokens": 2620,
+    "total_tokens": 10256,
+    "cache_read_tokens": 2688,
+    "cache_write_tokens": 0,
+    "cost_usd": 0.0014338464
+  },
+  "protocol_version": 1,
+  "invocation_id": "fbf5d5d4121e2b095cf2e18cfdc43637",
+  "input_digest": "876ff073a5ba41026f91bbd2e2af57c74748edeb81694c4c525470447c6663a8",
+  "schema_version": "archive-extraction/1",
+  "extraction_version": "archive-understand/1",
+  "chunk_version": "archive-chunk/1",
+  "provider": "deepseek",
+  "requested_model": "deepseek/deepseek-v4-flash",
+  "model": "deepseek-v4-flash",
+  "response_model": "deepseek-flash",
+  "stop_reason": "stop",
+  "execution": {
+    "mode": "direct-provider",
+    "owner": {
+      "kind": "provider",
+      "id": "deepseek"
+    }
+  },
+  "result": {
+    "domain": "health",
+    "document_type": "report",
+    "subjects": [
+      {
+        "id": "s1",
+        "name": "林明",
+        "role": "patient",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "6dba6765c7c8eb838414ed49ee3d221df04a5459dda503ce3a9e8d68504e0495/body/alternative-0/0:15",
+            "start": 3,
+            "end": 5,
+            "quote": "林明",
+            "derived_value_ref": ""
+          }
+        ]
+      },
+      {
+        "id": "s2",
+        "name": "王华",
+        "role": "doctor",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "4a270671841a9f2f38506a206123608d05206cf3c549d22f674fee519e436170/body/alternative-0/0:13",
+            "start": 3,
+            "end": 5,
+            "quote": "王华",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "dimensions": [
+          {
+            "kind": "unit",
+            "raw": "mmol/L",
+            "evidence": [
+              {
+                "view_id": "34e9eb4006fa3ebf1b0131b4b0f96e7b2554216e54262a7f99d16017fb78a5e0/body/alternative-0/0:6",
+                "start": 0,
+                "end": 6,
+                "quote": "mmol/L",
+                "derived_value_ref": ""
+              }
+            ]
+          }
+        ],
+        "subject_refs": [
+          "s1"
+        ],
+        "id": "f1",
+        "name": "变化",
+        "raw": "-2.75",
+        "evidence": [
+          {
+            "view_id": "905e6629869e16af566faeb579469138ab948bb684942ce1f459d66c64e2d354/body/alternative-0/0:5",
+            "start": 0,
+            "end": 5,
+            "quote": "-2.75",
+            "derived_value_ref": ""
+          },
+          {
+            "view_id": "811584c849d02524c861afb6abe5437d07c5cc27ab6c9332b8fd2814126cd61d/body/alternative-0/0:8",
+            "start": 0,
+            "end": 8,
+            "quote": "变化 Delta",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "decimal",
+            "value": "-2.75"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "id": "e1",
+        "type": "report",
+        "field_refs": [
+          "f1"
+        ],
+        "subject_refs": [
+          "s1"
+        ],
+        "section_evidence": [
+          {
+            "view_id": "af811561eb09bc746ed85fcca8c3161bf3612b4b80dcbaaa7343fa34e0f70a89/body/alternative-0/0:23",
+            "start": 0,
+            "end": 23,
+            "quote": "合成健康报告 SYNTHETIC REPORT",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "coverage": [
+      {
+        "view_id": "905e6629869e16af566faeb579469138ab948bb684942ce1f459d66c64e2d354/body/alternative-0/0:5",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "811584c849d02524c861afb6abe5437d07c5cc27ab6c9332b8fd2814126cd61d/body/alternative-0/0:8",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "34e9eb4006fa3ebf1b0131b4b0f96e7b2554216e54262a7f99d16017fb78a5e0/body/alternative-0/0:6",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "4a270671841a9f2f38506a206123608d05206cf3c549d22f674fee519e436170/body/alternative-0/0:13",
+        "disposition": "extracted"
+      }
+    ],
+    "issues": []
+  }
+}

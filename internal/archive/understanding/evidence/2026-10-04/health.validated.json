@@ -1,0 +1,345 @@
+{
+  "synthetic_text": "体检报告\n患者：林明\n医生：王华\n日期：2026-10-04\n血红蛋白：145.6 g/L\n",
+  "plan": {
+    "structural_context_limited": false,
+    "version": "archive-understand/1",
+    "parse_digest": "332189266eed023d223f4d7e3e448696d4d11ae31adb4533671cbc876b2ed7ca",
+    "parser_version": "archive-parse/1",
+    "status": "parsed",
+    "coverage": {
+      "complete": true,
+      "encoding": "",
+      "offset_unit": "",
+      "notes": null,
+      "read_parts": null,
+      "skipped_parts": null,
+      "skipped_features": null
+    },
+    "warnings": null,
+    "sheets": null,
+    "native": null,
+    "chunks": [
+      {
+        "protocol_version": 1,
+        "invocation_id": "332189266eed023d223f4d7e3e448696d4d11ae31adb4533671cbc876b2ed7ca:0",
+        "input_digest": "cddb4160afc57fbe584a3c8228e27a397ffcfd8b5c5af20964c08e6e9acb92c9",
+        "schema_version": "archive-extraction/1",
+        "extraction_version": "archive-understand/1",
+        "chunk_version": "archive-chunk/1",
+        "parse_digest": "332189266eed023d223f4d7e3e448696d4d11ae31adb4533671cbc876b2ed7ca",
+        "index": 0,
+        "owned": [
+          {
+            "quote_hints": [
+              {
+                "start": 0,
+                "end": 4,
+                "text": "体检报告"
+              },
+              {
+                "start": 5,
+                "end": 7,
+                "text": "患者"
+              },
+              {
+                "start": 8,
+                "end": 10,
+                "text": "林明"
+              },
+              {
+                "start": 11,
+                "end": 13,
+                "text": "医生"
+              },
+              {
+                "start": 14,
+                "end": 16,
+                "text": "王华"
+              },
+              {
+                "start": 17,
+                "end": 19,
+                "text": "日期"
+              },
+              {
+                "start": 20,
+                "end": 30,
+                "text": "2026-10-04"
+              },
+              {
+                "start": 31,
+                "end": 35,
+                "text": "血红蛋白"
+              },
+              {
+                "start": 36,
+                "end": 41,
+                "text": "145.6"
+              },
+              {
+                "start": 42,
+                "end": 45,
+                "text": "g/L"
+              }
+            ],
+            "view_id": "s1/body/0:46",
+            "parent_segment_id": "s1",
+            "alternative_id": "",
+            "component_id": "s1/body",
+            "component_kind": "body",
+            "origin": "parsed",
+            "start": 0,
+            "end": 46,
+            "text": "体检报告\n患者：林明\n医生：王华\n日期：2026-10-04\n血红蛋白：145.6 g/L\n",
+            "parse_digest": "332189266eed023d223f4d7e3e448696d4d11ae31adb4533671cbc876b2ed7ca",
+            "parser_version": "archive-parse/1",
+            "requires_review": false,
+            "visual_state": "",
+            "structure": {
+              "locator": {
+                "kind": "",
+                "text": null,
+                "csv": null,
+                "docx": null,
+                "xlsx": null
+              },
+              "cell_state": "",
+              "cell_type": "",
+              "value_present": false,
+              "cache_present": false,
+              "row_hidden": false,
+              "column_hidden": false,
+              "column_hidden_unresolved": false,
+              "merge_range": "",
+              "merge_anchor": "",
+              "docx_merge": null
+            },
+            "derived": null
+          }
+        ],
+        "context": []
+      }
+    ],
+    "manifest_digest": "e360ecec47a32d631b26b4c0ce4fe5fa3d40888b153616d1b4c25a29eaee0099"
+  },
+  "product": {
+    "link_issues": [],
+    "events": [
+      {
+        "anchor_policy": "exact-evidence/1",
+        "id": "archive-understand/1/event/2a5a93f598989f783e610507394dacf6da6246299e8466c9882d140484a2d888",
+        "type": "report",
+        "section_evidence": [
+          {
+            "view_id": "s1/body/0:46",
+            "start": 0,
+            "end": 4,
+            "quote": "体检报告",
+            "derived_value_ref": ""
+          }
+        ],
+        "field_refs": [
+          {
+            "chunk_index": 0,
+            "local_id": "f_date"
+          },
+          {
+            "chunk_index": 0,
+            "local_id": "f_hgb"
+          }
+        ],
+        "subject_refs": [
+          {
+            "chunk_index": 0,
+            "local_id": "pat1"
+          }
+        ],
+        "proposals": [
+          {
+            "chunk_index": 0,
+            "local_id": "e_report"
+          }
+        ]
+      }
+    ],
+    "version": "archive-understand/1",
+    "manifest_digest": "e360ecec47a32d631b26b4c0ce4fe5fa3d40888b153616d1b4c25a29eaee0099",
+    "parse_digest": "332189266eed023d223f4d7e3e448696d4d11ae31adb4533671cbc876b2ed7ca",
+    "complete": true,
+    "requires_review": false,
+    "parse_status": "parsed",
+    "parse_coverage": {
+      "complete": true,
+      "encoding": "",
+      "offset_unit": "",
+      "notes": null,
+      "read_parts": null,
+      "skipped_parts": null,
+      "skipped_features": null
+    },
+    "parse_warnings": null,
+    "sheets": null,
+    "native": null,
+    "chunks": [
+      {
+        "receipt": {
+          "invocation_id": "87790214d5a4de0beebaf089b8d7a0b5",
+          "input_digest": "2bb52ecd31d3119f1900e06022c535efafc0496b0f8d24b2e9ee5dbcb4b53602",
+          "provider": "deepseek",
+          "requested_model": "deepseek/deepseek-v4-flash",
+          "model": "deepseek-v4-flash",
+          "response_model": "deepseek-flash",
+          "stop_reason": "stop",
+          "execution": {
+            "mode": "direct-provider",
+            "owner": {
+              "kind": "provider",
+              "id": "deepseek"
+            }
+          },
+          "usage": {
+            "input_tokens": 251,
+            "output_tokens": 1283,
+            "total_tokens": 4478,
+            "cache_read_tokens": 2944,
+            "cache_write_tokens": 0,
+            "cost_usd": 0.0004026232
+          },
+          "configuration_fingerprint": "0fd2243da057e295d4b430caeadf7b4aca4f6d8e07dfc194ca1083e7cbcac72b"
+        },
+        "input_digest": "cddb4160afc57fbe584a3c8228e27a397ffcfd8b5c5af20964c08e6e9acb92c9",
+        "invocation_id": "332189266eed023d223f4d7e3e448696d4d11ae31adb4533671cbc876b2ed7ca:0",
+        "index": 0,
+        "result": {
+          "domain": "health",
+          "document_type": "体检报告",
+          "subjects": [
+            {
+              "id": "pat1",
+              "name": "林明",
+              "role": "patient",
+              "ambiguous": false,
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:46",
+                  "start": 8,
+                  "end": 10,
+                  "quote": "林明",
+                  "derived_value_ref": ""
+                }
+              ]
+            },
+            {
+              "id": "doc1",
+              "name": "王华",
+              "role": "doctor",
+              "ambiguous": false,
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:46",
+                  "start": 14,
+                  "end": 16,
+                  "quote": "王华",
+                  "derived_value_ref": ""
+                }
+              ]
+            }
+          ],
+          "fields": [
+            {
+              "dimensions": [],
+              "subject_refs": [],
+              "id": "f_date",
+              "name": "日期",
+              "raw": "2026-10-04",
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:46",
+                  "start": 20,
+                  "end": 30,
+                  "quote": "2026-10-04",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": [
+                {
+                  "kind": "date",
+                  "value": "2026-10-04"
+                }
+              ]
+            },
+            {
+              "dimensions": [
+                {
+                  "kind": "unit",
+                  "raw": "g/L",
+                  "evidence": [
+                    {
+                      "view_id": "s1/body/0:46",
+                      "start": 42,
+                      "end": 45,
+                      "quote": "g/L",
+                      "derived_value_ref": ""
+                    }
+                  ]
+                }
+              ],
+              "subject_refs": [
+                "pat1"
+              ],
+              "id": "f_hgb",
+              "name": "血红蛋白",
+              "raw": "145.6",
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:46",
+                  "start": 36,
+                  "end": 41,
+                  "quote": "145.6",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": [
+                {
+                  "kind": "decimal",
+                  "value": "145.6"
+                }
+              ]
+            }
+          ],
+          "events": [
+            {
+              "id": "e_report",
+              "type": "report",
+              "field_refs": [
+                "f_date",
+                "f_hgb"
+              ],
+              "subject_refs": [
+                "pat1"
+              ],
+              "section_evidence": [
+                {
+                  "view_id": "s1/body/0:46",
+                  "start": 0,
+                  "end": 4,
+                  "quote": "体检报告",
+                  "derived_value_ref": ""
+                }
+              ]
+            }
+          ],
+          "coverage": [
+            {
+              "view_id": "s1/body/0:46",
+              "disposition": "extracted"
+            }
+          ],
+          "issues": []
+        },
+        "digest": "93e2bd71e601804d3fa9c8a06df0f1dfdcae4ee4e422b96a33dfd39b2db5387f"
+      }
+    ],
+    "digest": "353a6daa696707bad15a3c0bb3646aa6b1bb143ac4cba564d7d91e96bc0329e3"
+  }
+}
