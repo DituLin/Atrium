@@ -200,3 +200,5 @@ T07 实现进行中，尚未提交/双审。根任务检查初版 handoff 后明
 T07 真实模型开发验证：实施者报告最终提示下健康、教育、原始普通银行记录、明确归属财务对照、房屋 5 个案例均通过（17.43 秒），包含精确 raw/date/dimension、角色与人物绑定、事件、引用和覆盖、真实 direct-provider/deepseek receipt/usage；原银行格式保留，没有用更容易的改写替代。此前不准的模型 offsets/标签与 raw 不一致被严格拒绝，加入宿主精确 quote hints 后改进。根任务另运行 quote hints、混币种维度及完整输入预算三项针对回归通过（0.380 秒）。这些仍为未提交开发结果，正式证据归档、全量及双审待完成。
 
 根任务继续检查真实 T06 图片产物时发现未提交 T07 分块的衔接缺口：`adapters/macos-archive-parser/evidence/report.png.result.json` 的 19 个片段被切为 16+3，两块 context 都为空；第一块独占 `-2.75`，第二块只有“变化 Delta”“mmol/L”和医生名，不能在该数值的可用输入内验证它的项目/单位，也缺患者上下文。只读 overlay `/var/folders/9n/qh4533dn6db5y_wc4q5v6kr40000gn/T/atriumos-understanding-handoff-f9b7rr2t/overlay.json` 的 `TestRootNativeReportChunks` 增加同一数值所属块可访问原行 label/unit 的断言后，根任务实跑 RED（exit 1）。已交实施者按既定页/段落/表格边界和有界 context-only 契约修复，保留唯一 ownership/实际输入限额；不能仅凭短文本 5 例 GREEN 宣称普通图片档案已完成。
+
+图片分块窄修复的原只读 overlay 已由根任务复跑 GREEN（0.490 秒）：19 片段现按 9+9+1 分配 ownership，context 分别 3/7/7，`-2.75` 所属块能访问原项目名与 mmol/L。实际模型图片提取仍待结果。根任务同时要求检查通用结构边界：有明确行定位的表格优先按行分块；长父文本/单元格的所有碎片不能在 context 阶段又被当成不可拆组，导致邻近上下文因总量超限全部消失。保留有界、唯一 ownership 和可验证原文范围，不以单个 3 邻居样本通过替代完整分块契约；实施与全量验收继续进行。
