@@ -19,8 +19,9 @@
 | T03 原件存储 | 已完成任务级验收 | `c147a88` + `e40c9c7` + `474c0c1`；独立需求与质量审查批准，race/全量 Go/跨平台编译通过；未部署 |
 | T04 接收 API | 已完成任务级验收 | `6fa1592` + `256aa88` + `8cbad4c`；独立需求/质量复审批准，真实临时 Core、相关 race、全量 Go 回归通过；默认关闭，未部署 |
 | T05 解析器 | 已完成任务级验收 | `20bfed1` + `6c17f41` + `ab21659` + `c75659a`；最终提交独立需求/质量双审批准，全量 Go/race/Linux 编译及原失败复验通过；未接生产消费者 |
-| T06 图片/PDF | 需求已批准，独立质量审查中 | `7c7bee8` 修复获需求批准；80 个结果及 266 项定位 fresh 通过，两项原发现已关闭；等待质量审查 |
-| T07–T18 | 未开始 | 理解、归属、发布、检索、分析、渠道、TV 和恢复契约已预审；不将设计文档或旧 family 记录作为新能力通过证据 |
+| T06 图片/PDF | 已实现并双审通过 | `7c7bee8` 获需求与质量独立批准；80 个结果、266 项定位及进程/依赖/资源检查通过，未接生产 |
+| T07 分类与事实提取 | 实现中 | 新实施者已接手；隔离公共 CLI 真实 DeepSeek 路由探针成功，正式四领域提取/证据/覆盖验收尚未执行 |
+| T08–T18 | 未开始 | 归属、发布、检索、分析、渠道、TV 和恢复契约已预审；不将设计文档或旧 family 记录作为新能力通过证据 |
 
 ## 基线核对
 
@@ -185,3 +186,11 @@ BMP 覆盖窄修复已在未提交实现上由根任务独立复测：不改原 
 上述窄修复已提交 `7c7bee8b8c01fed7622d5de4d132e7c896c1d29f`，根任务核对工作区干净。实施端最终验证 80 个夹具结果、266/266 字段定位、两份未改动审查 overlay、全量 Go、archive race、Linux 编译及差异检查通过；native/process suite 25.938 秒，race 12.314 秒。指纹保持 9c9c4ac。HEIF 使用同一保守策略但无独立实际夹具，未扩大格式验证声明。已提交原审查者针对需求复审，质量审查仍待该阶段通过。
 
 独立需求复审批准 `7c7bee8`，原 JPEG/PNG 和 BMP 两项发现均关闭。审查者 fresh 运行完整 native suite 23.877 秒，80 个结果、266 项定位、几何/协议/依赖/进程测试无 skip；两份原 overlay、focused race 6.232 秒及差异检查通过。确认未验证图片保留 OCR、zero-text 仍 partial、review 标记在 ID 哈希前传播；没有剩余可操作需求偏差。已派新的独立质量审查者审阅 T06 全部代码范围 `383167b..7c7bee8`，任务仍未最终验收，不提前启动 T07 实施。
+
+T06 独立质量审查批准完整代码范围 `383167b..7c7bee8`，无可操作 Critical/Important/Minor 发现。审查者新建 `/tmp/atriumos-quality-review/helper` 完整包，真实夹具 TestNative 24.508 秒、archive 回归 4.882 秒、进程/取消/输出限制/分组 deadline focused race 6.187 秒、JPEG 资源/ABI 检查均通过；额外 C harness 对 2,000 个不同压缩级别/IDAT 边界的合法 PNG 流验证通过。仓库未被审查者改动。T06 至此完成任务级双审；不代表 T09 调度、T17 部署完成。
+
+## T07 实施与真实模型入口
+
+根任务使用独立临时 home/state/config/cwd/workspace、仅 worker 与必要 DeepSeek 插件的 allowlist、环境白名单和单个受保护 DEEPSEEK_API_KEY，实际调用公开 `api.runtime.llm.complete`。脚本 `/tmp/atriumos-deepseek-live-probe.py` 不含常量密钥；临时目录 `/var/folders/9n/qh4533dn6db5y_wc4q5v6kr40000gn/T/atriumos-deepseek-live-probe-nmjb2_n4` 保存无密钥配置及合成响应，未改现用 OpenClaw 配置/渠道或发送 IM。请求 `deepseek/deepseek-v4-flash`，返回 provider=deepseek、model=deepseek-v4-flash、responseModel=deepseek-flash、stopReason=stop、execution.mode=direct-provider、owner=provider/deepseek，exit 0、stderr 0 字节。合成体检文本的受检人林明/医生王华、145.6 g/L、两项日期和参考区间正确；用量 118 input + 69 output = 187 tokens。该实际别名映射已交实施者，不能只按请求 model 字符串等同 responseModel。
+
+此探针只证明隔离公开宿主的实际路由与完整响应，不是正式 T07 schema/typed evidence/覆盖校验，也不构成四领域质量验收或完整零工具调用审计。新的单一实施者已接手 T07：完整分块、类型化证据、严格引用/数值校验、局部主体和事件提议、真实公共 CLI 进程适配，最终必须通过正式 worker 对四领域合成资料实测。T08–T18 仍未实施，目标保持完整。
