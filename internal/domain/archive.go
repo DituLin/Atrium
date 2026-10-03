@@ -177,13 +177,23 @@ func readArchiveJSON(dec *json.Decoder, depth int) (any, error) {
 
 // ArchiveDocumentDate stores exactly the precision found in the source. A year
 // or month is never padded into an invented date; unknown has an empty value.
-// Datetime requires RFC3339 with an explicit timezone.
+// Datetime requires RFC3339 with an explicit timezone and at most nine fractional
+// digits. More precise source values must not be silently truncated to nanoseconds.
 type ArchiveDocumentDate struct {
 	Precision string `json:"precision"`
 	Value     string `json:"value,omitempty"`
 }
 
+// Go's RFC3339 parser also accepts nonstandard offsets, comma fractions and
+// arbitrarily long fractions. Bound the input and enforce the wire shape before
+// using time.Parse to validate the calendar date.
+var archiveDatetimeShape = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]{1,9})?(Z|[+-]([01][0-9]|2[0-3]):[0-5][0-9])$`)
+
 func (d ArchiveDocumentDate) Validate() error {
+	const maxDateBytes = len("2006-01-02T15:04:05.123456789+07:00")
+	if len(d.Value) > maxDateBytes {
+		return Errorf(CodeInvalidRequest, "document date exceeds size limit")
+	}
 	if d.Precision == "unknown" && d.Value == "" {
 		return nil
 	}
@@ -196,6 +206,9 @@ func (d ArchiveDocumentDate) Validate() error {
 	case "date":
 		layout = "2006-01-02"
 	case "datetime":
+		if !archiveDatetimeShape.MatchString(d.Value) {
+			return Errorf(CodeInvalidRequest, "document datetime must have a bounded RFC3339 shape")
+		}
 		layout = time.RFC3339Nano
 	default:
 		return Errorf(CodeInvalidRequest, "invalid document date precision")

@@ -51,3 +51,42 @@ func TestArchiveTaskJSONHidesLeaseToken(t *testing.T) {
 	require.NotContains(t, string(b), "secret-lease-token")
 	require.NotContains(t, string(b), "lease_token")
 }
+
+func TestArchiveDocumentDateStrictDatetime(t *testing.T) {
+	for _, value := range []string{
+		"2026-10-03T09:30:00Z",
+		"2026-10-03T09:30:00+08:00",
+		"2026-10-03T09:30:00-05:30",
+		"2026-10-03T09:30:00.1Z",
+		"2026-10-03T09:30:00.123456789+08:00",
+		"2026-10-03T09:30:00.120000000Z",
+	} {
+		t.Run(value, func(t *testing.T) {
+			date := domain.ArchiveDocumentDate{Precision: "datetime", Value: value}
+			require.NoError(t, date.Validate())
+			require.Equal(t, value, date.Value, "validation must preserve the source's exact fractional precision")
+		})
+	}
+	for _, tc := range []struct{ name, value string }{
+		{"offset_hour_24", "2026-10-03T09:30:00+24:00"},
+		{"negative_offset_hour_24", "2026-10-03T09:30:00-24:00"},
+		{"offset_minute_60", "2026-10-03T09:30:00+00:60"},
+		{"single_digit_hour", "2026-10-03T9:30:00Z"},
+		{"comma_fraction", "2026-10-03T09:30:00,1Z"},
+		{"precision_beyond_nanoseconds", "2026-10-03T09:30:00.1234567890Z"},
+		{"oversized_fraction", "2026-10-03T09:30:00." + strings.Repeat("1", 65537) + "Z"},
+		{"invalid_calendar", "2026-02-30T09:30:00Z"},
+		{"invalid_hour", "2026-10-03T24:30:00Z"},
+		{"invalid_minute", "2026-10-03T09:60:00Z"},
+		{"invalid_second", "2026-10-03T09:30:60Z"},
+		{"empty_fraction", "2026-10-03T09:30:00.Z"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := (domain.ArchiveDocumentDate{Precision: "datetime", Value: tc.value}).Validate()
+			require.Error(t, err)
+			e, ok := domain.AsError(err)
+			require.True(t, ok)
+			require.Equal(t, domain.CodeInvalidRequest, e.Code)
+		})
+	}
+}
