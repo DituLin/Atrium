@@ -15,8 +15,9 @@
 | --- | --- | --- |
 | T00 设计 | 已审阅 | 3 份设计/计划文档及 R01–R14；独立审阅 5 项问题均已修正，见下方记录 |
 | T01 持久基础 | 已完成任务级验收 | `02b928a`；需求与质量复审批准，race 与全量 Go 回归通过；未接入 API/worker/生产 |
-| T02 家庭授权 | 需求复审通过，质量审查中 | `53fd964` + `2c8f0ea`；增量授权兼容问题已修复，相关 race 复验通过；未部署 |
-| T03–T18 | 未开始 | 不将文档或旧 family 记录作为新能力通过证据 |
+| T02 家庭授权 | 已完成任务级验收 | `53fd964` + `2c8f0ea`；需求与质量审查批准，相关 race 复验通过；未部署 |
+| T03 原件存储 | 开发中 | 流式保存、内容校验、家庭隔离、无覆盖发布与数据库恢复边界；尚未验收 |
+| T04–T18 | 未开始 | 不将文档或旧 family 记录作为新能力通过证据 |
 
 ## 基线核对
 
@@ -64,4 +65,8 @@ read + organize 可跨同家庭接入澄清或取消，事件分别记录原始�
 
 独立需求审查实跑 `go test -count=1 -race ./internal/auth ./internal/httpapi ./internal/domain ./internal/cli ./internal/store -run 'Archive|Household|Integration'` 通过，但发现一项兼容问题：GrantArchives 校验整个合并策略时，会因旧 screen/source 已撤销而拒绝新的有效 archive 授权。需要只校验本次新增的 archive 引用及最终结构/总量，完整保留旧列表，并保持旧资源运行时仍不可访问；其他已审 T02 范围无需求阻断。
 
-`2c8f0ea` 已修复该问题并同步 OpenAPI。新增测试先观察 revoked 旧引用导致 invalid_request 的红灯，再验证新家庭档案授权成功、全部旧列表保留、已撤销照片与屏幕命令仍 not_found；普通完整替换策略仍按原规则拒绝已撤销引用。实现端和独立需求复审的 store/auth/httpapi/cli/screen 相关 race 测试均通过，需求复审批准。质量审查进行中。
+`2c8f0ea` 已修复该问题并同步 OpenAPI。新增测试先观察 revoked 旧引用导致 invalid_request 的红灯，再验证新家庭档案授权成功、全部旧列表保留、已撤销照片与屏幕命令仍 not_found；普通完整替换策略仍按原规则拒绝已撤销引用。实现端和独立需求复审的 store/auth/httpapi/cli/screen 相关 race 测试均通过，需求复审批准。独立质量审查也批准，重新实跑 Archive 授权/生命周期/迁移/稳定家庭 ID/CAS 以及 domain/auth/httpapi/cli/契约相关 `-race -count=1` 测试和提交差异检查全部通过。T02 完成任务级验收。
+
+## T03 存储实现前预审
+
+独立预审已核实本机 Go 文档、x/sys API 与 macOS link 手册：os.Root 允许跟随根内 symlink，Rename 会覆盖目标，因此选目录 fd + no-follow 与 Linkat 无覆盖发布，并在重复目标上重验完整内容。文件发布先于数据库引用，失败不能删除可能已被并发接收引用的原件。最小表/事务交接/故障矩阵已写入开发计划 T03。当前实际 Go 为 1.27.1，模块基线 1.25；实现保持已锁定依赖与 macOS/Linux 支持，不依赖新增 Root 方法。这是实现契约，不是存储能力已完成的证据。
