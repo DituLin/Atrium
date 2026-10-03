@@ -269,9 +269,21 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 
 扩展：`adapters/openclaw/` 入站桥接、`scripts/check-openclaw-ingress.mjs`、协议和运行文档。
 
-从实际安装版 OpenClaw 的可信 hook/media facts 获取附件，校验账户/会话/原始消息/附件序号和可读根，不让模型传路径。当前 before_dispatch durable claim 与 intake 必须可恢复关联，避免 claim 成功后进程崩溃造成永远拒绝重投却没有接收任务。重投查询同一任务，不能重新执行完整归档。
+从实际渠道原生消息边界建立可信来源清单，校验账户/会话/原始消息/附件序号和可读根，不让模型传路径。当前 before_dispatch durable claim 与 intake 必须可恢复关联，避免 claim 成功后进程崩溃造成永远拒绝重投却没有接收任务。重投查询同一任务，不能重新执行完整归档。以下已核实的通用 hook 限制不能用假设字段绕过。
 
 红灯：hook 字段缺失、Discord 多附件、微信图片/文件、跨渠道同文件、源文件清理前保存、路径越界、临时 ID、duplicate delivery。真实渠道最终由用户提供新合成/真实文件进行验收；不代用户发送未授权外部消息。
+
+独立实装代码预审（微信 2.4.9、OpenClaw/Discord 2026.9.8；设计契约，尚未实现）：before_dispatch 没有 media 字段，message_received 是 fire-and-forget，inbound_claim 只交会话 owner plugin。微信当前在处理消息前保存 poll cursor，媒体只取 IMAGE/VIDEO/FILE/VOICE 首项并可能退回引用；CDN arrayBuffer 无流式上限，100 MiB 保存限制太晚。Discord 已有持久 MESSAGE_CREATE 队列及有界下载，但默认 100 MiB，preparedMedia 混入引用/转发/贴纸且丢失部分原生属性，文本还可能 debounce 合批。T13 因此使用固定版本、可重复校验的渠道桥接补丁，不假造通用 hook 能力。
+
+- 微信冻结渠道 accountId、from_user_id、原生 direct conversation、无损 message_id 及原 item_list 下标；合法 fallback 记录具体来源字段，缺稳定身份不归档。Discord 使用原始 id/channel_id/author.id、渠道 accountId、原附件位置和 attachment ID；不能用新回复线程、显示代理身份或合批最后一条消息替代。首次槽映射不可变，失败槽不压缩编号，编辑后同槽换字节冲突。T04 来源全部由宿主填，模型只能选择 opaque message/slot refs。
+- 微信在 monitor.ts 保存游标前等待 CaptureBatch 完整持久化获准消息与槽清单，之后才推进 cursor；捕获后/游标前崩溃按原生身份重放，额度不足不推进。捕获先执行渠道/本地 allowlist 和会话准入；拒绝者最多留最小身份摘要和拒绝码，不存正文、附件 URL 或解密信息。原文及恢复凭据只在有界、短期、受保护的操作收件箱，普通聊天处理后清理，不进入 Core 档案。Discord 在获准的原始消息路径做等待式交接，队列 settle 前确认成功，不依赖异步观察钩子。
+- 微信 process-message.ts/media-download.ts/pic-decrypt.ts 保留所有当前槽并逐槽记录失败；下载使用受控 provider URL、重定向策略、deadline、密文/明文流式上限，解密结束和长度/校验完成才发布 plaintext，明文遵守 32 MiB。Discord 复用有界 downloader 并收紧档案上限。错误仅固定码，不回显 CDN URL、AES key 或响应体。引用/历史/转发/贴纸保留独立 provenance，首期不自动归档；明确保存引用文件时仍需原消息身份和重新授权。语音转写不冒充原始文字。
+- 模型运行前，宿主从允许根中的已打开 regular-file FD 将下载内容复制到 Brain 私有 spool，逐级拒绝 symlink，流式算 hash/size、fsync、原子发布并同步目录后才标 staged。之后按 opaque spool ref 复核字节，不重信原路径；提示中的 media 路径、模型参数或字符串前缀不提供访问权。原名/声明 MIME 一次确定并持久保存，重试不换临时名或重猜 MIME。
+- 当前直接文件按用户既定输入即归档的意图处理；当前可信附言为空可直接持久 inherit。附言非空先 awaiting_intent，由现有正常消息模型轮调用归档工具提交 inherit/private/needs_clarification，完成后才接收；不另建通用分类器、不逐文件要求确认，也不能超时或漏字段后先按 inherit 上传。宿主绑定消息身份、完整附言及 digest、槽清单和意图版本，保留包含否定/限定的原文证据；附件正文/OCR/引用消息不能发出可见性指令。测试“不要在 TV 展示/这是私密”和否定私密的相反表达。已持久意图的 reconcile 不再询问模型。
+- 显式 private 仍需 ingest + read + organize，接收事务再次核验；缺权限明确 forbidden，受限暂存保留，不降级 inherit。已接收后的新私密要求走 T09 修订，不改原 intake intent。文字由归档工具选择宿主绑定的当前原文，普通问答/澄清不新增文本事件。模型不能自行写一段文字冒充收到的原文。
+- intent 持久化后每槽 downloading/staged/submitting/core_saved 与重试/终止状态独立。先 reconcile 收件箱，再检查既有模型轮消费账本；只补接收，不重跑已消费模型轮、屏幕或其他工具。每次重试先以冻结来源 lookup，已保存则核对 hash/size，没有才上传同一 spool；Core 成功但回执丢失按此恢复。固定同一 Core principal，凭据不能悄悄换属另一 principal 重新建来源。
+- ingest-only 账本只需自有 receipt/task、saved/hash/size/time，不要求 document ID 或 read。部分成功槽保留，全部 Core saved 前不说“附件全部已保存”；本地 staged 只称“已暂存，尚未进入档案”，NAS 由 Core 独立回执确认。registerService.start/stop 管理独立、有界、持久退避的 archive-only reconciler，不依赖会空闲退出的 host.js 模型进程。JSONL RPC 单条 64 KiB，不塞附件 base64，新增宿主清单/spool 专用操作和有界批次。
+- 补丁保存在仓库，固定包版本、原文件 hash 和锚点并覆盖实际加载 dist；不符就拒绝启用，不由生产桥接动态导入带 hash 的内部模块。故障测试覆盖整批捕获/游标各中断点、中间槽失败、引用混入、Discord 合批来源、伪造路径/ID、下载/解密失败、symlink 替换、回执丢失、已消费消息重投仅补传、服务重启/撤权和有限重试。最后仍需新消息的真实微信/Discord 入站验证。
 
 ### T14 — TV 档案信息架构与详情
 
