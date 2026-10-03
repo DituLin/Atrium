@@ -160,6 +160,10 @@ T16/T17 独立预检补充完整恢复点/证据引用闭包、历史身份而�
 
 独立需求审查未批准 `280fb4c`：将合成 report.jpg / report.png 截为一半字节，ImageIO 仍返回缩略图，helper 与公开 Go API 都给出 parsed/coverage.complete=true，原 19 个字段只剩 8 / 4 个。根任务分别重跑正式 helper 和 `/tmp/atriumos-t06-spec-probes/overlay.json` 的 `TestSpecReviewTruncatedImage`，均复现。该 macOS 上 ImageIO source/frame status 在截断样本解码前后仍为 0，单加状态判断不能证明修复，需有界、可实证的完整性检查并保留正常格式支持。实施者已收到唯一已验证阻断及回归输入，修复和复审待完成。审查另 fresh 运行带实际环境的全部 TestNative（33 个结果及 266 个位置对照）和 focused race 均通过，额外截断 PDF 探针返回 invalid；这些通过不抵消图片完整性缺口。
 
+修复进行中：PNG 的有界 chunk/CRC + 32 KiB 流式 zlib/行与交错 pass 字节验证，在实施端 16 个真实损坏/正例上通过，包括重新计算 CRC 后截断 IDAT、缺失 IEND、Adler/行数/filter 错误及正常 split/零长 IDAT、Adam7、1-bit/16-bit 灰度。JPEG 不以所有有效图片统一 partial 的方式回避完整性；独立 scratch 探针验证成熟 libjpeg-turbo 3.1.4.1 的严格 warning/error 回调、1/8 IDCT 全 scanline 消费与 finish，可接受 baseline/progressive/灰度/CMYK/含 EOI 的合法 COM，并拒绝比例截断、伪造 EOI 和真正末尾缺失的 6 个损坏样本。结果/代码在 `/tmp/atriumos-strict-image-probe/`；这仍是依赖能力证据，未替代正式 helper 修复验收。
+
+JPEG 依赖最小闭包仅 arm64 libjpeg dylib 与系统 libSystem，复制、相对 install ID、签名后独立运行已实测。实施将固定来源/版本/ABI/头文件/许可/原始及产物哈希并验证搬移运行，避免生产依赖 Codex 目录；缺失或不兼容返回 parser_unavailable。6000×6000 正常 progressive 在 64 MiB 虚拟系数预算下失败、128 MiB 下通过（约 105 MiB RSS），因此正式方案采用明确的 512 MiB 系数预算以保留既定 60 MP 常见输入范围，另有扫描数量/120 秒 deadline；这不是总 RSS 硬上限。WebP 的现有 ImageIO 损坏/重写 RIFF 回归已安全失败，当前不新增 libwebp 依赖。尚无修复提交、需求复审或质量批准。
+
 新实施者已完成首轮 Go 进程边界与证据分组的 RED→GREEN：未链接路径的原件通过 FD3 定位读取，调用者句柄/当前偏移保持；稳定片段 ID、未知/重复/截断/多份 JSON、坐标和计数、空白差异与数值/标点冲突、一对多分组、挂起/输出洪泛/异常退出/取消的 `TestNative` 实现端通过。测试 helper 使用 ReadAt，不以 cat 当前偏移迫使生产代码 Seek/reopen。实际 Objective-C helper 和完整合成格式矩阵正在实现，本轮不代表真实 OCR/PDF 验收。
 
 2026-10-04 将此前合成报告导出 JPEG（quality 95）和无损 WebP，用已有 Objective-C Vision 探针实跑，revision 3 均返回 13 片段，八个预期字段字符串均出现。这仅确认本机这两个格式的读取/OCR 基础能力，不是 T06 实现或复杂场景准确率验收；坐标关系、EXIF、PDF 混合页和资源/进程限制仍待正式实现。JPEG SHA-256 `5b88e0ac26b48de92fa34c871de9f06655cf656eb21abc3de373bde7a0032750`，WebP `087aec3e06912c25ce50c211f9f3c5750c9eb00dce18e107f92f1035670b7008`。合成图片、输出及结果清单位于本机 `/tmp/atriumos-image-format-probe/`，没有使用家庭文件或安装依赖。
