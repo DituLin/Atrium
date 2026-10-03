@@ -98,6 +98,9 @@ func Serve(parent context.Context, input io.ReadCloser, output io.WriteCloser, r
 		}
 	}
 	slots := make(chan struct{}, 4)
+	// Bound accepted work separately from execution. Model tool batches may
+	// exceed four calls; queue them without blocking the reader's cancel/end.
+	admitted := make(chan struct{}, 64)
 	scanner := bufio.NewScanner(input)
 	scanner.Buffer(make([]byte, 4096), 64*1024)
 	for scanner.Scan() {
@@ -136,7 +139,7 @@ func Serve(parent context.Context, input io.ReadCloser, output io.WriteCloser, r
 				return errors.New("runtime unavailable")
 			}
 			select {
-			case slots <- struct{}{}:
+			case admitted <- struct{}{}:
 			default:
 				send(response{ID: req.ID, Error: &protocolError{Code: "busy"}})
 				continue
@@ -144,6 +147,12 @@ func Serve(parent context.Context, input io.ReadCloser, output io.WriteCloser, r
 			workers.Add(1)
 			go func(req request) {
 				defer workers.Done()
+				defer func() { <-admitted }()
+				select {
+				case slots <- struct{}{}:
+				case <-ctx.Done():
+					return
+				}
 				defer func() { <-slots }()
 				result, report, err := runtime.Call(req.RunID, req.CallID, req.Tool, req.Arguments)
 				send(response{ID: req.ID, Result: struct {
