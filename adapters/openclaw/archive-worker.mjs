@@ -4,7 +4,7 @@ import {
   schema,
   prompt,
   schemaSource,
-} from "../../internal/archive/understanding/resources-v1.mjs";
+} from "../../internal/archive/understanding/resources-v2.mjs";
 import { createHash } from "node:crypto";
 export const MODEL = "deepseek/deepseek-v4-flash";
 export function configurationFingerprint() {
@@ -13,7 +13,7 @@ export function configurationFingerprint() {
     Prompt: prompt,
     Schema: schemaSource,
     Route:
-      "deepseek/direct-provider/aliases:deepseek-v4-flash,deepseek-flash/zero-tools/reasoning:low/temperature:0/evidence-only:1",
+      "deepseek/direct-provider/aliases:deepseek-v4-flash,deepseek-flash/zero-tools/reasoning:low/temperature:0/response-format:json_object/evidence-only:1",
     MaxTokens: 12000,
   }).replace(
     /[<>&\u2028\u2029]/g,
@@ -117,12 +117,18 @@ export function strictParse(text, limit = 65536, allowNull = false) {
   if (i !== text.length) fail();
   return out;
 }
-export function validateSchema(v, s) {
+export function validateSchema(v, s, root = s, depth = 0) {
   const invalid = (code) => {
     const error = new Error(code);
     error.code = code;
     throw error;
   };
+  if (depth > 32) invalid("worker_schema_limit");
+  if (s.$ref) {
+    const match = /^#\/\$defs\/([a-z_]+)$/.exec(s.$ref);
+    if (!match || !root.$defs?.[match[1]]) invalid("worker_schema_type");
+    return validateSchema(v, root.$defs[match[1]], root, depth + 1);
+  }
   if (s.type === "object") {
     if (v === null || typeof v !== "object" || Array.isArray(v))
       invalid("worker_schema_type");
@@ -140,15 +146,24 @@ export function validateSchema(v, s) {
         };
         invalid(known[k] ?? "worker_schema_unknown");
       }
-      validateSchema(v[k], s.properties[k]);
+      validateSchema(v[k], s.properties[k], root, depth + 1);
     }
   } else if (s.type === "array") {
     if (!Array.isArray(v)) invalid("worker_schema_type");
     if (v.length > (s.maxItems ?? 128)) invalid("worker_schema_limit");
-    for (const x of v) validateSchema(x, s.items);
+    if (
+      s.uniqueItems &&
+      new Set(v.map((x) => JSON.stringify(x))).size !== v.length
+    )
+      invalid("worker_schema_duplicate");
+    for (const x of v) validateSchema(x, s.items, root, depth + 1);
   } else if (s.type === "string") {
     if (typeof v !== "string") invalid("worker_schema_type");
-    if ([...v].length > (s.maxLength ?? 8192)) invalid("worker_schema_limit");
+    if (
+      [...v].length > (s.maxLength ?? 8192) ||
+      [...v].length < (s.minLength ?? 0)
+    )
+      invalid("worker_schema_limit");
   } else if (s.type === "integer") {
     if (!Number.isSafeInteger(v) || v < (s.minimum ?? 0))
       invalid("worker_schema_type");
@@ -194,8 +209,8 @@ export function validateRequest(r) {
   ]);
   if (
     r.protocol_version !== 1 ||
-    r.schema_version !== "archive-extraction/1" ||
-    r.extraction_version !== "archive-understand/1" ||
+    r.schema_version !== "archive-extraction/2" ||
+    r.extraction_version !== "archive-understand/2" ||
     r.chunk_version !== "archive-chunk/1" ||
     typeof r.invocation_id !== "string" ||
     r.invocation_id.length > 160 ||
@@ -397,6 +412,7 @@ export async function runArchiveWorker(api) {
       purpose: "atrium.archive-understand.v1",
       maxTokens: 12000,
       reasoning: "low",
+      responseFormat: { type: "json_object" },
       temperature: 0,
     };
     if (Buffer.byteLength(JSON.stringify(completionRequest)) > 32768) fail();

@@ -9,10 +9,10 @@ import (
 	"math"
 )
 
-//go:embed understanding/prompt-v1.txt
+//go:embed understanding/prompt-v2.txt
 var understandingPrompt string
 
-//go:embed understanding/extraction-v1.schema.json
+//go:embed understanding/extraction-v2.schema.json
 var understandingSchemaText string
 
 // The fingerprint records the trusted extraction policy without paths or auth.
@@ -20,7 +20,7 @@ func UnderstandingConfigurationFingerprint() string {
 	return digestJSON(struct {
 		Model, Prompt, Schema, Route string
 		MaxTokens                    int
-	}{UnderstandingModel, understandingPrompt, understandingSchemaText, "deepseek/direct-provider/aliases:deepseek-v4-flash,deepseek-flash/zero-tools/reasoning:low/temperature:0/evidence-only:1", 12000})
+	}{UnderstandingModel, understandingPrompt, understandingSchemaText, "deepseek/direct-provider/aliases:deepseek-v4-flash,deepseek-flash/zero-tools/reasoning:low/temperature:0/response-format:json_object/evidence-only:1", 12000})
 }
 
 type CompletionUsage struct {
@@ -87,14 +87,15 @@ func completionInputBytes(c UnderstandingChunk) int {
 		Context []EvidenceView `json:"context"`
 	}{c.Owned, c.Context})
 	request := struct {
-		Model        string              `json:"model"`
-		SystemPrompt string              `json:"systemPrompt"`
-		Messages     []map[string]string `json:"messages"`
-		Purpose      string              `json:"purpose"`
-		MaxTokens    int                 `json:"maxTokens"`
-		Reasoning    string              `json:"reasoning"`
-		Temperature  int                 `json:"temperature"`
-	}{UnderstandingModel, understandingPrompt + "\nJSON schema:\n" + schema.String(), []map[string]string{{"role": "user", "content": string(data)}}, "atrium.archive-understand.v1", 12000, "low", 0}
+		Model          string              `json:"model"`
+		SystemPrompt   string              `json:"systemPrompt"`
+		Messages       []map[string]string `json:"messages"`
+		Purpose        string              `json:"purpose"`
+		MaxTokens      int                 `json:"maxTokens"`
+		Reasoning      string              `json:"reasoning"`
+		Temperature    int                 `json:"temperature"`
+		ResponseFormat map[string]string   `json:"responseFormat"`
+	}{UnderstandingModel, understandingPrompt + "\nJSON schema:\n" + schema.String(), []map[string]string{{"role": "user", "content": string(data)}}, "atrium.archive-understand.v1", 12000, "low", 0, map[string]string{"type": "json_object"}}
 	b, _ := json.Marshal(request)
 	return len(b)
 }

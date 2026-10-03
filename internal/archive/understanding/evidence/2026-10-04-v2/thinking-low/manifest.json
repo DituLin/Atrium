@@ -1,0 +1,29 @@
+{
+  "synthetic_only": true,
+  "configuration_fingerprint": "80e1d4a59c4dd4e6a1e6601f402fb56d0ad3104dd536056ff9e9164c8da188ae",
+  "reasoning": "low",
+  "temperature_advisory": 0,
+  "response_format": "json_object",
+  "prompt_file": "../pre-grouping-prompt-v2.txt",
+  "prompt_sha256": "7cbed655cceb26902711f92c8a3130eb1a2739205b5d92631cb2a0e81f3256c1",
+  "schema_file": "../inline-schema-v2.json",
+  "schema_sha256": "5162ae274185d9654f3225e629b0138f9d9fb237b74c0ff919aec0ab454fe14c",
+  "evaluation": "five text cases passed; native failed; see live.log",
+  "files": {
+    "education.json": "e17441aa790e670737d33d93d270377f6699920c4e0cd7f2170cec992da76db2",
+    "education.validated.json": "6830c83b5e2b027021c1ced39687fc7965e38ae0020afe7501d705b4391e67a2",
+    "finance.json": "601d020df70dc1a7ef6a92000fe2b44d2bba2680b5a704ba10f9a89b1607f814",
+    "finance.validated.json": "083778b12125ef94ca150381160e9a5c28f4bbbd330a2a772dc69263b9ad4c2e",
+    "finance_explicit_control.json": "7e2015daa25fbf675a5dabf4f30adc563d29432e10a4354ae8eb77ce6fdd128b",
+    "finance_explicit_control.validated.json": "50c199a23761f2a2a0ac96febfffbc8fbb86d3d24f29b15a89fdd90373517b7b",
+    "health.json": "68aeb434f8578b9b4f7c18ad33c4488afa15d4f4c42ef1761184d7ce2721dcf7",
+    "health.validated.json": "bba9b78aa7923d8fa13e6354bd287632306755209638e517df18bdf7277716a4",
+    "live.log": "921f74f47c8288e5a3ee324bec3f5fbf316aa37bad434ba6c7984167cbb01faa",
+    "native-report-chunk-0.json": "d0d4565c6368ea359e8974462f38ce1bd24b03093eb39d441a95386c69e8a5b8",
+    "native-report-chunk-1.json": "91b151059659504e01f7f21bbe813f2ef0aa9683bab18ea01863252f31161401",
+    "native-report-chunk-2.json": "41c0ec1253138b45bdf030ab83afd3c4011b9da4a734586ca3fd024f0fa9a4b1",
+    "native-report-chunk-3.json": "9058e0e00416b6a4ac0f879ee31acf77f695c60c4947aa6b4dc2c08265a7aad9",
+    "property.json": "e3867094b583b51426f416a00655a7f4251307748fa4f98a2004fde31b64348b",
+    "property.validated.json": "d250c3fd7fe28c44f1b893d6613d9940904407b0316e718a25f5116df8e5c1b5"
+  }
+}

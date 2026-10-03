@@ -1,0 +1,144 @@
+{
+  "configuration_fingerprint": "9765c9ce40bf37f505cced22c1af598882aaac1d5934b3bf90a498b428e2d58f",
+  "usage": {
+    "input_tokens": 3306,
+    "output_tokens": 748,
+    "total_tokens": 6998,
+    "cache_read_tokens": 2944,
+    "cache_write_tokens": 0,
+    "cost_usd": 0.0006805232
+  },
+  "protocol_version": 1,
+  "invocation_id": "75f665ef20093a232a56374fa3569b05",
+  "input_digest": "9a5002b713a7aad8020761b1d5be454a361ed664c53fb90e6d341fa6440e6391",
+  "schema_version": "archive-extraction/2",
+  "extraction_version": "archive-understand/2",
+  "chunk_version": "archive-chunk/1",
+  "provider": "deepseek",
+  "requested_model": "deepseek/deepseek-v4-flash",
+  "model": "deepseek-v4-flash",
+  "response_model": "deepseek-flash",
+  "stop_reason": "stop",
+  "execution": {
+    "mode": "direct-provider",
+    "owner": {
+      "kind": "provider",
+      "id": "deepseek"
+    }
+  },
+  "result": {
+    "labels": [
+      "health",
+      "lab_report",
+      "synthetic"
+    ],
+    "domain": "health",
+    "document_type": "health_report",
+    "subjects": [
+      {
+        "id": "s1",
+        "name": "林明",
+        "role": "patient",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "6dba6765c7c8eb838414ed49ee3d221df04a5459dda503ce3a9e8d68504e0495/body/alternative-0/0:15",
+            "start": 3,
+            "end": 5,
+            "quote": "林明",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "dimensions": [],
+        "subject_refs": [
+          "s1"
+        ],
+        "id": "f1",
+        "name": "出生日期",
+        "raw": "1988-03-12",
+        "evidence": [
+          {
+            "view_id": "852e33a7fb56c5e0d4459b6174cfb2ecf5652a02aa927b1f0bbab7f01b379dbe/body/alternative-0/0:15",
+            "start": 5,
+            "end": 15,
+            "quote": "1988-03-12",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "date",
+            "value": "1988-03-12"
+          }
+        ]
+      },
+      {
+        "dimensions": [],
+        "subject_refs": [],
+        "id": "f2",
+        "name": "报告日期",
+        "raw": "2026-10-04",
+        "evidence": [
+          {
+            "view_id": "99cc724eaa2dfd98f4b03c26f748b721a8e694b25bbff8d27abf0b26c1c60d25/body/alternative-0/0:15",
+            "start": 5,
+            "end": 15,
+            "quote": "2026-10-04",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "date",
+            "value": "2026-10-04"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "id": "e1",
+        "type": "report",
+        "field_refs": [
+          "f1",
+          "f2"
+        ],
+        "subject_refs": [
+          "s1"
+        ],
+        "section_evidence": [
+          {
+            "view_id": "af811561eb09bc746ed85fcca8c3161bf3612b4b80dcbaaa7343fa34e0f70a89/body/alternative-0/0:23",
+            "start": 0,
+            "end": 6,
+            "quote": "合成健康报告",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "coverage": [
+      {
+        "view_id": "af811561eb09bc746ed85fcca8c3161bf3612b4b80dcbaaa7343fa34e0f70a89/body/alternative-0/0:23",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "6dba6765c7c8eb838414ed49ee3d221df04a5459dda503ce3a9e8d68504e0495/body/alternative-0/0:15",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "852e33a7fb56c5e0d4459b6174cfb2ecf5652a02aa927b1f0bbab7f01b379dbe/body/alternative-0/0:15",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "99cc724eaa2dfd98f4b03c26f748b721a8e694b25bbff8d27abf0b26c1c60d25/body/alternative-0/0:15",
+        "disposition": "extracted"
+      }
+    ],
+    "issues": []
+  }
+}

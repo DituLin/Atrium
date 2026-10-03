@@ -1,0 +1,204 @@
+{
+  "configuration_fingerprint": "89d56e4a5cb2d94f1089fecab52117a89302cf55bb123efbc86e69c50f6d52b0",
+  "usage": {
+    "input_tokens": 539,
+    "output_tokens": 1549,
+    "total_tokens": 5288,
+    "cache_read_tokens": 3200,
+    "cache_write_tokens": 0,
+    "cost_usd": 0.00051814
+  },
+  "protocol_version": 1,
+  "invocation_id": "bb46fc5ccf88a7949298ac5b527066e3",
+  "input_digest": "9f72f336eb5ced6856ef1d1bb01b4e80f630027c7ce68a8e31870564b1566112",
+  "schema_version": "archive-extraction/2",
+  "extraction_version": "archive-understand/2",
+  "chunk_version": "archive-chunk/1",
+  "provider": "deepseek",
+  "requested_model": "deepseek/deepseek-v4-flash",
+  "model": "deepseek-v4-flash",
+  "response_model": "deepseek-flash",
+  "stop_reason": "stop",
+  "execution": {
+    "mode": "direct-provider",
+    "owner": {
+      "kind": "provider",
+      "id": "deepseek"
+    }
+  },
+  "result": {
+    "labels": [
+      "education",
+      "成绩报告",
+      "grade_report",
+      "mathematics",
+      "student_record"
+    ],
+    "domain": "education",
+    "document_type": "成绩报告",
+    "subjects": [
+      {
+        "id": "s1",
+        "name": "陈晨",
+        "role": "student",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "s1/body/0:38",
+            "start": 8,
+            "end": 10,
+            "quote": "陈晨",
+            "derived_value_ref": ""
+          }
+        ]
+      },
+      {
+        "id": "s2",
+        "name": "李芳",
+        "role": "teacher",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "s1/body/0:38",
+            "start": 14,
+            "end": 16,
+            "quote": "李芳",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "dimensions": [],
+        "subject_refs": [
+          "s1"
+        ],
+        "id": "f_student",
+        "name": "学生",
+        "raw": "陈晨",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:38",
+            "start": 8,
+            "end": 10,
+            "quote": "陈晨",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": []
+      },
+      {
+        "dimensions": [],
+        "subject_refs": [
+          "s2"
+        ],
+        "id": "f_teacher",
+        "name": "老师",
+        "raw": "李芳",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:38",
+            "start": 14,
+            "end": 16,
+            "quote": "李芳",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": []
+      },
+      {
+        "dimensions": [],
+        "subject_refs": [],
+        "id": "f_date",
+        "name": "日期",
+        "raw": "2026-09-20",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:38",
+            "start": 20,
+            "end": 30,
+            "quote": "2026-09-20",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "date",
+            "value": "2026-09-20"
+          }
+        ]
+      },
+      {
+        "dimensions": [
+          {
+            "kind": "unit",
+            "raw": "分",
+            "evidence": [
+              {
+                "view_id": "s1/body/0:38",
+                "start": 36,
+                "end": 37,
+                "quote": "分",
+                "derived_value_ref": ""
+              }
+            ]
+          }
+        ],
+        "subject_refs": [
+          "s1"
+        ],
+        "id": "f_math",
+        "name": "数学",
+        "raw": "96",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:38",
+            "start": 34,
+            "end": 36,
+            "quote": "96",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "decimal",
+            "value": "96"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "id": "e1",
+        "type": "report",
+        "field_refs": [
+          "f_student",
+          "f_teacher",
+          "f_date",
+          "f_math"
+        ],
+        "subject_refs": [
+          "s1",
+          "s2"
+        ],
+        "section_evidence": [
+          {
+            "view_id": "s1/body/0:38",
+            "start": 0,
+            "end": 4,
+            "quote": "成绩报告",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "coverage": [
+      {
+        "view_id": "s1/body/0:38",
+        "disposition": "extracted"
+      }
+    ],
+    "issues": []
+  }
+}

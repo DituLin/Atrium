@@ -193,7 +193,7 @@ func (a OpenClawUnderstandingAdapter) complete(ctx context.Context, c Understand
 	}
 	if strictJSON(stdout.b.Bytes(), &failure) == nil {
 		switch failure.Code {
-		case "worker_schema_type", "worker_schema_required", "worker_schema_unknown", "worker_schema_review_flag", "worker_schema_confidence", "worker_schema_unit_field", "worker_schema_currency_field", "worker_schema_value_field", "worker_schema_evidence_field", "worker_schema_limit", "worker_schema_enum", "worker_input", "worker_configuration", "worker_completion", "worker_route", "worker_schema", "worker_output_limit", "worker_failed":
+		case "worker_schema_duplicate", "worker_schema_type", "worker_schema_required", "worker_schema_unknown", "worker_schema_review_flag", "worker_schema_confidence", "worker_schema_unit_field", "worker_schema_currency_field", "worker_schema_value_field", "worker_schema_evidence_field", "worker_schema_limit", "worker_schema_enum", "worker_input", "worker_configuration", "worker_completion", "worker_route", "worker_schema", "worker_output_limit", "worker_failed":
 			return bad("understand_" + failure.Code)
 		}
 	}

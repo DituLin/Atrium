@@ -1,0 +1,161 @@
+{
+  "configuration_fingerprint": "9765c9ce40bf37f505cced22c1af598882aaac1d5934b3bf90a498b428e2d58f",
+  "usage": {
+    "input_tokens": 615,
+    "output_tokens": 456,
+    "total_tokens": 4015,
+    "cache_read_tokens": 2944,
+    "cache_write_tokens": 0,
+    "cost_usd": 0.0002220232
+  },
+  "protocol_version": 1,
+  "invocation_id": "b2533bc33f70dcae5d4ff3eb2a3da84a",
+  "input_digest": "a4934fd08f818a3dd902ac1bd8f7db9ce9abc52d5ab70a2385f35b0f9699f7ab",
+  "schema_version": "archive-extraction/2",
+  "extraction_version": "archive-understand/2",
+  "chunk_version": "archive-chunk/1",
+  "provider": "deepseek",
+  "requested_model": "deepseek/deepseek-v4-flash",
+  "model": "deepseek-v4-flash",
+  "response_model": "deepseek-flash",
+  "stop_reason": "stop",
+  "execution": {
+    "mode": "direct-provider",
+    "owner": {
+      "kind": "provider",
+      "id": "deepseek"
+    }
+  },
+  "result": {
+    "labels": [
+      "成绩报告",
+      "数学"
+    ],
+    "domain": "education",
+    "document_type": "成绩报告",
+    "subjects": [
+      {
+        "id": "subj_student",
+        "name": "陈晨",
+        "role": "student",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "s1/body/0:38",
+            "start": 8,
+            "end": 10,
+            "quote": "陈晨",
+            "derived_value_ref": ""
+          }
+        ]
+      },
+      {
+        "id": "subj_teacher",
+        "name": "李芳",
+        "role": "teacher",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "s1/body/0:38",
+            "start": 14,
+            "end": 16,
+            "quote": "李芳",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "dimensions": [],
+        "subject_refs": [],
+        "id": "f_date",
+        "name": "日期",
+        "raw": "2026-09-20",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:38",
+            "start": 20,
+            "end": 30,
+            "quote": "2026-09-20",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "date",
+            "value": "2026-09-20"
+          }
+        ]
+      },
+      {
+        "dimensions": [
+          {
+            "kind": "unit",
+            "raw": "分",
+            "evidence": [
+              {
+                "view_id": "s1/body/0:38",
+                "start": 36,
+                "end": 37,
+                "quote": "分",
+                "derived_value_ref": ""
+              }
+            ]
+          }
+        ],
+        "subject_refs": [
+          "subj_student"
+        ],
+        "id": "f_math",
+        "name": "数学",
+        "raw": "96",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:38",
+            "start": 34,
+            "end": 36,
+            "quote": "96",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "decimal",
+            "value": "96"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "id": "ev_report",
+        "type": "report",
+        "field_refs": [
+          "f_date",
+          "f_math"
+        ],
+        "subject_refs": [
+          "subj_student",
+          "subj_teacher"
+        ],
+        "section_evidence": [
+          {
+            "view_id": "s1/body/0:38",
+            "start": 0,
+            "end": 4,
+            "quote": "成绩报告",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "coverage": [
+      {
+        "view_id": "s1/body/0:38",
+        "disposition": "extracted"
+      }
+    ],
+    "issues": []
+  }
+}

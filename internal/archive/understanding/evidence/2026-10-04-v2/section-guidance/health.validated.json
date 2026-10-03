@@ -1,0 +1,411 @@
+{
+  "synthetic_text": "体检报告\n患者：林明\n医生：王华\n日期：2026-10-04\n血红蛋白：145.6 g/L\n",
+  "plan": {
+    "structural_context_limited": false,
+    "version": "archive-understand/2",
+    "parse_digest": "332189266eed023d223f4d7e3e448696d4d11ae31adb4533671cbc876b2ed7ca",
+    "parser_version": "archive-parse/1",
+    "status": "parsed",
+    "coverage": {
+      "complete": true,
+      "encoding": "",
+      "offset_unit": "",
+      "notes": null,
+      "read_parts": null,
+      "skipped_parts": null,
+      "skipped_features": null
+    },
+    "warnings": null,
+    "sheets": null,
+    "native": null,
+    "chunks": [
+      {
+        "protocol_version": 1,
+        "invocation_id": "332189266eed023d223f4d7e3e448696d4d11ae31adb4533671cbc876b2ed7ca:0",
+        "input_digest": "11277e025767d3d432ec17f5d7e61092f9fdd01ec1f6a0d5b0fe397c81866eae",
+        "schema_version": "archive-extraction/2",
+        "extraction_version": "archive-understand/2",
+        "chunk_version": "archive-chunk/1",
+        "parse_digest": "332189266eed023d223f4d7e3e448696d4d11ae31adb4533671cbc876b2ed7ca",
+        "index": 0,
+        "owned": [
+          {
+            "quote_hints": [
+              {
+                "start": 0,
+                "end": 4,
+                "text": "体检报告"
+              },
+              {
+                "start": 5,
+                "end": 7,
+                "text": "患者"
+              },
+              {
+                "start": 8,
+                "end": 10,
+                "text": "林明"
+              },
+              {
+                "start": 11,
+                "end": 13,
+                "text": "医生"
+              },
+              {
+                "start": 14,
+                "end": 16,
+                "text": "王华"
+              },
+              {
+                "start": 17,
+                "end": 19,
+                "text": "日期"
+              },
+              {
+                "start": 20,
+                "end": 30,
+                "text": "2026-10-04"
+              },
+              {
+                "start": 31,
+                "end": 35,
+                "text": "血红蛋白"
+              },
+              {
+                "start": 36,
+                "end": 41,
+                "text": "145.6"
+              },
+              {
+                "start": 42,
+                "end": 45,
+                "text": "g/L"
+              }
+            ],
+            "view_id": "s1/body/0:46",
+            "parent_segment_id": "s1",
+            "alternative_id": "",
+            "component_id": "s1/body",
+            "component_kind": "body",
+            "origin": "parsed",
+            "start": 0,
+            "end": 46,
+            "text": "体检报告\n患者：林明\n医生：王华\n日期：2026-10-04\n血红蛋白：145.6 g/L\n",
+            "parse_digest": "332189266eed023d223f4d7e3e448696d4d11ae31adb4533671cbc876b2ed7ca",
+            "parser_version": "archive-parse/1",
+            "requires_review": false,
+            "visual_state": "",
+            "structure": {
+              "locator": {
+                "kind": "",
+                "text": null,
+                "csv": null,
+                "docx": null,
+                "xlsx": null
+              },
+              "cell_state": "",
+              "cell_type": "",
+              "value_present": false,
+              "cache_present": false,
+              "row_hidden": false,
+              "column_hidden": false,
+              "column_hidden_unresolved": false,
+              "merge_range": "",
+              "merge_anchor": "",
+              "docx_merge": null
+            },
+            "derived": null
+          }
+        ],
+        "context": []
+      }
+    ],
+    "manifest_digest": "f90cd6b82f63ccfc27cf508ab706d924d36b08ac9b2cc0d9b0d96854b090de3d"
+  },
+  "product": {
+    "labels": [
+      {
+        "label": "临床检验",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "体检",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "健康",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "血液检查",
+        "chunk_indexes": [
+          0
+        ]
+      }
+    ],
+    "link_issues": [],
+    "events": [
+      {
+        "canonical_evidence": [
+          {
+            "parse_digest": "332189266eed023d223f4d7e3e448696d4d11ae31adb4533671cbc876b2ed7ca",
+            "parser_version": "archive-parse/1",
+            "parent_segment_id": "s1",
+            "component_id": "s1/body",
+            "component_kind": "body",
+            "alternative_id": "",
+            "origin": "parsed",
+            "start": 0,
+            "end": 30,
+            "quote": "体检报告\n患者：林明\n医生：王华\n日期：2026-10-04",
+            "derived_value_ref": ""
+          }
+        ],
+        "anchor_policy": "exact-parent-evidence/2",
+        "id": "archive-understand/2/event/1c1a29704c2146f76f8fce76dd982d937889a2610badc9b7e43304d187312f3a",
+        "type": "report",
+        "section_evidence": [
+          {
+            "view_id": "s1/body/0:46",
+            "start": 0,
+            "end": 30,
+            "quote": "体检报告\n患者：林明\n医生：王华\n日期：2026-10-04",
+            "derived_value_ref": ""
+          }
+        ],
+        "field_refs": [
+          {
+            "chunk_index": 0,
+            "local_id": "f_date"
+          },
+          {
+            "chunk_index": 0,
+            "local_id": "f_hemoglobin"
+          }
+        ],
+        "subject_refs": [
+          {
+            "chunk_index": 0,
+            "local_id": "subj_patient"
+          },
+          {
+            "chunk_index": 0,
+            "local_id": "subj_doctor"
+          }
+        ],
+        "proposals": [
+          {
+            "chunk_index": 0,
+            "local_id": "ev_report"
+          }
+        ]
+      }
+    ],
+    "version": "archive-understand/2",
+    "manifest_digest": "f90cd6b82f63ccfc27cf508ab706d924d36b08ac9b2cc0d9b0d96854b090de3d",
+    "parse_digest": "332189266eed023d223f4d7e3e448696d4d11ae31adb4533671cbc876b2ed7ca",
+    "complete": true,
+    "requires_review": false,
+    "parse_status": "parsed",
+    "parse_coverage": {
+      "complete": true,
+      "encoding": "",
+      "offset_unit": "",
+      "notes": null,
+      "read_parts": null,
+      "skipped_parts": null,
+      "skipped_features": null
+    },
+    "parse_warnings": null,
+    "sheets": null,
+    "native": null,
+    "chunks": [
+      {
+        "receipt": {
+          "invocation_id": "7a132e875eac25a6f6480d47462c32d8",
+          "input_digest": "1374675ece3e6ea5139dba14ee7c689aaadce06d5c60f732646e8cdb3c532587",
+          "provider": "deepseek",
+          "requested_model": "deepseek/deepseek-v4-flash",
+          "model": "deepseek-v4-flash",
+          "response_model": "deepseek-flash",
+          "stop_reason": "stop",
+          "execution": {
+            "mode": "direct-provider",
+            "owner": {
+              "kind": "provider",
+              "id": "deepseek"
+            }
+          },
+          "usage": {
+            "input_tokens": 1953,
+            "output_tokens": 3158,
+            "total_tokens": 6903,
+            "cache_read_tokens": 1792,
+            "cache_write_tokens": 0,
+            "cost_usd": 0.0011626776
+          },
+          "configuration_fingerprint": "89d56e4a5cb2d94f1089fecab52117a89302cf55bb123efbc86e69c50f6d52b0"
+        },
+        "input_digest": "11277e025767d3d432ec17f5d7e61092f9fdd01ec1f6a0d5b0fe397c81866eae",
+        "invocation_id": "332189266eed023d223f4d7e3e448696d4d11ae31adb4533671cbc876b2ed7ca:0",
+        "index": 0,
+        "result": {
+          "labels": [
+            "体检",
+            "血液检查",
+            "临床检验",
+            "健康"
+          ],
+          "domain": "health",
+          "document_type": "体检报告",
+          "subjects": [
+            {
+              "id": "subj_patient",
+              "name": "林明",
+              "role": "patient",
+              "ambiguous": false,
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:46",
+                  "start": 8,
+                  "end": 10,
+                  "quote": "林明",
+                  "derived_value_ref": ""
+                },
+                {
+                  "view_id": "s1/body/0:46",
+                  "start": 5,
+                  "end": 7,
+                  "quote": "患者",
+                  "derived_value_ref": ""
+                }
+              ]
+            },
+            {
+              "id": "subj_doctor",
+              "name": "王华",
+              "role": "doctor",
+              "ambiguous": false,
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:46",
+                  "start": 14,
+                  "end": 16,
+                  "quote": "王华",
+                  "derived_value_ref": ""
+                },
+                {
+                  "view_id": "s1/body/0:46",
+                  "start": 11,
+                  "end": 13,
+                  "quote": "医生",
+                  "derived_value_ref": ""
+                }
+              ]
+            }
+          ],
+          "fields": [
+            {
+              "dimensions": [],
+              "subject_refs": [],
+              "id": "f_date",
+              "name": "报告日期",
+              "raw": "2026-10-04",
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:46",
+                  "start": 20,
+                  "end": 30,
+                  "quote": "2026-10-04",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": [
+                {
+                  "kind": "date",
+                  "value": "2026-10-04"
+                }
+              ]
+            },
+            {
+              "dimensions": [
+                {
+                  "kind": "unit",
+                  "raw": "g/L",
+                  "evidence": [
+                    {
+                      "view_id": "s1/body/0:46",
+                      "start": 42,
+                      "end": 45,
+                      "quote": "g/L",
+                      "derived_value_ref": ""
+                    }
+                  ]
+                }
+              ],
+              "subject_refs": [
+                "subj_patient"
+              ],
+              "id": "f_hemoglobin",
+              "name": "血红蛋白",
+              "raw": "145.6",
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:46",
+                  "start": 36,
+                  "end": 41,
+                  "quote": "145.6",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": [
+                {
+                  "kind": "decimal",
+                  "value": "145.6"
+                }
+              ]
+            }
+          ],
+          "events": [
+            {
+              "id": "ev_report",
+              "type": "report",
+              "field_refs": [
+                "f_date",
+                "f_hemoglobin"
+              ],
+              "subject_refs": [
+                "subj_patient",
+                "subj_doctor"
+              ],
+              "section_evidence": [
+                {
+                  "view_id": "s1/body/0:46",
+                  "start": 0,
+                  "end": 30,
+                  "quote": "体检报告\n患者：林明\n医生：王华\n日期：2026-10-04",
+                  "derived_value_ref": ""
+                }
+              ]
+            }
+          ],
+          "coverage": [
+            {
+              "view_id": "s1/body/0:46",
+              "disposition": "extracted"
+            }
+          ],
+          "issues": []
+        },
+        "digest": "4b06a3371e5050f743fb38d07026713cf80ae71f01b29e6ca35d5b1472bdc606"
+      }
+    ],
+    "digest": "cd921b35d81385ab8e52248de4cf47cd7be91d9db56f44b53f370961e955189a"
+  }
+}

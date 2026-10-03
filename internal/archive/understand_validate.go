@@ -63,6 +63,7 @@ type ExtractionIssue struct {
 	ViewRefs []string `json:"view_refs"`
 }
 type Extraction struct {
+	Labels       []string          `json:"labels"`
 	Domain       string            `json:"domain"`
 	DocumentType string            `json:"document_type"`
 	Subjects     []LocalSubject    `json:"subjects"`
@@ -88,17 +89,51 @@ type ScopedLocalReference struct {
 }
 
 const NativeHeadingAnchorPolicy = "native-report-heading-anchor/1"
+const NativeReportSectionPolicy = "native-report-header-section/1"
+
+// CanonicalEvidence identifies original evidence independently of a chunk view.
+// Original view references remain in SectionEvidence and each proposal.
+type CanonicalEvidence struct {
+	ParseDigest     string `json:"parse_digest"`
+	ParserVersion   string `json:"parser_version"`
+	ParentSegmentID string `json:"parent_segment_id"`
+	ComponentID     string `json:"component_id"`
+	ComponentKind   string `json:"component_kind"`
+	AlternativeID   string `json:"alternative_id"`
+	Origin          string `json:"origin"`
+	Start           int    `json:"start"`
+	End             int    `json:"end"`
+	Quote           string `json:"quote"`
+	DerivedValueRef string `json:"derived_value_ref"`
+}
+
+func canonicalEvidence(v EvidenceView, r EvidenceReference) CanonicalEvidence {
+	return CanonicalEvidence{v.ParseDigest, v.ParserVersion, v.ParentSegmentID, v.ComponentID, v.ComponentKind, v.AlternativeID, v.Origin, r.Start, r.End, r.Quote, r.DerivedValueRef}
+}
+func (r CanonicalEvidence) componentIdentity() string {
+	r.Start = 0
+	r.End = 0
+	r.Quote = ""
+	r.DerivedValueRef = ""
+	return digestJSON(r)
+}
 
 type MergedEvent struct {
-	AnchorPolicy    string                 `json:"anchor_policy"`
-	ID              string                 `json:"id"`
-	Type            string                 `json:"type"`
-	SectionEvidence []EvidenceReference    `json:"section_evidence"`
-	FieldRefs       []ScopedLocalReference `json:"field_refs"`
-	SubjectRefs     []ScopedLocalReference `json:"subject_refs"`
-	Proposals       []ScopedLocalReference `json:"proposals"`
+	CanonicalEvidence []CanonicalEvidence    `json:"canonical_evidence"`
+	AnchorPolicy      string                 `json:"anchor_policy"`
+	ID                string                 `json:"id"`
+	Type              string                 `json:"type"`
+	SectionEvidence   []EvidenceReference    `json:"section_evidence"`
+	FieldRefs         []ScopedLocalReference `json:"field_refs"`
+	SubjectRefs       []ScopedLocalReference `json:"subject_refs"`
+	Proposals         []ScopedLocalReference `json:"proposals"`
+}
+type UnderstandingLabel struct {
+	Label        string `json:"label"`
+	ChunkIndexes []int  `json:"chunk_indexes"`
 }
 type Understanding struct {
+	Labels         []UnderstandingLabel `json:"labels"`
 	LinkIssues     []string             `json:"link_issues"`
 	Events         []MergedEvent        `json:"events"`
 	Version        string               `json:"version"`
@@ -192,6 +227,16 @@ func ValidateChunk(p UnderstandingPlan, c UnderstandingChunk, data []byte) (Chun
 	}
 	if !boundedLabel(e.DocumentType) || !boundedLabel(e.Domain) || e.Subjects == nil || e.Fields == nil || e.Events == nil || e.Coverage == nil || e.Issues == nil || len(e.Subjects) > 128 || len(e.Fields) > 256 || len(e.Events) > 128 || len(e.Issues) > 128 {
 		return bad("understand_schema")
+	}
+	if e.Labels == nil || len(e.Labels) > 16 {
+		return bad("understand_schema")
+	}
+	labelSeen := map[string]bool{}
+	for _, label := range e.Labels {
+		if !boundedLabel(label) || strings.TrimSpace(label) == "" || labelSeen[label] {
+			return bad("understand_schema")
+		}
+		labelSeen[label] = true
 	}
 	switch e.Domain {
 	case "health", "education", "finance", "property", "other", "unknown":
@@ -431,7 +476,7 @@ func validateNormalization(n Normalization, f ExtractedField, views map[string]E
 	for _, r := range f.Evidence {
 		v := views[r.ViewID]
 		if n.Kind == "date" {
-			if !validDate(n.Value) {
+			if !validDate(n.Value) || n.Value != f.Raw {
 				return false
 			}
 			if r.DerivedValueRef != "" && v.Derived.Value == n.Value {
@@ -443,7 +488,7 @@ func validateNormalization(n Normalization, f ExtractedField, views map[string]E
 			continue
 		}
 		if n.Kind == "date_partial" {
-			if r.Quote == n.Value && partialDate.MatchString(n.Value) {
+			if n.Value == f.Raw && r.Quote == f.Raw && partialDate.MatchString(n.Value) {
 				return true
 			}
 			continue
@@ -543,6 +588,17 @@ func MergeChunks(p UnderstandingPlan, results []ChunkUnderstanding) (Understandi
 		out.RequiresReview = true
 	}
 	sort.Slice(out.Chunks, func(i, j int) bool { return out.Chunks[i].Index < out.Chunks[j].Index })
+	out.Labels = []UnderstandingLabel{}
+	labelChunks := map[string][]int{}
+	for _, c := range out.Chunks {
+		for _, label := range c.Result.Labels {
+			labelChunks[label] = append(labelChunks[label], c.Index)
+		}
+	}
+	for label, indexes := range labelChunks {
+		out.Labels = append(out.Labels, UnderstandingLabel{label, indexes})
+	}
+	sort.Slice(out.Labels, func(i, j int) bool { return out.Labels[i].Label < out.Labels[j].Label })
 	out.Events = mergeEventAnchors(p, out.Chunks)
 	out.LinkIssues = []string{}
 	if overlappingReportAnchors(out.Events) {
@@ -712,6 +768,7 @@ func mergeEventAnchors(p UnderstandingPlan, chunks []ChunkUnderstanding) []Merge
 	out := []MergedEvent{}
 	indices := map[string]int{}
 	headings := nativeReportHeadings(p)
+	sections := nativeReportSections(p, headings)
 	for _, c := range chunks {
 		for _, ev := range c.Result.Events {
 			refs := append([]EvidenceReference{}, ev.SectionEvidence...)
@@ -719,32 +776,60 @@ func mergeEventAnchors(p UnderstandingPlan, chunks []ChunkUnderstanding) []Merge
 			// citation and a valid full bilingual heading cite the same section. Expand
 			// only report anchors at the start of a native alternative view; never field
 			// quotes, arbitrary body ranges, row events, or invalid evidence.
-			policy := "exact-evidence/1"
+			policy := "exact-parent-evidence/2"
+			views := map[string]EvidenceView{}
+			for _, v := range p.Chunks[c.Index].Evidence() {
+				views[v.ViewID] = v
+			}
 			if ev.Type == "report" {
-				views := map[string]EvidenceView{}
-				for _, v := range p.Chunks[c.Index].Evidence() {
-					views[v.ViewID] = v
-				}
+				sectionDates := map[string]EvidenceReference{}
 				for i, r := range refs {
 					v := views[r.ViewID]
 					if headings[v.ViewID] && r.DerivedValueRef == "" && r.Start == v.Start && r.End > r.Start {
 						policy = NativeHeadingAnchorPolicy
 						refs[i].End = v.End
 						refs[i].Quote = v.Text
+						if date, ok := sections[v.ViewID]; ok {
+							if _, visible := views[date.ViewID]; visible {
+								sectionDates[date.ViewID] = date
+							}
+						}
 					}
+				}
+				for id, date := range sectionDates {
+					policy = NativeReportSectionPolicy
+					// Normalize only a verified complete date citation from this explicit
+					// date component; preserve partial dates and all additional evidence.
+					for i, r := range refs {
+						if r.ViewID == id && r.DerivedValueRef == "" && r.Start <= date.Start && r.End >= date.End {
+							refs[i] = date
+						}
+					}
+					refs = append(refs, date)
 				}
 			}
 
 			sort.Slice(refs, func(i, j int) bool { return digestJSON(refs[i]) < digestJSON(refs[j]) })
+			canonical := []CanonicalEvidence{}
+			seen := map[string]bool{}
+			for _, r := range refs {
+				value := canonicalEvidence(views[r.ViewID], r)
+				key := digestJSON(value)
+				if !seen[key] {
+					canonical = append(canonical, value)
+					seen[key] = true
+				}
+			}
+			sort.Slice(canonical, func(i, j int) bool { return digestJSON(canonical[i]) < digestJSON(canonical[j]) })
 			key := digestJSON(struct {
 				Type     string
-				Evidence []EvidenceReference
-			}{ev.Type, refs})
+				Evidence []CanonicalEvidence
+			}{ev.Type, canonical})
 			index, ok := indices[key]
 			if !ok {
 				index = len(out)
 				indices[key] = index
-				out = append(out, MergedEvent{AnchorPolicy: policy, ID: UnderstandingVersion + "/event/" + key, Type: ev.Type, SectionEvidence: refs, FieldRefs: []ScopedLocalReference{}, SubjectRefs: []ScopedLocalReference{}, Proposals: []ScopedLocalReference{}})
+				out = append(out, MergedEvent{CanonicalEvidence: canonical, AnchorPolicy: policy, ID: UnderstandingVersion + "/event/" + key, Type: ev.Type, SectionEvidence: refs, FieldRefs: []ScopedLocalReference{}, SubjectRefs: []ScopedLocalReference{}, Proposals: []ScopedLocalReference{}})
 			}
 			m := &out[index]
 			m.Proposals = append(m.Proposals, ScopedLocalReference{c.Index, ev.ID})
@@ -796,23 +881,101 @@ func nativeReportHeadings(p UnderstandingPlan) map[string]bool {
 	return out
 }
 
-var reportTitleMarker = regexp.MustCompile(`(?i)(?:报告|報告|report)(?:\s|$)`)
-
-func overlappingReportAnchors(events []MergedEvent) bool {
-	for i, a := range events {
-		if a.Type != "report" {
+// A host section is available only when the whole page contains exactly one
+// short native report title and one explicit report-date line, both atomic and
+// certain, with the date in that title's header region. Counting all page views
+// (not only nativeReportHeadings' first component) prevents guessing through
+// multiple reports, repeated titles, alternative dates, or ambiguous headers.
+func nativeReportSections(p UnderstandingPlan, headings map[string]bool) map[string]EvidenceReference {
+	out := map[string]EvidenceReference{}
+	if p.Native == nil {
+		return out
+	}
+	titles, dates := map[int][]EvidenceView{}, map[int][]EvidenceView{}
+	count := map[string]int{}
+	for _, c := range p.Chunks {
+		for _, v := range c.Owned {
+			count[v.ParentSegmentID]++
+			if l := v.Structure.Locator.Page; l != nil {
+				if reportDateLabel.MatchString(v.Text) {
+					dates[l.Page] = append(dates[l.Page], v)
+				} else if reportTitleMarker.MatchString(v.Text) {
+					titles[l.Page] = append(titles[l.Page], v)
+				}
+			}
+		}
+	}
+	for page, ts := range titles {
+		ds := dates[page]
+		if len(ts) != 1 || len(ds) != 1 {
 			continue
 		}
-		for _, b := range events[i+1:] {
-			if b.Type != "report" {
-				continue
+		title, date := ts[0], ds[0]
+		if !headings[title.ViewID] || count[date.ParentSegmentID] != 1 || date.AlternativeID == "" || date.ComponentKind != "body" || date.RequiresReview || date.VisualState == "native_unconfirmed" || date.Start != 0 || date.End > 128 || strings.ContainsAny(date.Text, "\r\n") {
+			continue
+		}
+		tl, dl := title.Structure.Locator.Page, date.Structure.Locator.Page
+		if dl.Rect[1] <= tl.Rect[1] || dl.Rect[1] > 0.35 || dl.Rect[1]+dl.Rect[3] > 0.4 {
+			continue
+		}
+		loc := reportDateLine.FindStringSubmatchIndex(date.Text)
+		if len(loc) != 4 || !validDate(date.Text[loc[2]:loc[3]]) {
+			continue
+		}
+		out[title.ViewID] = EvidenceReference{ViewID: date.ViewID, Start: utf8.RuneCountInString(date.Text[:loc[2]]), End: utf8.RuneCountInString(date.Text[:loc[3]]), Quote: date.Text[loc[2]:loc[3]]}
+	}
+	return out
+}
+
+var reportDateLabel = regexp.MustCompile(`(?i)^\s*(?:报告日期|報告日期|report\s+date)(?:\s|[:：]|$)`)
+var reportDateLine = regexp.MustCompile(`(?i)^\s*(?:报告日期|報告日期|report\s+date)\s*[:：]\s*([0-9]{4}-[0-9]{2}-[0-9]{2})\s*$`)
+
+var reportTitleMarker = regexp.MustCompile(`(?i)(?:报告|報告|report)(?:\s|$)`)
+
+// O(R log R) for R canonical ranges, rather than pairwise events/anchors.
+// Only overlap between different merged events is significant.
+func overlappingReportAnchors(events []MergedEvent) bool {
+	type interval struct{ start, end, event int }
+	groups := map[string][]interval{}
+	for i, e := range events {
+		if e.Type != "report" {
+			continue
+		}
+		for _, r := range e.CanonicalEvidence {
+			if r.End > r.Start {
+				key := r.componentIdentity()
+				groups[key] = append(groups[key], interval{r.Start, r.End, i})
 			}
-			for _, x := range a.SectionEvidence {
-				for _, y := range b.SectionEvidence {
-					if x.ViewID == y.ViewID && x.Start < y.End && y.Start < x.End {
-						return true
-					}
+		}
+	}
+	for _, ranges := range groups {
+		sort.Slice(ranges, func(i, j int) bool {
+			if ranges[i].start == ranges[j].start {
+				return ranges[i].end < ranges[j].end
+			}
+			return ranges[i].start < ranges[j].start
+		})
+		first, second := interval{event: -1}, interval{event: -1}
+		for _, r := range ranges {
+			if first.event >= 0 && first.event != r.event && first.end > r.start || second.event >= 0 && second.event != r.event && second.end > r.start {
+				return true
+			}
+			switch {
+			case first.event == r.event:
+				if r.end > first.end {
+					first = r
 				}
+			case second.event == r.event:
+				if r.end > second.end {
+					second = r
+				}
+				if second.end > first.end {
+					first, second = second, first
+				}
+			case first.event < 0 || r.end > first.end:
+				second, first = first, r
+			case second.event < 0 || r.end > second.end:
+				second = r
 			}
 		}
 	}

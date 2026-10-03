@@ -14,8 +14,8 @@ import (
 	"unicode/utf8"
 )
 
-const UnderstandingVersion = "archive-understand/1"
-const UnderstandingSchema = "archive-extraction/1"
+const UnderstandingVersion = "archive-understand/2"
+const UnderstandingSchema = "archive-extraction/2"
 const ChunkVersion = "archive-chunk/1"
 const WorkerProtocol = 1
 const MaxChunkInput = 32 << 10

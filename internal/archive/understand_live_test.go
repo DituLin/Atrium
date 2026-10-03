@@ -270,6 +270,7 @@ func TestUnderstandingLiveNativeReport(t *testing.T) {
 	if len(merged.Events) != 1 {
 		t.Fatalf("report anchors differ: %d events", len(merged.Events))
 	}
+	assertSyntheticNativeReport(t, merged)
 	if path := os.Getenv("ATRIUM_SYNTHETIC_EVIDENCE"); path != "" {
 		artifact := struct {
 			Plan    UnderstandingPlan `json:"plan"`
@@ -325,6 +326,7 @@ func TestUnderstandingNativeReportReplay(t *testing.T) {
 	if err != nil || len(merged.Events) != 1 {
 		t.Fatalf("report anchors not linked: %d %v", len(merged.Events), err)
 	}
+	assertSyntheticNativeReport(t, merged)
 	artifact := struct {
 		Plan    UnderstandingPlan `json:"plan"`
 		Product Understanding     `json:"product"`
@@ -332,5 +334,64 @@ func TestUnderstandingNativeReportReplay(t *testing.T) {
 	data, _ := json.MarshalIndent(artifact, "", "  ")
 	if os.WriteFile(filepath.Join(dir, "native-report.validated.json"), data, 0600) != nil {
 		t.Fatal("artifact")
+	}
+}
+
+// This evaluator is specific to the retained synthetic image, not a general
+// rule that every compound document has one event. The image has a single
+// report title and a shared item/value/unit table, with no separate bill section.
+func assertSyntheticNativeReport(t *testing.T, m Understanding) {
+	t.Helper()
+	if !m.Complete || len(m.Events) != 1 || m.Events[0].Type != "report" {
+		t.Fatal("synthetic single report incomplete or split")
+	}
+	expected := map[string]string{"1988-03-12": "", "2026-10-04": "", "145.6": "g/L", "1234.50": "CNY", "-2.75": "mmol/L"}
+	found := map[string]bool{}
+	patient, doctor := false, false
+	linked := map[ScopedLocalReference]bool{}
+	for _, r := range m.Events[0].FieldRefs {
+		linked[r] = true
+	}
+	for _, c := range m.Chunks {
+		roles := map[string]string{}
+		for _, s := range c.Result.Subjects {
+			roles[s.ID] = s.Role
+			patient = patient || (s.Role == "patient" && strings.Contains(s.Name, "林明"))
+			doctor = doctor || (s.Role == "doctor" && strings.Contains(s.Name, "王华"))
+		}
+		for _, f := range c.Result.Fields {
+			dim, ok := expected[f.Raw]
+			if !ok {
+				continue
+			}
+			if !linked[ScopedLocalReference{c.Index, f.ID}] {
+				t.Fatal("report field not linked")
+			}
+			dimensionOK := dim == ""
+			for _, d := range f.Dimensions {
+				kind := "unit"
+				if dim == "CNY" {
+					kind = "currency"
+				}
+				dimensionOK = dimensionOK || (d.Raw == dim && d.Kind == kind)
+			}
+			bound := f.Raw != "1988-03-12" && f.Raw != "145.6" && f.Raw != "-2.75"
+			for _, id := range f.SubjectRefs {
+				bound = bound || roles[id] == "patient"
+			}
+			labelOK := f.Raw != "-2.75"
+			for _, r := range f.Evidence {
+				labelOK = labelOK || strings.Contains(r.Quote, "变化")
+			}
+			found[f.Raw] = dimensionOK && bound && labelOK
+		}
+	}
+	if !patient || !doctor {
+		t.Fatal("native subject role missing")
+	}
+	for raw := range expected {
+		if !found[raw] {
+			t.Fatal("native expected field/dimension/binding missing")
+		}
 	}
 }

@@ -1,0 +1,421 @@
+{
+  "synthetic_text": "银行交易记录\n账户持有人：周宁\n日期：2026-10-01\n周宁的交易金额：130.50元\n收款人：吴平\n",
+  "plan": {
+    "structural_context_limited": false,
+    "version": "archive-understand/2",
+    "parse_digest": "acc6546cfbb20c8d647be73169fce3e474405232b5f64cd0e432037c359ec40f",
+    "parser_version": "archive-parse/1",
+    "status": "parsed",
+    "coverage": {
+      "complete": true,
+      "encoding": "",
+      "offset_unit": "",
+      "notes": null,
+      "read_parts": null,
+      "skipped_parts": null,
+      "skipped_features": null
+    },
+    "warnings": null,
+    "sheets": null,
+    "native": null,
+    "chunks": [
+      {
+        "protocol_version": 1,
+        "invocation_id": "acc6546cfbb20c8d647be73169fce3e474405232b5f64cd0e432037c359ec40f:0",
+        "input_digest": "bdc7388c3f5cfd2b0d60e8c1b482a0da47d3db651cb63fd9527f5d45d099a33d",
+        "schema_version": "archive-extraction/2",
+        "extraction_version": "archive-understand/2",
+        "chunk_version": "archive-chunk/1",
+        "parse_digest": "acc6546cfbb20c8d647be73169fce3e474405232b5f64cd0e432037c359ec40f",
+        "index": 0,
+        "owned": [
+          {
+            "quote_hints": [
+              {
+                "start": 0,
+                "end": 6,
+                "text": "银行交易记录"
+              },
+              {
+                "start": 7,
+                "end": 12,
+                "text": "账户持有人"
+              },
+              {
+                "start": 13,
+                "end": 15,
+                "text": "周宁"
+              },
+              {
+                "start": 16,
+                "end": 18,
+                "text": "日期"
+              },
+              {
+                "start": 19,
+                "end": 29,
+                "text": "2026-10-01"
+              },
+              {
+                "start": 30,
+                "end": 37,
+                "text": "周宁的交易金额"
+              },
+              {
+                "start": 38,
+                "end": 44,
+                "text": "130.50"
+              },
+              {
+                "start": 44,
+                "end": 45,
+                "text": "元"
+              },
+              {
+                "start": 46,
+                "end": 49,
+                "text": "收款人"
+              },
+              {
+                "start": 50,
+                "end": 52,
+                "text": "吴平"
+              }
+            ],
+            "view_id": "s1/body/0:53",
+            "parent_segment_id": "s1",
+            "alternative_id": "",
+            "component_id": "s1/body",
+            "component_kind": "body",
+            "origin": "parsed",
+            "start": 0,
+            "end": 53,
+            "text": "银行交易记录\n账户持有人：周宁\n日期：2026-10-01\n周宁的交易金额：130.50元\n收款人：吴平\n",
+            "parse_digest": "acc6546cfbb20c8d647be73169fce3e474405232b5f64cd0e432037c359ec40f",
+            "parser_version": "archive-parse/1",
+            "requires_review": false,
+            "visual_state": "",
+            "structure": {
+              "locator": {
+                "kind": "",
+                "text": null,
+                "csv": null,
+                "docx": null,
+                "xlsx": null
+              },
+              "cell_state": "",
+              "cell_type": "",
+              "value_present": false,
+              "cache_present": false,
+              "row_hidden": false,
+              "column_hidden": false,
+              "column_hidden_unresolved": false,
+              "merge_range": "",
+              "merge_anchor": "",
+              "docx_merge": null
+            },
+            "derived": null
+          }
+        ],
+        "context": []
+      }
+    ],
+    "manifest_digest": "7369b2f2e62134fd0b2320804eb027c0e801def903dcf9f0cfee50a9b130346a"
+  },
+  "product": {
+    "labels": [
+      {
+        "label": "account_holder",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "banking",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "payee",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "transaction",
+        "chunk_indexes": [
+          0
+        ]
+      }
+    ],
+    "link_issues": [],
+    "events": [
+      {
+        "canonical_evidence": [
+          {
+            "parse_digest": "acc6546cfbb20c8d647be73169fce3e474405232b5f64cd0e432037c359ec40f",
+            "parser_version": "archive-parse/1",
+            "parent_segment_id": "s1",
+            "component_id": "s1/body",
+            "component_kind": "body",
+            "alternative_id": "",
+            "origin": "parsed",
+            "start": 30,
+            "end": 45,
+            "quote": "周宁的交易金额：130.50元",
+            "derived_value_ref": ""
+          }
+        ],
+        "anchor_policy": "exact-parent-evidence/2",
+        "id": "archive-understand/2/event/0c75a360b5f8a24447e54408e5fbbc8c3d629c626ba99c8b543bd0526422e44c",
+        "type": "transaction",
+        "section_evidence": [
+          {
+            "view_id": "s1/body/0:53",
+            "start": 30,
+            "end": 45,
+            "quote": "周宁的交易金额：130.50元",
+            "derived_value_ref": ""
+          }
+        ],
+        "field_refs": [
+          {
+            "chunk_index": 0,
+            "local_id": "f_date"
+          },
+          {
+            "chunk_index": 0,
+            "local_id": "f_amount"
+          },
+          {
+            "chunk_index": 0,
+            "local_id": "f_payee"
+          }
+        ],
+        "subject_refs": [
+          {
+            "chunk_index": 0,
+            "local_id": "s_zhouning"
+          },
+          {
+            "chunk_index": 0,
+            "local_id": "s_wuping"
+          }
+        ],
+        "proposals": [
+          {
+            "chunk_index": 0,
+            "local_id": "e_transaction"
+          }
+        ]
+      }
+    ],
+    "version": "archive-understand/2",
+    "manifest_digest": "7369b2f2e62134fd0b2320804eb027c0e801def903dcf9f0cfee50a9b130346a",
+    "parse_digest": "acc6546cfbb20c8d647be73169fce3e474405232b5f64cd0e432037c359ec40f",
+    "complete": true,
+    "requires_review": false,
+    "parse_status": "parsed",
+    "parse_coverage": {
+      "complete": true,
+      "encoding": "",
+      "offset_unit": "",
+      "notes": null,
+      "read_parts": null,
+      "skipped_parts": null,
+      "skipped_features": null
+    },
+    "parse_warnings": null,
+    "sheets": null,
+    "native": null,
+    "chunks": [
+      {
+        "receipt": {
+          "invocation_id": "a70edcf398f1ddcd2ece77a771185e0a",
+          "input_digest": "dea64ecf834f62ac5660a0fd5fba940359b0e144f2d523b9d8c328c26e1c2d48",
+          "provider": "deepseek",
+          "requested_model": "deepseek/deepseek-v4-flash",
+          "model": "deepseek-v4-flash",
+          "response_model": "deepseek-flash",
+          "stop_reason": "stop",
+          "execution": {
+            "mode": "direct-provider",
+            "owner": {
+              "kind": "provider",
+              "id": "deepseek"
+            }
+          },
+          "usage": {
+            "input_tokens": 555,
+            "output_tokens": 2647,
+            "total_tokens": 6402,
+            "cache_read_tokens": 3200,
+            "cache_write_tokens": 0,
+            "cost_usd": 0.00082782
+          },
+          "configuration_fingerprint": "89d56e4a5cb2d94f1089fecab52117a89302cf55bb123efbc86e69c50f6d52b0"
+        },
+        "input_digest": "bdc7388c3f5cfd2b0d60e8c1b482a0da47d3db651cb63fd9527f5d45d099a33d",
+        "invocation_id": "acc6546cfbb20c8d647be73169fce3e474405232b5f64cd0e432037c359ec40f:0",
+        "index": 0,
+        "result": {
+          "labels": [
+            "banking",
+            "transaction",
+            "account_holder",
+            "payee"
+          ],
+          "domain": "finance",
+          "document_type": "bank_transaction_record",
+          "subjects": [
+            {
+              "id": "s_zhouning",
+              "name": "周宁",
+              "role": "account_holder",
+              "ambiguous": false,
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:53",
+                  "start": 13,
+                  "end": 15,
+                  "quote": "周宁",
+                  "derived_value_ref": ""
+                }
+              ]
+            },
+            {
+              "id": "s_wuping",
+              "name": "吴平",
+              "role": "payee",
+              "ambiguous": false,
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:53",
+                  "start": 50,
+                  "end": 52,
+                  "quote": "吴平",
+                  "derived_value_ref": ""
+                }
+              ]
+            }
+          ],
+          "fields": [
+            {
+              "dimensions": [],
+              "subject_refs": [],
+              "id": "f_date",
+              "name": "日期",
+              "raw": "2026-10-01",
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:53",
+                  "start": 19,
+                  "end": 29,
+                  "quote": "2026-10-01",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": [
+                {
+                  "kind": "date",
+                  "value": "2026-10-01"
+                }
+              ]
+            },
+            {
+              "dimensions": [
+                {
+                  "kind": "currency",
+                  "raw": "元",
+                  "evidence": [
+                    {
+                      "view_id": "s1/body/0:53",
+                      "start": 44,
+                      "end": 45,
+                      "quote": "元",
+                      "derived_value_ref": ""
+                    }
+                  ]
+                }
+              ],
+              "subject_refs": [
+                "s_zhouning"
+              ],
+              "id": "f_amount",
+              "name": "交易金额",
+              "raw": "130.50",
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:53",
+                  "start": 38,
+                  "end": 44,
+                  "quote": "130.50",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": [
+                {
+                  "kind": "decimal",
+                  "value": "130.50"
+                }
+              ]
+            },
+            {
+              "dimensions": [],
+              "subject_refs": [
+                "s_wuping"
+              ],
+              "id": "f_payee",
+              "name": "收款人",
+              "raw": "吴平",
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:53",
+                  "start": 50,
+                  "end": 52,
+                  "quote": "吴平",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": []
+            }
+          ],
+          "events": [
+            {
+              "id": "e_transaction",
+              "type": "transaction",
+              "field_refs": [
+                "f_date",
+                "f_amount",
+                "f_payee"
+              ],
+              "subject_refs": [
+                "s_zhouning",
+                "s_wuping"
+              ],
+              "section_evidence": [
+                {
+                  "view_id": "s1/body/0:53",
+                  "start": 30,
+                  "end": 45,
+                  "quote": "周宁的交易金额：130.50元",
+                  "derived_value_ref": ""
+                }
+              ]
+            }
+          ],
+          "coverage": [
+            {
+              "view_id": "s1/body/0:53",
+              "disposition": "extracted"
+            }
+          ],
+          "issues": []
+        },
+        "digest": "7cfe7412d855d018f92d4f4515befb286eb8b50010eacd2f880efd35bd7a8295"
+      }
+    ],
+    "digest": "32d5eb8bd3b2b9f7d99ab7f1f2dd1100effcb86b15c62a951592bdc5848d2f77"
+  }
+}

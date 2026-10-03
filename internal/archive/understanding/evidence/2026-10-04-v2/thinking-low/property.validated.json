@@ -1,0 +1,402 @@
+{
+  "synthetic_text": "房屋检查报告\n业主：赵青\n工程师：孙涛\n日期：2026-09-30\n建筑面积：88.75平方米\n",
+  "plan": {
+    "structural_context_limited": false,
+    "version": "archive-understand/2",
+    "parse_digest": "e307e640ae8f152b7d14e11cd2094ae8c550d0457b1c1ead6fbd0e1b95076c93",
+    "parser_version": "archive-parse/1",
+    "status": "parsed",
+    "coverage": {
+      "complete": true,
+      "encoding": "",
+      "offset_unit": "",
+      "notes": null,
+      "read_parts": null,
+      "skipped_parts": null,
+      "skipped_features": null
+    },
+    "warnings": null,
+    "sheets": null,
+    "native": null,
+    "chunks": [
+      {
+        "protocol_version": 1,
+        "invocation_id": "e307e640ae8f152b7d14e11cd2094ae8c550d0457b1c1ead6fbd0e1b95076c93:0",
+        "input_digest": "db10ce2ffaa60f171167869971ba7efff3db80e9e3cbebd4995238badbaa7687",
+        "schema_version": "archive-extraction/2",
+        "extraction_version": "archive-understand/2",
+        "chunk_version": "archive-chunk/1",
+        "parse_digest": "e307e640ae8f152b7d14e11cd2094ae8c550d0457b1c1ead6fbd0e1b95076c93",
+        "index": 0,
+        "owned": [
+          {
+            "quote_hints": [
+              {
+                "start": 0,
+                "end": 6,
+                "text": "房屋检查报告"
+              },
+              {
+                "start": 7,
+                "end": 9,
+                "text": "业主"
+              },
+              {
+                "start": 10,
+                "end": 12,
+                "text": "赵青"
+              },
+              {
+                "start": 13,
+                "end": 16,
+                "text": "工程师"
+              },
+              {
+                "start": 17,
+                "end": 19,
+                "text": "孙涛"
+              },
+              {
+                "start": 20,
+                "end": 22,
+                "text": "日期"
+              },
+              {
+                "start": 23,
+                "end": 33,
+                "text": "2026-09-30"
+              },
+              {
+                "start": 34,
+                "end": 38,
+                "text": "建筑面积"
+              },
+              {
+                "start": 39,
+                "end": 44,
+                "text": "88.75"
+              },
+              {
+                "start": 44,
+                "end": 47,
+                "text": "平方米"
+              }
+            ],
+            "view_id": "s1/body/0:48",
+            "parent_segment_id": "s1",
+            "alternative_id": "",
+            "component_id": "s1/body",
+            "component_kind": "body",
+            "origin": "parsed",
+            "start": 0,
+            "end": 48,
+            "text": "房屋检查报告\n业主：赵青\n工程师：孙涛\n日期：2026-09-30\n建筑面积：88.75平方米\n",
+            "parse_digest": "e307e640ae8f152b7d14e11cd2094ae8c550d0457b1c1ead6fbd0e1b95076c93",
+            "parser_version": "archive-parse/1",
+            "requires_review": false,
+            "visual_state": "",
+            "structure": {
+              "locator": {
+                "kind": "",
+                "text": null,
+                "csv": null,
+                "docx": null,
+                "xlsx": null
+              },
+              "cell_state": "",
+              "cell_type": "",
+              "value_present": false,
+              "cache_present": false,
+              "row_hidden": false,
+              "column_hidden": false,
+              "column_hidden_unresolved": false,
+              "merge_range": "",
+              "merge_anchor": "",
+              "docx_merge": null
+            },
+            "derived": null
+          }
+        ],
+        "context": []
+      }
+    ],
+    "manifest_digest": "be257b1ad716cbbc20e694578b502b1e9deda8fc19dfc57115f7fa8d6ba74620"
+  },
+  "product": {
+    "labels": [
+      {
+        "label": "property_inspection",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "业主",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "工程师",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "建筑面积",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "房屋检查报告",
+        "chunk_indexes": [
+          0
+        ]
+      }
+    ],
+    "link_issues": [],
+    "events": [
+      {
+        "canonical_evidence": [
+          {
+            "parse_digest": "e307e640ae8f152b7d14e11cd2094ae8c550d0457b1c1ead6fbd0e1b95076c93",
+            "parser_version": "archive-parse/1",
+            "parent_segment_id": "s1",
+            "component_id": "s1/body",
+            "component_kind": "body",
+            "alternative_id": "",
+            "origin": "parsed",
+            "start": 0,
+            "end": 6,
+            "quote": "房屋检查报告",
+            "derived_value_ref": ""
+          }
+        ],
+        "anchor_policy": "exact-parent-evidence/2",
+        "id": "archive-understand/2/event/1f22dc6aa1ec2bd4e103a85649fab39a2db43e5dce32c23455cfe876bf80dbf3",
+        "type": "report",
+        "section_evidence": [
+          {
+            "view_id": "s1/body/0:48",
+            "start": 0,
+            "end": 6,
+            "quote": "房屋检查报告",
+            "derived_value_ref": ""
+          }
+        ],
+        "field_refs": [
+          {
+            "chunk_index": 0,
+            "local_id": "fld-date"
+          },
+          {
+            "chunk_index": 0,
+            "local_id": "fld-area"
+          }
+        ],
+        "subject_refs": [
+          {
+            "chunk_index": 0,
+            "local_id": "subj-owner"
+          },
+          {
+            "chunk_index": 0,
+            "local_id": "subj-engineer"
+          }
+        ],
+        "proposals": [
+          {
+            "chunk_index": 0,
+            "local_id": "ev-report"
+          }
+        ]
+      }
+    ],
+    "version": "archive-understand/2",
+    "manifest_digest": "be257b1ad716cbbc20e694578b502b1e9deda8fc19dfc57115f7fa8d6ba74620",
+    "parse_digest": "e307e640ae8f152b7d14e11cd2094ae8c550d0457b1c1ead6fbd0e1b95076c93",
+    "complete": true,
+    "requires_review": false,
+    "parse_status": "parsed",
+    "parse_coverage": {
+      "complete": true,
+      "encoding": "",
+      "offset_unit": "",
+      "notes": null,
+      "read_parts": null,
+      "skipped_parts": null,
+      "skipped_features": null
+    },
+    "parse_warnings": null,
+    "sheets": null,
+    "native": null,
+    "chunks": [
+      {
+        "receipt": {
+          "invocation_id": "2850ae9a606e402a554502220385dcb3",
+          "input_digest": "1ad409ece42d74b1690be3232937f0f924e932446d06394d581a376e1d8cbd3a",
+          "provider": "deepseek",
+          "requested_model": "deepseek/deepseek-v4-flash",
+          "model": "deepseek-v4-flash",
+          "response_model": "deepseek-flash",
+          "stop_reason": "stop",
+          "execution": {
+            "mode": "direct-provider",
+            "owner": {
+              "kind": "provider",
+              "id": "deepseek"
+            }
+          },
+          "usage": {
+            "input_tokens": 524,
+            "output_tokens": 836,
+            "total_tokens": 4432,
+            "cache_read_tokens": 3072,
+            "cache_write_tokens": 0,
+            "cost_usd": 0.0003160416
+          },
+          "configuration_fingerprint": "80e1d4a59c4dd4e6a1e6601f402fb56d0ad3104dd536056ff9e9164c8da188ae"
+        },
+        "input_digest": "db10ce2ffaa60f171167869971ba7efff3db80e9e3cbebd4995238badbaa7687",
+        "invocation_id": "e307e640ae8f152b7d14e11cd2094ae8c550d0457b1c1ead6fbd0e1b95076c93:0",
+        "index": 0,
+        "result": {
+          "labels": [
+            "房屋检查报告",
+            "property_inspection",
+            "建筑面积",
+            "业主",
+            "工程师"
+          ],
+          "domain": "property",
+          "document_type": "房屋检查报告",
+          "subjects": [
+            {
+              "id": "subj-owner",
+              "name": "赵青",
+              "role": "owner",
+              "ambiguous": false,
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:48",
+                  "start": 10,
+                  "end": 12,
+                  "quote": "赵青",
+                  "derived_value_ref": ""
+                }
+              ]
+            },
+            {
+              "id": "subj-engineer",
+              "name": "孙涛",
+              "role": "engineer",
+              "ambiguous": false,
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:48",
+                  "start": 17,
+                  "end": 19,
+                  "quote": "孙涛",
+                  "derived_value_ref": ""
+                }
+              ]
+            }
+          ],
+          "fields": [
+            {
+              "dimensions": [],
+              "subject_refs": [],
+              "id": "fld-date",
+              "name": "日期",
+              "raw": "2026-09-30",
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:48",
+                  "start": 23,
+                  "end": 33,
+                  "quote": "2026-09-30",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": [
+                {
+                  "kind": "date",
+                  "value": "2026-09-30"
+                }
+              ]
+            },
+            {
+              "dimensions": [
+                {
+                  "kind": "unit",
+                  "raw": "平方米",
+                  "evidence": [
+                    {
+                      "view_id": "s1/body/0:48",
+                      "start": 44,
+                      "end": 47,
+                      "quote": "平方米",
+                      "derived_value_ref": ""
+                    }
+                  ]
+                }
+              ],
+              "subject_refs": [],
+              "id": "fld-area",
+              "name": "建筑面积",
+              "raw": "88.75",
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:48",
+                  "start": 39,
+                  "end": 44,
+                  "quote": "88.75",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": [
+                {
+                  "kind": "decimal",
+                  "value": "88.75"
+                }
+              ]
+            }
+          ],
+          "events": [
+            {
+              "id": "ev-report",
+              "type": "report",
+              "field_refs": [
+                "fld-date",
+                "fld-area"
+              ],
+              "subject_refs": [
+                "subj-owner",
+                "subj-engineer"
+              ],
+              "section_evidence": [
+                {
+                  "view_id": "s1/body/0:48",
+                  "start": 0,
+                  "end": 6,
+                  "quote": "房屋检查报告",
+                  "derived_value_ref": ""
+                }
+              ]
+            }
+          ],
+          "coverage": [
+            {
+              "view_id": "s1/body/0:48",
+              "disposition": "extracted"
+            }
+          ],
+          "issues": []
+        },
+        "digest": "0366834618036dda7a26357c8271734eb9aded32acd803007047dc8aaf81b535"
+      }
+    ],
+    "digest": "fdab98a09fdb5744bad1d41f39614e090b15aeed46aeb5968dd81a282d6552af"
+  }
+}

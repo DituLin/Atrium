@@ -85,7 +85,7 @@ func TestUnderstandingAtomicAlternatives(t *testing.T) {
 }
 
 func validExtraction(c UnderstandingChunk) Extraction {
-	e := Extraction{Domain: "health", DocumentType: "report", Subjects: []LocalSubject{}, Fields: []ExtractedField{}, Events: []EventProposal{}, Coverage: []UnitCoverage{}, Issues: []ExtractionIssue{}}
+	e := Extraction{Labels: []string{}, Domain: "health", DocumentType: "report", Subjects: []LocalSubject{}, Fields: []ExtractedField{}, Events: []EventProposal{}, Coverage: []UnitCoverage{}, Issues: []ExtractionIssue{}}
 	for _, v := range c.Owned {
 		e.Coverage = append(e.Coverage, UnitCoverage{ViewID: v.ViewID, Disposition: "irrelevant"})
 	}
