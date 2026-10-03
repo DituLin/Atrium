@@ -1,5 +1,7 @@
 # Atrium
 
+**Product direction (2026-10-03):** evolve into a family AgentOS, with a shared, intelligent archive that identifies people and document types from incoming text, images and files, preserves originals, and supports cross-domain retrieval and evidence-backed analysis. The first planned increment prioritizes health, education, finance and home documents for the whole household. See the [intelligent family archive design](docs/plans/2026-10-03-family-agentos-archives-design.md) for requirements, current gaps and acceptance criteria; these planned capabilities are not yet shipped.
+
 Atrium is a local-first home hub: a Mac mini runs the core service, a NAS holds the family photo library (read-only), and a TV shows an always-on dashboard with the clock, photo slideshow and device status. Everything works on the home LAN without cloud accounts, and a maintainer can change what the TV shows from the command line.
 
 > Status: **pre-release, hardware validation in progress**. V0.1–V0.3 and the standalone Android TV host are implemented. Mac mini, NAS and OnePlus 6T have live smoke-test evidence; full TV hardware, reboot and 24-hour/seven-day acceptance remain separate gates. See `docs/ops/android-tv-results-2026-09-06.md`.
