@@ -1,0 +1,846 @@
+{
+  "native": {
+    "engine": {
+      "helper": "atrium-native/1",
+      "build": "170fbb014fb3582957b6e40b4f5d36ee7d46b3a32e59ab58c2e64af31c6c8c7a",
+      "os_build": "24C101",
+      "vision_revision": 3,
+      "languages": [
+        "zh-Hans",
+        "en-US"
+      ],
+      "recognition": "accurate",
+      "language_correction": false
+    },
+    "pages": [
+      {
+        "page": 1,
+        "width": 1800,
+        "height": 1600,
+        "orientation": 1,
+        "rotation": 0,
+        "effective_crop": null,
+        "transform": null,
+        "ocr_complete": true,
+        "native_complete": false
+      }
+    ],
+    "total_pages": 1,
+    "processed_pages": 1,
+    "annotations": "not_applicable",
+    "forms": "not_applicable",
+    "encrypted": false,
+    "allows_copying": true
+  },
+  "detected_format": "image",
+  "parser_version": "archive-native/1/7aa7f99757deaadf20a60ca11e7dbef02250f712c721a457df34c6526f2b6341",
+  "status": "parsed",
+  "segments": [
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "合成健康报告 SYNTHETIC REPORT",
+            "rect": [
+              0.04999999591666674,
+              0.0654205611728711,
+              0.4083333333333333,
+              0.03738317728042606
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "1a734e717a7ad4b49014b216fdb5091d3b72278a17888eea9138f8d09d7afc65",
+      "text": "合成健康报告 SYNTHETIC REPORT",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.04999999591666674,
+            0.0654205611728711,
+            0.4083333333333333,
+            0.03738317728042606
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "姓名：林明 Alice Lin",
+            "rect": [
+              0.056686047748796334,
+              0.14869281075585394,
+              0.22093022664388023,
+              0.027777776718139635
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "bb2ef8c617f9f4cd54837e1940f0ce86a3fe2f5ab3380e14f4ab505b566fd472",
+      "text": "姓名：林明 Alice Lin",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.056686047748796334,
+            0.14869281075585394,
+            0.22093022664388023,
+            0.027777776718139635
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "出生日期：1988-03-12",
+            "rect": [
+              0.05668604770980955,
+              0.2124183010067089,
+              0.2456395297580295,
+              0.029456698894500755
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "bf66f7b91361f655839a63d87ee55518ab65db8d1484ada6d4dcfa0bdbf1390d",
+      "text": "出生日期：1988-03-12",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.05668604770980955,
+            0.2124183010067089,
+            0.2456395297580295,
+            0.029456698894500755
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "报告日期：2026-10-04",
+            "rect": [
+              0.05523255772153075,
+              0.2743749998919768,
+              0.24854651557074653,
+              0.029546568393707173
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "ce5c94ba39bc3ad9eee396965c6e64e772e99b210b2977838abee57b1f5154cf",
+      "text": "报告日期：2026-10-04",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.05523255772153075,
+            0.2743749998919768,
+            0.24854651557074653,
+            0.029546568393707173
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "参考区间",
+            "rect": [
+              0.7107243601632526,
+              0.37895280130695674,
+              0.09744662814670135,
+              0.029676096439361643
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 1
+          }
+        ]
+      },
+      "id": "5aa59dd9a1ecfd717f91c000570a642c4ff5ce9f0355298d6d61bcc31e29a4b7",
+      "text": "参考区间",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.7107243601632526,
+            0.37895280130695674,
+            0.09744662814670135,
+            0.029676096439361643
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "数值",
+            "rect": [
+              0.3604651178252938,
+              0.3806249996339284,
+              0.05087209065755205,
+              0.029505718946456927
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 1
+          }
+        ]
+      },
+      "id": "9dc2147c590e8b4c4407708ef659012f00676fb003acbf23873ccc4bcd87333c",
+      "text": "数值",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.3604651178252938,
+            0.3806249996339284,
+            0.05087209065755205,
+            0.029505718946456927
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "单位",
+            "rect": [
+              0.543604652663593,
+              0.3806249996455997,
+              0.05087209065755216,
+              0.029505718946456927
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 1
+          }
+        ]
+      },
+      "id": "583f836a31d120b5a3742c7201f5b4700c3592a1be3650b1fc328b7b1d4a5a1a",
+      "text": "单位",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.543604652663593,
+            0.3806249996455997,
+            0.05087209065755216,
+            0.029505718946456927
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "项目",
+            "rect": [
+              0.05377907074516018,
+              0.3806249997506417,
+              0.0494186019897461,
+              0.029505718946456927
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 1
+          }
+        ]
+      },
+      "id": "7bbb16c43d3764da78885baf424180ce73fcff7fffb80c234cafa5c06a843435",
+      "text": "项目",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.05377907074516018,
+            0.3806249997506417,
+            0.0494186019897461,
+            0.029505718946456927
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "145.6",
+            "rect": [
+              0.3590116270455294,
+              0.4460784316291385,
+              0.066860466003418,
+              0.03767156839370733
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 1
+          }
+        ]
+      },
+      "id": "780e4a807419935e5550b1f7a28bb57c4ac79a93817fe921e480bb390f4cc53a",
+      "text": "145.6",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.3590116270455294,
+            0.4460784316291385,
+            0.066860466003418,
+            0.03767156839370733
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "血红蛋白",
+            "rect": [
+              0.05523255838310323,
+              0.44934640548167937,
+              0.09738371955023872,
+              0.03127859473228445
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 1
+          }
+        ]
+      },
+      "id": "c42c0ae4bf54c6273d072535c9dcebbf11d87ca4ccb42335e1f1694f6ece0ac4",
+      "text": "血红蛋白",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.05523255838310323,
+            0.44934640548167937,
+            0.09738371955023872,
+            0.03127859473228445
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "130-175",
+            "rect": [
+              0.712173182515106,
+              0.4524221902788377,
+              0.08873502943250866,
+              0.02162620782852176
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "a0431bfbd5a127d9cfa80f51629eac4b139ff456851c66fc909b6664b1d5b223",
+      "text": "130-175",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.712173182515106,
+            0.4524221902788377,
+            0.08873502943250866,
+            0.02162620782852176
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "g/L",
+            "rect": [
+              0.5421511632394874,
+              0.45250000025249804,
+              0.03779069688585068,
+              0.02952614307403567
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "a2b0d8711e53139d7cdda6834482425b1a46034c161cabbc9050a9dc6fc40e6d",
+      "text": "g/L",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.5421511632394874,
+            0.45250000025249804,
+            0.03779069688585068,
+            0.02952614307403567
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "1234.50",
+            "rect": [
+              0.3587386041355755,
+              0.5334419243873063,
+              0.09356930202907987,
+              0.039325301647186284
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 1
+          }
+        ]
+      },
+      "id": "4a0f91d0a8b1329f1255c929698904c7ba778269e3952a76f4b6e4cebc6a5b15",
+      "text": "1234.50",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.3587386041355755,
+            0.5334419243873063,
+            0.09356930202907987,
+            0.039325301647186284
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "费用 Amount",
+            "rect": [
+              0.05665137498320675,
+              0.5357474514185082,
+              0.14105771382649743,
+              0.031446273326873775
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "07acec34fc0761117f7f29cb40727a00a5ef6d816b66f0770be8ae7cc78d4cee",
+      "text": "费用 Amount",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.05665137498320675,
+            0.5357474514185082,
+            0.14105771382649743,
+            0.031446273326873775
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "CNY",
+            "rect": [
+              0.5436046521433682,
+              0.5374999997503881,
+              0.05377906799316401,
+              0.02949346423149113
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 1
+          }
+        ]
+      },
+      "id": "610bc10c6fd6408e22987b56afa0728998bba6b0ecf32518642daad48a1d2ea8",
+      "text": "CNY",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.5436046521433682,
+            0.5374999997503881,
+            0.05377906799316401,
+            0.02949346423149113
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "-2.75",
+            "rect": [
+              0.35591457953570377,
+              0.620502949249626,
+              0.06433363172743056,
+              0.03840586662292478
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 1
+          }
+        ]
+      },
+      "id": "5d9641a800f165f38283aac45c6f9e04e24edce63e95f8e597ac43bf40491c70",
+      "text": "-2.75",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.35591457953570377,
+            0.620502949249626,
+            0.06433363172743056,
+            0.03840586662292478
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "变化 Delta",
+            "rect": [
+              0.05507504030285487,
+              0.623385243888286,
+              0.11514061821831598,
+              0.03100728988647461
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "af88f1b211874432552bd850f3b66c696a4aac2de82aa4015afa3e70343495e4",
+      "text": "变化 Delta",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.05507504030285487,
+            0.623385243888286,
+            0.11514061821831598,
+            0.03100728988647461
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "mmol/L",
+            "rect": [
+              0.5436046529171082,
+              0.6256250001292051,
+              0.08284883287217881,
+              0.029603757858276403
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 1
+          }
+        ]
+      },
+      "id": "3fc6e74fb9559f6621db45d1613e876fca46eff1550d2dd5398c3f22f739e2e9",
+      "text": "mmol/L",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.5436046529171082,
+            0.6256250001292051,
+            0.08284883287217881,
+            0.029603757858276403
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "ocr",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "医生：王华 Dr Wang",
+            "rect": [
+              0.05499901882960633,
+              0.7227688141489784,
+              0.22727973090277775,
+              0.033984096050262425
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "ed3ac9168df8049dd2561396b4c26a21d2272681b3af6a535791b143b1da2f39",
+      "text": "医生：王华 Dr Wang",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.05499901882960633,
+            0.7227688141489784,
+            0.22727973090277775,
+            0.033984096050262425
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    }
+  ],
+  "warnings": null,
+  "counts": {
+    "decoded_text_bytes": 236,
+    "source_bytes": 88532,
+    "expanded_bytes": 0,
+    "text_bytes": 472,
+    "zip_entries": 0,
+    "parts_read": 0,
+    "xml_nodes": 0,
+    "strings": 0,
+    "cells": 0,
+    "segments": 19,
+    "relationships": 0
+  },
+  "coverage": {
+    "complete": true,
+    "encoding": "",
+    "offset_unit": "page_rect",
+    "notes": [
+      "geometry_order_is_not_reading_order",
+      "parsed_is_not_ocr_accuracy"
+    ],
+    "read_parts": null,
+    "skipped_parts": null,
+    "skipped_features": null
+  },
+  "sheets": null
+}

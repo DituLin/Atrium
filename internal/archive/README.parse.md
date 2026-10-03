@@ -83,7 +83,10 @@ main parts, binary workbooks, ZIP64 and unsupported ZIP methods are unsupported.
 Compound-file magic alone returns `unsupported_compound_container`, never an
 unsupported claim that the file is encrypted. ZIP encryption flags produce
 `encrypted_zip`; this detects declared ZIP encryption, not cipher correctness.
-Worksheet protection is not file encryption. PDF/OCR is a later parser.
+Worksheet protection is not file encryption. PDF/OCR uses the separate
+`NativeParser` descriptor adapter documented in
+[`adapters/macos-archive-parser/README.md`](../../adapters/macos-archive-parser/README.md).
+`Parse` retains its original PDF-unsupported behavior; T09 selects the adapter.
 
 ZIP detection requires a complete ZIP record signature, so ordinary text beginning
 with `PK` remains text/CSV. Explicit DOCX/XLSX hints route malformed packages to

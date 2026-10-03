@@ -83,6 +83,7 @@ type ParseWarning struct {
 	PartURI string `json:"part_uri"`
 }
 type ParseResult struct {
+	Native         *NativeMetadata `json:"native,omitempty"`
 	DetectedFormat string          `json:"detected_format"`
 	ParserVersion  string          `json:"parser_version"`
 	Status         ParseStatus     `json:"status"`
@@ -93,13 +94,15 @@ type ParseResult struct {
 	Sheets         []SheetEvidence `json:"sheets"`
 }
 type Segment struct {
-	ID        string        `json:"id"`
-	Text      string        `json:"text"`
-	Locator   Locator       `json:"locator"`
-	Cell      *CellEvidence `json:"cell"`
-	DOCXMerge *DOCXMerge    `json:"docx_merge"`
+	Visual    *VisualEvidence `json:"visual,omitempty"`
+	ID        string          `json:"id"`
+	Text      string          `json:"text"`
+	Locator   Locator         `json:"locator"`
+	Cell      *CellEvidence   `json:"cell"`
+	DOCXMerge *DOCXMerge      `json:"docx_merge"`
 }
 type Locator struct {
+	Page *PageLocation `json:"page,omitempty"`
 	Kind string        `json:"kind"`
 	Text *TextLocation `json:"text"`
 	CSV  *CSVLocation  `json:"csv"`

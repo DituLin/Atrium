@@ -1,0 +1,141 @@
+{
+  "native": {
+    "engine": {
+      "helper": "atrium-native/1",
+      "build": "170fbb014fb3582957b6e40b4f5d36ee7d46b3a32e59ab58c2e64af31c6c8c7a",
+      "os_build": "24C101",
+      "vision_revision": 3,
+      "languages": [
+        "zh-Hans",
+        "en-US"
+      ],
+      "recognition": "accurate",
+      "language_correction": false
+    },
+    "pages": [
+      {
+        "page": 1,
+        "width": 900,
+        "height": 400,
+        "orientation": 1,
+        "rotation": 0,
+        "effective_crop": [
+          0,
+          0,
+          450,
+          200
+        ],
+        "transform": [
+          2,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        "ocr_complete": true,
+        "native_complete": true
+      }
+    ],
+    "total_pages": 1,
+    "processed_pages": 1,
+    "annotations": "excluded",
+    "forms": "excluded",
+    "encrypted": false,
+    "allows_copying": true
+  },
+  "detected_format": "pdf",
+  "parser_version": "archive-native/1/7aa7f99757deaadf20a60ca11e7dbef02250f712c721a457df34c6526f2b6341",
+  "status": "parsed",
+  "segments": [
+    {
+      "visual": {
+        "state": "conflict",
+        "requires_review": true,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "TOTAL 9.30",
+            "rect": [
+              0.10888889005555547,
+              0.310000000725,
+              0.3933333333333333,
+              0.14500000000000002
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          },
+          {
+            "origin": "native",
+            "text": "TOTAL 9.80",
+            "rect": [
+              0.1111111111111111,
+              0.331796875,
+              0.3873422222222223,
+              0.16000000000000003
+            ],
+            "page_space": [
+              50,
+              101.640625,
+              174.30400000000003,
+              32
+            ],
+            "clipped": false,
+            "confidence": 0
+          }
+        ]
+      },
+      "id": "4a6dfc1aa138e2c7ef21e1de395be9998566d718e630dcdaef93d17c3e18dac2",
+      "text": "",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.10888889005555547,
+            0.310000000725,
+            0.3933333333333333,
+            0.18179687427500002
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    }
+  ],
+  "warnings": null,
+  "counts": {
+    "decoded_text_bytes": 20,
+    "source_bytes": 9616,
+    "expanded_bytes": 0,
+    "text_bytes": 20,
+    "zip_entries": 0,
+    "parts_read": 0,
+    "xml_nodes": 0,
+    "strings": 0,
+    "cells": 0,
+    "segments": 1,
+    "relationships": 0
+  },
+  "coverage": {
+    "complete": true,
+    "encoding": "",
+    "offset_unit": "page_rect",
+    "notes": [
+      "geometry_order_is_not_reading_order",
+      "parsed_is_not_ocr_accuracy"
+    ],
+    "read_parts": null,
+    "skipped_parts": null,
+    "skipped_features": [
+      "annotations",
+      "form_values"
+    ]
+  },
+  "sheets": null
+}

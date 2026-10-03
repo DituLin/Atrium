@@ -1,0 +1,2 @@
+# Preserve generated PDF bytes and xref spacing as binary fixture evidence.
+evidence/*.pdf binary
