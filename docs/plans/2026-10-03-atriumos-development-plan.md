@@ -95,9 +95,25 @@ T04 开发期先对接受控 CLI/测试接收；T13 接入实际 IM。T01–T04 
 
 新增：`internal/httpapi/archive_intake.go`、`archive_intake_test.go`、`internal/archive/intake.go` 及测试；API 契约 `docs/api/archives.openapi.json`。
 
-输入采用可信接入 metadata 和有界字节流，主体暂未知不要求 member_id；纯文本以原文作为原件。返回 `document_id`、`task_id`、saved/queued、NAS 状态。任务查询返回阶段、逐文件结果和澄清问题，不返回服务器路径。
+输入采用可信接入 metadata 和有界字节流，主体暂未知不要求 member_id；纯文本以原文作为原件。仅 ingest 返回自有 receipt/task ID、本次保存状态、实际大小/哈希和接收时间；有 read 时才附 document 引用及完整状态，不返回其他来源的任务或去重命中。明确原件 saved、处理 queued、NAS pending 的不同含义；不提前声称已识别或已同步。任务查询使用面向用户的阶段/结果/澄清投影，不直接泄露内部路径或任意 worker 状态对象。
 
-红灯：未授权接收、重投、同键不同字节、超限、接收途中取消、文件已写但任务提交失败、多个附件部分失败。验证：真实临时 HTTP server 上传并查回哈希及任务，不用 mock 代替落盘。
+独立协议预审后的最小接口：
+
+- `POST /api/v1/integrations/archives/intakes`：一次接收一个文本/附件槽。流式 multipart，第一个 part 为有界 JSON metadata，第二个为字节内容；拒绝额外 part、重复 metadata 和未知字段，确认合法结束后才能提交。文本原文不 trim 或改换行。
+- `POST /api/v1/integrations/archives/intakes/lookup`：以来源 metadata 查询本 principal 的已提交回执，无须重传文件；仅 ingest 仍可查自己的简化状态。未找到只表示暂无已提交回执，不能判定并发上传一定失败。
+- `GET /api/v1/integrations/archives/tasks/{id}`：当前 archive.read 查询本家庭任务。保持 T02 Get 的 read 要求，不为回执查询暗中放宽。
+
+metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID、槽编号、原名、可选声明 MIME/预期大小/哈希及 visibility_intent(inherit/private)。household 从 LocalHousehold 获取，actor 从服务端认证身份取得；拒绝输入 household/principal/member/document/本机路径/URL。Core 对版本化规范数组 `[version,household,principal,channel,account,conversation,sender,message_id,kind,slot]` 做 SHA-256 得到 source_key；不能接受模型自造 request key。T04 只验证受认证宿主提交，真实 IM 消息字段绑定在 T13 验收。
+
+同一 source 比较 hash/size/kind/visibility intent 等固定业务参数，相同重放原 receipt/task，不同返回 idempotency_conflict；临时路径、当前时刻、随机 ID 不参与判等。text 的不同来源即使字节相同也建立不同 logical document；file 同内容在家庭内复用 canonical document。每个新 source 建立自有 receipt/task，跨 principal 不转移旧 task 委托；因此跨渠道同文件是两条 source/两个任务/一个文档。T09 按文档提取与业务事件版本保证不重复统计。
+
+逐槽接收独立提交，多附件成功槽不随失败槽回滚，适配器维护预期槽清单并补传失败槽；T04 不提供虚假的整消息全部成功标记。上传先验证当前权限并记录 policy_version，再在无数据库写锁时 Put，确认 multipart 结束，然后单个写事务重新验证 credential/principal/同一策略代次，先查来源冲突，再建立 blob/document/source/task 和可见性审计。Core 提交而回执丢失由 lookup 恢复；DB 失败留下可复用 blob，不删除物理原件。
+
+`inherit` 只需 ingest，新文档采用既定默认 TV 可见，已有文档保持当前设置。显式 `private` 是组合操作：在查询任何来源键/哈希之前统一要求 ingest + read + organize，新旧文件一致，最终事务再次检查；将既有 public 降为 private 时增加可见性版本并记录 actor/source/前后值/时间，同事务提交。已经 private 不做无意义修订。intake 不接受 public 意图，重发/重新解析不能把 private 提升为公开；也不能静默忽略 private 请求。此统一授权替代无条件“仅 ingest 可设置私密”的模糊解释，不增加人工审核流程。
+
+保留集成鉴权、限流与追踪，但上传独立使用有界 deadline/MaxBytesReader/实际 body read deadline；现有 requireIntegration 五秒 context 不足以处理 32 MiB 流式接收，单独延长 context 也不能终止阻塞 Read。新增默认关闭的档案 intake feature flag，关闭时不注册业务入口、不启动消费者；本任务不改 OpenClaw 工具清单。使用真实临时 Core/SQLite/BlobStore/HTTP 验证，并实际 CLI/curl 走上传→lookup→task 查询；原生产服务保持关闭直至发布任务。
+
+红灯：未授权接收、重投、同键不同字节/intent、超限、接收途中取消、文件已写但任务提交失败、回执丢失、上传期间撤销/轮换/策略变化、多个附件部分失败、跨 principal 私密去重、默认重发不公开、private 组合权限和可见性审计原子性。验证：真实临时 HTTP server 上传并查回哈希及任务，不用 mock 代替落盘。
 
 ### T05 — 解析器接口与文本 / Office
 
