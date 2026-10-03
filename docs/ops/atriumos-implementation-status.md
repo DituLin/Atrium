@@ -20,7 +20,7 @@
 | T04 接收 API | 已完成任务级验收 | `6fa1592` + `256aa88` + `8cbad4c`；独立需求/质量复审批准，真实临时 Core、相关 race、全量 Go 回归通过；默认关闭，未部署 |
 | T05 解析器 | 已完成任务级验收 | `20bfed1` + `6c17f41` + `ab21659` + `c75659a`；最终提交独立需求/质量双审批准，全量 Go/race/Linux 编译及原失败复验通过；未接生产消费者 |
 | T06 图片/PDF | 已实现并双审通过 | `7c7bee8` 获需求与质量独立批准；80 个结果、266 项定位及进程/依赖/资源检查通过，未接生产 |
-| T07 分类与事实提取 | 实现中 | 新实施者已接手；隔离公共 CLI 真实 DeepSeek 路由探针成功，正式四领域提取/证据/覆盖验收尚未执行 |
+| T07 分类与事实提取 | 需求复审通过，质量审查中 | `a19ed7a`；四领域及财务对照实际响应、图片真实响应重放、长文档/严格校验/归并回归已核验；待独立质量批准，未接生产消费者 |
 | T08–T18 | 未开始 | 归属、发布、检索、分析、渠道、TV 和恢复契约已预审；不将设计文档或旧 family 记录作为新能力通过证据 |
 
 ## 基线核对
@@ -222,3 +222,5 @@ v2 未提交修复补齐有界开放标签及分块来源，root 原样复跑独
 root 对 `internal/archive/understanding/evidence/2026-10-04-v2/compact` 独立核对 17 文件哈希、当前 prompt/schema 哈希及 7 响应实际配置指纹一致，复制到 `/var/folders/9n/qh4533dn6db5y_wc4q5v6kr40000gn/T/atriumos-root-v2-replay-ywv4vxg4/evidence` 后运行 NativeReportReplay GREEN（0.200 秒），未改仓库留存产物。加强后的重放验证两日期、145.6 g/L、1234.50 CNY、-2.75/变化 Delta/mmol/L、患者/医生角色、字段归属/覆盖和单一报告。这里无新模型调用或旧响应重标；原采样与宿主修复重放明确区分。最终全量、固定修复提交和独立复审仍待完成。
 
 修复已固定提交 `a19ed7a89e82fa729eca30177218343c1b5f080d`，root 核对工作区干净，另验证 thinking-off/thinking-low/section-guidance 三批历史资源哈希、文件哈希与响应指纹一致。实施端最终 full Go、archive race、Linux 编译、Node 六项、原审查探针与 native 回归通过。已交原独立需求审查者复审全部修复、新增 section policy/区间扫描、共享 schema 及最终真实证据；暂无需求批准，质量审查与 T08 未启动。
+
+独立需求复审 APPROVED `a19ed7a`：原三探针、全部 TestUnderstanding、Node 六项、11 项 native section 正反例、独立 10,000 区间 oracle 通过；从临时副本按原 evaluator 重放五文本响应（包括 education 和“元”为 currency 的明确财务对照）及完整 native 报告通过，17 文件/7 响应/当前资源哈希一致。root 另建 10,000 seeded oracle `/var/folders/9n/qh4533dn6db5y_wc4q5v6kr40000gn/T/atriumos-root-overlap-oracle-q4dtqq0w/overlay.json` 对照朴素判定同样 GREEN（0.390 秒）。无剩余需求阻断项，不将有限合成结果表述为消除随机失败。已启动新的独立质量审查，审完整 T07 范围 `d023044..a19ed7a`；T08 仍待双审完成。
