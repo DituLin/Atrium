@@ -15,7 +15,7 @@
 | --- | --- | --- |
 | T00 设计 | 已审阅 | 3 份设计/计划文档及 R01–R14；独立审阅 5 项问题均已修正，见下方记录 |
 | T01 持久基础 | 已完成任务级验收 | `02b928a`；需求与质量复审批准，race 与全量 Go 回归通过；未接入 API/worker/生产 |
-| T02 家庭授权 | 需求复审修正中 | `53fd964` 基础回归通过；复审发现旧资源撤销后增量档案授权被误拒绝，正在修复；未部署 |
+| T02 家庭授权 | 需求复审通过，质量审查中 | `53fd964` + `2c8f0ea`；增量授权兼容问题已修复，相关 race 复验通过；未部署 |
 | T03–T18 | 未开始 | 不将文档或旧 family 记录作为新能力通过证据 |
 
 ## 基线核对
@@ -63,3 +63,5 @@ read + organize 可跨同家庭接入澄清或取消，事件分别记录原始�
 实现端已观察目标 API 缺失/旧行为的红灯，完成后 `go test -race ./internal/domain ./internal/store ./internal/auth ./internal/httpapi ./internal/cli` 与 `go test ./...` 全通过，`git diff --check` 通过。迁移回归仅递增 schema/count 并加入新表，新增 schema 9→10 保留数据/事件/澄清且不扩大授权的回归。独立需求与质量审查通过后才标为任务验收。
 
 独立需求审查实跑 `go test -count=1 -race ./internal/auth ./internal/httpapi ./internal/domain ./internal/cli ./internal/store -run 'Archive|Household|Integration'` 通过，但发现一项兼容问题：GrantArchives 校验整个合并策略时，会因旧 screen/source 已撤销而拒绝新的有效 archive 授权。需要只校验本次新增的 archive 引用及最终结构/总量，完整保留旧列表，并保持旧资源运行时仍不可访问；其他已审 T02 范围无需求阻断。
+
+`2c8f0ea` 已修复该问题并同步 OpenAPI。新增测试先观察 revoked 旧引用导致 invalid_request 的红灯，再验证新家庭档案授权成功、全部旧列表保留、已撤销照片与屏幕命令仍 not_found；普通完整替换策略仍按原规则拒绝已撤销引用。实现端和独立需求复审的 store/auth/httpapi/cli/screen 相关 race 测试均通过，需求复审批准。质量审查进行中。
