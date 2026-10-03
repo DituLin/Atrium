@@ -193,7 +193,7 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 
 - 纯 resolver 接收已经验证的文档内 mentions、角色/身份字段证据、日期精度、OCR 冲突标志，以及 Core 从同一家庭取得的候选快照；不查库、不生成实体 ID，也不接受模型指定全局 ID。快照带家庭 `resolution_revision`、实体版本和 complete 标志。截断或匹配能力不可用不能当作候选为空。输出 link_existing/create_entity/needs_resolution/household_document、规则版本、理由码、证据和依赖版本；新实体先用计划内引用，同批新建意图参与后续匹配。
 - 清楚的具名主体和角色、候选确实为空时自动建独立实体，不推断关系、性别或家庭成员身份。姓名/有证据别名加完整出生日期一致、唯一候选且无明确冲突，可以关联；唯一同名而无辅助证据仍待归属。双方完整生日明确不同且无共同强身份依据，可新建第二个同名人物；强身份相同却生日冲突则待核对。年/月生日、年龄、性别、发送者、文件名和模型 confidence 不独立证明身份，不补齐日期再匹配。OCR 冲突证据不能成为确定身份的依据。
-- 完整稳定身份标识按家庭、类型、签发方和带版本的精确规则匹配，保留前导零；唯一匹配且无冲突可以关联。原值只留原件与受保护事实，仓库内有界比较，不建立裸 SHA 或普通身份号索引，不为此新增密钥系统。向 resolver 只返回匹配实体 ID、证据引用、冲突及完整性，历史身份号不进入模型上下文、普通候选 DTO、FTS、日志或 TV。超限、未知类型或签发方不足返回 incomplete/unsupported，不能当作无候选再自动建人。
+- 完整稳定身份标识按家庭、类型、签发方和带版本的精确规则匹配，保留前导零；唯一匹配且无冲突可以关联。原值只留原件与受保护事实，仓库内有界比较，不建立裸 SHA 或普通身份号索引，不为此新增密钥系统。向 resolver 只返回匹配实体 ID、证据引用、冲突及完整性，历史身份号不进入模型上下文、普通候选 DTO、FTS、日志或 TV 摘要/导航。原件保留原字节，其独立读取遵守既定默认 TV 可见与显式私密闭包，不因识别出身份信息自动将资料设为 private。超限、未知类型或签发方不足返回 incomplete/unsupported，不能当作无候选再自动建人。
 - 名称保留原文；比较键使用带版本的 NFC、首尾空白删除、连续 Unicode 空白折叠及 ASCII 大小写折叠，NFC 使用锁定版本的 `x/text`。保留标点、内部词界，不自动简繁转换、拼音化、删连字符或 OCR 近似纠错。普通 display_alias 只参与候选；confirmed_binding 保存作用域、目标、确认者、版本与证据，作用域相符、目标唯一且无冲突才自动关联。首版支持 legacy_member 和 document_mention；单份纠正不升级为永久全家身份规则。后续资料别名规则只有明确授权后才创建，亲属称谓仍需明确参照。
 - 无参照的“妈妈”待归属；医生、工程师保存相关角色，不成为家庭成员。多人文件逐 mention 决策，字段不能全部挂到第一个人物。房屋完整地址精确匹配须保留楼栋/单元/房号差异；设备型号不是唯一身份。无个人主体的学校通知使用 household_document，不制造未知人物。
 - 任何实体、别名、确认绑定或合并修订均增加家庭 resolution_revision。T09 的同一写事务除 lease/principal/policy/StateVersion/extraction 外，还检查该 revision 和受影响实体版本；过时就回滚、重取一致候选并重新运行 resolver。事务内检查同批实体和绑定冲突。两个任务同时看到空候选不能分别照旧建人；第二个重新关联或待归属。实体写助手留在 store 包内，与事实、关联、checkpoint/outbox 同事务，禁止 service 先建人再另开事务提交事实。
@@ -232,6 +232,15 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 
 合成四领域检索集 ≥ 30 个问题，每条预期档案和证据点可检查；测试姓名别名、多主体、未知日期、零结果、私密/撤销、分页和同文件多来源。具体样本与 42 项预期见[综合档案合成验收集](2026-10-03-atriumos-archive-acceptance.md)，它是待执行契约，不是通过报告。记录召回不足，必要时再增语义检索，不以加入向量库作为验收。
 
+独立检索预审收敛（设计契约，尚未实现）：
+
+- 小型 schema 仅含字面 query、实体/领域/资料类型、日期范围、归属状态和 limit/cursor；家庭、principal、TV/集成投影由宿主决定。默认 10 条、最多 25 条，按实际序列化字节分页，遵守现有 MCP 32 KiB 上限。返回 items/next_cursor/coverage/index_status；不完整的零结果不等于没有资料。实体筛选仅使用已确认关联。
+- 当前 credential/principal/household 或 screen、发布引用闭包、可见性与 legacy 当前状态在同一短只读快照核验，不依赖 middleware 的旧身份，也不先取前 N 条再过滤。本机 modernc v1.58.0 的 BeginTx(ReadOnly:true) 会跳过 `_txlock=immediate`，实现窄只读 helper 并实测搜索期间 writer 可写。授权承诺是该读取快照时有效，不承诺网络响应后的瞬时撤销。
+- 长字面查询由 Core 编码为受限 FTS 参数，短姓名/两字词使用别名与参数化 instr；引号、问号、NOT、星号等不能获得操作符含义。短词扫描有字符量、候选量和 deadline 上限，耗尽如实返回不完整/需缩小范围。索引采用稳定业务排序和 ID 次序，避免依赖包含不可见资料的全库 BM25。复用现有签名 cursor 机制，绑定主体/策略、投影、规范筛选/排序、数据与索引代次和最后排序键；条件变化明确要求重查。
+- FTS/片段/标题/候选/导航只使用安全搜索投影，排除明确支持的受保护身份类型及已识别证据范围，不无条件索引全部 parsed text。投影未准备好先仅有安全元数据，测试支持的类型而不宣称通用个人信息检测；这不自动修改文档可见性，原件读取独立应用既定策略。待归属文档可检索并标 waiting/unassigned、解析状态和原文证据，未决模型字段不进入已确认事实或个人统计；已确认家庭通知不同于待归属资料。TV coverage 不泄露不可见私密资料数量。
+- 证据包含 document_id/publication_revision、observation_id+revision、source_extraction_id/segment_id/locator 和有界摘录，校验属于当前发布的引用闭包。T09 可保留旧提取的当前事实，不能强制来源 extraction 等于最新 extraction。历史读取须明确且继续当前授权。partial、OCR alternatives、index pending 均保留覆盖状态。
+- outbox 按当前文档版本重建，旧消息重放不得恢复旧内容；撤回/私密/改归属立即依赖 DB 过滤。重建分批新 generation 后切换或明确 indexing，不能清空后返回完整零结果。10k 文档性能同时记录总索引字符、长度分布、查询选择性、私密比例及 P50/P95，不以文档数量暗示任意 10k × 2 MiB 都满足固定延迟。
+
 ### T11 — 自然语言查询工具与来源回答
 
 修改：`internal/homemcp/server.go`、`internal/integration/`、`internal/brain/model_tools.go` / `executor.go` / `receipt.go`、`adapters/openclaw/index.js` / manifest / tests。
@@ -240,6 +249,8 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 
 验证完整工具库存、参数边界、工具结果上限、模型实际查询两领域以上并正确引用；旧十三项工具回归继续通过。
 
+实际接线须同时更新 ModelTools 白名单、executor 参数表、OpenClaw inventory/manifest、receiptResult 和 receipt-renderer.mjs；ask.mjs 最终渲染回执，仅新增工具注册不足以交付回答。模型解释问题并真实调用 search/entity/document-evidence/task/typed-clarification，T12 再加入 analysis；Core 返回结构化事实/引用，宿主渲染出处、覆盖范围与计算结果，不展示未经验证的模型最终文字。partial/coverage 放入有版本的 data schema，不滥用旧 envelope 不接受的状态。验收记录实际 OpenClaw 调用参数、Core 结果和最终引用，不用问句到预填答案的映射；既有 30 秒/8 次调用预算耗尽需明确本轮未完成。
+
 ### T12 — 基础分析与数据覆盖
 
 新增：`internal/archive/analyze.go`、`analyze_test.go`、分析快照存储/API。
@@ -247,6 +258,12 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 代码计算 count/sum/latest/time series；原始字段保留，单位/币种不一致分组，日期精度不足不能放到猜测日期。支出不将同笔账单/付款凭证直接重复相加；无法证明同一事件则提示候选重复并标覆盖范围。结果绑定事实版本，修订后失效。
 
 验收：喂养 330 ml 奶粉 + 120 ml 母乳=450 ml；70 ml 是最近一次不是当日合计；教育不同满分不直接比较；金额用十进制精确表达；医疗参考范围来自报告。只说已归档范围，不推断全家全量事实。
+
+独立分析预审收敛（设计契约，尚未实现）：首期支持 count/sum/latest/series/ratio，count 明确数文档、事件或 observation。当前 canonical event/observation slot 才参与计算，line_item/total/payment 角色须有表头、标签或公式证据；角色不明者排除并披露，不能按金额相等或模型 confidence 推定。F01 合计缓存 200 不再算一笔费用，F02 付款证明不重复增加 charge；CNY 授权范围为 250.00、TV 为 200.00，USD 20.00 单列。
+
+使用有界十进制字符串与整数尺度/有理数运算，不沿用旧 float64 measurement 或 SQLite REAL 求和。币种、单位、项目/样本不兼容分组，换算仅支持明确的版本化规则。ratio 保存分子/分母与舍入方式；88/100 与 132/150 都为 88%，变化 0 个百分点；零分母、缺满分、比较符数值不当精确值。家庭时区与日期精度参与区间判断，粗日期重叠不能强选最近一次，未知总量不生成完整率。
+
+分析快照绑定算法版本、规范查询、投影、输入 observation revisions 和数据代次；新增匹配事实也使结果过期，不只跟踪原有输入变化。读取快照取数后计算，保存时短事务重新核验。TV 单独计算公开集合，不能删私密明细却保留其总额。故障验收覆盖停 outbox、重建、撤回/私密/改归属、新数据和过期 cursor，及旧 extraction 保留事实的有效引用；所有数值同时有字段证据与覆盖范围。
 
 ### T13 — 微信与 Discord 可信附件接入
 
