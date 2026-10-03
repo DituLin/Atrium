@@ -249,3 +249,5 @@ T08 首次固定实现提交 `0c90a0d598b0c0c2f36f9745617f11e117497c95`，root �
 独立需求复审 APPROVED `5c276f6`：原三项 overlay GREEN（0.253 秒），新增 `/tmp/t08-spec-recheck-overlay.json` 的六种组冲突排列、正常强身份关联、无关负证据、别名权威、年份精度、输入不变与重复决策稳定性 GREEN（0.454 秒）。全 Go 退出 0（缓存），非缓存 race archive 44.645 秒/store 35.290 秒通过。审查者核对当前 HEAD 仅多 root 状态文档，代码未变、工作区干净。已启动新的独立质量审查，覆盖两次 T08 代码提交的完整范围；T08 尚未双审验收，T09 未启动。
 
 独立质量审查 CHANGES REQUESTED `5c276f6`，两项 P2：property 写入无条件设为 full_address，把单文确认的新地址别名提升为后续全家匹配依据；合并期间针对合并前旧 link 新增/修订的确认没有自身 merge context，undo 可能漏隔离，重新将原 B 静默指向 A。root 原样运行 `/tmp/t08-quality-overlay.json` 两反例均 RED（0.250 秒），独立原 archive/store 基线通过但未覆盖这两项。已交原实施者修复 property 别名权威及绑定修订时的合并上下文，要求保留历史、合并前有效确认和同文其他主体；质量复审与最终需求回归仍待完成，T09 未启动。
+
+质量修复固定为 `1a070c679bf326064071bf2003c2981de2802d46`，root 核对工作区干净。property 保留 display_alias；绑定引入独立 confirmation_version 与不可变的每次确认合并上下文，undo 按当前确认版本隔离，历史记录保留。新增原地址/当前限域确认、合并前绑定、同文其他主体、过期及嵌套重确认对照，更新未部署 schema 13。root 原 quality 两项独立 GREEN（0.351 秒）；实施者最终 quality/spec/recheck overlays、full Go、race（store 42.161 秒/archive 49.220 秒）、Linux 编译和 vet 均通过。已交原质量审查者复审，并交原需求审查者核对最终差异；最终双审批准尚待确认，T09 未启动。
