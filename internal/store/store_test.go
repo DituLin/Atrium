@@ -72,7 +72,7 @@ func TestSchemaMatchesDesignTables(t *testing.T) {
 	}
 	require.NoError(t, rows.Err())
 	require.ElementsMatch(t, []string{
-		"archive_entities", "archive_entity_attributes", "archive_entity_bindings", "archive_entity_history", "archive_entity_link_merge_context", "archive_entity_links", "archive_entity_merges", "archive_entity_redirects", "archive_legacy_entities", "archive_protected_identity_facts", "archive_resolution_revisions",
+		"archive_entities", "archive_entity_attributes", "archive_entity_bindings", "archive_entity_binding_merge_context", "archive_entity_history", "archive_entity_link_merge_context", "archive_entity_links", "archive_entity_merges", "archive_entity_redirects", "archive_legacy_entities", "archive_protected_identity_facts", "archive_resolution_revisions",
 		"archive_blobs", "archive_documents", "archive_sources", "archive_visibility_events", "households", "local_household", "archive_tasks", "archive_task_events", "archive_task_resolutions", "family_members", "family_records", "family_record_exports", "admin_tokens", "audit_log", "data_sources", "jobs", "pairings", "photo_exclusions",
 		"video_work", "video_scan_state", "videos", "photos", "preview_files", "scan_runs", "schema_migrations", "screen_commands",
 		"screens", "settings", "widget_cache", "integration_principals", "integration_credentials", "integration_operations",

@@ -489,7 +489,7 @@ func archiveApplyResolutionIn(ctx context.Context, tx *sql.Tx, in archive.Resolu
 					}
 				}
 			}
-			if m.Kind == "property" {
+			if m.Kind == "property" && nameKind == "name" {
 				nameKind = "full_address"
 			}
 			if e = archiveAttributePutIn(ctx, tx, in.HouseholdID, id, nameKind, m.Name, "", in.DocumentID, "", m.Evidence, visible, false, linkID); e != nil {
@@ -515,13 +515,28 @@ func archiveApplyResolutionIn(ctx context.Context, tx *sql.Tx, in archive.Resolu
 	return out, nil
 }
 func archiveLinkMergeContextIn(ctx context.Context, tx *sql.Tx, h, link, id string) error {
-	canonical, e := archiveCanonicalIn(ctx, tx, h, id)
+	contexts, e := archiveActiveMergeContextIn(ctx, tx, h, id)
 	if e != nil {
 		return e
 	}
-	rows, e := tx.QueryContext(ctx, `SELECT id,target_id FROM archive_entity_merges WHERE household_id=? AND active=1`, h)
+	for _, merge := range contexts {
+		if _, e = tx.ExecContext(ctx, `INSERT INTO archive_entity_link_merge_context VALUES(?,?,?)`, h, link, merge); e != nil {
+			return e
+		}
+	}
+	return nil
+}
+
+// Context snapshots all active merges of the target's current component.
+// It must be taken at the moment of each new link or binding confirmation.
+func archiveActiveMergeContextIn(ctx context.Context, tx *sql.Tx, h, id string) ([]string, error) {
+	canonical, e := archiveCanonicalIn(ctx, tx, h, id)
 	if e != nil {
-		return e
+		return nil, e
+	}
+	rows, e := tx.QueryContext(ctx, `SELECT id,target_id FROM archive_entity_merges WHERE household_id=? AND active=1 ORDER BY id`, h)
+	if e != nil {
+		return nil, e
 	}
 	type merge struct{ id, target string }
 	ms := []merge{}
@@ -529,27 +544,26 @@ func archiveLinkMergeContextIn(ctx context.Context, tx *sql.Tx, h, link, id stri
 		var m merge
 		if e = rows.Scan(&m.id, &m.target); e != nil {
 			rows.Close()
-			return e
+			return nil, e
 		}
 		ms = append(ms, m)
 	}
 	e = rows.Err()
 	rows.Close()
 	if e != nil {
-		return e
+		return nil, e
 	}
+	out := []string{}
 	for _, m := range ms {
 		root, e := archiveCanonicalIn(ctx, tx, h, m.target)
 		if e != nil {
-			return e
+			return nil, e
 		}
 		if root == canonical {
-			if _, e = tx.ExecContext(ctx, `INSERT INTO archive_entity_link_merge_context VALUES(?,?,?)`, h, link, m.id); e != nil {
-				return e
-			}
+			out = append(out, m.id)
 		}
 	}
-	return nil
+	return out, nil
 }
 
 func archiveMergeEntitiesIn(ctx context.Context, tx *sql.Tx, h, source, target string, sv, tv int64, actor, reason string) (string, error) {
@@ -653,8 +667,9 @@ func archiveBindingPutIn(ctx context.Context, tx *sql.Tx, h, scope, key, id, act
 		return e
 	}
 	var oldID, oldTarget, oldActor, oldEvidence string
-	var v int64
-	e := tx.QueryRowContext(ctx, `SELECT id,entity_id,confirmed_by,version,evidence_json FROM archive_entity_bindings WHERE household_id=? AND scope=? AND scope_key=?`, h, scope, key).Scan(&oldID, &oldTarget, &oldActor, &v, &oldEvidence)
+	var v, oldConfirmationVersion int64
+	var oldConflict bool
+	e := tx.QueryRowContext(ctx, `SELECT id,entity_id,confirmed_by,version,evidence_json,confirmation_version,conflict FROM archive_entity_bindings WHERE household_id=? AND scope=? AND scope_key=?`, h, scope, key).Scan(&oldID, &oldTarget, &oldActor, &v, &oldEvidence, &oldConfirmationVersion, &oldConflict)
 	if errors.Is(e, sql.ErrNoRows) {
 		if expected != 0 {
 			return domain.ErrConflict
@@ -665,7 +680,7 @@ func archiveBindingPutIn(ctx context.Context, tx *sql.Tx, h, scope, key, id, act
 		if v != expected {
 			return domain.ErrConflict
 		}
-		_, e = tx.ExecContext(ctx, `UPDATE archive_entity_bindings SET entity_id=?,confirmed_by=?,version=version+1,evidence_json=?,conflict=0 WHERE household_id=? AND id=?`, id, actor, entityJSON(evidence), h, oldID)
+		_, e = tx.ExecContext(ctx, `UPDATE archive_entity_bindings SET entity_id=?,confirmed_by=?,version=version+1,confirmation_version=version+1,evidence_json=?,conflict=0 WHERE household_id=? AND id=?`, id, actor, entityJSON(evidence), h, oldID)
 	}
 	if e != nil {
 		return e
@@ -673,7 +688,16 @@ func archiveBindingPutIn(ctx context.Context, tx *sql.Tx, h, scope, key, id, act
 	if e = archiveEntityTouchIn(ctx, tx, h, id); e != nil {
 		return e
 	}
-	return archiveEntityHistoryIn(ctx, tx, h, oldID, "binding", actor, "scoped_confirmation", map[string]any{"target": oldTarget, "version": v, "actor": oldActor, "evidence": oldEvidence}, map[string]any{"target": id, "version": v + 1, "scope": scope, "key": key, "evidence": evidence})
+	contexts, e := archiveActiveMergeContextIn(ctx, tx, h, id)
+	if e != nil {
+		return e
+	}
+	for _, merge := range contexts {
+		if _, e = tx.ExecContext(ctx, `INSERT INTO archive_entity_binding_merge_context VALUES(?,?,?,?)`, h, oldID, v+1, merge); e != nil {
+			return e
+		}
+	}
+	return archiveEntityHistoryIn(ctx, tx, h, oldID, "binding", actor, "scoped_confirmation", map[string]any{"target": oldTarget, "version": v, "actor": oldActor, "evidence": oldEvidence, "confirmation_version": oldConfirmationVersion, "conflict": oldConflict}, map[string]any{"target": id, "version": v + 1, "confirmation_version": v + 1, "scope": scope, "key": key, "evidence": evidence, "merge_context": contexts, "conflict": false})
 }
 func (r *ArchiveEntities) ConfirmDocumentMention(ctx context.Context, a domain.IntegrationActor, h, doc, mention, target string, expected int64, evidence []string) error {
 	return r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
@@ -926,7 +950,7 @@ func archiveEvidenceLinkIn(ctx context.Context, tx *sql.Tx, h, doc, entity, requ
 }
 
 func archiveInvalidateMergeBindingsIn(ctx context.Context, tx *sql.Tx, h, merge, actor, reason string) error {
-	rows, e := tx.QueryContext(ctx, `SELECT b.id,b.version,b.entity_id FROM archive_entity_bindings b WHERE b.household_id=? AND b.scope='document_mention' AND EXISTS(SELECT 1 FROM archive_entity_links l JOIN archive_entity_link_merge_context c ON c.household_id=l.household_id AND c.link_id=l.id WHERE l.household_id=b.household_id AND b.scope_key=l.document_id||'#'||l.mention_ref AND c.merge_id=?)`, h, merge)
+	rows, e := tx.QueryContext(ctx, `SELECT b.id,b.version,b.entity_id FROM archive_entity_bindings b WHERE b.household_id=? AND EXISTS(SELECT 1 FROM archive_entity_binding_merge_context c WHERE c.household_id=b.household_id AND c.binding_id=b.id AND c.confirmation_version=b.confirmation_version AND c.merge_id=?)`, h, merge)
 	if e != nil {
 		return e
 	}

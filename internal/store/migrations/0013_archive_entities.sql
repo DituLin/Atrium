@@ -30,6 +30,7 @@ CREATE TABLE archive_entity_bindings (
  household_id TEXT NOT NULL, id TEXT NOT NULL, scope TEXT NOT NULL CHECK(scope IN ('legacy_member','document_mention')),
  scope_key TEXT NOT NULL, entity_id TEXT NOT NULL, confirmed_by TEXT NOT NULL,
  version INTEGER NOT NULL CHECK(version>0), evidence_json TEXT NOT NULL CHECK(json_valid(evidence_json)),
+ confirmation_version INTEGER NOT NULL DEFAULT 1 CHECK(confirmation_version>0 AND confirmation_version<=version),
  conflict INTEGER NOT NULL DEFAULT 0 CHECK(conflict IN (0,1)),
  PRIMARY KEY(household_id,id), UNIQUE(household_id,scope,scope_key),
  FOREIGN KEY(household_id,entity_id) REFERENCES archive_entities(household_id,id)
@@ -42,6 +43,18 @@ CREATE TABLE archive_entity_merges (
  FOREIGN KEY(household_id,source_id) REFERENCES archive_entities(household_id,id),
  FOREIGN KEY(household_id,target_id) REFERENCES archive_entities(household_id,id)
 );
+-- Context belongs to each confirmation revision, independently of when the
+-- document link was created. Old contexts remain available after reconfirming.
+CREATE TABLE archive_entity_binding_merge_context (
+ household_id TEXT NOT NULL, binding_id TEXT NOT NULL, confirmation_version INTEGER NOT NULL CHECK(confirmation_version>0), merge_id TEXT NOT NULL,
+ PRIMARY KEY(household_id,binding_id,confirmation_version,merge_id),
+ FOREIGN KEY(household_id,binding_id) REFERENCES archive_entity_bindings(household_id,id),
+ FOREIGN KEY(household_id,merge_id) REFERENCES archive_entity_merges(household_id,id)
+);
+CREATE TRIGGER archive_entity_binding_context_immutable_update BEFORE UPDATE ON archive_entity_binding_merge_context
+BEGIN SELECT RAISE(ABORT,'binding merge context is immutable'); END;
+CREATE TRIGGER archive_entity_binding_context_immutable_delete BEFORE DELETE ON archive_entity_binding_merge_context
+BEGIN SELECT RAISE(ABORT,'binding merge context is immutable'); END;
 CREATE TABLE archive_entity_redirects (
  household_id TEXT NOT NULL, source_id TEXT NOT NULL, target_id TEXT NOT NULL, merge_id TEXT NOT NULL,
  PRIMARY KEY(household_id,source_id), CHECK(source_id<>target_id),

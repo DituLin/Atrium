@@ -24,7 +24,9 @@ transaction, not a model DTO. It includes a household revision, candidate versio
 and completeness. Display aliases generate candidates only. Automatic scoped
 bindings require `legacy_member` or the exact `document_mention` key
 `documentID#mentionRef`. A correction does not authorize a future family-wide
-alias rule. New objects use plan-local refs; matching later mentions against them
+alias rule. This also applies to property addresses: a scoped correction to a
+new address stays a display alias; the original exact full address retains its
+matching authority. New objects use plan-local refs; matching later mentions against them
 prevents duplicate same-batch identities. Names use the versioned NFC/Unicode
 space/ASCII-fold rule with pinned x/text v0.31.0 (Go 1.24 compatible with the
 repository's Go 1.25 directive); punctuation and word boundaries remain.
@@ -81,7 +83,13 @@ New links created while a merge was active retain merge context and become
 `needs_resolution` on undo rather than guessing a split. Their exact mention-linked
 attributes and protected identity facts stop participating in matching and public
 projection; scoped bindings that would silently reattach them are marked conflicting.
-Other confirmed subjects in the same document remain usable. Subsequent consumer
+Other confirmed subjects in the same document remain usable. Each binding
+confirmation revision records its own immutable active-merge context, including
+confirmations that revise a link created before a merge. Undo consults the
+current confirmation's context, preserves pre-merge assertions, and retains
+nested dependencies even as invalidation increments the binding version. An
+explicit reconfirmation requires the current binding version and takes a fresh
+context; historical contexts cannot invalidate that new independent assertion. Subsequent consumer
 revisions must retain these historical IDs and contexts. Canonical lookup is
 household scoped, type checked on merge, and rejects cycles. The legacy mapping
 is unique on household/member, restricted to the configured `local_household`,
