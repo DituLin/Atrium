@@ -1,6 +1,6 @@
 # AtriumOS 实施与验收记录
 
-更新：2026-10-03。开发分支 `codex/atriumos`，隔离工作树 `.worktrees/atriumos`。所有“规划/开发中/通过”区分记录，生产版本未自动跟随开发分支。
+更新：2026-10-04。开发分支 `codex/atriumos`，隔离工作树 `.worktrees/atriumos`。所有“规划/开发中/通过”区分记录，生产版本未自动跟随开发分支。
 
 ## 目标与入口
 
@@ -112,3 +112,11 @@ T05 独立解析预审已补充到开发计划：严格编码白名单、OOXML �
 T06 预审明确继承文件句柄、统一页/坐标、每页 OCR 与 native 文本证据组、冲突不擅自择一、资源/进程/协议限制；仍未实现。T07 在本机 OpenClaw 2026.9.8 文档和实现中核对公开 direct-provider completion，选择专用 CLI 插件复用 DeepSeek 路由与凭据；它保留 stopReason/responseModel，优于当前会丢掉截断终止原因的 isolated 路线。只接受完整 stop，零工具与模型身份须实测。T07/T09 的产物/checkpoint 原子持久化交接已明确，避免把大产物塞入 64 KiB task state。此阶段未调用 provider、未读取凭据、未修改生产 OpenClaw 配置，不能作为模型质量证据。
 
 T08/T09 预审补充具名新主体自动创建、同名证据规则、范围明确的身份绑定、候选快照代次与原子发布。身份号只在受保护仓库有界精确比较，不新增普通索引或密钥系统。事件区段/观测由 Core 分配持久 ID，重解析和改归属不靠模型临时 ID 重建事件；问题/答案带版本并在同事务验证。人工修订/私密、有限预算、连续 legacy outbox 与索引交接的契约已写入计划，仍未实现或验收。
+
+## T05 实现中的证据
+
+2026-10-04 首批文本/CSV/限制行为测试在 API stub 上观察到 RED：精确 Unicode/CRLF、带 BOM 的 UTF-16、CSV 引号内换行/尾空字段及物理 FieldPos、源/文本/字符串/片段上限、取消和 ReaderAt I/O。实现进行中，尚不能称格式支持已通过。OOXML 夹具将移动主 part 的位置，验证沿 content types/relationships 定位而非依赖固定文件名，并覆盖稀疏、公式缓存、合并、日期及异常包。
+
+## T06 格式能力补充探针
+
+2026-10-04 将此前合成报告导出 JPEG（quality 95）和无损 WebP，用已有 Objective-C Vision 探针实跑，revision 3 均返回 13 片段，八个预期字段字符串均出现。这仅确认本机这两个格式的读取/OCR 基础能力，不是 T06 实现或复杂场景准确率验收；坐标关系、EXIF、PDF 混合页和资源/进程限制仍待正式实现。JPEG SHA-256 `5b88e0ac26b48de92fa34c871de9f06655cf656eb21abc3de373bde7a0032750`，WebP `087aec3e06912c25ce50c211f9f3c5750c9eb00dce18e107f92f1035670b7008`。合成图片、输出及结果清单位于本机 `/tmp/atriumos-image-format-probe/`，没有使用家庭文件或安装依赖。
