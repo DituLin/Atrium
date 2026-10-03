@@ -9,11 +9,12 @@ import (
 
 // Subdirectories of the data directory (design §4.2 step 2).
 const (
-	CacheDir   = "cache"
-	LogsDir    = "logs"
-	TLSDir     = "tls"
-	BackupsDir = "backups"
-	DBFileName = "atrium.db"
+	CacheDir    = "cache"
+	LogsDir     = "logs"
+	TLSDir      = "tls"
+	BackupsDir  = "backups"
+	ArchivesDir = "archives"
+	DBFileName  = "atrium.db"
 )
 
 // Layout resolves the paths under a data directory.
@@ -35,6 +36,10 @@ func (l Layout) TLS() string { return filepath.Join(l.Root, TLSDir) }
 
 // Backups is the backup directory.
 func (l Layout) Backups() string { return filepath.Join(l.Root, BackupsDir) }
+
+// Archives contains immutable originals. Only archive.NewBlobStore creates it;
+// it must not enter Ensure's symlink-following MkdirAll/Chmod loop.
+func (l Layout) Archives() string { return filepath.Join(l.Root, ArchivesDir) }
 
 // DB is the SQLite database path.
 func (l Layout) DB() string { return filepath.Join(l.Root, DBFileName) }
