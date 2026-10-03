@@ -144,3 +144,5 @@ T16/T17 独立预检补充完整恢复点/证据引用闭包、历史身份而�
 ## T06 格式能力补充探针
 
 2026-10-04 将此前合成报告导出 JPEG（quality 95）和无损 WebP，用已有 Objective-C Vision 探针实跑，revision 3 均返回 13 片段，八个预期字段字符串均出现。这仅确认本机这两个格式的读取/OCR 基础能力，不是 T06 实现或复杂场景准确率验收；坐标关系、EXIF、PDF 混合页和资源/进程限制仍待正式实现。JPEG SHA-256 `5b88e0ac26b48de92fa34c871de9f06655cf656eb21abc3de373bde7a0032750`，WebP `087aec3e06912c25ce50c211f9f3c5750c9eb00dce18e107f92f1035670b7008`。合成图片、输出及结果清单位于本机 `/tmp/atriumos-image-format-probe/`，没有使用家庭文件或安装依赖。
+
+PDF crop/rotation 窄探针（macOS 15.2、Apple clang 16）使用非零 MediaBox/CropBox、0/90/180/270 度、两倍显式 raster scale。四页有效 crop 均映射到实际像素框，8 条 native/Vision 几何 IoU 为 0.903–0.957；文字仅 5/8 完全一致，三处拉丁 B 被 OCR 识成西里尔 В，不能凭视觉相似归一化后自动合并。根任务读取结果并查看 0/90 度页图，方向/红色定位点与变换一致。探针确认 CGPDFPageGetDrawingTransform 已处理页旋转，单独放大目标 rect 不上采样，应显式 scale 并复用实际 CTM；计划已加入同框公式及裁切文字规则。代码、四张 raster 和结果在本机 `/tmp/atriumos-pdf-transform-probe/`，仍非 T06 实现验收，正式 overlay/裁切/非整数缩放/非 BMP 夹具待补。

@@ -160,6 +160,10 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 - 解析专属总 deadline 初以 120 秒做基准，不沿用视频 15 秒；不能把总超时说成硬每页超时。CommandContext、有界 stdout/stderr（stderr 64 KiB）、超限取消、WaitDelay；Start 成功后一次 Wait 并在回收前持有并发槽。进程组取消若采用须实测，Process.Kill 不代表杀整个组。只接受成功退出和唯一完整 JSON，严格校验版本/页码/有限矩形/字符串数组/覆盖计数。生产错误仅固定码，不传播 NSError、原始 stderr、参数或识别文字；崩溃/超时/坏协议不能变成 empty/parsed。
 - 实际夹具覆盖中英姓名/日期/金额/小数/负号/单位/区间、物理旋转与 EXIF 镜像、双栏表格、纯文本 PDF/扫描 PDF/扫描正文+文字页脚/多页混合、native/OCR 数字冲突、非零 crop box 与 90/180/270 度页旋转、非 BMP 字符、空白/损坏/锁定/101 页/超像素/多帧。Go helper 夹具覆盖挂起/取消/输出洪泛/半截或多份 JSON/坏版本/NaN 或越界框/退出异常与无残留进程。保存引擎指纹、原图与框叠加图，比较字段和框覆盖范围，不以整段 OCR 快照或仅字符串出现代替证据关系验证。
 
+PDF 几何交接补充（SDK/合成探针已验证方案，仍须 T06 正式夹具）：以 `CGPDFPageGetDrawingTransform` 配合 `CGContextDrawPDFPage` 为唯一 raster 路径，PDFKit 只取原生逐行文本/page-space bounds。有效区域 E 为 CropBox 与 MediaBox 交集，按页内 Rotate=90/270 交换显示宽高；drawing transform 的额外 rotate 参数为 0，不能预减 crop origin 或再次应用 PDFPage.rotation。API 不保证目标 rect 放大时上采样，因此在未翻转 bitmap context 显式应用有界 raster scale，再 concat drawing transform，保存实际 CTM 为 T，按 E 裁剪后绘制；记录真实像素 W/H、T、effective crop 和 rotation，取整边距属于实际 frame。
+
+native bounds 四角用相同 T 变换，包围矩形 b 转为 `[minX(b)/W,1-maxY(b)/H,width(b)/W,height(b)/H]`；Vision 对已转向 raster 使用 Up，框仅做左上原点转换。native bounds 以页面内容原点为参照，非 crop 原点；完全在 crop 外的文本不参加可见区域自动去重，部分裁切行必须标 clipped/native_unconfirmed，不能只夹紧框却保留整句为完整可见证据。禁止在此变换上再调用自行处理 rotation/box 的 PDFPage.drawWithBox 路径；注释/表单按实际覆盖明确记录。正式验证增加 crop 超出 media 的交集、裁切文字、非整数缩放、非 BMP、四角/逆变换与 overlay。依据：[Apple Quartz PDF drawing](https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/drawingwithquartz2d/dq_pdf/dq_pdf.html) 及本机 CGPDFPage/PDFSelection/PDFPage headers。
+
 ### T07 — 分类与事实提取执行器
 
 新增：`internal/archive/understand.go`、`understand_test.go`、版本化 schema/prompt；受控 Agent worker 适配在 `adapters/openclaw/archive-worker.mjs`。
