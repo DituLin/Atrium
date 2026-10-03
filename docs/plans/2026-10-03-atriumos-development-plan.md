@@ -125,6 +125,19 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 
 红灯：表格边界、合并单元格、缺失值、CSV 引号/换行、ZIP 炸弹大小、恶意路径、空/损坏/加密文件状态。验证格式矩阵逐项记录；只解析正文字符串不足以通过。
 
+独立解析预审收敛（设计契约，尚未实现）：
+
+- 解析器接收已授权原件的 ReaderAt/大小/哈希与格式 hint，不接收服务器路径，不导入 store，不联网或修改原件。输出 detected_format、parser_version、status、segments、warnings、实际资源计数与覆盖范围。区分 parsed/partial/empty/unsupported/encrypted/invalid/limit_exceeded；I/O 或取消返回 error，nil error 不能单独证明完整解析。segment ID 对同原件、同解析版本稳定，不承诺跨版本相同。
+- locator 明确文本解码后字符范围（半开区间、单位明确）、CSV 逻辑记录/列及解码输入物理行/字节列、DOCX 包内 part URI/段落或 table path/row/grid-column/paragraph、XLSX sheet ID/名称/part URI/A1 地址。解码偏移不冒充原件字节偏移；T06 增加页与归一化矩形。单元格结构保留原始值、数据类型、公式/缓存存在性、样式与合并关系。
+- 首期编码只支持严格 UTF-8（可带 BOM）及带 BOM 的 UTF-16LE/BE，校验 surrogate、奇数字节和解码后上限；不猜 GBK 或替换坏字节称成功。CSV 只支持逗号，逐条读取，严格引号，保留空格/尾空字段，宽度变化警告、不补零。Go CSV 的 CRLF→LF 和 FieldPos 字节列语义必须在证据中明确；以 `=` 开头仍是原始文本。
+- ZIP 类型由 content types + 根 relationships + 主 part 类型证明，不靠扩展名、声明 MIME 或固定文件名。先支持 Transitional OOXML；Strict、宏、二进制工作簿等不支持的变体明确标记。namespace 按 URI。包内关系的相对 `../` 在归一化后仍位于包内可以合法，不能和 ZIP entry 路径穿越规则混淆；外部关系只警告，绝不读取。
+- 初始限额：源 32 MiB、ZIP 4096 entries、单 part 16 MiB、累计解压 64 MiB、XML 深度 64、最终文本 2 MiB；另对字符串、cell、segment、关系数及压缩比设显式限额和测试。先有界预检 central directory 字节数/entry 数，再调用 zip.NewReader，之后校验实际目录；读取阶段也计数，不能只信 header。拒绝重复/规范化冲突 part、symlink/异常 entry/越界关系；只支持 Store/Deflate，不递归展开。用到的 part 读至结尾以验证 CRC；XML 不允许 DTD/自定义实体，超限或损坏不得称完整成功。
+- DOCX 保留正文顺序、run/tab/换行和嵌套表格路径，横向 gridSpan、纵向 vMerge 保存 anchor/span/continuation；不重复输出 cell 与其内段落导致重复事实。未支持的页眉/脚注/文本框/修订/嵌入图像等若存在，记录 skipped parts/features 并标 partial；不把已删除修订混入当前正文。
+- XLSX 沿 workbook 的 r:id 取 sheet 关系；支持 shared/inline/rich text、数值/布尔/错误/日期，shared-string 越界为 invalid。按稀疏坐标读取，区分缺格、显式空格、空字符串、零、无缓存公式；维度声明不驱动巨型矩阵。保存公式原文/属性/shared group 及可选历史缓存，不执行或伪展开；合并区域不复制金额。保留 style/numFmt/code，有限显示格式须逐项测试，未知格式保留 raw 并警告；date1904 与 1900 日期异常单独覆盖，无时区值不补时区。保留 sheet/row/column 隐藏标志。
+- CFB magic 本身不证明加密，首版可以返回 unsupported_compound_container；只有有界验证 EncryptionInfo/EncryptedPackage 后才能称 encrypted。工作表保护不等于文件加密。未知/加密资料仍保留原件，并可如实解释未解析原因。
+
+合成夹具对每类固定预期 segment、locator、原始值、合并/缓存/缺值与警告，包括正常四领域样本、中文工作表、两套日期、坏关系/重复 entry/CRC/真实解压超限。标准依据：[ECMA-376](https://ecma-international.org/publications-and-standards/standards/ecma-376/)、[Spreadsheet Cell](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.cell)、[Excel 日期系统](https://support.microsoft.com/en-us/excel/date-systems-in-excel)、[MS-OFFCRYPTO](https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-offcrypto/b60c8b35-2db2-4409-8710-59d88a793f83)。这些限额与支持范围需实际实现验收，不以标准链接代替解析证据。
+
 ### T06 — macOS 图片 OCR 与 PDF
 
 新增：`adapters/macos-archive-parser/` Objective-C 命令行、构建说明、合成样本；`internal/archive/native_parser.go` 及测试。使用 Vision/PDFKit，进程 stdout 只输出协议，stderr 不含原文。
