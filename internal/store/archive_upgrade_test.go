@@ -30,7 +30,7 @@ func TestArchiveAuthorizationUpgradePreservesUnboundHistory(t *testing.T) {
 	require.NoError(t, err)
 	applied, err := db.Migrate(ctx)
 	require.NoError(t, err)
-	require.Equal(t, 3, applied)
+	require.Equal(t, 4, applied)
 	task, err := archiveTaskIn(ctx, db.sql, "legacy-home", "legacy-task")
 	require.NoError(t, err)
 	require.Empty(t, task.PrincipalID)
