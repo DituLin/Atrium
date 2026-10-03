@@ -1,6 +1,6 @@
 // Explicit installed-runtime compatibility check. Does not contact IM services,
 // invoke a model, load personal configuration, or write household records.
-// Usage: node scripts/check-openclaw-ingress.mjs /absolute/path/to/openclaw
+// Usage: node scripts/check-openclaw-ingress.mjs /absolute/path/to/openclaw [weixin-package-root]
 import assert from 'node:assert/strict';
 import { readdirSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -64,6 +64,25 @@ try {
   assert.equal(calls, before, 'missing sender must never claim a durable identity');
  }
  assert.equal(claimed.size, 2);
+ if (process.argv[3]) {
+  const {weixinMessageToMsgContext} = await import(pathToFileURL(join(process.argv[3], 'dist/src/messaging/inbound.js')).href);
+  const message = {message_id:'18446744073709551614', from_user_id:'fixture@im.wechat',
+   item_list:[{type:1, text_item:{text:'synthetic read-only query'}}]};
+  const context = msg => ({...weixinMessageToMsgContext(msg, 'fixture'),
+   SessionKey:'agent:home:openclaw-weixin:direct:fixture'});
+  const first = context(message), replay = context(message);
+  assert.equal(first.MessageSidFull, message.message_id, 'provider uint64 ID must remain lossless');
+  assert.equal(await dispatch(first), undefined, 'actual Weixin converter must admit a valid sender');
+  assert.equal((await dispatch(replay)).handled, true, 'actual converter replay must not duplicate work');
+  assert.equal(await dispatch(context({...message,message_id:'18446744073709551615'})), undefined,
+   'distinct messages with identical text must be admitted');
+  for (const invalid of [{...message,from_user_id:undefined}, {...message,message_id:undefined}]) {
+   const before = calls;
+   assert.equal((await dispatch(context(invalid))).handled,true);
+   assert.equal(calls,before,'missing provider identity must not reach the ledger');
+  }
+  console.log('PASS: installed Weixin converter → OpenClaw mapper → Atrium ingress; valid, replay, distinct and incomplete identities');
+ }
  console.log('PASS: installed OpenClaw mapper → Atrium ingress; canonical replay and missing identity checks');
  console.log('Synthetic contexts only; real IM transport and replies remain separately unverified.');
 } finally {

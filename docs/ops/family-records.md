@@ -152,3 +152,12 @@ Discord 入站与回复验收已补齐，见下方最新记录。OnePlus 测试�
 用户确认收到机器人回复后，核对当前网关与 agent SQLite：Discord default 有对应入站与出站时间；该 Discord session 的 DeepSeek V4 Flash 实际调用 `home_list_family_members` 与 `home_list_family_records(member_id=abu)`，两次结果 isError=false，返回成员阿布及空记录。最终回复与用户确认一致。宿主 `brain_inbound_messages` 从 0 增至 1，说明实际 before_dispatch 接收与持久认领生效。未使用 CLI 模拟这次 IM 入站，未主动代用户向联系人发消息。
 
 本机私有摘要为 `~/Atrium/family-staging/im-acceptance-summary.json`，原始会话保留在 OpenClaw 自身存储，不复制私人会话或账号标识进仓库。原目标的 IM app 路径以 Discord 验收完成；微信仅保持接线配置，不宣称其收发验证完成。其他实现、部署、写入/读取、NAS、修订恢复、界面与测试证据见上表。可以开始通过现有 Discord 机器人录入真实数据，是否 TV 展示须由用户明确指定。
+
+
+### 微信发送者字段修复（2026-10-03）
+
+19:49 微信已实际收到两条消息并发回拒绝提示，但没有进入家庭工具。实际运行的 Tencent 插件为 2.4.9：它已使用 `MessageSidFull` 保存无损原始消息编号，却未将 `from_user_id` 映射到 OpenClaw 标准 `SenderId`，导致 Atrium `before_dispatch` 身份校验拒绝。旧 npm 目录仍留有 2.4.3，不能据该目录判断当前实现。
+
+本机补丁只补齐上游上下文的 `SenderId`，不放宽 Atrium 的校验或持久去重。`scripts/patch-weixin-sender.mjs <插件绝对目录>` 对 2.4.9 的源码和编译产物应用同一补丁，原文件保存在旁边 `.atrium-sender-original`；遇到其他版本或代码布局会停止。运行 `openclaw plugins info openclaw-weixin --json`，使用其中 `plugin.rootDir` 定位实际插件。升级插件后应重新检查，不能假定本地补丁会保留。
+
+验证命令：`node scripts/check-openclaw-ingress.mjs <OpenClaw绝对目录> <微信插件绝对目录>`。检查实际已安装的微信转换器 → OpenClaw mapper → Atrium hook：原始 uint64 编号保持无损，首次投递放行、重复投递阻断、同文不同编号放行，缺发送者或原始编号拒绝。补丁前复现相同拒绝提示，补丁后通过；49 项适配器测试通过。此项为合成入站链路测试，不代替修复后用户从微信发送新查询的端到端验收，也不补写此前被拒绝的消息。
