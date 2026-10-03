@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/base32"
 	"errors"
 	"fmt"
 	"io"
@@ -30,7 +31,7 @@ func newTestBlobs(t *testing.T, limit int64) (*BlobStore, string) {
 }
 
 func blobPath(root string, ref domain.ArchiveBlobRef) string {
-	return filepath.Join(root, ref.HouseholdID, "blobs", ref.SHA256[:2], ref.SHA256)
+	return filepath.Join(root, householdDirectoryName(ref.HouseholdID), "blobs", ref.SHA256[:2], ref.SHA256)
 }
 
 func testRef(home string, content []byte) domain.ArchiveBlobRef {
@@ -84,7 +85,7 @@ func TestBlobPutBoundedAndValidatesExpectedMetadata(t *testing.T) {
 				require.Error(t, err)
 				require.Zero(t, ref)
 				require.GreaterOrEqual(t, r.Len(), n-9, "read at most max+1 bytes")
-				require.NoDirExists(t, filepath.Join(root, "home-1"))
+				require.NoDirExists(t, filepath.Join(root, householdDirectoryName("home-1")))
 			} else {
 				require.NoError(t, err)
 				assertOriginal(t, s, ref, bytes.Repeat([]byte("x"), n))
@@ -99,7 +100,7 @@ func TestBlobPutBoundedAndValidatesExpectedMetadata(t *testing.T) {
 		require.Error(t, err)
 		require.Zero(t, ref)
 		assertNoStaging(t, root)
-		require.NoDirExists(t, filepath.Join(root, "home-1"))
+		require.NoDirExists(t, filepath.Join(root, householdDirectoryName("home-1")))
 	}
 	s, _ := newTestBlobs(t, 8)
 	ref, err := s.Put(context.Background(), "home-1", bytes.NewReader(content), PutOptions{ExpectedSize: ptrInt64(8), ExpectedSHA256: testRef("home-1", content).SHA256})
@@ -133,7 +134,7 @@ func TestBlobPutShortReadsErrorsAndCancellation(t *testing.T) {
 	_, err = s.Put(context.Background(), "other", readerFunc(func([]byte) (int, error) { return 0, nil }), PutOptions{})
 	require.ErrorIs(t, err, io.ErrNoProgress)
 	assertNoStaging(t, root)
-	require.NoDirExists(t, filepath.Join(root, "other"))
+	require.NoDirExists(t, filepath.Join(root, householdDirectoryName("other")))
 }
 
 func TestBlobConcurrentDuplicatesAndHouseholdIsolation(t *testing.T) {
@@ -166,6 +167,48 @@ func TestBlobConcurrentDuplicatesAndHouseholdIsolation(t *testing.T) {
 	assertOriginal(t, s, ref, content)
 	assertOriginal(t, s, other, content)
 	assertNoStaging(t, root)
+}
+
+func TestBlobCaseOnlyHouseholdsHaveDistinctOriginals(t *testing.T) {
+	for _, homes := range [][2]string{{"home-a", "HOME-A"}, {strings.Repeat("a", 128), strings.Repeat("a", 127) + "A"}} {
+		t.Run(fmt.Sprintf("length-%d", len(homes[0])), func(t *testing.T) {
+			s, root := newTestBlobs(t, 0)
+			content := []byte("same original, separate households")
+			var originals [2]os.FileInfo
+			for i, home := range homes {
+				ref, err := s.Put(context.Background(), home, bytes.NewReader(content), PutOptions{})
+				require.NoError(t, err)
+				require.Equal(t, home, ref.HouseholdID, "filesystem encoding must not alter the domain identity")
+				require.Equal(t, 1, ref.StorageVersion)
+				f, err := s.OpenVerified(context.Background(), ref)
+				require.NoError(t, err)
+				originals[i], err = f.Stat()
+				require.NoError(t, err)
+				got, err := io.ReadAll(f)
+				require.NoError(t, err)
+				require.Equal(t, content, got)
+				require.NoError(t, f.Close())
+			}
+			require.False(t, os.SameFile(originals[0], originals[1]), "case-only household IDs must not share the same physical original")
+			entries, err := os.ReadDir(root)
+			require.NoError(t, err)
+			require.Len(t, entries, 2)
+			var decoded []string
+			for _, entry := range entries {
+				require.True(t, entry.IsDir())
+				require.Regexp(t, `^[a-z2-7]+$`, entry.Name(), "directory names use lowercase unpadded base32")
+				require.LessOrEqual(t, len(entry.Name()), 205)
+				if len(homes[0]) == 128 {
+					require.Len(t, entry.Name(), 205)
+				}
+				id, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(strings.ToUpper(entry.Name()))
+				require.NoError(t, err)
+				decoded = append(decoded, string(id))
+			}
+			require.ElementsMatch(t, homes[:], decoded, "actual directory names losslessly encode the exact identities")
+			require.False(t, strings.EqualFold(entries[0].Name(), entries[1].Name()), "portable collision check for case-insensitive filesystems")
+		})
+	}
 }
 
 func TestBlobRejectsCorruptionAndMetadataDriftWithoutOverwrite(t *testing.T) {
@@ -219,9 +262,9 @@ func TestBlobRejectsSymlinkAtEachLevelAndSpecialFiles(t *testing.T) {
 			path := root
 			switch level {
 			case "household":
-				path = filepath.Join(root, "home-1")
+				path = filepath.Join(root, householdDirectoryName("home-1"))
 			case "blobs":
-				path = filepath.Join(root, "home-1", "blobs")
+				path = filepath.Join(root, householdDirectoryName("home-1"), "blobs")
 			case "prefix":
 				path = filepath.Dir(blobPath(root, ref))
 			case "leaf":

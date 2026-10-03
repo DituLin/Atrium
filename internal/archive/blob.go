@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base32"
 	"errors"
 	"fmt"
 	"io"
@@ -21,6 +22,8 @@ import (
 )
 
 const DefaultMaxBlobBytes int64 = 32 << 20
+
+var householdPathEncoding = base32.NewEncoding("abcdefghijklmnopqrstuvwxyz234567").WithPadding(base32.NoPadding)
 
 var (
 	ErrEmpty    = errors.New("archive: empty original")
@@ -117,9 +120,17 @@ func (s *BlobStore) directory(parent *os.File, name string, create bool) (*os.Fi
 	return dir, nil
 }
 
+// Storage version 1 encodes the exact validated household ID bytes as lowercase
+// unpadded base32. Distinct IDs remain distinct on case-insensitive filesystems;
+// the maximum 128-byte ID becomes 205 bytes, within a 255-byte name component.
+// Domain identities and authorization remain case-sensitive and unchanged.
+func householdDirectoryName(household string) string {
+	return householdPathEncoding.EncodeToString([]byte(household))
+}
+
 func (s *BlobStore) blobDirectory(ref domain.ArchiveBlobRef, create bool) (*os.File, error) {
 	parent := s.root
-	for _, component := range []string{ref.HouseholdID, "blobs", ref.SHA256[:2]} {
+	for _, component := range []string{householdDirectoryName(ref.HouseholdID), "blobs", ref.SHA256[:2]} {
 		next, err := s.directory(parent, component, create)
 		if parent != s.root {
 			parent.Close()
