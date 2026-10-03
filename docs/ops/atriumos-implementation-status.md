@@ -144,6 +144,8 @@ T07 公共 CLI 宿主合成探针已验证 OpenClaw 2026.9.8 的 package/manifes
 
 后续本机配置元数据核对：`/Users/ditu/.openclaw.pre-migration/openclaw.json` 的默认 primary 为 `deepseek/deepseek-v4-flash`，普通会话 fallback 为 `deepseek/deepseek-v4-pro`；DeepSeek 插件已 enabled、auth mode 为 api_key。实际公开 provider 包 `@openclaw/deepseek-provider` 版本 2026.9.8 位于 `/Users/ditu/.openclaw.pre-migration/npm/projects/openclaw-deepseek-provider-2481ed984b/node_modules/@openclaw/deepseek-provider`，manifest 的 runtime entry 为 `dist/index.js`、providerCatalogEntry 为 `dist/provider-discovery.js`，端点 `https://api.deepseek.com`。受保护的 state `.env`（0600）存在 DEEPSEEK_API_KEY 键名，未输出密钥、未调用模型或修改运行配置。T07 可显式加载该受信 provider 并按需提供单个密钥，不能依赖独立 worker 自动发现普通 state/npm 安装，也不能复制普通会话/fallback/完整环境；实际 responseModel 与提取质量仍未验证。
 
+独立 provider 加载探针位于 `/var/folders/9n/qh4533dn6db5y_wc4q5v6kr40000gn/T/atriumos-deepseek-catalog-probe-7x_8woxc`：空配置/state/workspace、环境白名单、无 API 密钥且 Node 网络阻断下，显式 load.paths + allowlist 的 `plugins list --json` 返回 archive probe 和 DeepSeek 2026.9.8 均 loaded，后者 providerIds=[deepseek]、无 tool/channel/service。禁 bundled plugins 不妨碍这个显式 provider。无凭据的 models list/refresh 返回空本地目录，不能据此否定插件加载，也不能作为实际模型可调用的证据。仅在临时目录写入探针配置/缓存，未改生产；T07 真实调用门槛不变。
+
 T10–T13 实现前核查已收敛短中文检索、当前发布引用闭包、真实回执渲染、十进制分析及渠道桥接契约。实装代码确认微信首媒体/先推进 cursor 和通用非等待式 hook 不能保证可靠多附件；计划明确固定版本补丁、准入后的整批捕获、冻结槽清单、流式下载、意图与消费分账及独立恢复。当前未修改生产渠道，也未进行真实 IM 附件验收。
 
 T14 独立代码预检确认现有页面默认首位成员、历史展开暂停刷新、档案授权仅 integration、媒体只服务照片、远程命令只能打开 family 首页。开发计划已明确全家默认 DTO、screen 公共快照、独立展示有效期与失效 topic、预览产物、Core 公开分析、返回焦点，以及绑定 screen 的查询回执展示动作。尚未修改前端/生产，也未将已有“档案”Tab 更名视为综合档案能力。
@@ -162,7 +164,9 @@ T16/T17 独立预检补充完整恢复点/证据引用闭包、历史身份而�
 
 修复进行中：PNG 的有界 chunk/CRC + 32 KiB 流式 zlib/行与交错 pass 字节验证，在实施端 16 个真实损坏/正例上通过，包括重新计算 CRC 后截断 IDAT、缺失 IEND、Adler/行数/filter 错误及正常 split/零长 IDAT、Adam7、1-bit/16-bit 灰度。JPEG 不以所有有效图片统一 partial 的方式回避完整性；独立 scratch 探针验证成熟 libjpeg-turbo 3.1.4.1 的严格 warning/error 回调、1/8 IDCT 全 scanline 消费与 finish，可接受 baseline/progressive/灰度/CMYK/含 EOI 的合法 COM，并拒绝比例截断、伪造 EOI 和真正末尾缺失的 6 个损坏样本。结果/代码在 `/tmp/atriumos-strict-image-probe/`；这仍是依赖能力证据，未替代正式 helper 修复验收。
 
-JPEG 依赖最小闭包仅 arm64 libjpeg dylib 与系统 libSystem，复制、相对 install ID、签名后独立运行已实测。实施将固定来源/版本/ABI/头文件/许可/原始及产物哈希并验证搬移运行，避免生产依赖 Codex 目录；缺失或不兼容返回 parser_unavailable。6000×6000 正常 progressive 在 64 MiB 虚拟系数预算下失败、128 MiB 下通过（约 105 MiB RSS），因此正式方案采用明确的 512 MiB 系数预算以保留既定 60 MP 常见输入范围，另有扫描数量/120 秒 deadline；这不是总 RSS 硬上限。WebP 的现有 ImageIO 损坏/重写 RIFF 回归已安全失败，当前不新增 libwebp 依赖。尚无修复提交、需求复审或质量批准。
+JPEG 依赖最小闭包仅 arm64 libjpeg dylib 与系统 libSystem，复制、相对 install ID、签名后独立运行已实测。实施将固定来源/版本/ABI/头文件/许可/原始及产物哈希并验证搬移运行，避免生产依赖 Codex 目录；缺失或不兼容返回 parser_unavailable。6000×6000 正常 progressive 在 64 MiB 虚拟系数预算下失败、128 MiB 下通过（约 105 MiB RSS），因此正式方案采用明确的 512 MiB 系数预算以保留既定 60 MP 常见输入范围，另有扫描数量/120 秒 deadline；这不是总 RSS 硬上限。正式修复端已通过原失败 overlay（JPEG/PNG 均 invalid/complete=false）、36 项完整性用例、3600 万像素 progressive 与搬移/缺失/篡改依赖检查，仍待完成补充修复和双审。
+
+WebP 初始只调整外层 RIFF 的截断样本被 framing 拒绝，不能证明压缩流完整。随后同时重写 RIFF 和 VP8/VP8L chunk 长度的半截 lossless/lossy 文件，仍被 ImageIO 误报 parsed/complete，分别只剩 4/3 片段；根任务在中间 helper 指纹 `95956350fca5513ad2f8d8818a493aefe443014b64a2e2585ae3a30ed0f990f8` 实跑复现。成熟 libwebp 1.6.0 的完整解码状态校验已在 scratch 拒绝两者（status 3/7），并接受正常 lossy/alpha/odd chunk 与 3600 万像素 lossless。实施因此加入固定 libwebp + libsharpyuv 依赖闭包及公开 API 校验，保留正常 WebP 完整提取；外部 1×1 输出不代表内部 lossless 无源图大小分配。新增缺口修复中，尚无修复提交、需求复审或质量批准。
 
 新实施者已完成首轮 Go 进程边界与证据分组的 RED→GREEN：未链接路径的原件通过 FD3 定位读取，调用者句柄/当前偏移保持；稳定片段 ID、未知/重复/截断/多份 JSON、坐标和计数、空白差异与数值/标点冲突、一对多分组、挂起/输出洪泛/异常退出/取消的 `TestNative` 实现端通过。测试 helper 使用 ReadAt，不以 cat 当前偏移迫使生产代码 Seek/reopen。实际 Objective-C helper 和完整合成格式矩阵正在实现，本轮不代表真实 OCR/PDF 验收。
 
