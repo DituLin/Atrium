@@ -179,6 +179,7 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 - T07 提供 PlanChunks/UnderstandChunk/ValidateChunk/MergeChunks 和进程适配，生产调度在 T09 接入。Task.StateJSON 上限 64 KiB，只存版本/产物引用/进度/预算；T09 另外持久化不可变 parse/chunk products。产物键绑定 task/extraction、chunker/prompt/schema、证据 digest 和模型配置指纹；保存产物与推进 checkpoint 同一事务。
 - T09 Core 单 worker 先短事务 Claim/准备授权输入，事务外调用，后短事务校验 lease/principal/policy/StateVersion/extraction 并提交产物；调用中续租，撤销/取消/续租失败终止子进程。重启同一 task，只复用已提交且版本匹配的 chunk，缺失部分重做；不能承诺 provider exactly-once 计费。有限网络退避/schema 最多一次修正，次数/预算持久化；理解完成仅推进 understood，正式发布前不把整个任务称 succeeded。
 - 验收增加有效 JSON 但 length、实际模型错配、chunk 漏覆盖、OCR 冲突被擅自清除、输出洪泛/取消；T09 增加模型返回后提交前中断、checkpoint 后中断、租约重领、模型调用时 SQLite 可写、超过 64 KiB 的全产物恢复。T07 实际 DeepSeek 四领域验证记录 provider/responseModel、字段/角色/引用/覆盖质量和零工具证据；本次预审不计作模型验证。
+- 事件输出为 extraction-local event_proposals，包含临时 ID、事件类型、成员字段引用与区段证据；字段的分组和引用同样验证。模型临时 ID 不具有跨版本含义，不接受模型指定现有 event_id/observation_id。Core 在 T09 持久分配并核对事件区段与观测身份；一份报告可以是 document-root 事件，交易表可逐行分组，不能每个 OCR 片段生成一次事件。
 
 ### T08 — 实体匹配与可撤销关联
 
@@ -210,6 +211,18 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 本任务还负责把 T05–T08 接到持久任务消费者，落地 T07 规定的 parse/chunk 产物与 checkpoint 原子事务、外部调用期间续租/取消、版本匹配恢复及持久预算。大产物不放入 64 KiB Task.StateJSON；在正式事实发布前，仅作为内部候选产物保存，不能被查询/统计当作已确认事实。
 
 红灯：提交中断、并发澄清、重复模型结果、改归属、撤回、私密修订及重新提取；历史事实不能重复计入统计。增加 archive_subject_events 区分物理去重和真实事件，三种计数规则按档案设计验证。
+
+独立发布预审收敛（设计契约，尚未实现）：
+
+- extraction 绑定 document/task、完整 pipeline 指纹及基准 document_revision；parse/chunk/merge products 不可变并保存 digest。SaveProductAndCheckpoint 和 PublishExtraction 留在 store 内部事务，不能拆成 service 的产品保存、建实体和 Finish。发布同时检查 lease/principal/policy/StateVersion、目标 extraction、document_revision、resolution_revision 和受影响实体版本；成功原子切换 active 发布版本、当前事实/关联、outbox 和任务状态。同文件另一个来源可复用已完成且指纹相同的产物并完成自己的任务，不转移任务身份或扩大 ingest 回执内容。
+- Core 建立持久 section/event 与 observation slot 身份，保存物理锚点和规则版本。相同原件的重新提取，仅可比较且唯一的一对一原件锚点可自动复用，例如 OOXML part/table/cell 或 CSV 逻辑记录；PDF 必须验证相同页和 crop/rotation 坐标系，明确几何重合阈值、唯一性与拒绝规则。segment ID、模型临时 ID、姓名和日期不能成为跨提取稳定键。区段 split/merge、覆盖不全或新增事件区段语义不明时保留旧 active 事实，新候选等待澄清；已明确事件中的新增字段不等同新增事件。主体更正只修订关联，不换 event_id。
+- 同一 observation 的值变化保存不可变 revision，发布版本显式引用当前 revision，历史不计入统计。跨文件仅在支持的完整交易标识、类型/签发方唯一且无冲突时归并；多份证明挂同一观测，冲突保存 alternatives，不能叠加金额。疑似重复披露不确定性。重新提取缺字段不自动撤回旧事实；覆盖完整且对应明确才替换。首次 partial 解析可保留有完整证据的确定结果并披露覆盖范围，不能声称整份解析成功。
+- 人工更正、归属、私密为独立修订，重新解析不得覆盖；用户补充值注明 user assertion，不能伪造原文引文。发布、撤回、改归属与私密修改递增 document_revision。私密区域立即限制未脱敏原件、整页缩略图及上下文并使派生内容失效；重新解析无法对应旧私密锚点时继续限制整份原件。人工修订使用独立审计结构，不冒充 0012 中绑定 intake source 的可见性事件。
+- 澄清公开投影只向有 read 的调用者提供 question_id/question_version/waiting_task_version/extraction_id/document_revision、安全证据摘要与允许选项。提交携带这些版本、resolution_key 和 typed answer；自然语言解释出的动作也须在同一仓库事务核验当前问题、允许动作/目标、依赖版本、当前 read + organize 和原始委托有效性，再保存问答并恢复同一 task_id。旧问题/过时答案冲突，回答不刷新原委托、不暴露 lease。沿用 T01 的任意 JSON ResolveWaiting 不能代替本业务验证。任务投影补齐 partial/empty/encrypted/invalid/limit_exceeded 等真实解析状态。
+- 外部调用前事务预留 invocation 与最大预算，结果和 checkpoint 原子提交；调用后崩溃导致计费未知时不退还预留预算。调用、schema 修正、退避及累计预算跨重启保留，耗尽明确终止，Attempts 领取计数不能代替预算。消费者仅领取自己支持的 task kind，不能拿走索引/NAS 任务。
+- T09 建立 legacy 连续 outbox 生产和幂等投影，旧记录写入同一事务入队；legacy record ID 保留修订映射，supersedes 链根对应同一事件。消费读取链当前状态，乱序回放不回退；T17 完成全量回填/恢复验收。T10 的 document_changed(household,document,revision) outbox 在消费者实现前保持待处理，不虚报索引已完成，也不阻塞已确认事实发布；检索读取仍按当前 DB 版本和 legacy 状态过滤。
+
+故障夹具覆盖外部调用/产品提交/发布各中断点、同文件两来源并发、同文不同事件、重 OCR 值更正、root 报告与逐行交易、区段 split/merge、新字段和主体更正后事件 ID、并发/过期/越权澄清、人工值与私密保留、legacy 新增/更正/私密/撤回乱序回放，以及预算耗尽重启不恢复无限重试。
 
 ### T10 — 统一检索与证据
 
