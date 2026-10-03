@@ -41,6 +41,11 @@ type archiveHTTPHarness struct {
 
 func newArchiveHTTP(t *testing.T, enabled bool, permissions ...string) *archiveHTTPHarness {
 	t.Helper()
+	return newArchiveHTTPWithMax(t, enabled, 1024, permissions...)
+}
+
+func newArchiveHTTPWithMax(t *testing.T, enabled bool, maxBytes int64, permissions ...string) *archiveHTTPHarness {
+	t.Helper()
 	ctx := context.Background()
 	db, err := store.Open(ctx, filepath.Join(t.TempDir(), "core.db"))
 	require.NoError(t, err)
@@ -51,9 +56,9 @@ func newArchiveHTTP(t *testing.T, enabled bool, permissions ...string) *archiveH
 	require.NoError(t, err)
 	cfg := config.Defaults()
 	cfg.Archives.Enabled = enabled
-	cfg.Archives.MaxBytes = 1024
+	cfg.Archives.MaxBytes = maxBytes
 	cfg.Archives.UploadTimeout = config.Duration(150 * time.Millisecond)
-	blobs, err := archive.NewBlobStore(filepath.Join(t.TempDir(), "originals"), 1024)
+	blobs, err := archive.NewBlobStore(filepath.Join(t.TempDir(), "originals"), maxBytes)
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, blobs.Close()) })
 	_, token, err := auth.NewIntegrationService(db, nil).Issue(ctx, "test", domain.IntegrationPolicy{Permissions: permissions, HouseholdIDs: []string{home.ID}}, time.Now().Add(time.Hour))
@@ -309,4 +314,83 @@ func TestArchiveHTTPOptionalAssertionPresence(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestArchiveHTTPActualMultipartOverheadBound(t *testing.T) {
+	for _, overhead := range []int{128*1024 - 1, 128 * 1024, 128*1024 + 1, 512 * 1024} {
+		t.Run(fmt.Sprint(overhead), func(t *testing.T) {
+			h := newArchiveHTTPWithMax(t, true, 32<<20, "archive.ingest")
+			body, ct := archiveMultipart(t, validIntakeMetadata, "bytes", "")
+			header := "Content-Type: application/json; pad="
+			padding := overhead - (len(body) - len("bytes")) - len(header) - 2
+			require.Positive(t, padding)
+			header += strings.Repeat("x", padding) + "\r\n"
+			position := bytes.Index(body, []byte("\r\n\r\n")) + 2
+			body = append(append(append([]byte{}, body[:position]...), []byte(header)...), body[position:]...)
+			require.Equal(t, overhead, len(body)-len("bytes"))
+			status, _, raw := h.request(t, "POST", intakePath, ct, body, h.token)
+			expectedStatus, expectedRows := http.StatusOK, 1
+			if overhead > 128*1024 {
+				expectedStatus, expectedRows = http.StatusRequestEntityTooLarge, 0
+			}
+			require.Equal(t, expectedStatus, status, raw)
+			for _, table := range []string{"archive_sources", "archive_tasks"} {
+				var count int
+				require.NoError(t, h.db.SQL().QueryRow(`SELECT count(*) FROM `+table).Scan(&count))
+				require.Equal(t, expectedRows, count, table)
+			}
+		})
+	}
+}
+
+func TestArchiveHTTPFirstWhitespaceTerminatorRejectsEpilogue(t *testing.T) {
+	for _, space := range []string{" ", "\t", " \t "} {
+		for _, epilogue := range []string{"none", "text", "later_delimiter", "extra_part"} {
+			t.Run(fmt.Sprintf("%q/%s", space, epilogue), func(t *testing.T) {
+				h := newArchiveHTTP(t, true, "archive.ingest")
+				body, ct := archiveMultipart(t, validIntakeMetadata, "bytes", "")
+				_, boundary, ok := strings.Cut(ct, "boundary=")
+				require.True(t, ok)
+				closing := []byte("\r\n--" + boundary + "--\r\n")
+				require.True(t, bytes.HasSuffix(body, closing))
+				body = append(bytes.TrimSuffix(body, closing), []byte("\r\n--"+boundary+"--"+space+"\r\n")...)
+				switch epilogue {
+				case "text":
+					body = append(body, []byte("hidden bytes")...)
+				case "later_delimiter":
+					body = append(body, closing...)
+				case "extra_part":
+					body = append(body, []byte("--"+boundary+"\r\nContent-Disposition: form-data; name=\"extra\"\r\n\r\nhidden bytes")...)
+					body = append(body, closing...)
+				}
+				status, _, raw := h.request(t, "POST", intakePath, ct, body, h.token)
+				expectedStatus, expectedRows := http.StatusBadRequest, 0
+				if epilogue == "none" {
+					expectedStatus, expectedRows = http.StatusOK, 1
+				}
+				require.Equal(t, expectedStatus, status, raw)
+				for _, table := range []string{"archive_sources", "archive_tasks"} {
+					var count int
+					require.NoError(t, h.db.SQL().QueryRow(`SELECT count(*) FROM `+table).Scan(&count))
+					require.Equal(t, expectedRows, count, table)
+				}
+			})
+		}
+	}
+}
+
+func TestArchiveHTTPMarkerLikeContentIsPreserved(t *testing.T) {
+	h := newArchiveHTTP(t, true, "archive.ingest")
+	body, ct := archiveMultipart(t, validIntakeMetadata, "placeholder", "")
+	_, boundary, ok := strings.Cut(ct, "boundary=")
+	require.True(t, ok)
+	// Bare LF is ordinary content in CRLF multipart mode. Embedded prefixes and
+	// a boundary followed by a non-delimiter character must also remain bytes.
+	content := "prefix--" + boundary + "-- \r\n\n--" + boundary + "--\t\r\n\r\n--" + boundary + "X\r\nlast"
+	body = bytes.Replace(body, []byte("placeholder"), []byte(content), 1)
+	status, envelope, raw := h.request(t, "POST", intakePath, ct, body, h.token)
+	require.Equal(t, http.StatusOK, status, raw)
+	receipt := envelope["data"].(map[string]any)
+	require.EqualValues(t, len(content), receipt["size_bytes"])
+	require.Equal(t, fmt.Sprintf("%x", sha256.Sum256([]byte(content))), receipt["sha256"])
 }

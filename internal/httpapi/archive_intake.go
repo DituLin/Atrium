@@ -18,7 +18,10 @@ import (
 	"github.com/DituLin/Atrium/internal/domain"
 )
 
-const archiveMetadataLimit = 16 << 10
+const (
+	archiveMetadataLimit = 16 << 10
+	archiveOverheadLimit = 128 << 10
+)
 
 func (a *API) archiveRoutes() {
 	if a.deps.Config == nil || !a.deps.Config.Archives.Enabled || a.deps.Archives == nil {
@@ -26,7 +29,7 @@ func (a *API) archiveRoutes() {
 	}
 	prefix := APIPrefix + "/integrations/archives"
 	timeout := time.Duration(a.deps.Config.Archives.UploadTimeout)
-	a.mux.HandleFunc("POST "+prefix+"/intakes", a.archiveBodyDeadline(timeout, a.deps.Config.Archives.MaxBytes+128*1024, a.requireIntegrationTimeout("archive.ingest", timeout, a.archiveIntake)))
+	a.mux.HandleFunc("POST "+prefix+"/intakes", a.archiveBodyDeadline(timeout, a.deps.Config.Archives.MaxBytes+archiveOverheadLimit, a.requireIntegrationTimeout("archive.ingest", timeout, a.archiveIntake)))
 	a.mux.HandleFunc("POST "+prefix+"/intakes/lookup", a.archiveBodyDeadline(5*time.Second, archiveMetadataLimit, a.requireIntegration("archive.ingest", a.archiveLookup)))
 	a.mux.HandleFunc("GET "+prefix+"/tasks/{id}", a.requireIntegration("archive.read", a.archiveTask))
 }
@@ -138,32 +141,122 @@ func archivePart(part *multipart.Part, name string) error {
 	return nil
 }
 
-// multipart.Reader buffers beyond the closing delimiter and allows epilogues.
-// Track the wire terminator as well, so extra bytes/parts after it cannot be
-// hidden in its read-ahead buffer. This API permits no epilogue.
+// multipart.Reader buffers past closing delimiters and permits epilogues. This
+// constant-space scanner records the first final delimiter, matching Go's
+// isFinalBoundary: --boundary-- followed by space/tab and the selected newline,
+// or EOF. Only the first actual opening delimiter selects CRLF versus LF mode;
+// arbitrary preamble/content lines never select it. No body lines are buffered.
 type archiveEnvelopeReader struct {
-	reader       io.Reader
-	marker, tail []byte
-	total, end   int64
+	reader             io.Reader
+	boundary           []byte // --boundary, without newline or final --
+	total, end         int64
+	position           int
+	state              archiveBoundaryState
+	final, eof, bareLF bool
+	newline, previous  byte // newline: zero before first delimiter, CR or LF after it
 }
+
+type archiveBoundaryState uint8
+
+const (
+	archiveBoundaryPrefix archiveBoundaryState = iota
+	archiveBoundarySuffix
+	archiveBoundaryDash
+	archiveBoundarySpace
+	archiveBoundaryCR
+	archiveBoundaryOther
+)
 
 func (e *archiveEnvelopeReader) Read(p []byte) (int, error) {
 	n, err := e.reader.Read(p)
-	if n > 0 {
-		joined := append(e.tail, p[:n]...)
-		if e.end == 0 {
-			if at := bytes.Index(joined, e.marker); at >= 0 {
-				e.end = e.total - int64(len(e.tail)) + int64(at+len(e.marker))
+	for i, b := range p[:n] {
+		if b == '\n' {
+			lineEnd := byte('\n')
+			if e.state == archiveBoundaryCR {
+				lineEnd = '\r'
+			}
+			complete := e.state == archiveBoundarySuffix || e.state == archiveBoundarySpace || e.state == archiveBoundaryCR
+			eligible := e.newline != '\r' || !e.bareLF
+			if complete && eligible {
+				if e.final {
+					selected := e.newline
+					if selected == 0 {
+						selected = '\r'
+					} // Go starts in CRLF mode before any part.
+					if e.end == 0 && lineEnd == selected {
+						e.end = e.total + int64(i) + 1
+					}
+				} else if e.newline == 0 {
+					e.newline = lineEnd
+				}
+			}
+			e.position, e.state, e.final = 0, archiveBoundaryPrefix, false
+			e.bareLF = e.previous != '\r'
+		} else {
+			switch e.state {
+			case archiveBoundaryPrefix:
+				if b != e.boundary[e.position] {
+					e.state = archiveBoundaryOther
+				} else {
+					e.position++
+					if e.position == len(e.boundary) {
+						e.state = archiveBoundarySuffix
+					}
+				}
+			case archiveBoundarySuffix:
+				switch b {
+				case '-':
+					e.state = archiveBoundaryDash
+				case ' ', '\t':
+					e.state = archiveBoundarySpace
+				case '\r':
+					e.state = archiveBoundaryCR
+				default:
+					e.state = archiveBoundaryOther
+				}
+			case archiveBoundaryDash:
+				if b == '-' {
+					e.final = true
+					e.state = archiveBoundarySpace
+				} else {
+					e.state = archiveBoundaryOther
+				}
+			case archiveBoundarySpace:
+				switch b {
+				case ' ', '\t':
+				case '\r':
+					e.state = archiveBoundaryCR
+				default:
+					e.state = archiveBoundaryOther
+				}
+			case archiveBoundaryCR:
+				e.state = archiveBoundaryOther
 			}
 		}
-		e.total += int64(n)
-		keep := min(len(joined), len(e.marker))
-		e.tail = append([]byte(nil), joined[len(joined)-keep:]...)
+		e.previous = b
 	}
+	e.total += int64(n)
+	e.eof = err == io.EOF
 	return n, err
 }
 func (e *archiveEnvelopeReader) validEnd() bool {
-	return e.end == e.total || e.end == 0 && bytes.HasSuffix(e.tail, e.marker[:len(e.marker)-2])
+	if e.end != 0 {
+		return e.end == e.total
+	}
+	return e.eof && e.final && e.state == archiveBoundarySpace && (e.newline != '\r' || !e.bareLF)
+}
+
+// Count actual content bytes, not the declared size or configured maximum.
+// Receive only calls envelope validation after a successful complete Put.
+type archiveContentReader struct {
+	io.Reader
+	total int64
+}
+
+func (r *archiveContentReader) Read(p []byte) (int, error) {
+	n, err := r.Reader.Read(p)
+	r.total += int64(n)
+	return n, err
 }
 func (a *API) archiveIntake(w http.ResponseWriter, r *http.Request) {
 	fail := func(err error) { WriteError(w, r, archiveRequestError(err)) }
@@ -172,7 +265,7 @@ func (a *API) archiveIntake(w http.ResponseWriter, r *http.Request) {
 		fail(domain.Errorf(domain.CodeInvalidRequest, "expected multipart/form-data"))
 		return
 	}
-	envelope := &archiveEnvelopeReader{reader: r.Body, marker: []byte("\r\n--" + params["boundary"] + "--\r\n")}
+	envelope := &archiveEnvelopeReader{reader: r.Body, boundary: []byte("--" + params["boundary"])}
 	parts := multipart.NewReader(envelope, params["boundary"])
 	metadataPart, err := parts.NextRawPart()
 	if err != nil {
@@ -207,7 +300,8 @@ func (a *API) archiveIntake(w http.ResponseWriter, r *http.Request) {
 		fail(err)
 		return
 	}
-	receipt, err := a.deps.Archives.Receive(r.Context(), auth.FromContext(r.Context()).IntegrationActor(), household.ID, metadata, content, func() error {
+	original := &archiveContentReader{Reader: content}
+	receipt, err := a.deps.Archives.Receive(r.Context(), auth.FromContext(r.Context()).IntegrationActor(), household.ID, metadata, original, func() error {
 		if _, err := parts.NextRawPart(); !errors.Is(err, io.EOF) {
 			return archiveMultipartError(err)
 		}
@@ -216,6 +310,9 @@ func (a *API) archiveIntake(w http.ResponseWriter, r *http.Request) {
 		}
 		if !envelope.validEnd() {
 			return domain.Errorf(domain.CodeInvalidRequest, "invalid archive multipart terminator")
+		}
+		if envelope.total-original.total > archiveOverheadLimit {
+			return domain.Errorf(domain.CodeInvalidRequest, "archive multipart overhead limit exceeded").WithStatus(http.StatusRequestEntityTooLarge)
 		}
 		return nil
 	})
