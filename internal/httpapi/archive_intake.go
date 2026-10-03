@@ -96,6 +96,11 @@ func strictArchiveJSON(reader io.Reader, dst any, required []string, optional ..
 		if bytes.Equal(v, []byte("null")) {
 			return domain.Errorf(domain.CodeInvalidRequest, "null archive metadata field")
 		}
+		// These optional strings use empty internal values for omission, but an
+		// explicitly supplied empty assertion is outside their wire schemas.
+		if (key == "expected_sha256" || key == "visibility_intent") && bytes.Equal(v, []byte(`""`)) {
+			return domain.Errorf(domain.CodeInvalidRequest, "empty archive assertion")
+		}
 	}
 	for _, key := range required {
 		if _, ok := fields[key]; !ok {

@@ -274,3 +274,39 @@ func TestArchiveHTTPLostReceiptRecoveredWithoutResendingOriginal(t *testing.T) {
 	require.Equal(t, taskID, recovered["task_id"])
 	require.Len(t, recovered, 6)
 }
+
+func TestArchiveHTTPOptionalAssertionPresence(t *testing.T) {
+	hash := fmt.Sprintf("%x", sha256.Sum256([]byte("bytes")))
+	for _, tc := range []struct {
+		name, fields string
+		status       int
+	}{
+		{"omitted", "", http.StatusOK},
+		{"hash_omitted_with_inherit", `,"visibility_intent":"inherit"`, http.StatusOK},
+		{"intent_omitted_with_hash", `,"expected_sha256":"` + hash + `"`, http.StatusOK},
+		{"empty_declared_mime_allowed", `,"declared_mime":""`, http.StatusOK},
+		{"empty_hash", `,"expected_sha256":""`, http.StatusBadRequest},
+		{"empty_intent", `,"visibility_intent":""`, http.StatusBadRequest},
+		{"mixed_case_hash", `,"expected_sha256":"","Expected_SHA256":"` + hash + `"`, http.StatusBadRequest},
+		{"mixed_case_intent", `,"visibility_intent":"","Visibility_Intent":"inherit"`, http.StatusBadRequest},
+		{"duplicate_hash", `,"expected_sha256":"","expected_sha256":"` + hash + `"`, http.StatusBadRequest},
+		{"duplicate_intent", `,"visibility_intent":"","visibility_intent":"inherit"`, http.StatusBadRequest},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := newArchiveHTTP(t, true, "archive.ingest")
+			metadata := strings.TrimSuffix(validIntakeMetadata, "}") + tc.fields + "}"
+			body, contentType := archiveMultipart(t, metadata, "bytes", "")
+			status, _, raw := h.request(t, "POST", intakePath, contentType, body, h.token)
+			require.Equal(t, tc.status, status, raw)
+			expectedRows := 0
+			if tc.status == http.StatusOK {
+				expectedRows = 1
+			}
+			for _, table := range []string{"archive_sources", "archive_tasks"} {
+				var count int
+				require.NoError(t, h.db.SQL().QueryRow(`SELECT count(*) FROM `+table).Scan(&count))
+				require.Equal(t, expectedRows, count, table)
+			}
+		})
+	}
+}
