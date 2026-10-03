@@ -142,6 +142,8 @@ T05→T07/T09 证据交接已按实际 API 补充 typed components、原值/派�
 
 T07 公共 CLI 宿主合成探针已验证 OpenClaw 2026.9.8 的 package/manifest、definePluginEntry/registerCli/discovery action 和 api.runtime.llm.complete 可用；独立 OPENCLAW_HOME/state/config/cwd、环境白名单、禁 bundled plugins/shell-env、网络阻断下，echo 一条 JSON 且 stderr 为空。诊断 console 转 stderr，未捕获错误却会在 JSON stdout 与 stderr 传播原 message；根任务已读取四类输出及插件源码。计划因此明确省略请求 execution（direct-provider 仅为返回归因）、纯 machineOutput descriptor、捕获固定错误码与完整宿主生命周期。探针目录 `/var/folders/9n/qh4533dn6db5y_wc4q5v6kr40000gn/T/atriumos-openclaw-cli-probe-pw1kd33w`；没有 provider 调用、现用凭据/配置读取或仓库/安装包修改。这不证明实际 DeepSeek 路由/模型质量，仍须 T07 四领域真实调用验收。
 
+后续本机配置元数据核对：`/Users/ditu/.openclaw.pre-migration/openclaw.json` 的默认 primary 为 `deepseek/deepseek-v4-flash`，普通会话 fallback 为 `deepseek/deepseek-v4-pro`；DeepSeek 插件已 enabled、auth mode 为 api_key。实际公开 provider 包 `@openclaw/deepseek-provider` 版本 2026.9.8 位于 `/Users/ditu/.openclaw.pre-migration/npm/projects/openclaw-deepseek-provider-2481ed984b/node_modules/@openclaw/deepseek-provider`，manifest 的 runtime entry 为 `dist/index.js`、providerCatalogEntry 为 `dist/provider-discovery.js`，端点 `https://api.deepseek.com`。受保护的 state `.env`（0600）存在 DEEPSEEK_API_KEY 键名，未输出密钥、未调用模型或修改运行配置。T07 可显式加载该受信 provider 并按需提供单个密钥，不能依赖独立 worker 自动发现普通 state/npm 安装，也不能复制普通会话/fallback/完整环境；实际 responseModel 与提取质量仍未验证。
+
 T10–T13 实现前核查已收敛短中文检索、当前发布引用闭包、真实回执渲染、十进制分析及渠道桥接契约。实装代码确认微信首媒体/先推进 cursor 和通用非等待式 hook 不能保证可靠多附件；计划明确固定版本补丁、准入后的整批捕获、冻结槽清单、流式下载、意图与消费分账及独立恢复。当前未修改生产渠道，也未进行真实 IM 附件验收。
 
 T14 独立代码预检确认现有页面默认首位成员、历史展开暂停刷新、档案授权仅 integration、媒体只服务照片、远程命令只能打开 family 首页。开发计划已明确全家默认 DTO、screen 公共快照、独立展示有效期与失效 topic、预览产物、Core 公开分析、返回焦点，以及绑定 screen 的查询回执展示动作。尚未修改前端/生产，也未将已有“档案”Tab 更名视为综合档案能力。
