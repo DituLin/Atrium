@@ -109,11 +109,15 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 
 同一 source 比较 hash/size/kind/visibility intent 等固定业务参数，相同重放原 receipt/task，不同返回 idempotency_conflict；临时路径、当前时刻、随机 ID 不参与判等。text 的不同来源即使字节相同也建立不同 logical document；file 同内容在家庭内复用 canonical document。每个新 source 建立自有 receipt/task，跨 principal 不转移旧 task 委托；因此跨渠道同文件是两条 source/两个任务/一个文档。T09 按文档提取与业务事件版本保证不重复统计。
 
+判等中的 hash/size 指实际字节结果；可选 expected_size/expected_sha256 只是传输断言，每次上传均校验，重试时从省略改为提供正确断言不改变业务身份。原名、声明 MIME、规范化后的 visibility intent 属于来源固定元数据，变化须报告来源冲突。
+
 逐槽接收独立提交，多附件成功槽不随失败槽回滚，适配器维护预期槽清单并补传失败槽；T04 不提供虚假的整消息全部成功标记。上传先验证当前权限并记录 policy_version，再在无数据库写锁时 Put，确认 multipart 结束，然后单个写事务重新验证 credential/principal/同一策略代次，先查来源冲突，再建立 blob/document/source/task 和可见性审计。Core 提交而回执丢失由 lookup 恢复；DB 失败留下可复用 blob，不删除物理原件。
 
 `inherit` 只需 ingest，新文档采用既定默认 TV 可见，已有文档保持当前设置。显式 `private` 是组合操作：在查询任何来源键/哈希之前统一要求 ingest + read + organize，新旧文件一致，最终事务再次检查；将既有 public 降为 private 时增加可见性版本并记录 actor/source/前后值/时间，同事务提交。已经 private 不做无意义修订。intake 不接受 public 意图，重发/重新解析不能把 private 提升为公开；也不能静默忽略 private 请求。此统一授权替代无条件“仅 ingest 可设置私密”的模糊解释，不增加人工审核流程。
 
 保留集成鉴权、限流与追踪，但上传独立使用有界 deadline/MaxBytesReader/实际 body read deadline；现有 requireIntegration 五秒 context 不足以处理 32 MiB 流式接收，单独延长 context 也不能终止阻塞 Read。新增默认关闭的档案 intake feature flag，关闭时不注册业务入口、不启动消费者；本任务不改 OpenClaw 工具清单。使用真实临时 Core/SQLite/BlobStore/HTTP 验证，并实际 CLI/curl 走上传→lookup→task 查询；原生产服务保持关闭直至发布任务。
+
+具体配置为 `archives.enabled`（默认 false），与旧 `family_archive` NAS 导出开关分开；原件沿用 T03 的 Layout.Archives（dataDir/archives）。服务层通过领域类型与窄仓库接口交接，archive 包不依赖 store。关闭开关时不初始化原件目录；退出时终止未结束的上传读取再关闭 BlobStore，避免被持有读取锁的阻塞 body 拖住。
 
 红灯：未授权接收、重投、同键不同字节/intent、超限、接收途中取消、文件已写但任务提交失败、回执丢失、上传期间撤销/轮换/策略变化、多个附件部分失败、跨 principal 私密去重、默认重发不公开、private 组合权限和可见性审计原子性。验证：真实临时 HTTP server 上传并查回哈希及任务，不用 mock 代替落盘。
 

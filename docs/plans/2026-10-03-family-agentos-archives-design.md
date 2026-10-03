@@ -249,9 +249,9 @@ TV 列表、详情、搜索片段、原件预览与分析共用同一可见性�
 
 现有 Brain 的“模型轮已消费”账本保留，新增独立 durable inbox 记录接收生命周期，不能把两者合成一个 claimed 布尔值。两库不做伪分布式事务。
 
-1. 可信接入先验证稳定消息身份，为每个附件/文本创建 source_key。将本次待接收原文/附件拷入本机受控 spool 并校验，原子写 inbox manifest；失败不将它说成已接收成功。附件尚未下载只记 downloading 状态和可信渠道引用，不能报告已保存。
-2. inbox 的逐项状态为 staged / submitting / core_saved / failed，并保存 core document_id、task_id 和结果版本；有界后台 reconcile 重试只调用 Core intake，不再次触发模型轮或屏幕动作。
-3. Core 用 source_key 原子建立 source + document 映射 + task，文本可建立来源派生的 provisional event；文件内事件区段需要解析，延后到 T09 在理解提交时建立 event 与事实关联。重复完全相同请求查回同一结果。Core 成功但 Brain 回执丢失时，下次相同提交或 lookup 取回相同任务。
+1. 可信接入先验证稳定消息身份，为每个附件/文本创建本地 inbox 键并保存完整来源 metadata；它不是可由适配器指定的 Core source_key。将本次待接收原文/附件拷入本机受控 spool 并校验，原子写 inbox manifest；失败不将它说成已接收成功。附件尚未下载只记 downloading 状态和可信渠道引用，不能报告已保存。
+2. inbox 的逐项状态为 staged / submitting / core_saved / failed，并保存 Core receipt_id、task_id 和回执字段；有 read 权限返回 document_id 时才附存该引用。有界后台 reconcile 重试只调用 Core intake，不再次触发模型轮或屏幕动作。
+3. Core 根据认证 principal、家庭和来源 metadata 构造 source_key，原子建立 source + document 映射 + task。文本可建立来源派生的 provisional event；文件内事件区段需要解析，延后到 T09 在理解提交时建立 event 与事实关联。重复完全相同请求查回同一结果。Core 成功但 Brain 回执丢失时，下次相同提交或 lookup 取回相同任务。
 4. Brain 仅在确认 Core saved 后将对应槽置 core_saved；spool 按确认与保留窗清理。多附件部分成功不回滚已保存项，未成功槽可继续补齐。
 5. 原始消息重投先查询/修复 inbox。模型轮的原 claim 若已消费，禁止再次运行旧指令；可以返回现有接收结果或说明未完成。独立 inbox reconcile 不要求用户重新发送已完整暂存的附件。
 6. 若崩溃发生在可靠暂存之前且渠道不重投/文件已消失，明确 source_unavailable 并请求重传，不能承诺未保存字节可恢复。证据与指标区分收到渠道事件、已暂存、Core 已保存。
