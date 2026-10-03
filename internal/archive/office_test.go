@@ -475,6 +475,9 @@ func TestXLSXEmptyDefinedNamesDoesNotReduceCoverage(t *testing.T) {
 	}
 }
 func TestSyntheticCorpusExactTextAndCSV(t *testing.T) {
+	if b := fixture(t, "feeding.txt"); !bytes.Equal(b, []byte("张明 1980-03-12 医生周青\r\n喂养70ml\r\n喂养70ml\r\n")) {
+		t.Fatalf("feeding fixture changed original bytes: %q", b)
+	}
 	for _, name := range []string{"feeding.txt", "home.txt", "school.txt"} {
 		b := fixture(t, name)
 		r := parseBytes(t, b, "text", ParseLimits{})
