@@ -282,7 +282,7 @@ func ValidateChunk(p UnderstandingPlan, c UnderstandingChunk, data []byte) (Chun
 				}
 				continue
 			}
-			if v.ComponentKind == "derived_display" || r.Start < v.Start || r.End < r.Start || r.End > v.End {
+			if v.ComponentKind == "derived_display" || r.Start < v.Start || r.End < r.Start || r.End > v.End || r.Start == r.End && parents[v.ComponentID] != "" {
 				return false
 			}
 			rr := []rune(v.Text)
@@ -503,7 +503,7 @@ func validateNormalization(n Normalization, f ExtractedField, views map[string]E
 		if v.ComponentKind == "cell_text" && v.Structure.CellType != "" && v.Structure.CellType != "n" {
 			continue
 		}
-		if _, numericRaw := decimalRat(f.Raw); numericRaw && r.Quote != f.Raw {
+		if r.Quote != f.Raw {
 			continue
 		}
 		source, ok := decimalRat(r.Quote)
@@ -619,8 +619,14 @@ func requiredJSONFields(data json.RawMessage, t reflect.Type) bool {
 		if json.Unmarshal(data, &m) != nil || m == nil {
 			return false
 		}
+		// encoding/json accepts case-insensitive aliases even with
+		// DisallowUnknownFields. Enforce exact tags before decoding instead.
+		allowed := map[string]bool{}
 		for i := 0; i < t.NumField(); i++ {
 			f := t.Field(i)
+			if f.PkgPath != "" {
+				continue
+			}
 			tag := strings.Split(f.Tag.Get("json"), ",")[0]
 			if tag == "-" {
 				continue
@@ -628,6 +634,7 @@ func requiredJSONFields(data json.RawMessage, t reflect.Type) bool {
 			if tag == "" {
 				tag = f.Name
 			}
+			allowed[tag] = true
 			b, ok := m[tag]
 			if !ok {
 				if strings.Contains(f.Tag.Get("json"), "omitempty") {
@@ -636,6 +643,11 @@ func requiredJSONFields(data json.RawMessage, t reflect.Type) bool {
 				return false
 			}
 			if !requiredJSONFields(b, f.Type) {
+				return false
+			}
+		}
+		for key := range m {
+			if !allowed[key] {
 				return false
 			}
 		}
