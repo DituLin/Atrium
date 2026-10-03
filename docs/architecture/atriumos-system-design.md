@@ -1,6 +1,6 @@
 # AtriumOS：家庭 AgentOS 整体系统设计
 
-版本 0.1 · 2026-10-03 · 设计基线，分期实施。实施状态以[开发计划](../plans/2026-10-03-atriumos-development-plan.md)为准，本文不把规划能力列作已上线功能。
+版本 0.1 · 2026-10-03 · 设计基线，分期实施。任务顺序见[开发计划](../plans/2026-10-03-atriumos-development-plan.md)，实际完成状态和证据以[实施记录](../ops/atriumos-implementation-status.md)为准，本文不把规划能力列作已上线功能。
 
 ## 1. 产品定义与边界
 
