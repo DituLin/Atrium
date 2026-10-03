@@ -70,6 +70,7 @@ T04 开发期先对接受控 CLI/测试接收；T13 接入实际 IM。T01–T04 
 - HTTP 身份保留 principal 和 credential ID。写事务内重新检查凭据与 principal；后台任务只绑定 stable principal + policy_version，正常凭据轮换不取消已接受任务，principal 撤销/过期或策略代次变化拒绝后续提交。
 - 授权、租约和状态条件在同一个仓库事务检查，使用锁后时间；不得在 service 先检查再另开写事务。供后续 T04/T09 使用的事务内辅助方法留在 store 包内，使来源/事实/任务状态可原子提交；不新增通用 callback 框架。
 - Get/Events 在同一数据库快照检查当前身份并读取限定家庭的数据；越家庭与不存在资源统一 not_found，失效凭据 unauthorized。幂等重放先重新授权。接收回执只暴露本次接收必要状态，不授予其他档案读取权。
+- 整理权限以家庭为范围，不把原始接入 principal 当作唯一可操作人。同家庭 read + organize 可跨微信/Discord 回答有效委托的澄清或取消任务，并在事件记录实际操作者；原始委托和来源不改。取消不发布结果，当前有权用户可以取消已失效委托的任务；继续处理的澄清仍须原委托有效。
 - 保留 CLI `policy` 完整替换语义，增加 `grant-archives` 与 expected_policy_version 条件，在服务端原子合并明确的 archive 权限/household_ids 并保留全部旧 allowlist；版本冲突不自动覆盖。加入稳定 ID、撤销竞争、策略变化、凭据轮换、跨 principal 重放及完整策略保留测试。
 
 ### T03 — 不可变原件存储
@@ -79,6 +80,14 @@ T04 开发期先对接受控 CLI/测试接收；T13 接入实际 IM。T01–T04 
 红灯：大文件/空输入策略、相同内容复用、hash/size 不符拒绝、路径穿越/符号链接拒绝、写入中断不产生可读成功、未同步原件不能被缓存回收。
 
 实现流式有界接收、MIME 检测、SHA-256、临时文件/fsync/原子发布；文件系统与 SQLite 边界用可重入 reconcile：原件已发布但 DB 失败允许下一次复用，DB 不能引用未发布文件。内容键在家庭内隔离，文档与来源分离。异步孤儿清理只针对无 DB 引用且超过保留窗的临时对象。
+
+文件系统预审收敛：BlobStore 初始化固定本机根和字节上限（初始 32 MiB），Put 接收 household + Reader + 可选预期大小/哈希；返回哈希、实际大小、sniffed MIME 和存储版本，不返回路径。拒绝空输入，读取 max+1 检测超限；T04 负责 HTTP deadline/body 关闭，不为任意阻塞 Reader 启动失控 goroutine。MIME 只按字节检测，Office ZIP 细分在 T05 完成。
+
+根下各层使用目录 fd + `Openat(O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC)`，文件 no-follow 并验证 regular file；严格组件验证。临时文件以随机名/0600 独占创建，流写和校验后 Sync，再用 `Linkat` 原子无覆盖发布。目标存在必须重验 size/hash，一致复用、损坏报错；同步最终目录和新目录的父级，再报告发布。不能用会覆盖目标的 Rename，也不能单凭允许根内 symlink 的 os.Root 声称拒绝符号链接。Layout 只提供 Archives 路径，安全初始化不沿用 MkdirAll+Chmod 的跟随链接流程。维持 macOS 构建与现有 Linux CI 可编译。
+
+文件发布不持有 SQLite 事务。T03 最小表为 household+sha256 唯一的 archive_blobs 与有复合家庭外键的 archive_documents；原始文件名/消息键留 T04 sources。文档不强加 blob_hash 唯一约束，以支持同文不同文本事件。store 包内 metadata/doc 方法供 T04 在同一事务重新授权并建立 source/document/task；DB 失败不能删除可能已有别的引用的 blob。OpenVerified 只接收经上层文档授权得到的内部引用，裸哈希不构成下载权限。孤儿 GC/NAS/解析器暂不在 T03 实现。
+
+故障验收补充：同家庭并发同内容、跨家庭隔离、每层 symlink、FIFO/目录冒充文件、已有 blob 损坏、短读与 Reader 错误、写入/同步/链接失败、发布后 DB 回滚重试及已有引用不被失败清理删除。当前承诺进程崩溃恢复；现有 SQLite synchronous=NORMAL 与普通 fsync 不足以宣称整条接收具备断电硬件缓存耐久。
 
 验证：`go test -race ./internal/archive ./internal/store ./internal/app`。不得向既有只读照片目录写入。
 
