@@ -297,6 +297,18 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 
 验证私密子内容的原件/缩略图/片段/缓存闭包、公开统计独立计算、授权失效后清除、旧请求不覆盖新状态、焦点/返回/滚动保持、Chrome 66 内置与 CSS 限制、OnePlus 实屏。构建命令 `npm --prefix web ci` 后 `npm --prefix web run build`，按 package.json 的测试命令运行，不猜脚本。
 
+独立 TV 入口预审收敛（基于现有页面/授权/命令代码，尚未实现）：
+
+- 默认 `全家 + 全领域`，不自动选择第一个 legacy member；没有预登记人物也展示家庭共有和待处理资料。人物/房屋来自 T08 实体，旧成员用稳定映射兼容。新增档案列表/详情/任务摘要 DTO，不把新字段硬塞进旧 FamilyRecord；包含版本、解析/理解/归属状态、coverage、原件保存及 NAS 状态，不暴露内部 task state、来源账号或私密资料数量。首期过滤包括人物、房屋、领域和待归属状态。
+- 新增配对屏幕专用只读仓库/API 路径；现有 archive 授权仅支持 integration，不能直接复用其私密读取能力。`/archives/*` 有界 GET/HEAD 在同一短读取快照核验当前 active screen、服务端 local household 和公开发布引用闭包，不只信 middleware 身份。列表、筛选、详情、证据、原件及分析固定 audience=tv，客户端不能指定家庭或扩大 audience；符合当前 cookie 只允许 GET/HEAD 的约束，首期 TV 不增加整理写入口。
+- 档案展示有效期独立于全局 24 小时鉴权缓存：初始每 15 秒重验，最多 30 秒未验证展示期，其他接口成功不能续期；展开历史仍重验权限和资料版本。新增 archive generation 及 `archives` topic 的枚举/coalescer/refetch/当前页 refresh 链路。收到撤销/私密失效先清除相关内容再重取，筛选或授权变化使旧请求无效；断线到期隐藏，页面恢复可见先重验。列表、详情、摘要、图像 DOM/object URL 都清除；承诺读取快照授权和有界失效，不声称撤回已发送字节。
+- T14 同时实现档案预览产物与路由；T06 OCR 坐标不是可展示页图。图片/PDF 提供资源有界的页图，文本/CSV/Office 提供保留 locator 的结构化内容预览，明确不是原版式复现；未知/加密文件显示原件已保存且暂不能预览。接口只接受 document ID、版本、页号等白名单参数，无路径/裸 hash；每次读取核对当前公开闭包、`Cache-Control: no-store`，不套用现有照片的 60 秒缓存。验证 cookie 直载和 bearer fetch + object URL，凭据不入 URL。子内容私密而无经过验证的脱敏副本时，禁止未脱敏整份原件/整页图；其他原件仍遵守用户默认可见偏好，不新增自动 PII→private 规则。
+- 摘要和趋势消费 T12 公开分析 DTO 的精确十进制字符串、单位/币种、算法版本、覆盖范围及分母，不从当前分页求全家合计。图表浮点只用于坐标，显示数值和合计仍来自 Core。筛选改变重查；待归属、未决 OCR 和金额角色不明不进入确定统计。year/month/date/datetime/unknown 按精度展示，不统一 Date.parse 补日期。新档案金额代码不依赖 Chrome 66 没有的 BigInt。
+- 保留 family 路由、宋式 tokens/RemoteButton，补有类型的 list/detail/evidence 状态及返回栈；保存筛选、cursor、稳定 item ID、scrollTop 和焦点。资料卡片可遥控进入详情/证据，阅读区滚动不代替卡片操作。刷新不抢焦点；目标撤回后回到最近可用项。沿用现有 legacyApis 与 CSS 兼容检查，并补实际浏览器和 OnePlus 验证。
+- IM→TV 结果增加宿主授权动作，不能把当前只能开 family 首页的 navigate 当作搜索结果展示。宿主工具提交已有查询回执引用；Core 核验当前 archive.read + screens.control、家庭/屏幕范围，创建绑定目标 screen/家庭/有效期的 opaque archive_view_id。命令只携带该引用；TV 再取公开结果，不把 IM 私密结果塞进命令，公开结果重新按 TV 投影计算。使用档案专用授权分支，不沿用“允许所有 NAS source 才可导航”的照片规则；串联 ModelTools/执行器/OpenClaw 工具清单/回执渲染。实际结果加载并呈现才 ack applied，过期/撤权/失败明确返回，不能只路由切换即声称已展示。
+
+最小行为验收覆盖无人预登记的四领域全家列表、房屋/待归属筛选、分页后统计不变、公开 CNY 200 与授权端 250 分离、展开历史/断线/过时请求/图像解码期间私密撤销、详情返回焦点、真实查询回执到 TV accepted→applied，以及 Chrome 66/OnePlus 实屏。此处为后续开发契约，不代表功能通过。
+
 ### T15 — 端到端综合档案体验
 
 新增：`scripts/e2e/archives/` 与混合样本验收脚本（生产数据不提交）。
