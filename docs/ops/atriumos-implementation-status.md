@@ -20,7 +20,7 @@
 | T04 接收 API | 已完成任务级验收 | `6fa1592` + `256aa88` + `8cbad4c`；独立需求/质量复审批准，真实临时 Core、相关 race、全量 Go 回归通过；默认关闭，未部署 |
 | T05 解析器 | 已完成任务级验收 | `20bfed1` + `6c17f41` + `ab21659` + `c75659a`；最终提交独立需求/质量双审批准，全量 Go/race/Linux 编译及原失败复验通过；未接生产消费者 |
 | T06 图片/PDF | 已实现并双审通过 | `7c7bee8` 获需求与质量独立批准；80 个结果、266 项定位及进程/依赖/资源检查通过，未接生产 |
-| T07 分类与事实提取 | 需求复审通过，质量审查中 | `a19ed7a`；四领域及财务对照实际响应、图片真实响应重放、长文档/严格校验/归并回归已核验；待独立质量批准，未接生产消费者 |
+| T07 分类与事实提取 | 需求复审通过，质量修复中 | `a19ed7a`；真实合成响应与回归已核验；质量审查新增数字串绑、JSON 大小写别名、伪造空值三项，待修复复审，未接生产消费者 |
 | T08–T18 | 未开始 | 归属、发布、检索、分析、渠道、TV 和恢复契约已预审；不将设计文档或旧 family 记录作为新能力通过证据 |
 
 ## 基线核对
@@ -224,3 +224,5 @@ root 对 `internal/archive/understanding/evidence/2026-10-04-v2/compact` 独立�
 修复已固定提交 `a19ed7a89e82fa729eca30177218343c1b5f080d`，root 核对工作区干净，另验证 thinking-off/thinking-low/section-guidance 三批历史资源哈希、文件哈希与响应指纹一致。实施端最终 full Go、archive race、Linux 编译、Node 六项、原审查探针与 native 回归通过。已交原独立需求审查者复审全部修复、新增 section policy/区间扫描、共享 schema 及最终真实证据；暂无需求批准，质量审查与 T08 未启动。
 
 独立需求复审 APPROVED `a19ed7a`：原三探针、全部 TestUnderstanding、Node 六项、11 项 native section 正反例、独立 10,000 区间 oracle 通过；从临时副本按原 evaluator 重放五文本响应（包括 education 和“元”为 currency 的明确财务对照）及完整 native 报告通过，17 文件/7 响应/当前资源哈希一致。root 另建 10,000 seeded oracle `/var/folders/9n/qh4533dn6db5y_wc4q5v6kr40000gn/T/atriumos-root-overlap-oracle-q4dtqq0w/overlay.json` 对照朴素判定同样 GREEN（0.390 秒）。无剩余需求阻断项，不将有限合成结果表述为消除随机失败。已启动新的独立质量审查，审完整 T07 范围 `d023044..a19ed7a`；T08 仍待双审完成。
+
+独立质量审查 CHANGES REQUESTED `a19ed7a`：非数字 raw="Alice" 可借附加 quote="70" 获 decimal=70（P1）；Go JSON 接受同时 domain/Domain 并由大小写别名覆盖值（P2）；非空正文可用零宽空 quote/raw 伪造 extracted 空字段（P2）。三者均可通过原校验，其中错误事实仍 complete=true/review=false。root 原样复跑 `/tmp/atrium-t07-quality-review/overlay.json`，前两项 RED（0.185 秒），新增空值项 RED（0.212 秒）。原 TestUnderstanding 和 Node 六项 GREEN 不能覆盖这些缺口。已交同一实施者窄修复，要求数字始终绑定 raw 来源、递归精确 JSON tag 匹配、拒绝非空组件零宽引用但保留真正空组件/derived 协议，并重放保存的真实响应；不额外调用模型，T08 继续等待。
