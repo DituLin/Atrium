@@ -17,7 +17,7 @@
 | T01 持久基础 | 已完成任务级验收 | `02b928a`；需求与质量复审批准，race 与全量 Go 回归通过；未接入 API/worker/生产 |
 | T02 家庭授权 | 已完成任务级验收 | `53fd964` + `2c8f0ea`；需求与质量审查批准，相关 race 复验通过；未部署 |
 | T03 原件存储 | 已完成任务级验收 | `c147a88` + `e40c9c7` + `474c0c1`；独立需求与质量审查批准，race/全量 Go/跨平台编译通过；未部署 |
-| T04 接收 API | 需求审查修复中 | `6fa1592`；独立实测发现显式空哈希/可见性意图被接受，正在补回归与修复；默认关闭 |
+| T04 接收 API | 需求复审中 | `6fa1592` + `256aa88`；显式空哈希/可见性意图已补 HTTP 回归并修复，等待独立复核及质量审查；默认关闭 |
 | T05–T18 | 未开始 | T05–T07 解析与理解契约已预审；不将设计文档或旧 family 记录作为新能力通过证据 |
 
 ## 基线核对
@@ -95,6 +95,8 @@ T03 两类独立审查通过后启动 T04，实现提交 `6fa1592`。archives.en
 实现端 `go test ./...` 与 `go test -race ./internal/archive ./internal/store ./internal/httpapi ./internal/app ./internal/config ./internal/domain` exit 0；最后轮换/回执/二进制 PNG/MIME/审计回归也通过，OpenAPI JSON/引用和差异检查通过。可重复脚本 `scripts/e2e/archive-intake.py` 实际构建并启动临时 Core，以 CLI 授权、curl 上传→lookup→task 查询得到 200/200/200；26 字节 UTF-8/CRLF 原文哈希 `7e75b5c52b2e85cd0ad35beb1f789a062b49d032c7d417ab9d1bc4430e3fa988` 一致，恢复同一回执，状态 saved/queued/NAS pending。只使用临时凭据、目录和合成资料。独立需求审查已启动；尚未完成任务级验收，也未验证真实 IM 附件绑定或部署。
 
 独立需求审查在真实临时 Core 复现两个缺口：显式提供 `expected_sha256:""` 或 `visibility_intent:""` 均返回 200/saved。它们分别违反已提供哈希必须为 64 位小写十六进制、已提供可见性意图只能为 inherit/private 的契约；仅字段省略可以采用默认行为。审查未批准，要求补充 HTTP 400 且来源/任务不提交的回归，再修复并复审。空 declared_mime 在当前 schema 中允许，不计作缺陷。审查另外实跑六包 fresh 测试及 CLI/curl 200/200/200 基线均通过；通过基线不能代替边界校验。
+
+修复提交 `256aa88`，仅在严格 JSON 入口区分上述可选字段的显式空值，保留内部存储 API 和省略默认值。两个真实 HTTP 回归先观察 200 红灯，再验证 400 且没有 source/task 提交；同时覆盖省略、合法声明、空 declared_mime 正例及重复/大小写字段绕过。实现端 focused archive HTTP/upload race 测试通过；独立需求复审进行中。
 
 T05 独立解析预审已补充到开发计划：严格编码白名单、OOXML 容器证明与读取限额、partial/coverage、可定位表格及合并单元格、公式历史缓存/缺值/原始与显示值区分。该预审仅收敛实现契约，解析功能尚未开始。
 
