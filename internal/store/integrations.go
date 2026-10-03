@@ -5,8 +5,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/DituLin/Atrium/internal/domain"
 	"time"
+
+	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // Integrations stores principals independently from replaceable credentials.
@@ -107,6 +108,15 @@ func (r *Integrations) validateReferences(ctx context.Context, p domain.Integrat
 		}
 	}
 
+	for _, id := range p.HouseholdIDs {
+		var n int
+		if err := r.ex.QueryRowContext(ctx, `SELECT COUNT(*) FROM households WHERE id=?`, id).Scan(&n); err != nil {
+			return err
+		}
+		if n != 1 {
+			return domain.Errorf(domain.CodeInvalidRequest, "policy references an unknown household")
+		}
+	}
 	for _, id := range p.MemberIDs {
 		var n int
 		if err := r.ex.QueryRowContext(ctx, `SELECT COUNT(*) FROM family_members WHERE id=?`, id).Scan(&n); err != nil {
@@ -195,4 +205,71 @@ func (r *Integrations) UpdatePolicy(ctx context.Context, id string, policy domai
 		}
 		return affectedOne(res, id)
 	})
+}
+
+// GetCredential looks up a credential reference without trusting cached identity state.
+func (r *Integrations) GetCredential(ctx context.Context, id string) (*domain.IntegrationCredential, error) {
+	var c domain.IntegrationCredential
+	var created, expires string
+	var revoked sql.NullString
+	err := r.ex.QueryRowContext(ctx, `SELECT id,principal_id,created_at,expires_at,revoked_at FROM integration_credentials WHERE id=?`, id).Scan(&c.ID, &c.PrincipalID, &created, &expires, &revoked)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, domain.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	c.CreatedAt = timeVal(created)
+	c.ExpiresAt = timeVal(expires)
+	c.RevokedAt = timePtr(revoked)
+	return &c, nil
+}
+
+// GrantArchives performs CAS, additive merge, reference validation and the final
+// read in one write transaction. A conflict never retries against a newer policy.
+func (r *Integrations) GrantArchives(ctx context.Context, id string, grant domain.ArchiveGrant, now time.Time) (*domain.IntegrationPrincipal, error) {
+	if err := grant.Validate(); err != nil {
+		return nil, err
+	}
+	var out *domain.IntegrationPrincipal
+	err := r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
+		repo := r.WithTx(tx)
+		p, err := repo.Get(ctx, id)
+		if err != nil {
+			return err
+		}
+		if p.PolicyVersion != grant.ExpectedPolicyVersion {
+			return domain.Errorf(domain.CodeConflict, "integration policy version changed")
+		}
+		for _, v := range grant.Permissions {
+			if !p.Policy.Allows(v) {
+				p.Policy.Permissions = append(p.Policy.Permissions, v)
+			}
+		}
+		for _, v := range grant.HouseholdIDs {
+			if !p.Policy.AllowsHousehold(v) {
+				p.Policy.HouseholdIDs = append(p.Policy.HouseholdIDs, v)
+			}
+		}
+		if err := repo.validateReferences(ctx, p.Policy); err != nil {
+			return err
+		}
+		blob, err := json.Marshal(p.Policy)
+		if err != nil {
+			return err
+		}
+		result, err := tx.ExecContext(ctx, `UPDATE integration_principals SET policy_json=?,policy_version=policy_version+1,updated_at=? WHERE id=? AND policy_version=?`, string(blob), FormatTime(now), id, grant.ExpectedPolicyVersion)
+		if err != nil {
+			return err
+		}
+		if err = affectedOne(result, id); err != nil {
+			return err
+		}
+		out, err = repo.Get(ctx, id)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }

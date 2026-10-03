@@ -2,11 +2,12 @@ package auth
 
 import (
 	"context"
-	"github.com/DituLin/Atrium/internal/domain"
-	"github.com/DituLin/Atrium/internal/store/testutil"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/store/testutil"
 )
 
 func TestIntegrationLifecycle(t *testing.T) {
@@ -183,4 +184,30 @@ func TestIntegrationResourcePolicyValidationIsAtomic(t *testing.T) {
 		t.Fatal("revoked screen accepted")
 	}
 	assertUnchanged()
+}
+
+func TestIntegrationIdentityCarriesExactCredentialReference(t *testing.T) {
+	ctx := context.Background()
+	db := testutil.NewDB(t)
+	now := time.Now().UTC()
+	p, token, err := NewIntegrationService(db, func() time.Time { return now }).Issue(ctx, "archive", domain.IntegrationPolicy{}, now.Add(time.Hour))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := httptest.NewRequest("GET", "https://core/", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	id, err := NewAuthenticator(db, NewOriginPolicy(nil), func() time.Time { return now }).Authenticate(ctx, req, ScopeIntegration)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, credential, err := db.Integrations().GetByTokenHash(ctx, HashToken(token))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id.IntegrationCredentialID != credential.ID {
+		t.Fatal("authenticated credential reference lost")
+	}
+	if got := id.IntegrationActor(); got.PrincipalID != p.ID || got.CredentialID != credential.ID {
+		t.Fatalf("actor reference differs: %+v", got)
+	}
 }

@@ -15,8 +15,9 @@ const ScreenCookieName = "atrium_screen"
 
 // Identity is the authenticated caller of a request.
 type Identity struct {
-	Scope       Scope
-	Integration *domain.IntegrationPrincipal
+	Scope                   Scope
+	IntegrationCredentialID string
+	Integration             *domain.IntegrationPrincipal
 	// Screen is set for the screen scope.
 	Screen *domain.Screen
 	// AdminTokenID is set for the admin scope.
@@ -146,4 +147,13 @@ func normalizeOrigin(origin string) string {
 		return ""
 	}
 	return strings.ToLower(u.Scheme + "://" + u.Host)
+}
+
+// IntegrationActor forwards only references, never middleware-cached policy.
+// Archive repositories reauthorize the reference in the protected transaction.
+func (i *Identity) IntegrationActor() domain.IntegrationActor {
+	if i == nil || i.Scope != ScopeIntegration || i.Integration == nil {
+		return domain.IntegrationActor{}
+	}
+	return domain.IntegrationActor{PrincipalID: i.Integration.ID, CredentialID: i.IntegrationCredentialID}
 }

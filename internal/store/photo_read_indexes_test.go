@@ -32,7 +32,7 @@ func TestPhotoReadIndexesUpgradeAndVisibility(t *testing.T) {
 	require.NoError(t, err)
 	n, err := db.Migrate(ctx)
 	require.NoError(t, err)
-	require.Equal(t, 4, n, "v5 needs photo read, family record, revision and archive task migrations")
+	require.Equal(t, 5, n, "v5 needs photo read, family record, revision, archive task and archive authorization migrations")
 	after, err := db.Photos().Get(ctx, photo.ID)
 	require.NoError(t, err)
 	require.Equal(t, before, after)

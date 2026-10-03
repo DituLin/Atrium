@@ -32,26 +32,30 @@ const (
 // Service adapters must validate task-specific schemas and source permissions.
 // LeaseToken is worker authority and must never be sent to ordinary API clients.
 type ArchiveTask struct {
-	ID                string            `json:"id"`
-	HouseholdID       string            `json:"household_id"`
-	Kind              string            `json:"kind"`
-	RequestKey        string            `json:"request_key"`
-	InputJSON         json.RawMessage   `json:"input_json"`
-	Status            ArchiveTaskStatus `json:"status"`
-	Stage             string            `json:"stage"`
-	Attempts          int               `json:"attempts"`
-	AttemptID         string            `json:"attempt_id,omitempty"`
-	Version           int64             `json:"version"`
-	StateVersion      int64             `json:"state_version"`
-	StateJSON         json.RawMessage   `json:"state_json"`
-	ResultJSON        json.RawMessage   `json:"result_json"`
-	ClarificationJSON json.RawMessage   `json:"clarification_json"`
-	AvailableAt       time.Time         `json:"available_at"`
-	LeaseToken        string            `json:"-"`
-	LeaseExpiresAt    *time.Time        `json:"lease_expires_at,omitempty"`
-	LastErrorCode     string            `json:"last_error_code,omitempty"`
-	CreatedAt         time.Time         `json:"created_at"`
-	UpdatedAt         time.Time         `json:"updated_at"`
+	PrincipalID   string `json:"principal_id,omitempty"`
+	PolicyVersion int64  `json:"policy_version,omitempty"`
+	// DelegationErrorCode is computed in authorized client reads, never persisted.
+	DelegationErrorCode string            `json:"delegation_error_code,omitempty"`
+	ID                  string            `json:"id"`
+	HouseholdID         string            `json:"household_id"`
+	Kind                string            `json:"kind"`
+	RequestKey          string            `json:"request_key"`
+	InputJSON           json.RawMessage   `json:"input_json"`
+	Status              ArchiveTaskStatus `json:"status"`
+	Stage               string            `json:"stage"`
+	Attempts            int               `json:"attempts"`
+	AttemptID           string            `json:"attempt_id,omitempty"`
+	Version             int64             `json:"version"`
+	StateVersion        int64             `json:"state_version"`
+	StateJSON           json.RawMessage   `json:"state_json"`
+	ResultJSON          json.RawMessage   `json:"result_json"`
+	ClarificationJSON   json.RawMessage   `json:"clarification_json"`
+	AvailableAt         time.Time         `json:"available_at"`
+	LeaseToken          string            `json:"-"`
+	LeaseExpiresAt      *time.Time        `json:"lease_expires_at,omitempty"`
+	LastErrorCode       string            `json:"last_error_code,omitempty"`
+	CreatedAt           time.Time         `json:"created_at"`
+	UpdatedAt           time.Time         `json:"updated_at"`
 }
 
 // ArchiveTaskUpdate replaces the stage, state, result and error fields together.
@@ -73,6 +77,9 @@ type ArchiveTaskUpdate struct {
 // StateVersion fences checkpoint writes and survives lease renewals. Input and
 // clarification snapshots preserve the checkpoint provenance.
 type ArchiveTaskEvent struct {
+	PrincipalID       string            `json:"principal_id,omitempty"`
+	PolicyVersion     int64             `json:"policy_version,omitempty"`
+	ActorPrincipalID  string            `json:"actor_principal_id,omitempty"`
 	HouseholdID       string            `json:"household_id"`
 	TaskID            string            `json:"task_id"`
 	Version           int64             `json:"version"`

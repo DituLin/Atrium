@@ -21,6 +21,8 @@ type integrationCredentialResponse struct {
 
 func (a *API) adminIntegrationRoutes() {
 	prefix := APIPrefix + "/admin/integrations"
+	a.mux.HandleFunc("GET "+APIPrefix+"/admin/household", a.requireScope(auth.ScopeAdmin, a.adminHousehold))
+	a.mux.HandleFunc("POST "+prefix+"/{id}/grant-archives", a.requireScope(auth.ScopeAdmin, a.adminIntegrationGrantArchives))
 	a.mux.HandleFunc("POST "+prefix, a.requireScope(auth.ScopeAdmin, a.adminIntegrationIssue))
 	a.mux.HandleFunc("GET "+prefix, a.requireScope(auth.ScopeAdmin, a.adminIntegrationList))
 	a.mux.HandleFunc("POST "+prefix+"/{id}/rotate", a.requireScope(auth.ScopeAdmin, a.adminIntegrationRotate))
@@ -107,4 +109,29 @@ func (a *API) adminIntegrationRevoke(w http.ResponseWriter, r *http.Request) {
 	}
 	a.audit(r.Context(), r, "integration.revoke", id, "")
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (a *API) adminHousehold(w http.ResponseWriter, r *http.Request) {
+	household, err := a.deps.DB.LocalHousehold(r.Context())
+	if err != nil {
+		WriteError(w, r, err)
+		return
+	}
+	w.Header().Set("Cache-Control", "no-store")
+	WriteJSON(w, http.StatusOK, household)
+}
+func (a *API) adminIntegrationGrantArchives(w http.ResponseWriter, r *http.Request) {
+	var grant domain.ArchiveGrant
+	if err := decodeIntegrationJSON(w, r, &grant); err != nil {
+		WriteError(w, r, err)
+		return
+	}
+	p, err := auth.NewIntegrationService(a.deps.DB, a.deps.Now).GrantArchives(r.Context(), r.PathValue("id"), grant)
+	if err != nil {
+		WriteError(w, r, notFoundAs(err, "integration"))
+		return
+	}
+	a.audit(r.Context(), r, "integration.grant_archives", p.ID, "")
+	w.Header().Set("Cache-Control", "no-store")
+	WriteJSON(w, http.StatusOK, p)
 }
