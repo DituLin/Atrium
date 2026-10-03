@@ -1319,7 +1319,7 @@
             "adminBearer": []
           }
         ],
-        "description": "Admin only. Atomically compare expected_policy_version, merge the explicit archive permissions and household IDs, validate every reference, increment the generation, and return that transaction's principal. Preserves all existing permissions and screen/source/member/household allowlists; grants no extra permissions. Unknown households are invalid_request. Version mismatch is conflict (409) with no mutation; clients must not automatically overwrite a newer policy.",
+        "description": "Admin only. Atomically compare expected_policy_version, merge the explicit archive permissions and household IDs, validate the requested archive permissions and household references plus the merged policy structure, increment the generation, and return that transaction's principal. Preserves all existing permissions and screen/source/member/household allowlists, including references to subsequently revoked resources; grants no extra permissions and does not restore revoked resources. Unknown households are invalid_request. Version mismatch is conflict (409) with no mutation; clients must not automatically overwrite a newer policy.",
         "responses": {
           "200": {
             "description": "Permission-filtered observation.",

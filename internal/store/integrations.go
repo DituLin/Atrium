@@ -225,8 +225,9 @@ func (r *Integrations) GetCredential(ctx context.Context, id string) (*domain.In
 	return &c, nil
 }
 
-// GrantArchives performs CAS, additive merge, reference validation and the final
-// read in one write transaction. A conflict never retries against a newer policy.
+// GrantArchives performs CAS, additive merge, new-reference validation and the
+// final read in one write transaction. It validates the merged policy structure
+// while preserving old references. A conflict never retries a newer policy.
 func (r *Integrations) GrantArchives(ctx context.Context, id string, grant domain.ArchiveGrant, now time.Time) (*domain.IntegrationPrincipal, error) {
 	if err := grant.Validate(); err != nil {
 		return nil, err
@@ -251,7 +252,13 @@ func (r *Integrations) GrantArchives(ctx context.Context, id string, grant domai
 				p.Policy.HouseholdIDs = append(p.Policy.HouseholdIDs, v)
 			}
 		}
-		if err := repo.validateReferences(ctx, p.Policy); err != nil {
+		// This additive operation preserves legacy references even if their
+		// resources were revoked after the original grant. Runtime access still
+		// checks resource status; complete policy replacement remains stricter.
+		if err := p.Policy.Validate(); err != nil {
+			return err
+		}
+		if err := repo.validateReferences(ctx, domain.IntegrationPolicy{Permissions: grant.Permissions, HouseholdIDs: grant.HouseholdIDs}); err != nil {
 			return err
 		}
 		blob, err := json.Marshal(p.Policy)
