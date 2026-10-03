@@ -129,7 +129,7 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 
 红灯：表格边界、合并单元格、缺失值、CSV 引号/换行、ZIP 炸弹大小、恶意路径、空/损坏/加密文件状态。验证格式矩阵逐项记录；只解析正文字符串不足以通过。
 
-独立解析预审收敛（设计契约，尚未实现）：
+独立解析预审收敛（实施契约；当前完成状态见实施记录）：
 
 - 解析器接收已授权原件的 ReaderAt/大小/哈希与格式 hint，不接收服务器路径，不导入 store，不联网或修改原件。输出 detected_format、parser_version、status、segments、warnings、实际资源计数与覆盖范围。区分 parsed/partial/empty/unsupported/encrypted/invalid/limit_exceeded；I/O 或取消返回 error，nil error 不能单独证明完整解析。segment ID 对同原件、同解析版本稳定，不承诺跨版本相同。
 - locator 明确文本解码后字符范围（半开区间、单位明确）、CSV 逻辑记录/列及解码输入物理行/字节列、DOCX 包内 part URI/段落或 table path/row/grid-column/paragraph、XLSX sheet ID/名称/part URI/A1 地址。解码偏移不冒充原件字节偏移；T06 增加页与归一化矩形。单元格结构保留原始值、数据类型、公式/缓存存在性、样式与合并关系。
