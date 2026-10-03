@@ -212,3 +212,5 @@ T07 首次固定实现提交 `f3af3d2bbe00c539fab896559f8151c44882b400`，根任
 T07 独立需求审查中已复现三项实现缺口，根任务原样运行 `/tmp/atrium-t07-spec-review/overlay.json` 的 `^TestReview` 同样全部 RED（0.217 秒）：raw 日期 2026-10-01 附另一日期证据后可被错误规范为 2026-10-04；同父同范围 4972:5228 的 section 引用在 owned 完整 view 与裁剪 context view 中因 ViewID 不同而合成两份报告且未标 review；约定的 bounded open labels 在 schema/type 缺失并被严格拒绝。审查者继续检查其余边界，尚未出最终报告；这些缺口和既有真实模型失败均未关闭。
 
 独立需求审查最终 NOT APPROVED `f3af3d2`：上述两项 P1、一项 P2 及教育/财务维度真实验收缺口均待修复。审查 fresh 19 项理解定向、process/协议/receipt/隔离、Node 四项、实际 native replay/context 通过；没有把这些成功扩大为完整批准。同一实施者已收到完整修复任务，要求原探针输入保留、跨视图锚点使用原始证据身份、日期绑定实际 raw 来源、补齐开放标签，并在新配置下保存新的实际验证证据，禁止重标旧调用。质量审查和 T08 继续等待需求复审。
+
+审查修复进行中：根任务在未提交改动上实跑日期 raw/derived/partial 三项回归 GREEN（0.242 秒），再原样运行独立 overlay 的 DateCrossBinding 与 SameParentAnchorDifferentViews 两项 GREEN（0.368 秒）。代码将日期候选绑定字段 raw，并以 parse/parent/component/alternative/origin/原始范围等证据身份归并和检查重叠，保留原提议引用。标签与最终版本/实际模型验证仍待完成。实施者对旧教育配置做三次有界合成诊断均返回结构合规，原 unknown-schema 子类型未复现，不能据此编造根因或消除旧失败；财务对照已确认“元”的维度种类误分。后续 v2 结构示例与维度指导须以新证据验证，不再重复旧配置抽样等待成功。
