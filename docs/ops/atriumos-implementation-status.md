@@ -243,3 +243,5 @@ T08 开发中检查发现并交实施者补回归的边界：单文确认不能�
 T08 首次固定实现提交 `0c90a0d598b0c0c2f36f9745617f11e117497c95`，root 核对工作区干净。实施者最终报告 `go test ./...`、store/archive race（34.688/44.877 秒）、Linux amd64 全包编译、archive/store vet 和差异检查全部通过。root 已独立运行重复别名、生日聚合及 undo mention 身份闭包三项回归 GREEN（0.235 秒），最后一项同时验证同文其他独立主体仍可公开、旧合并上下文确认绑定不可继续自动匹配。组件衔接说明位于 `internal/archive/README.resolve.md`；没有模型调用或生产修改。已启动新的独立 T08 需求审查，尚未批准，质量审查及 T09 未启动。
 
 独立需求审查 CHANGES REQUESTED `0c90a0d`：同名同生日可忽略候选已有不同 national ID 的矛盾而关联（P1）；同强 ID 三个 mention 的生日为空/A/B 时，空值者先创建，组内矛盾未覆盖全组（P1）；同批新别名经强 ID 关联后未进入后续临时候选，第三次无 ID 的别名又被创建成新人（P2）。root 原样运行 `/tmp/t08-spec-review-overlay.json` 前两项 RED（10.398 秒），第三项 RED（0.181 秒）。独立基线 archive/store 测试通过，不能替代反例。已交同一实施者修复：候选范围的稳定身份负证据、先核验同身份组一致性、关联后更新临时候选且别名不升级主名。尚无需求批准，质量审查和 T09 继续等待。
+
+修复固定为 `5c276f6867b7b86ed4e3eec0fc07974fc1569fdc`，root 核对工作区干净。规则升级 `entity-resolution/2`，保护身份比较只输出候选/局部 peer 反证，不输出原值或哈希；先检查同身份组，再决策；link 后更新候选日期和 display_alias。增加同批空 DB 不同稳定 ID、输入排列及无关候选/真实新实体正反对照，去除原三层 peer 扫描。root 原样复跑三项 spec overlay GREEN（0.403 秒）；实施者最终原 overlay、full Go、race（store 35.441 秒/archive 45.966 秒）、Linux 编译与 vet 均通过。已交原需求审查者复审完整修复，尚无批准，质量审查与 T09 未启动。
