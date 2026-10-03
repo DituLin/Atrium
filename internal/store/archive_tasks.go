@@ -8,23 +8,42 @@ import (
 	"errors"
 	"time"
 
+	"github.com/DituLin/Atrium/internal/clock"
 	"github.com/DituLin/Atrium/internal/domain"
 )
 
 // ArchiveTasks owns durable tasks, fenced worker leases and atomic checkpoints.
 // Household IDs must come from trusted host context, including worker scope.
 // This repository does not execute JSON payloads or grant source-file access.
-type ArchiveTasks struct{ db *DB }
+type ArchiveTasks struct {
+	db    *DB
+	clock clock.Clock
+}
 
-func (d *DB) ArchiveTasks() *ArchiveTasks { return &ArchiveTasks{db: d} }
+func (d *DB) ArchiveTasks() *ArchiveTasks { return d.ArchiveTasksWithClock(clock.SystemClock{}) }
 
-const archiveTaskColumns = `id,household_id,kind,request_key,input_json,status,stage,attempts,attempt_id,version,state_json,result_json,clarification_json,available_at,lease_token,lease_expires_at,last_error_code,created_at,updated_at`
+// ArchiveTasksWithClock installs a trusted host clock, not a timestamp supplied
+// by a worker or request payload. The clock must support concurrent Now calls.
+// Each write samples it after acquiring the transaction lock, including retries.
+func (d *DB) ArchiveTasksWithClock(c clock.Clock) *ArchiveTasks {
+	if c == nil {
+		c = clock.SystemClock{}
+	}
+	return &ArchiveTasks{db: d, clock: c}
+}
+
+func (r *ArchiveTasks) currentTime() (time.Time, error) {
+	now := r.clock.Now().UTC()
+	return now, archiveTime(now)
+}
+
+const archiveTaskColumns = `id,household_id,kind,request_key,input_json,status,stage,attempts,attempt_id,version,state_version,state_json,result_json,clarification_json,available_at,lease_token,lease_expires_at,last_error_code,created_at,updated_at`
 
 func scanArchiveTask(row interface{ Scan(...any) error }) (*domain.ArchiveTask, error) {
 	var task domain.ArchiveTask
 	var input, state, result, clarification, available, created, updated string
 	var lease sql.NullString
-	err := row.Scan(&task.ID, &task.HouseholdID, &task.Kind, &task.RequestKey, &input, &task.Status, &task.Stage, &task.Attempts, &task.AttemptID, &task.Version, &state, &result, &clarification, &available, &task.LeaseToken, &lease, &task.LastErrorCode, &created, &updated)
+	err := row.Scan(&task.ID, &task.HouseholdID, &task.Kind, &task.RequestKey, &input, &task.Status, &task.Stage, &task.Attempts, &task.AttemptID, &task.Version, &task.StateVersion, &state, &result, &clarification, &available, &task.LeaseToken, &lease, &task.LastErrorCode, &created, &updated)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, domain.ErrNotFound
 	}
@@ -81,11 +100,8 @@ func archiveTaskIn(ctx context.Context, ex execer, household, id string) (*domai
 // Enqueue creates a host-generated task identity, or returns the current task
 // for an identical household/request key. InputJSON remains immutable even after
 // clarification. Changed kind/input under the same key is an idempotency conflict.
-func (r *ArchiveTasks) Enqueue(ctx context.Context, household, kind, requestKey string, input json.RawMessage, now time.Time) (*domain.ArchiveTask, bool, error) {
+func (r *ArchiveTasks) Enqueue(ctx context.Context, household, kind, requestKey string, input json.RawMessage) (*domain.ArchiveTask, bool, error) {
 	if err := archiveIdentifiers(household, kind, requestKey); err != nil {
-		return nil, false, err
-	}
-	if err := archiveTime(now); err != nil {
 		return nil, false, err
 	}
 	normalized, err := domain.NormalizeArchiveObject(input)
@@ -95,6 +111,10 @@ func (r *ArchiveTasks) Enqueue(ctx context.Context, household, kind, requestKey 
 	var out *domain.ArchiveTask
 	replayed := false
 	err = r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
+		now, err := r.currentTime()
+		if err != nil {
+			return err
+		}
 		existing, err := scanArchiveTask(tx.QueryRowContext(ctx, `SELECT `+archiveTaskColumns+` FROM archive_tasks WHERE household_id=? AND request_key=?`, household, requestKey))
 		if err == nil {
 			if existing.Kind != kind || string(existing.InputJSON) != string(normalized) {
@@ -107,8 +127,8 @@ func (r *ArchiveTasks) Enqueue(ctx context.Context, household, kind, requestKey 
 		if !errors.Is(err, domain.ErrNotFound) {
 			return err
 		}
-		out = &domain.ArchiveTask{ID: domain.NewID(), HouseholdID: household, Kind: kind, RequestKey: requestKey, InputJSON: normalized, Status: domain.ArchiveTaskQueued, Stage: "intake", Version: 1, StateJSON: json.RawMessage(`{}`), ResultJSON: json.RawMessage(`{}`), ClarificationJSON: json.RawMessage(`{}`), AvailableAt: now.UTC(), CreatedAt: now.UTC(), UpdatedAt: now.UTC()}
-		_, err = tx.ExecContext(ctx, `INSERT INTO archive_tasks (`+archiveTaskColumns+`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, out.ID, household, kind, requestKey, string(normalized), out.Status, out.Stage, 0, "", 1, "{}", "{}", "{}", FormatTime(now), "", nil, "", FormatTime(now), FormatTime(now))
+		out = &domain.ArchiveTask{ID: domain.NewID(), HouseholdID: household, Kind: kind, RequestKey: requestKey, InputJSON: normalized, Status: domain.ArchiveTaskQueued, Stage: "intake", Version: 1, StateVersion: 1, StateJSON: json.RawMessage(`{}`), ResultJSON: json.RawMessage(`{}`), ClarificationJSON: json.RawMessage(`{}`), AvailableAt: now.UTC(), CreatedAt: now.UTC(), UpdatedAt: now.UTC()}
+		_, err = tx.ExecContext(ctx, `INSERT INTO archive_tasks (`+archiveTaskColumns+`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, out.ID, household, kind, requestKey, string(normalized), out.Status, out.Stage, 0, "", 1, 1, "{}", "{}", "{}", FormatTime(now), "", nil, "", FormatTime(now), FormatTime(now))
 		if err != nil {
 			return err
 		}
@@ -162,11 +182,8 @@ func (r *ArchiveTasks) Events(ctx context.Context, household, id string, afterVe
 // Claim atomically selects due work in one household and issues a new secret
 // token and independent attempt identity. Nil means no task is runnable. Expiry
 // alone revokes worker authority, even before another worker reclaims the task.
-func (r *ArchiveTasks) Claim(ctx context.Context, household string, now time.Time, ttl time.Duration) (*domain.ArchiveTask, error) {
+func (r *ArchiveTasks) Claim(ctx context.Context, household string, ttl time.Duration) (*domain.ArchiveTask, error) {
 	if err := archiveIdentifiers(household); err != nil {
-		return nil, err
-	}
-	if err := archiveTime(now); err != nil {
 		return nil, err
 	}
 	if err := archiveLeaseDuration(ttl); err != nil {
@@ -174,6 +191,10 @@ func (r *ArchiveTasks) Claim(ctx context.Context, household string, now time.Tim
 	}
 	var out *domain.ArchiveTask
 	err := r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
+		now, err := r.currentTime()
+		if err != nil {
+			return err
+		}
 		task, err := scanArchiveTask(tx.QueryRowContext(ctx, `SELECT `+archiveTaskColumns+` FROM archive_tasks WHERE household_id=? AND ((status IN ('queued','retry_wait') AND available_at<=?) OR (status='running' AND lease_expires_at<=?)) ORDER BY available_at,created_at,id LIMIT 1`, household, FormatTime(now), FormatTime(now)))
 		if errors.Is(err, domain.ErrNotFound) {
 			out = nil
@@ -205,11 +226,8 @@ func (r *ArchiveTasks) Claim(ctx context.Context, household string, now time.Tim
 
 // mutate holds the write lock while checking authority and saving a transition.
 // No caller-supplied task snapshot can overwrite a newer checkpoint.
-func (r *ArchiveTasks) mutate(ctx context.Context, household, id, token string, needsLease bool, kind string, now time.Time, change func(*domain.ArchiveTask) error) (*domain.ArchiveTask, error) {
+func (r *ArchiveTasks) mutate(ctx context.Context, household, id, token string, needsLease bool, kind string, change func(*domain.ArchiveTask, time.Time) error) (*domain.ArchiveTask, error) {
 	if err := archiveIdentifiers(household, id); err != nil {
-		return nil, err
-	}
-	if err := archiveTime(now); err != nil {
 		return nil, err
 	}
 	if needsLease {
@@ -219,6 +237,10 @@ func (r *ArchiveTasks) mutate(ctx context.Context, household, id, token string, 
 	}
 	var out *domain.ArchiveTask
 	err := r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
+		now, err := r.currentTime()
+		if err != nil {
+			return err
+		}
 		task, err := archiveTaskIn(ctx, tx, household, id)
 		if err != nil {
 			return err
@@ -233,7 +255,7 @@ func (r *ArchiveTasks) mutate(ctx context.Context, household, id, token string, 
 			out = task
 			return nil
 		}
-		if err := change(task); err != nil {
+		if err := change(task, now); err != nil {
 			return err
 		}
 		if err := archiveSave(ctx, tx, task, kind, now); err != nil {
@@ -248,11 +270,11 @@ func (r *ArchiveTasks) mutate(ctx context.Context, household, id, token string, 
 	return out, nil
 }
 
-func (r *ArchiveTasks) Renew(ctx context.Context, household, id, token string, now time.Time, ttl time.Duration) (*domain.ArchiveTask, error) {
+func (r *ArchiveTasks) Renew(ctx context.Context, household, id, token string, ttl time.Duration) (*domain.ArchiveTask, error) {
 	if err := archiveLeaseDuration(ttl); err != nil {
 		return nil, err
 	}
-	return r.mutate(ctx, household, id, token, true, "renewed", now, func(task *domain.ArchiveTask) error {
+	return r.mutate(ctx, household, id, token, true, "renewed", func(task *domain.ArchiveTask, now time.Time) error {
 		until := now.Add(ttl).UTC()
 		if until.Before(*task.LeaseExpiresAt) {
 			return domain.Errorf(domain.CodeInvalidRequest, "renewal cannot shorten the archive lease")
@@ -263,6 +285,9 @@ func (r *ArchiveTasks) Renew(ctx context.Context, household, id, token string, n
 }
 
 func normalizeArchiveUpdate(update domain.ArchiveTaskUpdate) (domain.ArchiveTaskUpdate, error) {
+	if update.ExpectedStateVersion < 1 {
+		return update, domain.Errorf(domain.CodeInvalidRequest, "archive update requires a checkpoint state version")
+	}
 	if err := archiveIdentifiers(update.Stage); err != nil {
 		return update, err
 	}
@@ -284,7 +309,11 @@ func normalizeArchiveUpdate(update domain.ArchiveTaskUpdate) (domain.ArchiveTask
 	update.ResultJSON, err = domain.NormalizeArchiveObject(update.ResultJSON)
 	return update, err
 }
-func applyArchiveUpdate(task *domain.ArchiveTask, update domain.ArchiveTaskUpdate, status domain.ArchiveTaskStatus) {
+func applyArchiveUpdate(task *domain.ArchiveTask, update domain.ArchiveTaskUpdate, status domain.ArchiveTaskStatus) error {
+	if task.StateVersion != update.ExpectedStateVersion {
+		return domain.Errorf(domain.CodeConflict, "archive checkpoint state version changed")
+	}
+	task.StateVersion++
 	task.Stage = update.Stage
 	task.StateJSON = update.StateJSON
 	task.ResultJSON = update.ResultJSON
@@ -294,24 +323,24 @@ func applyArchiveUpdate(task *domain.ArchiveTask, update domain.ArchiveTaskUpdat
 		task.LeaseToken = ""
 		task.LeaseExpiresAt = nil
 	}
+	return nil
 }
 
 // Checkpoint persists completed stage references without giving up the lease.
 // It does not publish facts or make external side effects exactly-once; those
 // services must use the task/checkpoint identities for their own idempotency.
-func (r *ArchiveTasks) Checkpoint(ctx context.Context, household, id, token string, update domain.ArchiveTaskUpdate, now time.Time) (*domain.ArchiveTask, error) {
+func (r *ArchiveTasks) Checkpoint(ctx context.Context, household, id, token string, update domain.ArchiveTaskUpdate) (*domain.ArchiveTask, error) {
 	update, err := normalizeArchiveUpdate(update)
 	if err != nil {
 		return nil, err
 	}
-	return r.mutate(ctx, household, id, token, true, "checkpointed", now, func(task *domain.ArchiveTask) error {
-		applyArchiveUpdate(task, update, domain.ArchiveTaskRunning)
-		return nil
+	return r.mutate(ctx, household, id, token, true, "checkpointed", func(task *domain.ArchiveTask, now time.Time) error {
+		return applyArchiveUpdate(task, update, domain.ArchiveTaskRunning)
 	})
 }
 
 // Finish atomically publishes the final result and event, rejecting stale leases.
-func (r *ArchiveTasks) Finish(ctx context.Context, household, id, token string, status domain.ArchiveTaskStatus, update domain.ArchiveTaskUpdate, now time.Time) (*domain.ArchiveTask, error) {
+func (r *ArchiveTasks) Finish(ctx context.Context, household, id, token string, status domain.ArchiveTaskStatus, update domain.ArchiveTaskUpdate) (*domain.ArchiveTask, error) {
 	if status != domain.ArchiveTaskSucceeded && status != domain.ArchiveTaskFailed {
 		return nil, domain.Errorf(domain.CodeInvalidRequest, "archive finish requires succeeded or failed")
 	}
@@ -319,42 +348,43 @@ func (r *ArchiveTasks) Finish(ctx context.Context, household, id, token string, 
 	if err != nil {
 		return nil, err
 	}
-	return r.mutate(ctx, household, id, token, true, "finished", now, func(task *domain.ArchiveTask) error { applyArchiveUpdate(task, update, status); return nil })
+	return r.mutate(ctx, household, id, token, true, "finished", func(task *domain.ArchiveTask, now time.Time) error { return applyArchiveUpdate(task, update, status) })
 }
 
-func (r *ArchiveTasks) Retry(ctx context.Context, household, id, token string, update domain.ArchiveTaskUpdate, availableAt, now time.Time) (*domain.ArchiveTask, error) {
+func (r *ArchiveTasks) Retry(ctx context.Context, household, id, token string, update domain.ArchiveTaskUpdate, availableAt time.Time) (*domain.ArchiveTask, error) {
 	if err := archiveTime(availableAt); err != nil {
 		return nil, err
-	}
-	if availableAt.Before(now) || availableAt.Sub(now) > domain.MaxArchiveRetryDelay {
-		return nil, domain.Errorf(domain.CodeInvalidRequest, "archive retry must be due within thirty days")
 	}
 	update, err := normalizeArchiveUpdate(update)
 	if err != nil {
 		return nil, err
 	}
-	return r.mutate(ctx, household, id, token, true, "retry_scheduled", now, func(task *domain.ArchiveTask) error {
-		applyArchiveUpdate(task, update, domain.ArchiveTaskRetryWait)
+	return r.mutate(ctx, household, id, token, true, "retry_scheduled", func(task *domain.ArchiveTask, now time.Time) error {
+		if availableAt.Before(now) || availableAt.Sub(now) > domain.MaxArchiveRetryDelay {
+			return domain.Errorf(domain.CodeInvalidRequest, "archive retry must be due within thirty days")
+		}
+		if err := applyArchiveUpdate(task, update, domain.ArchiveTaskRetryWait); err != nil {
+			return err
+		}
 		task.AvailableAt = availableAt.UTC()
 		return nil
 	})
 }
 
-func (r *ArchiveTasks) Wait(ctx context.Context, household, id, token string, update domain.ArchiveTaskUpdate, now time.Time) (*domain.ArchiveTask, error) {
+func (r *ArchiveTasks) Wait(ctx context.Context, household, id, token string, update domain.ArchiveTaskUpdate) (*domain.ArchiveTask, error) {
 	update, err := normalizeArchiveUpdate(update)
 	if err != nil {
 		return nil, err
 	}
-	return r.mutate(ctx, household, id, token, true, "waiting_input", now, func(task *domain.ArchiveTask) error {
-		applyArchiveUpdate(task, update, domain.ArchiveTaskWaitingInput)
-		return nil
+	return r.mutate(ctx, household, id, token, true, "waiting_input", func(task *domain.ArchiveTask, now time.Time) error {
+		return applyArchiveUpdate(task, update, domain.ArchiveTaskWaitingInput)
 	})
 }
 
 // Cancel revokes a lease immediately. Repeated cancellation is idempotent;
 // succeeded/failed tasks cannot be changed into cancelled tasks.
-func (r *ArchiveTasks) Cancel(ctx context.Context, household, id string, now time.Time) (*domain.ArchiveTask, error) {
-	return r.mutate(ctx, household, id, "", false, "cancelled", now, func(task *domain.ArchiveTask) error {
+func (r *ArchiveTasks) Cancel(ctx context.Context, household, id string) (*domain.ArchiveTask, error) {
+	return r.mutate(ctx, household, id, "", false, "cancelled", func(task *domain.ArchiveTask, now time.Time) error {
 		if task.Status == domain.ArchiveTaskSucceeded || task.Status == domain.ArchiveTaskFailed {
 			return domain.Errorf(domain.CodeConflict, "archive task is already terminal")
 		}
@@ -368,11 +398,8 @@ func (r *ArchiveTasks) Cancel(ctx context.Context, household, id string, now tim
 // ResolveWaiting resumes the same task with a separate clarification object.
 // A key binds the expected waiting version and canonical input. Exact replays
 // return the current task (even after further work), creating no extra event.
-func (r *ArchiveTasks) ResolveWaiting(ctx context.Context, household, id string, expectedVersion int64, resolutionKey string, input json.RawMessage, now time.Time) (*domain.ArchiveTask, bool, error) {
+func (r *ArchiveTasks) ResolveWaiting(ctx context.Context, household, id string, expectedVersion int64, resolutionKey string, input json.RawMessage) (*domain.ArchiveTask, bool, error) {
 	if err := archiveIdentifiers(household, id, resolutionKey); err != nil {
-		return nil, false, err
-	}
-	if err := archiveTime(now); err != nil {
 		return nil, false, err
 	}
 	if expectedVersion < 1 {
@@ -385,6 +412,10 @@ func (r *ArchiveTasks) ResolveWaiting(ctx context.Context, household, id string,
 	var out *domain.ArchiveTask
 	replayed := false
 	err = r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
+		now, err := r.currentTime()
+		if err != nil {
+			return err
+		}
 		task, err := archiveTaskIn(ctx, tx, household, id)
 		if err != nil {
 			return err
@@ -408,6 +439,7 @@ func (r *ArchiveTasks) ResolveWaiting(ctx context.Context, household, id string,
 		}
 		task.Status = domain.ArchiveTaskQueued
 		task.ClarificationJSON = normalized
+		task.StateVersion++
 		task.AvailableAt = now.UTC()
 		if err := archiveSave(ctx, tx, task, "resolved", now); err != nil {
 			return err
@@ -429,7 +461,7 @@ func archiveSave(ctx context.Context, tx *sql.Tx, task *domain.ArchiveTask, kind
 	previousVersion := task.Version
 	task.Version++
 	task.UpdatedAt = now.UTC()
-	result, err := tx.ExecContext(ctx, `UPDATE archive_tasks SET status=?,stage=?,attempts=?,attempt_id=?,version=?,state_json=?,result_json=?,clarification_json=?,available_at=?,lease_token=?,lease_expires_at=?,last_error_code=?,updated_at=? WHERE household_id=? AND id=? AND version=?`, task.Status, task.Stage, task.Attempts, task.AttemptID, task.Version, string(task.StateJSON), string(task.ResultJSON), string(task.ClarificationJSON), FormatTime(task.AvailableAt), task.LeaseToken, FormatTimePtr(task.LeaseExpiresAt), task.LastErrorCode, FormatTime(now), task.HouseholdID, task.ID, previousVersion)
+	result, err := tx.ExecContext(ctx, `UPDATE archive_tasks SET status=?,stage=?,attempts=?,attempt_id=?,version=?,state_version=?,state_json=?,result_json=?,clarification_json=?,available_at=?,lease_token=?,lease_expires_at=?,last_error_code=?,updated_at=? WHERE household_id=? AND id=? AND version=?`, task.Status, task.Stage, task.Attempts, task.AttemptID, task.Version, task.StateVersion, string(task.StateJSON), string(task.ResultJSON), string(task.ClarificationJSON), FormatTime(task.AvailableAt), task.LeaseToken, FormatTimePtr(task.LeaseExpiresAt), task.LastErrorCode, FormatTime(now), task.HouseholdID, task.ID, previousVersion)
 	if err != nil {
 		return err
 	}
@@ -444,7 +476,7 @@ func archiveSave(ctx context.Context, tx *sql.Tx, task *domain.ArchiveTask, kind
 }
 
 func archiveEvent(ctx context.Context, tx *sql.Tx, task *domain.ArchiveTask, kind string) error {
-	event := domain.ArchiveTaskEvent{HouseholdID: task.HouseholdID, TaskID: task.ID, Version: task.Version, Kind: kind, Status: task.Status, Stage: task.Stage, Attempts: task.Attempts, AttemptID: task.AttemptID, InputJSON: task.InputJSON, StateJSON: task.StateJSON, ResultJSON: task.ResultJSON, ClarificationJSON: task.ClarificationJSON, LastErrorCode: task.LastErrorCode, AvailableAt: task.AvailableAt, LeaseExpiresAt: task.LeaseExpiresAt, CreatedAt: task.UpdatedAt}
+	event := domain.ArchiveTaskEvent{HouseholdID: task.HouseholdID, TaskID: task.ID, Version: task.Version, StateVersion: task.StateVersion, Kind: kind, Status: task.Status, Stage: task.Stage, Attempts: task.Attempts, AttemptID: task.AttemptID, InputJSON: task.InputJSON, StateJSON: task.StateJSON, ResultJSON: task.ResultJSON, ClarificationJSON: task.ClarificationJSON, LastErrorCode: task.LastErrorCode, AvailableAt: task.AvailableAt, LeaseExpiresAt: task.LeaseExpiresAt, CreatedAt: task.UpdatedAt}
 	raw, err := json.Marshal(event)
 	if err != nil {
 		return err

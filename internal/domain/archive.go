@@ -42,6 +42,7 @@ type ArchiveTask struct {
 	Attempts          int               `json:"attempts"`
 	AttemptID         string            `json:"attempt_id,omitempty"`
 	Version           int64             `json:"version"`
+	StateVersion      int64             `json:"state_version"`
 	StateJSON         json.RawMessage   `json:"state_json"`
 	ResultJSON        json.RawMessage   `json:"result_json"`
 	ClarificationJSON json.RawMessage   `json:"clarification_json"`
@@ -54,22 +55,28 @@ type ArchiveTask struct {
 }
 
 // ArchiveTaskUpdate replaces the stage, state, result and error fields together.
+// ExpectedStateVersion must match the worker's source checkpoint. It starts at
+// one and advances on payload replacement or clarification, independently of
+// event Version. Claims, renewals and cancellation preserve StateVersion.
 // Nil state/result values mean empty objects, not partial merges. A worker can
 // reuse persisted completed-stage references after reclaim without reparsing.
 type ArchiveTaskUpdate struct {
-	Stage         string
-	StateJSON     json.RawMessage
-	ResultJSON    json.RawMessage
-	LastErrorCode string
+	ExpectedStateVersion int64
+	Stage                string
+	StateJSON            json.RawMessage
+	ResultJSON           json.RawMessage
+	LastErrorCode        string
 }
 
 // ArchiveTaskEvent is an immutable transition snapshot. AttemptID is an audit
-// identity, distinct from the secret lease token. Version also identifies the
-// checkpoint version; input and clarification snapshots preserve its provenance.
+// identity, distinct from the secret lease token. Version orders all events;
+// StateVersion fences checkpoint writes and survives lease renewals. Input and
+// clarification snapshots preserve the checkpoint provenance.
 type ArchiveTaskEvent struct {
 	HouseholdID       string            `json:"household_id"`
 	TaskID            string            `json:"task_id"`
 	Version           int64             `json:"version"`
+	StateVersion      int64             `json:"state_version"`
 	Kind              string            `json:"kind"`
 	Status            ArchiveTaskStatus `json:"status"`
 	Stage             string            `json:"stage"`

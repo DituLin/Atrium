@@ -11,6 +11,7 @@ CREATE TABLE archive_tasks (
  attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
  attempt_id TEXT NOT NULL DEFAULT '',
  version INTEGER NOT NULL CHECK (version >= 1),
+ state_version INTEGER NOT NULL CHECK (state_version >= 1),
  state_json TEXT NOT NULL CHECK (json_valid(state_json) AND json_type(state_json)='object'),
  result_json TEXT NOT NULL CHECK (json_valid(result_json) AND json_type(result_json)='object'),
  clarification_json TEXT NOT NULL CHECK (json_valid(clarification_json) AND json_type(clarification_json)='object'),
