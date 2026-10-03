@@ -6,7 +6,7 @@
 
 **Architecture:** 模块化 Go Core 负责持久任务、原件、实体、事实、权限和索引；隔离解析器与受控模型工作进程负责理解；OpenClaw 提供 IM 接入，React TV 提供已有风格的全家档案展示。保留现有 family 记录、屏幕与影像服务。
 
-**Tech Stack:** Go / modernc SQLite / React + TypeScript / OpenClaw + DeepSeek；macOS Vision/PDFKit 解析辅助进程；Office 开放格式解析器。新增依赖必须锁定版本并验证安装与故障路径。
+**Tech Stack:** Go / modernc SQLite / React + TypeScript / OpenClaw + DeepSeek；macOS Vision/PDFKit（Objective-C）解析辅助进程；Office 开放格式解析器。新增依赖必须锁定版本并验证安装与故障路径。
 
 ## 0. 执行规则与基线
 
@@ -89,11 +89,11 @@ T04 开发期先对接受控 CLI/测试接收；T13 接入实际 IM。T01–T04 
 
 ### T06 — macOS 图片 OCR 与 PDF
 
-新增：`adapters/macos-archive-parser/` Swift 命令行、构建说明、合成样本；`internal/archive/native_parser.go` 及测试。使用 Vision/PDFKit，进程 stdout 只输出协议，stderr 不含原文。
+新增：`adapters/macos-archive-parser/` Objective-C 命令行、构建说明、合成样本；`internal/archive/native_parser.go` 及测试。使用 Vision/PDFKit，进程 stdout 只输出协议，stderr 不含原文。
 
 红灯：中英文混排、旋转、双栏、扫描 PDF、混合文本/扫描页、页数上限、坏图/超大像素、进程超时；逐页 JSON 坐标能回到原件。无平台能力时返回 parser_unavailable，不能丢原件或宣称空成功。
 
-验证：本机真实运行 Swift 辅助程序，逐字段核对合成样本；Go 测超时/协议/资源限制。先展示原图和提取定位检查，再记录准确率；表格仍不可靠时保留待核对并报告，不删需求。
+验证：本机真实运行原生辅助程序，逐字段核对合成样本；Go 测超时/协议/资源限制。先展示原图和提取定位检查，再记录准确率；表格仍不可靠时保留待核对并报告，不删需求。
 
 ### T07 — 分类与事实提取执行器
 
@@ -171,7 +171,7 @@ T04 开发期先对接受控 CLI/测试接收；T13 接入实际 IM。T01–T04 
 
 原件、提取版本、实体与关联、事实、业务事件稳定 ID/归并证据/文档事实关联及索引重建信息的清单包含哈希及 schema；先文件后清单，全部读回成功才确认。导入到新目录，校验引用闭包、权限范围、冲突、版本与大小。恢复不重放旧操作/通知。
 
-验收：NAS 断开/错误挂载、写一半、损坏哈希、缺文件、重复恢复、旧家人 JSON 与新归档共存、完整恢复后四领域检索一致。
+验收：NAS 断开/错误挂载、写一半、损坏哈希、缺文件、重复恢复、旧家人 JSON 与新归档共存、完整恢复后四领域检索及三类事件计数、账单/付款凭证归并结果一致。
 
 ### T17 — 迁移、性能与发布
 
