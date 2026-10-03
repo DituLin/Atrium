@@ -150,6 +150,16 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 
 验证：本机真实运行原生辅助程序，逐字段核对合成样本；Go 测超时/协议/资源限制。先展示原图和提取定位检查，再记录准确率；表格仍不可靠时保留待核对并报告，不删需求。
 
+独立原生解析预审收敛（设计契约，尚未实现）：
+
+- Go 接收 fresh OpenVerified 文件句柄，ExtraFiles 将原件交给 helper 的 FD 3，不传原件路径、不从 File.Name 重开。helper fstat 检查普通文件和大小，有界 pread 后使用 PDFKit/ImageIO data API。可信本机配置固定绝对 helper 路径；固定参数、小型 stdin 配置、必要环境白名单、不经 shell。解析器不依赖 store，不新增裸哈希读取入口。
+- stdout 仅一个版本化 JSON，复用 T05 status/segments/coverage，加 engine 指纹（helper/OS build/Vision revision/languages/settings）、页几何、origin/alternatives/requires_review。页码从 1 开始，图片视为一页。矩形统一为显示方向、左上原点、归一化 `[x,y,width,height]`；Vision 下左原点转为 `(x,1-y-h,w,h)`。PDF native 与 raster OCR 共用 crop box、旋转、平移变换，避免二次旋转。若保留 NSRange 标明 utf16_code_unit，最低只承诺页和矩形，不冒充字符或原件字节偏移。
+- 每个允许处理的 PDF 页面都渲染 OCR，不能因存在文本层或字符阈值而跳过。原生文本按行定位；只有位置匹配明确且除空白外文本一致，才组成同一证据组，保留 native 原文与 OCR alternative。不能先规范数字、负号、小数点或日期再当一致。重叠冲突/一对多不明确是一个 requires_review 组，不是两条独立事实候选；native 无视觉对应标 native_unconfirmed，OCR 独有区域保留。几何排序只用于稳定输出，不把数组顺序当行列、主体、单位关系。segment 标识不使用 Vision UUID，版本包含引擎/设置指纹，不承诺 OS 升级后 OCR 不变。
+- ImageIO 关闭预解码缓存，先查实际类型/帧数/尺寸/EXIF 1–8，校验有限正尺寸和乘法溢出，再受限 thumbnail 解码。若 thumbnail 已应用方向变换，Vision 按 Up 处理。初始限额为图片 60 MP/最长边 16,384、单页 raster 16 MP/最长边 4,096、PDF 100 页、文本 2 MiB、20,000 segments、stdout 8 MiB；alternatives 也计入。多帧首期可明确 unsupported，不能只取首帧称完整。101 页预检 limit_exceeded，逐页释放对象；先一个并发 helper，性能验收后再调整。输入/raster 限额不是 PDFKit 内部解码的硬内存上限。
+- Accurate、明确 revision 与语言配置，预检实际支持 zh-Hans/en-US，不静默降至英文/Fast；繁体另做实际夹具后宣称支持。parsed 只表示目标页文本提取流程完成，不等于 OCR 零错误；部分页失败为 partial，全部已处理但未识字为 empty/no_text_detected。PDF isLocked 才表示当前密码阻止读取，isEncrypted 不足以判断；首版不接收密码。复制限制记录为限制元数据，按实际可读取/渲染能力报告，不能仅因 allowsCopying=false 就误称损坏/加密。平台/helper/语言缺失返回类型化 parser_unavailable，保留原件。
+- 解析专属总 deadline 初以 120 秒做基准，不沿用视频 15 秒；不能把总超时说成硬每页超时。CommandContext、有界 stdout/stderr（stderr 64 KiB）、超限取消、WaitDelay；Start 成功后一次 Wait 并在回收前持有并发槽。进程组取消若采用须实测，Process.Kill 不代表杀整个组。只接受成功退出和唯一完整 JSON，严格校验版本/页码/有限矩形/字符串数组/覆盖计数。生产错误仅固定码，不传播 NSError、原始 stderr、参数或识别文字；崩溃/超时/坏协议不能变成 empty/parsed。
+- 实际夹具覆盖中英姓名/日期/金额/小数/负号/单位/区间、物理旋转与 EXIF 镜像、双栏表格、纯文本 PDF/扫描 PDF/扫描正文+文字页脚/多页混合、native/OCR 数字冲突、非零 crop box 与 90/180/270 度页旋转、非 BMP 字符、空白/损坏/锁定/101 页/超像素/多帧。Go helper 夹具覆盖挂起/取消/输出洪泛/半截或多份 JSON/坏版本/NaN 或越界框/退出异常与无残留进程。保存引擎指纹、原图与框叠加图，比较字段和框覆盖范围，不以整段 OCR 快照或仅字符串出现代替证据关系验证。
+
 ### T07 — 分类与事实提取执行器
 
 新增：`internal/archive/understand.go`、`understand_test.go`、版本化 schema/prompt；受控 Agent worker 适配在 `adapters/openclaw/archive-worker.mjs`。
