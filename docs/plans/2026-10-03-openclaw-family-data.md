@@ -144,3 +144,10 @@ Latest stable OpenClaw running; DeepSeek working; IM input routed and usable; gr
 - Reload generation 7 logged old provider cleanup timeouts. Subsequent live Discord ready/connected state and real gateway tool calls (failures=0) verified active operation; Weixin remains starting with activity, not proven messaging. Actual attached Android family navigation sequence303 applied and screenshot inspected.
 - Reconfirmed installed and npm stable OpenClaw both 2026.9.8; installed artifacts match verified build. go vet passed. Final requirement/evidence table is in docs/ops/family-records.md. No extra feature work remains from this plan; actual IM input/reply is the unresolved completion gate.
 - The same missing real IM verification has persisted across the mapper audit, revision implementation and deployment turns. Independent implementation and acceptance work is now complete. No inbound event has arrived and no permission to send an IM message on the user's behalf was given; a user private query is needed to finish this gate. Do not claim goal complete.
+
+
+## Completion evidence — real Discord roundtrip
+
+- User confirmed receipt of the requested private IM query response. Fresh channel status shows Discord inbound/outbound at 19:29 local; the durable ingress ledger now has one claim.
+- Read-only inspection of the actual Discord session transcript confirms DeepSeek V4 Flash invoked home_list_family_members and home_list_family_records for abu, both successful; response returned the real empty Atrium record list and was received by the user.
+- This resolves the final blocked gate. Original goal requires an IM app; Discord is the verified path. Weixin transport and manufacturer-specific television hardware are explicitly unverified, not claimed as accepted. Core/model write→NAS→TV, corrections/retraction/recovery, branch/deployment/style/tests remain supported by the previously recorded evidence. No pending implementation or required acceptance work remains for the original objective.

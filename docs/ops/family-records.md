@@ -1,6 +1,6 @@
 # 家庭记录与 NAS 归档
 
-本功能在 `codex/openclaw-family-data` 分支开发中。当前已实现记录仓库、授权 HTTP API 和后台 JSON 归档。OpenClaw 工具已实现并通过实际 Core/MCP/Brain 测试；TV 图表已实现，IM 路由和完整实机验收尚未完成，不能把下面的 HTTP 验证当作完整业务验收。
+本功能在 `codex/openclaw-family-data` 分支开发中。当前已实现记录仓库、授权 HTTP API 和后台 JSON 归档。OpenClaw 工具已实现并通过实际 Core/MCP/Brain 测试；TV 图表已实现；Discord 私聊已完成真实入站、工具读取和用户收件确认。写入、NAS 与显示另经隔离真实模型和配对浏览器验证。微信传输和用户电视厂商硬件未验证。
 
 ## 数据与权限
 
@@ -74,9 +74,9 @@ SMB I/O 最多占一个归档工作槽，调用等待上限 20 秒。无法取�
 
 ## 当前验证与剩余事项
 
-已有测试覆盖 API 权限、成员范围、私密记录投影、重复消息、冲突正文、重启后持久数据、并发重放、NAS 身份错误、意外本地盘、损坏档案和崩溃重试。完整 IM → OpenClaw → Atrium → NAS → TV 验证未完成。
+已有测试覆盖 API 权限、成员范围、私密记录投影、重复消息、冲突正文、重启后持久数据、并发重放、NAS 身份错误、意外本地盘、损坏档案和崩溃重试。Discord 已验证真实私聊入站、Atrium 读取和用户收到回复；写入→NAS→TV 链路在隔离环境经过真实模型验证，未伪造正式家庭记录。
 
-基础模型写入、NAS 实际导出、配对浏览器及 OnePlus 显示已验证；NAS 恢复和持久 IM 去重已有测试。更正/撤回已部署，隔离真实模型、NAS 和配对浏览器验收均通过。实际 IM 收发和用户 TV 硬件仍未验证。不要把测试示例导入家庭真实记录。
+基础模型写入、NAS 实际导出、配对浏览器及 OnePlus 显示已验证；NAS 恢复和持久 IM 去重已有测试。更正/撤回已部署，隔离真实模型、NAS 和配对浏览器验收均通过。Discord 实际收发已验证；微信传输与用户 TV 厂商硬件未验证。不要把测试示例导入家庭真实记录。
 
 ### TV family page
 
@@ -98,7 +98,7 @@ NAS `/Volumes/home/AtriumFamily` 已建立身份标记，生产配置启用归�
 
 微信插件从 2.4.3 更新为 2.4.9，消除了旧 plugin-sdk/channel-runtime 导入错误。状态为 running=true，但 lifecycle=starting；Discord 两个账号 connected=true，主动 HTTP probe 出现 ECONNRESET。因此暂不声称微信/Discord 实际收发验收完成，需真实私聊验证。已请求维护者发送只读查询；本任务没有向任何 IM 联系人主动发消息。
 
-待完成：实际 IM 入站与回复验证。OnePlus 测试机不等同于用户电视，未验证长期运行或厂商遥控差异。
+Discord 入站与回复验收已补齐，见下方最新记录。OnePlus 测试机不等同于用户电视，未验证长期运行或厂商遥控差异。
 
 ## 从 NAS 恢复家庭记录
 
@@ -140,8 +140,15 @@ NAS `/Volumes/home/AtriumFamily` 已建立身份标记，生产配置启用归�
 | TV 分类、图表、既有风格 | 配对浏览器无 API mock：成长更正/撤回刷新、心率图、体检事项及饮食计划，分类键盘操作及无页面错误；1920 截图已检查。此前 804 分辨率也通过 |
 | Android TV 容器部署 | 已连接 OnePlus 测试设备 sequence=303 family 命令 applied，实屏显示阿布空记录；未接用户电视，不声称厂商遥控或长期运行验证 |
 | 权限与重复投递 | Go 全量测试、store/archive/HTTP race、49 项插件测试、go vet、Web/Go 构建通过；同成员权限、私密投影、持久入站去重和实际安装 mapper 检查通过 |
-| 真实 IM 输入/回复 | **未验证，阻塞完整验收**。实际频道无入站消息；CLI、框架合成上下文不替代此项。需要用户向现有机器人发“查询阿布已有的家庭记录”，确认回复并核对入站轨迹 |
+| 真实 IM 输入/回复 | **Discord 已验证（19:29）**：真实入站触发 DeepSeek 调用成员和记录查询，两个工具成功，回复返回阿布空记录；用户确认收件，去重账本新增一次接收。微信传输仍未验证，不声称两个渠道均通过 |
 
 验收文件保存在私有 `~/Atrium/family-acceptance` 与 `~/Atrium/family-staging`，未提交私人配置或凭据。`model-correction.json`、`model-retraction.json`、`model-categories.json` 是真实模型回执；`revision-browser.log`、`categories-browser.log` 和相应 PNG 是实际配对页面证据。隔离 Core 已停止。为完成测试清理，NAS 上的 `AtriumFamilyAcceptance-20261003` 已移除，七个文件先逐一验证哈希并转存本机 `family-acceptance/nas-evidence`；正式归档 `/Volumes/home/AtriumFamily` 未受影响。旧验收配置仅保留为证据，重跑需重新建立隔离根目录，不能误用正式成员。
 
 正式入口当前仅授权已建立的阿布；其他家庭成员应先按“数据与权限”说明创建稳定 ID 并加入接入身份白名单。没有猜测家人姓名、关系或录入任何真实健康数值。
+
+
+### IM 验收补齐（2026-10-03 19:29，Asia/Singapore）
+
+用户确认收到机器人回复后，核对当前网关与 agent SQLite：Discord default 有对应入站与出站时间；该 Discord session 的 DeepSeek V4 Flash 实际调用 `home_list_family_members` 与 `home_list_family_records(member_id=abu)`，两次结果 isError=false，返回成员阿布及空记录。最终回复与用户确认一致。宿主 `brain_inbound_messages` 从 0 增至 1，说明实际 before_dispatch 接收与持久认领生效。未使用 CLI 模拟这次 IM 入站，未主动代用户向联系人发消息。
+
+本机私有摘要为 `~/Atrium/family-staging/im-acceptance-summary.json`，原始会话保留在 OpenClaw 自身存储，不复制私人会话或账号标识进仓库。原目标的 IM app 路径以 Discord 验收完成；微信仅保持接线配置，不宣称其收发验证完成。其他实现、部署、写入/读取、NAS、修订恢复、界面与测试证据见上表。可以开始通过现有 Discord 机器人录入真实数据，是否 TV 展示须由用户明确指定。
