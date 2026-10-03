@@ -19,7 +19,7 @@
 | T03 原件存储 | 已完成任务级验收 | `c147a88` + `e40c9c7` + `474c0c1`；独立需求与质量审查批准，race/全量 Go/跨平台编译通过；未部署 |
 | T04 接收 API | 已完成任务级验收 | `6fa1592` + `256aa88` + `8cbad4c`；独立需求/质量复审批准，真实临时 Core、相关 race、全量 Go 回归通过；默认关闭，未部署 |
 | T05 解析器 | 已完成任务级验收 | `20bfed1` + `6c17f41` + `ab21659` + `c75659a`；最终提交独立需求/质量双审批准，全量 Go/race/Linux 编译及原失败复验通过；未接生产消费者 |
-| T06 图片/PDF | 需求复审发现剩余覆盖问题 | `c92e58c` 的 PNG/JPEG/WebP 修复通过；截断 BMP 仍被标为完整，根任务复现后已交修复；未获最终需求/质量批准 |
+| T06 图片/PDF | BMP 覆盖修复已提交，需求复审中 | `7c7bee8` 保留未验证格式 OCR 并强制 incomplete/review；原 BMP 探针 GREEN，80 个结果及 266 项定位通过；未获最终需求/质量批准 |
 | T07–T18 | 未开始 | 理解、归属、发布、检索、分析、渠道、TV 和恢复契约已预审；不将设计文档或旧 family 记录作为新能力通过证据 |
 
 ## 基线核对
@@ -181,3 +181,5 @@ T06 完整性修复提交 `c92e58c1af9f2e496db13372749baea6bf0fcf5b`，根任务
 独立需求复审仍未批准 `c92e58c`：原 JPEG/PNG 探针、全部实际 native 测试（23.709 秒）、资源/ABI 和另外 12 个重新封装的截断 lossy/lossless WebP 均通过；但允许列表中的 BMP 绕过完整性检查。合成报告转 BMP 后原件有 19 个字段，截为 25% 返回 empty/complete=true/0 组，截为 50% 返回 parsed/complete=true/7 组。根任务运行 `/tmp/atriumos-t06-spec-probes/repair/bmp-overlay.json` 的 `TestSpecReviewBMPCoverage`，在最终指纹 bcd463b 上独立复现同样失败。已交原实施者作窄修复：未独立验证完整性的其他图像路径返回明确不完整/不支持及待核对状态，保留已验证 PNG/JPEG/WebP 正常支持，不要求再实现其他完整解码器；README 的未验证说明不能替代机器可读覆盖状态。质量审查继续等待需求复审批准。
 
 BMP 覆盖窄修复已在未提交实现上由根任务独立复测：不改原 overlay/input，helper 指纹 `9c9c4ac321b6debbf9909e42469671f4ee6f726f557a7712afb6e657828cdf1c` 下，25% BMP 为 partial/complete=false/0 组，50% BMP 为 partial/complete=false/7 组，`TestSpecReviewBMPCoverage` GREEN。实现保留未独立验证格式的可读 OCR，以 `image_integrity_unverified` 与 `image_integrity_validation` skipped feature 明确限制，并在片段 ID 哈希前继承 requires_review。实施端另报告正常 BMP/GIF/单页 TIFF/HEIC、空白 BMP 和结构无效/多帧保留行为通过；最终提交、全量检查及独立复审仍待完成，不把此窄探针当 T06 验收。
+
+上述窄修复已提交 `7c7bee8b8c01fed7622d5de4d132e7c896c1d29f`，根任务核对工作区干净。实施端最终验证 80 个夹具结果、266/266 字段定位、两份未改动审查 overlay、全量 Go、archive race、Linux 编译及差异检查通过；native/process suite 25.938 秒，race 12.314 秒。指纹保持 9c9c4ac。HEIF 使用同一保守策略但无独立实际夹具，未扩大格式验证声明。已提交原审查者针对需求复审，质量审查仍待该阶段通过。
