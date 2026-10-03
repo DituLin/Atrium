@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/DituLin/Atrium/internal/app/events"
+	"github.com/DituLin/Atrium/internal/archive"
 	"github.com/DituLin/Atrium/internal/auth"
 	"github.com/DituLin/Atrium/internal/backup"
 	"github.com/DituLin/Atrium/internal/briefing"
@@ -28,6 +29,7 @@ import (
 // Deps are the collaborators the HTTP layer needs. Everything is an explicit
 // field so tests can substitute fakes without touching package state.
 type Deps struct {
+	Archives *archive.Intake
 	Config   *config.Config
 	DB       *store.DB
 	Logger   *slog.Logger
@@ -145,6 +147,7 @@ func New(deps Deps) *API {
 	}
 	a.routes()
 	a.integrationRoutes()
+	a.archiveRoutes()
 	a.adminIntegrationRoutes()
 	a.handler = Chain(a.mux,
 		WithRequestID(),

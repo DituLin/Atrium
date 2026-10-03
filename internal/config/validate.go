@@ -55,6 +55,13 @@ func (c *Config) Validate() error {
 		add("storage.min_free_bytes must not be negative")
 	}
 
+	if c.Archives.MaxBytes < 1 || c.Archives.MaxBytes > 1<<30 {
+		add("archives.max_bytes must be between 1 and 1073741824")
+	}
+	if time.Duration(c.Archives.UploadTimeout) < 100*time.Millisecond || time.Duration(c.Archives.UploadTimeout) > 10*time.Minute {
+		add("archives.upload_timeout must be between 100ms and 10m")
+	}
+
 	seen := make(map[string]struct{}, len(c.Sources))
 	for i, s := range c.Sources {
 		prefix := fmt.Sprintf("sources[%d]", i)

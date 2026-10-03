@@ -219,3 +219,24 @@ func TestFamilyArchiveConfiguration(t *testing.T) {
 	cfg.FamilyArchive.Identity = ""
 	require.Error(t, cfg.Validate())
 }
+
+func TestArchivesIntakeConfiguration(t *testing.T) {
+	cfg := config.Defaults()
+	require.False(t, cfg.Archives.Enabled)
+	require.EqualValues(t, 32<<20, cfg.Archives.MaxBytes)
+	require.Equal(t, 2*time.Minute, time.Duration(cfg.Archives.UploadTimeout))
+	cfg, err := config.Parse([]byte("home:\n  timezone: Asia/Singapore\narchives:\n  enabled: true\n  max_bytes: 1024\n  upload_timeout: 1s\n"))
+	require.NoError(t, err)
+	require.NoError(t, cfg.Validate())
+	require.True(t, cfg.Archives.Enabled)
+	require.False(t, cfg.FamilyArchive.Enabled)
+	for _, size := range []int64{0, -1, 1 << 31} {
+		cfg.Archives.MaxBytes = size
+		require.Error(t, cfg.Validate())
+	}
+	cfg.Archives.MaxBytes = 1024
+	for _, timeout := range []time.Duration{0, -1, 11 * time.Minute} {
+		cfg.Archives.UploadTimeout = config.Duration(timeout)
+		require.Error(t, cfg.Validate())
+	}
+}

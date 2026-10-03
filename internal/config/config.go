@@ -17,6 +17,7 @@ type Config struct {
 	Logging       Logging       `yaml:"logging"`
 	Backup        Backup        `yaml:"backup"`
 	FamilyArchive FamilyArchive `yaml:"family_archive"`
+	Archives      Archives      `yaml:"archives"`
 
 	// path is the file the config was loaded from; empty for defaults.
 	path     string    `yaml:"-"`
@@ -210,4 +211,11 @@ type FamilyArchive struct {
 	Dir        string `yaml:"dir"`
 	Identity   string `yaml:"identity"`
 	AllowLocal bool   `yaml:"allow_local"`
+}
+
+// Archives enables local durable intake independently of the legacy NAS exporter.
+type Archives struct {
+	Enabled       bool     `yaml:"enabled"`
+	MaxBytes      int64    `yaml:"max_bytes"`
+	UploadTimeout Duration `yaml:"upload_timeout"`
 }

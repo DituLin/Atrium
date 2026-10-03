@@ -1,0 +1,804 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Atrium durable archive intake API",
+    "version": "1.0.0",
+    "description": "T04 local original intake and receipt/task queries. No parser, NAS worker, classification, IM binding or OpenClaw inventory changes are included."
+  },
+  "security": [
+    {
+      "integrationBearer": []
+    }
+  ],
+  "paths": {
+    "/api/v1/integrations/archives/intakes": {
+      "post": {
+        "operationId": "archiveIntake",
+        "summary": "Save exactly one text or file slot",
+        "description": "Disabled unless archives.enabled=true (default false). Streaming multipart with metadata first and content second. Part names and headers are strict; only Content-Disposition and Content-Type headers, no transfer encoding, no duplicate/extra parts, and no epilogue. Content bytes are unmodified, including text whitespace/newlines. The complete legal ending is checked before the acceptance transaction. Default content limit 33554432 bytes; request overhead capped at 128 KiB; default actual body-read deadline 2m. Metadata is preflight-authorized, bytes published outside the SQLite writer lock, and credential/principal/same policy version rechecked atomically with source/document/task/audit. Published blobs survive DB failures. File sources share a household canonical document; distinct text sources retain distinct documents. Every new source has its own receipt/task delegation, including across principals. Slots commit independently; a success never claims the whole message or parsing/NAS completion. Optional multipart filename parameters are ignored on both parts; original_name comes exclusively from the validated JSON metadata.",
+        "x-required-permissions": [
+          "archive.ingest"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "metadata",
+                  "content"
+                ],
+                "properties": {
+                  "metadata": {
+                    "$ref": "#/components/schemas/IntakeMetadata"
+                  },
+                  "content": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "metadata": {
+                  "contentType": "application/json"
+                },
+                "content": {
+                  "contentType": "application/octet-stream"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Committed own receipt or authorized current task projection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid metadata, multipart envelope, empty original or expected size/hash mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Inactive, expired, revoked or rotated credential",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing archive permissions or policy changed during upload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Outside household scope, no own committed receipt, or no intake-backed task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Upload body deadline or cancellation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "idempotency_conflict: source already accepted different content/immutable metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Configured byte limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Integration request limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal persistence or transport error; use lookup before retrying uncertain outcomes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/archives/intakes/lookup": {
+      "post": {
+        "operationId": "archiveIntakeLookup",
+        "summary": "Recover an own committed receipt without original bytes",
+        "description": "Requires current ingest authorization and original principal source identity. A miss only means there is no committed receipt at the instant of lookup; it does not prove an in-flight upload failed. No source from another principal can be looked up. Lookup never relaxes task read authorization.",
+        "x-required-permissions": [
+          "archive.ingest"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceIdentity"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Committed own receipt or authorized current task projection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid metadata, multipart envelope, empty original or expected size/hash mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Inactive, expired, revoked or rotated credential",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing archive permissions or policy changed during upload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Outside household scope, no own committed receipt, or no intake-backed task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Upload body deadline or cancellation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "idempotency_conflict: source already accepted different content/immutable metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Configured byte limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Integration request limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal persistence or transport error; use lookup before retrying uncertain outcomes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/archives/tasks/{id}": {
+      "get": {
+        "operationId": "archiveIntakeTask",
+        "summary": "Read a safe current intake task projection",
+        "x-required-permissions": [
+          "archive.read"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Committed own receipt or authorized current task projection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid metadata, multipart envelope, empty original or expected size/hash mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Inactive, expired, revoked or rotated credential",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing archive permissions or policy changed during upload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Outside household scope, no own committed receipt, or no intake-backed task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Upload body deadline or cancellation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "idempotency_conflict: source already accepted different content/immutable metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Configured byte limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Integration request limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal persistence or transport error; use lookup before retrying uncertain outcomes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "integrationBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Scoped integration credential; admin/screen credentials do not authorize intake."
+      }
+    },
+    "schemas": {
+      "SourceIdentity": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "channel",
+          "account",
+          "conversation",
+          "sender",
+          "provider_message_id",
+          "slot_index"
+        ],
+        "properties": {
+          "channel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "1 to 512 UTF-8 bytes; control characters rejected; value is not trimmed or normalized."
+          },
+          "account": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "1 to 512 UTF-8 bytes; control characters rejected; value is not trimmed or normalized."
+          },
+          "conversation": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "1 to 512 UTF-8 bytes; control characters rejected; value is not trimmed or normalized."
+          },
+          "sender": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "1 to 512 UTF-8 bytes; control characters rejected; value is not trimmed or normalized."
+          },
+          "provider_message_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "1 to 512 UTF-8 bytes; control characters rejected; value is not trimmed or normalized."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "text",
+              "file"
+            ]
+          },
+          "slot_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1023
+          }
+        },
+        "description": "Trusted host delivery metadata. T04 authenticates the submitting host; real IM message binding is deferred to T13. Core uses SHA-256 of the canonical JSON array [\"archive-source-v1\",household,principal,channel,account,conversation,sender,provider_message_id,kind,slot_index]. Household comes from LocalHousehold and principal from the authenticated credential. Text slot 0 differs from file slot 0. Lookup is only for the current principal."
+      },
+      "IntakeMetadata": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "channel",
+          "account",
+          "conversation",
+          "sender",
+          "provider_message_id",
+          "slot_index",
+          "original_name"
+        ],
+        "properties": {
+          "channel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "1 to 512 UTF-8 bytes; control characters rejected; value is not trimmed or normalized."
+          },
+          "account": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "1 to 512 UTF-8 bytes; control characters rejected; value is not trimmed or normalized."
+          },
+          "conversation": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "1 to 512 UTF-8 bytes; control characters rejected; value is not trimmed or normalized."
+          },
+          "sender": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "1 to 512 UTF-8 bytes; control characters rejected; value is not trimmed or normalized."
+          },
+          "provider_message_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "1 to 512 UTF-8 bytes; control characters rejected; value is not trimmed or normalized."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "text",
+              "file"
+            ]
+          },
+          "slot_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1023
+          },
+          "original_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "Display filename, never a filesystem path; slash, backslash and control characters are rejected. Required also for text."
+          },
+          "declared_mime": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "Optional MIME assertion retained as immutable metadata. Actual MIME is sniffed from original bytes."
+          },
+          "expected_size": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expected_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "visibility_intent": {
+            "type": "string",
+            "enum": [
+              "inherit",
+              "private"
+            ],
+            "default": "inherit",
+            "description": "inherit needs ingest: a new document defaults TV-visible, an existing document retains visibility. private uniformly requires ingest+read+organize before any source/hash lookup and in the final transaction. No public intent is accepted."
+          }
+        },
+        "description": "At most 16 KiB UTF-8 JSON; exact field names only, duplicate/unknown/null fields rejected. Source identity, original_name, declared_mime, normalized intent and actual bytes hash/size determine replay equality. expected_size/expected_sha256 are transport assertions: omitted versus matching supplied assertions do not change identity. Household/principal/member/document/server_path/URL/request_key fields are forbidden."
+      },
+      "TaskResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "parse_status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "parsed",
+              "unsupported",
+              "failed"
+            ]
+          },
+          "fact_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          }
+        }
+      },
+      "TaskClarification": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "subject_ambiguous",
+              "document_unreadable",
+              "unsupported_format"
+            ]
+          }
+        }
+      },
+      "Task": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "stage",
+          "original_status",
+          "nas_status",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "waiting_input",
+              "retry_wait",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "saved",
+              "parsing",
+              "understanding",
+              "resolving",
+              "committing",
+              "processing"
+            ]
+          },
+          "original_status": {
+            "type": "string",
+            "enum": [
+              "saved"
+            ]
+          },
+          "nas_status": {
+            "type": "string",
+            "enum": [
+              "pending"
+            ]
+          },
+          "result": {
+            "$ref": "#/components/schemas/TaskResult"
+          },
+          "clarification": {
+            "$ref": "#/components/schemas/TaskClarification"
+          },
+          "delegation_error_code": {
+            "type": "string",
+            "enum": [
+              "unbound",
+              "principal_inactive",
+              "policy_changed",
+              "permission_denied"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "Current read-authorized projection of a task with a committed intake source. T04 queues work only: saved means local original+receipt committed; queued is processing state; pending is not NAS success. No raw input/state/result JSON, worker free text, paths, source metadata or leases are exposed. Result and clarification are allowlisted typed fields for future processing stages."
+      },
+      "Receipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "receipt_id",
+          "task_id",
+          "original_status",
+          "size_bytes",
+          "sha256",
+          "received_at"
+        ],
+        "properties": {
+          "receipt_id": {
+            "type": "string"
+          },
+          "task_id": {
+            "type": "string"
+          },
+          "original_status": {
+            "type": "string",
+            "enum": [
+              "saved"
+            ]
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "document_id": {
+            "type": "string",
+            "description": "Only present with current archive.read."
+          },
+          "task": {
+            "$ref": "#/components/schemas/Task"
+          }
+        },
+        "description": "Ingest-only callers always receive exactly the six required immutable own receipt fields, including on replay/lookup after worker updates. Only current archive.read adds document_id and safe current task projection. No dedup flag, other source/task identities or visibility details."
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "ReceiptResponse": {
+        "type": "object",
+        "required": [
+          "schema_version",
+          "observed_at",
+          "availability",
+          "data"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "enum": [
+              "1"
+            ]
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "availability": {
+            "type": "string",
+            "enum": [
+              "available"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/Receipt"
+          }
+        }
+      },
+      "TaskResponse": {
+        "type": "object",
+        "required": [
+          "schema_version",
+          "observed_at",
+          "availability",
+          "data"
+        ],
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "enum": [
+              "1"
+            ]
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "availability": {
+            "type": "string",
+            "enum": [
+              "available"
+            ]
+          },
+          "data": {
+            "$ref": "#/components/schemas/Task"
+          }
+        }
+      }
+    }
+  }
+}
