@@ -51,6 +51,8 @@ T04 开发期先对接受控 CLI/测试接收；T13 接入实际 IM。T01–T04 
 
 实现：事务领取到期 queued/retry_wait 和过期 running；Claim 递增 attempts 并发放新 token；Renew/Finish/Retry/Wait 均要求当前 token 且租约未过期；Cancel 使 token 失效；ResolveWaiting 以预期状态版本恢复，澄清参数有幂等键。完成结果与阶段事件原子保存。每次领取有独立 attempt_id（不同于保密的 lease token）；事件记录输入/检查点/结果版本，已提交检查点可被后续尝试复用。
 
+质量审查补充：时间由仓库可信时钟提供，在每次取得事务写锁后采样，重试重新采样；调用者不能传入旧时间延长租约。`state_version` 独立于事件 `version`，Checkpoint/Finish/Retry/Wait 携带预期状态版本，旧结果拒绝覆盖；续租不推进状态版本。受控时钟与锁协调测试必须覆盖等待锁期间过期和同一尝试乱序回传。
+
 验证：`go test -race ./internal/domain ./internal/store`；队列测试只使用受控时钟而不 sleep。提交：`feat: add durable archive task contracts and leases`。
 
 ### T02 — 家庭作用域及档案授权
