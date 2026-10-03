@@ -247,3 +247,5 @@ T08 首次固定实现提交 `0c90a0d598b0c0c2f36f9745617f11e117497c95`，root �
 修复固定为 `5c276f6867b7b86ed4e3eec0fc07974fc1569fdc`，root 核对工作区干净。规则升级 `entity-resolution/2`，保护身份比较只输出候选/局部 peer 反证，不输出原值或哈希；先检查同身份组，再决策；link 后更新候选日期和 display_alias。增加同批空 DB 不同稳定 ID、输入排列及无关候选/真实新实体正反对照，去除原三层 peer 扫描。root 原样复跑三项 spec overlay GREEN（0.403 秒）；实施者最终原 overlay、full Go、race（store 35.441 秒/archive 45.966 秒）、Linux 编译与 vet 均通过。已交原需求审查者复审完整修复，尚无批准，质量审查与 T09 未启动。
 
 独立需求复审 APPROVED `5c276f6`：原三项 overlay GREEN（0.253 秒），新增 `/tmp/t08-spec-recheck-overlay.json` 的六种组冲突排列、正常强身份关联、无关负证据、别名权威、年份精度、输入不变与重复决策稳定性 GREEN（0.454 秒）。全 Go 退出 0（缓存），非缓存 race archive 44.645 秒/store 35.290 秒通过。审查者核对当前 HEAD 仅多 root 状态文档，代码未变、工作区干净。已启动新的独立质量审查，覆盖两次 T08 代码提交的完整范围；T08 尚未双审验收，T09 未启动。
+
+独立质量审查 CHANGES REQUESTED `5c276f6`，两项 P2：property 写入无条件设为 full_address，把单文确认的新地址别名提升为后续全家匹配依据；合并期间针对合并前旧 link 新增/修订的确认没有自身 merge context，undo 可能漏隔离，重新将原 B 静默指向 A。root 原样运行 `/tmp/t08-quality-overlay.json` 两反例均 RED（0.250 秒），独立原 archive/store 基线通过但未覆盖这两项。已交原实施者修复 property 别名权威及绑定修订时的合并上下文，要求保留历史、合并前有效确认和同文其他主体；质量复审与最终需求回归仍待完成，T09 未启动。
