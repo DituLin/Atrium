@@ -168,6 +168,18 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 
 验证固定错误输出、无来源数字、prompt 注入样本、模型故障、片段超预算；再用实际 DeepSeek 对合成四领域样本评估，不以 mock 通过代替真实提取质量。金额计算不用模型。
 
+独立模型入口预审收敛（基于本机 OpenClaw 2026.9.8，尚未调用模型验收）：
+
+- 新增仅注册私有 stdin/stdout CLI 的小插件及 manifest，通过公开 `api.runtime.llm.complete` 的 direct-provider 模式复用 OpenClaw 的 DeepSeek 路由/凭据。它需要真实插件宿主，不能在独立脚本伪造 api.runtime，也不导入带哈希的内部 dist 模块。旧 ask.mjs 只渲染工具回执且限 30 秒，不能当理解接口；agent exec 默认 coding 工具，isolated 不等于无工具。当前 isolated completion 接受 length 后丢弃 stopReason，不适合作本期默认。公开契约见本机 `docs/plugins/sdk-runtime/models.md`；实现时再次核验已安装版本。
+- 专用宿主配置只包含 archive worker 与必要 provider，独立空工作目录/状态、无渠道/MCP/家庭工具/记忆；deny-all 工具、空 skills、禁止 contextInjection 和 Code Mode/Tool Search。completion 仅固定版本化 systemPrompt 与一个有界 user 证据消息。模型/端点/凭据/执行路径/系统提示由宿主决定，stdin 不可指定；allowedCompletionModels 约束包括默认模型的全部调用，首期无跨 provider fallback。必须验证 direct-provider mode、provider、请求模型及允许的 responseModel 映射；只接受 stopReason=stop，缺失/length/toolUse/error/aborted 都不是完整结果。采样 token 上限仅为 provider hint，进程输出另有硬上限。
+- 单次子进程处理一个 chunk。请求包括 protocol_version、invocation_id、input_digest、schema/extraction/chunk 版本、owned/context-only segment IDs 及证据；响应回传身份/digest、provider/requested/response model、stop_reason、usage（可缺）与 result。Go 校验所有宿主标识、deadline、输入输出限额及退出回收；worker 用 AbortSignal。租约令牌/集成凭据/路径不进模型。固定错误码，不传播原始 prompt、响应或 stderr，也不从污染 stdout 中猜 JSON。
+- 候选 schema 包含领域（健康/教育/财务/住房/其他及有界标签）、文档内 subjects/角色、原始 fields/单位币种日期/规范候选与各字段证据、coverage 和 issues。不要求预建类别/人物，不允许模型指定家庭全局 entity ID、账户或权限。证据为 segment ID、可选 alternative、固定字符单位的片段范围和精确摘录；数值须来自完整数字 token，不能从 130 截出 30。规范数字由代码重解析，金额为十进制字符串，不让模型补年份/币种/时区或算合计。未知证据/不匹配摘录/伪造数字使整个 chunk 失败，不能悄悄丢掉后称完整。
+- Core 强制继承 requires_review/native_unconfirmed，模型不能清除；冲突 alternatives 仍是一组待核对证据。医生/患者、学生/老师、房主/工程师等角色保留；“妈妈”等无参照称谓保留歧义。每个 owned segment 恰好归入 extracted/irrelevant/insufficient，context-only 不产生重复覆盖责任。
+- 初始 chunk 限 128 segments/证据 JSON 24 KiB/完整输入约 32 KiB，输出 64 KiB，单资料最多 256 chunks，经实际四领域样本校准。按页/段落/表格边界分块，alternative group 不拆散；必要页眉可作为 context-only 重复。确定性 merge 检查全部 chunk、按完整证据去除精确重复、保留冲突，不按同数值/姓名合并事件；不要求再调模型重读全档。超限明确返回，不能截断。
+- T07 提供 PlanChunks/UnderstandChunk/ValidateChunk/MergeChunks 和进程适配，生产调度在 T09 接入。Task.StateJSON 上限 64 KiB，只存版本/产物引用/进度/预算；T09 另外持久化不可变 parse/chunk products。产物键绑定 task/extraction、chunker/prompt/schema、证据 digest 和模型配置指纹；保存产物与推进 checkpoint 同一事务。
+- T09 Core 单 worker 先短事务 Claim/准备授权输入，事务外调用，后短事务校验 lease/principal/policy/StateVersion/extraction 并提交产物；调用中续租，撤销/取消/续租失败终止子进程。重启同一 task，只复用已提交且版本匹配的 chunk，缺失部分重做；不能承诺 provider exactly-once 计费。有限网络退避/schema 最多一次修正，次数/预算持久化；理解完成仅推进 understood，正式发布前不把整个任务称 succeeded。
+- 验收增加有效 JSON 但 length、实际模型错配、chunk 漏覆盖、OCR 冲突被擅自清除、输出洪泛/取消；T09 增加模型返回后提交前中断、checkpoint 后中断、租约重领、模型调用时 SQLite 可写、超过 64 KiB 的全产物恢复。T07 实际 DeepSeek 四领域验证记录 provider/responseModel、字段/角色/引用/覆盖质量和零工具证据；本次预审不计作模型验证。
+
 ### T08 — 实体匹配与可撤销关联
 
 新增：`internal/archive/resolve.go`、`resolve_test.go`；`internal/store/archive_entities.go` 及迁移/测试。
@@ -181,6 +193,8 @@ metadata 只含 kind(text/file)、渠道/账户/会话/发送者/原始消息 ID
 新增：`internal/store/archive_extractions.go`、`internal/archive/commit.go`、对应测试及迁移；扩展任务查询和澄清 API。
 
 在有效租约/授权下，原子提交版本化片段、分类、实体关联、事实及索引/outbox 任务。丢失租约不得提交一半。澄清沿用 task_id 和预期版本；过期回答返回冲突，缺主体不影响其他附件。
+
+本任务还负责把 T05–T08 接到持久任务消费者，落地 T07 规定的 parse/chunk 产物与 checkpoint 原子事务、外部调用期间续租/取消、版本匹配恢复及持久预算。大产物不放入 64 KiB Task.StateJSON；在正式事实发布前，仅作为内部候选产物保存，不能被查询/统计当作已确认事实。
 
 红灯：提交中断、并发澄清、重复模型结果、改归属、撤回、私密修订及重新提取；历史事实不能重复计入统计。增加 archive_subject_events 区分物理去重和真实事件，三种计数规则按档案设计验证。
 
