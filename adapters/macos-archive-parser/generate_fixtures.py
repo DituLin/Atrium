@@ -89,3 +89,68 @@ with open(out/'annotations.pdf','wb')as f:w.write(f)
 manifest['generator_versions']={'pillow':__import__('PIL').__version__,'pypdf':__import__('pypdf').__version__,'reportlab':__import__('reportlab').Version}
 (out/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2))
 print(out)
+
+# Integrity regressions: preserve synthetic originals and include valid framing
+# variants so a completeness guard cannot simply reject a format or all images.
+import struct, zlib
+integrity=out/'integrity';integrity.mkdir(exist_ok=True)
+def chunk(kind,payload):
+ return struct.pack('>I',len(payload))+kind+payload+struct.pack('>I',zlib.crc32(kind+payload))
+def png(w,h,raw,depth=8,color=2,interlace=0):
+ return b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',w,h,depth,color,0,0,interlace))+chunk(b'IDAT',zlib.compress(raw))+chunk(b'IEND',b'')
+for ext in ['jpg','png','webp']:
+ source=(out/f'report.{ext}').read_bytes()
+ for numerator in [1,2,3,95]:
+  denominator=100 if numerator==95 else 4
+  (integrity/f'truncated-{numerator}-{denominator}.{ext}').write_bytes(source[:len(source)*numerator//denominator])
+ if ext=='jpg':
+  (integrity/'truncated-appended-eoi.jpg').write_bytes(source[:len(source)//2]+b'\xff\xd9')
+  # Embedded EOI bytes in a metadata segment must not count as the terminator.
+  (integrity/'embedded-eoi-missing-end.jpg').write_bytes(source[:2]+b'\xff\xfe\x00\x04\xff\xd9'+source[2:-2])
+  (integrity/'valid-comment-eoi.jpg').write_bytes(source[:2]+b'\xff\xfe\x00\x04\xff\xd9'+source[2:])
+ if ext=='png':
+  offset=8;parts=[];idat=b''
+  while offset<len(source):
+   n=int.from_bytes(source[offset:offset+4],'big');kind=source[offset+4:offset+8];payload=source[offset+8:offset+8+n];parts.append((kind,payload));offset+=n+12
+   if kind==b'IDAT':idat+=payload
+  ihdr=next(payload for kind,payload in parts if kind==b'IHDR')
+  (integrity/'valid-split-idat.png').write_bytes(source[:8]+chunk(b'IHDR',ihdr)+chunk(b'IDAT',b'')+chunk(b'IDAT',idat[:1])+chunk(b'IDAT',idat[1:7])+chunk(b'IDAT',idat[7:])+chunk(b'IDAT',b'')+chunk(b'IEND',b''))
+  (integrity/'truncated-reframed-idat.png').write_bytes(source[:8]+chunk(b'IHDR',ihdr)+chunk(b'IDAT',idat[:len(idat)//2])+chunk(b'IEND',b''))
+  bad=bytearray(source);bad[41]^=1;(integrity/'bad-crc.png').write_bytes(bad)
+  (integrity/'missing-iend.png').write_bytes(source[:-12])
+  (integrity/'trailing-data.png').write_bytes(source+b'junk')
+  (integrity/'bad-zlib-checksum.png').write_bytes(source[:8]+chunk(b'IHDR',ihdr)+chunk(b'IDAT',idat[:-1]+bytes([idat[-1]^1]))+chunk(b'IEND',b''))
+ if ext=='webp':
+  cut=bytearray(source[:len(source)//2]);cut[4:8]=struct.pack('<I',len(cut)-8);(integrity/'truncated-reframed-riff.webp').write_bytes(cut)
+# Small valid PNG variants exercise exact row length/Adam7/sub-byte paths.
+(integrity/'valid-gray1.png').write_bytes(png(17,9,b'\x00\xff\xff\x80'*9,1,0))
+(integrity/'valid-gray16.png').write_bytes(png(17,9,(b'\x00'+b'\xff\xff'*17)*9,16,0))
+w,h=17,9;raw=b''
+for sx,sy,dx,dy in [(0,0,8,8),(4,0,8,8),(0,4,4,8),(2,0,4,4),(0,2,2,4),(1,0,2,2),(0,1,1,2)]:
+ pw=max(0,(w-sx+dx-1)//dx);ph=max(0,(h-sy+dy-1)//dy)
+ if pw and ph:raw+=(b'\x00'+b'\xff\xff\xff'*pw)*ph
+(integrity/'valid-adam7.png').write_bytes(png(w,h,raw,8,2,1))
+(integrity/'invalid-filter.png').write_bytes(png(17,9,(b'\x05'+b'\xff'*51)*9))
+(integrity/'excess-inflate.png').write_bytes(png(17,9,(b'\x00'+b'\xff'*51)*9+b'\x00'))
+(integrity/'short-inflate.png').write_bytes(png(17,9,(b'\x00'+b'\xff'*51)*8))
+im.save(integrity/'valid-progressive.jpg',quality=96,progressive=True)
+im.convert('L').save(integrity/'valid-grayscale.jpg',quality=96)
+im.convert('CMYK').save(integrity/'valid-cmyk.jpg',quality=96)
+
+# Resource-positive JPEG: within the declared 60 MP input limit. Strict entropy
+# validation scales output to 1/8 and allows bounded progressive coefficient work.
+large=Image.new('RGB',(6000,6000),'white');large.save(integrity/'valid-large-progressive.jpg',progressive=True,quality=90)
+# RIFF chunks have explicit lengths and odd-length payload padding.
+webp=(out/'report.webp').read_bytes()
+for name,tail in [('valid-odd-chunk.webp',b'XTRA'+struct.pack('<I',1)+b'x\x00'),('missing-riff-padding.webp',b'XTRA'+struct.pack('<I',1)+b'x')]:
+ content=bytearray(webp+tail);content[4:8]=struct.pack('<I',len(content)-8);(integrity/name).write_bytes(content)
+im.save(integrity/'valid-lossy.webp',quality=90)
+alpha=im.convert('RGBA');alpha.putalpha(192);alpha.save(integrity/'valid-alpha.webp',lossless=True)
+# Repair both outer and inner length fields, so ImageIO must reject incomplete
+# VP8/VP8L payloads even when the RIFF framing itself is internally consistent.
+for kind,path in [('lossless',out/'report.webp'),('lossy',integrity/'valid-lossy.webp')]:
+ source=path.read_bytes();assert source[12:16] in (b'VP8L',b'VP8 ')
+ n=int.from_bytes(source[16:20],'little')//2
+ cut=bytearray(source[:20+n]+(b'\x00' if n%2 else b''))
+ cut[16:20]=struct.pack('<I',n);cut[4:8]=struct.pack('<I',len(cut)-8)
+ (integrity/f'truncated-reframed-{kind}.webp').write_bytes(cut)

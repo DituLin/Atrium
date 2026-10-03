@@ -1,8 +1,15 @@
+#include "jpeg_integrity.h"
+#include "png_integrity.h"
+#include "webp_framing.h"
+#include "webp_integrity.h"
+#include <CommonCrypto/CommonDigest.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <Foundation/Foundation.h>
 #import <ImageIO/ImageIO.h>
 #import <PDFKit/PDFKit.h>
 #import <Vision/Vision.h>
+#include <limits.h>
+#include <mach-o/dyld.h>
 #include <math.h>
 #include <sys/stat.h>
 #include <sys/sysctl.h>
@@ -83,7 +90,8 @@ static VNRecognizeTextRequest *request(void) {
     return r;
 }
 #ifdef ATRIUM_FIXTURE_RENDER
-// Compiled only into the synthetic-fixture renderer, never the production helper.
+// Compiled only into the synthetic-fixture renderer, never the production
+// helper.
 static NSString *fixtureDirectory;
 static void saveFixtureRaster(CGImageRef image, NSUInteger page) {
     NSURL *url = [NSURL
@@ -126,6 +134,43 @@ static BOOL recognize(CGImageRef image, NSUInteger page) {
 static BOOL dimensions(double w, double h, double maxPixels, double maxEdge) {
     return isfinite(w) && isfinite(h) && w > 0 && h > 0 && floor(w) == w && floor(h) == h &&
            w <= maxEdge && h <= maxEdge && w <= maxPixels / h;
+}
+static NSString *pinnedCodec(NSString *name, const char *expectedHash) {
+    @try {
+        char executable[PATH_MAX];
+        uint32_t size = sizeof(executable);
+        if (_NSGetExecutablePath(executable, &size) != 0)
+            return nil;
+        NSString *path =
+            [[[NSString stringWithUTF8String:executable] stringByDeletingLastPathComponent]
+                stringByAppendingPathComponent:[@"lib" stringByAppendingPathComponent:name]];
+        struct stat st;
+        if (lstat(path.fileSystemRepresentation, &st) || !S_ISREG(st.st_mode) || st.st_size < 1 ||
+            st.st_size > 1024 * 1024)
+            return nil;
+        NSData *library = [NSData dataWithContentsOfFile:path options:0 error:NULL];
+        if (!library || library.length != (NSUInteger)st.st_size)
+            return nil;
+        unsigned char digest[CC_SHA256_DIGEST_LENGTH];
+        CC_SHA256(library.bytes, (CC_LONG)library.length, digest);
+        char hex[CC_SHA256_DIGEST_LENGTH * 2 + 1];
+        for (size_t i = 0; i < sizeof(digest); i++)
+            snprintf(hex + i * 2, 3, "%02x", digest[i]);
+        if (strcmp(hex, expectedHash))
+            return nil;
+        return path;
+    } @catch (NSException *exception) {
+        (void)exception;
+        return nil;
+    }
+}
+static BOOL prepareCodecs(void) {
+    NSString *jpeg = pinnedCodec(@"atrium-libjpeg-3.1.4.1.dylib", ATRIUM_JPEG_SHA256);
+    NSString *webp = pinnedCodec(@"atrium-libwebp-1.6.0.dylib", ATRIUM_WEBP_SHA256);
+    // libwebp's sole non-system dependency uses this fixed @loader_path name.
+    NSString *yuv = pinnedCodec(@"libsharpyuv.0.dylib", ATRIUM_YUV_SHA256);
+    return jpeg && webp && yuv && jpegLoad(jpeg.fileSystemRepresentation) &&
+           webpLoad(webp.fileSystemRepresentation);
 }
 static void imageData(NSData *data) {
     result[@"format"] = @"image";
@@ -181,6 +226,58 @@ static void imageData(NSData *data) {
         outcome(@"invalid", @"invalid_input");
         CFRelease(source);
         return;
+    }
+    if ([(__bridge NSString *)type isEqual:@"public.png"] &&
+        !pngComplete(data.bytes, data.length, (uint32_t)w, (uint32_t)h)) {
+        outcome(@"invalid", @"invalid_input");
+        CFRelease(source);
+        return;
+    }
+    if ([(__bridge NSString *)type isEqual:@"org.webmproject.webp"]) {
+        WebPIntegrity integrity =
+            webpFramed(data.bytes, data.length)
+                ? webpComplete(data.bytes, data.length, (uint32_t)w, (uint32_t)h)
+                : WebPInvalid;
+        if (integrity != WebPComplete) {
+            switch (integrity) {
+            case WebPResourceLimit:
+                outcome(@"limit_exceeded", @"webp_resources");
+                break;
+            case WebPUnsupported:
+                outcome(@"unsupported", @"unsupported_image");
+                break;
+            case WebPUnavailable:
+                outcome(@"unsupported", @"parser_unavailable");
+                break;
+            default:
+                outcome(@"invalid", @"invalid_input");
+                break;
+            }
+            CFRelease(source);
+            return;
+        }
+    }
+    if ([(__bridge NSString *)type isEqual:@"public.jpeg"]) {
+        JPEGIntegrity integrity =
+            jpegComplete(data.bytes, data.length, (uint32_t)w, (uint32_t)h, 512L * 1024 * 1024);
+        if (integrity != JPEGComplete) {
+            switch (integrity) {
+            case JPEGResourceLimit:
+                outcome(@"limit_exceeded", @"jpeg_resources");
+                break;
+            case JPEGUnsupported:
+                outcome(@"unsupported", @"unsupported_jpeg_precision");
+                break;
+            case JPEGUnavailable:
+                outcome(@"unsupported", @"parser_unavailable");
+                break;
+            default:
+                outcome(@"invalid", @"invalid_input");
+                break;
+            }
+            CFRelease(source);
+            return;
+        }
     }
     double edge = fmin(4096, floor(sqrt(16000000 * fmax(w, h) / fmin(w, h))));
     NSDictionary *options = @{
@@ -319,7 +416,8 @@ static void pdfData(NSData *data) {
                     @"native_complete" : @NO
                 } mutableCopy];
                 [pages addObject:page];
-                // Every renderable page reaches Vision, including native-only and footer PDFs.
+                // Every renderable page reaches Vision, including native-only and
+                // footer PDFs.
                 BOOL ok = recognize(image, i + 1);
                 CGImageRelease(image);
                 page[@"ocr_complete"] = @(ok);
@@ -345,7 +443,8 @@ static void pdfData(NSData *data) {
                         if (CGRectIsNull(visible) || CGRectIsEmpty(visible))
                             continue;
                         BOOL clipped = !CGRectContainsRect(crop, raw);
-                        // CGRectApplyAffineTransform bounds all four corners, including rotation.
+                        // CGRectApplyAffineTransform bounds all four corners, including
+                        // rotation.
                         CGRect rect = topRect(CGRectApplyAffineTransform(visible, T), W, H);
                         if (!appendObservation(i + 1, line.string, @"native", rect, raw, clipped,
                                                0) &&
@@ -429,7 +528,8 @@ int main(int argc, const char *argv[]) {
                 VNRecognizeTextRequest *r =
                     [VNRecognizeTextRequest.supportedRevisions containsIndex:3] ? request() : nil;
                 NSArray *supported = [r supportedRecognitionLanguagesAndReturnError:NULL];
-                if (![VNRecognizeTextRequest.supportedRevisions containsIndex:3] ||
+                if (!prepareCodecs() ||
+                    ![VNRecognizeTextRequest.supportedRevisions containsIndex:3] ||
                     ![supported containsObject:@"zh-Hans"] || ![supported containsObject:@"en-US"])
                     outcome(@"unsupported", @"parser_unavailable");
                 else {

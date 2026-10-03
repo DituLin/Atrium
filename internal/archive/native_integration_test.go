@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"math"
 	"os"
 	"path/filepath"
@@ -307,5 +308,144 @@ func TestNativeActualRepeatIdentity(t *testing.T) {
 		if a.Segments[i].ID != bResult.Segments[i].ID {
 			t.Fatal("nondeterministic evidence IDs")
 		}
+	}
+}
+
+func TestNativeActualImageIntegrity(t *testing.T) {
+	helper := os.Getenv("ATRIUM_NATIVE_HELPER")
+	dir := os.Getenv("ATRIUM_NATIVE_FIXTURES")
+	if helper == "" || dir == "" {
+		t.Skip("native fixture environment required")
+	}
+	files, err := os.ReadDir(filepath.Join(dir, "integrity"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range files {
+		t.Run(entry.Name(), func(t *testing.T) {
+			path := filepath.Join(dir, "integrity", entry.Name())
+			b, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			hash := sha256.Sum256(b)
+			f, err := os.Open(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer f.Close()
+			r, err := (NativeParser{HelperPath: helper}).Parse(context.Background(), NativeSource{f, hex.EncodeToString(hash[:])})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.HasPrefix(entry.Name(), "valid-") {
+				if !r.Coverage.Complete {
+					t.Fatalf("valid image lost complete coverage: %s", r.Status)
+				}
+			} else if r.Coverage.Complete || r.Status == ParseParsed || r.Status == ParseEmpty {
+				t.Fatalf("damaged image declared complete: %s with %d segments", r.Status, len(r.Segments))
+			}
+			if strings.HasPrefix(entry.Name(), "valid-") && strings.HasSuffix(entry.Name(), ".jpg") && entry.Name() != "valid-large-progressive.jpg" {
+				all := ""
+				for _, s := range r.Segments {
+					all += s.Text
+				}
+				if !strings.Contains(all, "1988-03-12") {
+					t.Fatal("valid JPEG lost expected original text")
+				}
+			}
+			if _, err := f.ReadAt(make([]byte, 1), 0); err != nil {
+				t.Fatal("original descriptor lost")
+			}
+		})
+	}
+}
+
+func TestNativeActualRelocatedCodecBundle(t *testing.T) {
+	helper := os.Getenv("ATRIUM_NATIVE_HELPER")
+	fixtures := os.Getenv("ATRIUM_NATIVE_FIXTURES")
+	if helper == "" || fixtures == "" {
+		t.Skip("native fixture environment required")
+	}
+	dir := t.TempDir()
+	copied := filepath.Join(dir, "helper")
+	data, err := os.ReadFile(helper)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(copied, data, 0700); err != nil {
+		t.Fatal(err)
+	}
+	sourceBytes, err := os.ReadFile(filepath.Join(fixtures, "report.jpg"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	sum := sha256.Sum256(sourceBytes)
+	f, err := os.Open(filepath.Join(fixtures, "report.jpg"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	source := NativeSource{f, hex.EncodeToString(sum[:])}
+	parser := NativeParser{HelperPath: copied}
+	unavailable := func(t *testing.T) {
+		t.Helper()
+		_, err := parser.Parse(context.Background(), source)
+		var e *NativeParserError
+		if !errors.As(err, &e) || e.Code != "parser_unavailable" {
+			t.Fatalf("missing/incompatible codec got %v", err)
+		}
+	}
+	unavailable(t)
+	libdir := filepath.Join(dir, "lib")
+	if err = os.Mkdir(libdir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	codecs := map[string][]byte{}
+	for _, name := range []string{"atrium-libjpeg-3.1.4.1.dylib", "atrium-libwebp-1.6.0.dylib", "libsharpyuv.0.dylib"} {
+		codecs[name], err = os.ReadFile(filepath.Join(filepath.Dir(helper), "lib", name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = os.WriteFile(filepath.Join(libdir, name), codecs[name], 0500); err != nil {
+			t.Fatal(err)
+		}
+	}
+	result, err := parser.Parse(context.Background(), source)
+	if err != nil || !result.Coverage.Complete {
+		t.Fatalf("relocated bundle failed: %v %s", err, result.Status)
+	}
+	// WebP must decode using the copied transitive dependency as well.
+	webpBytes, err := os.ReadFile(filepath.Join(fixtures, "report.webp"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	webpFile, err := os.Open(filepath.Join(fixtures, "report.webp"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer webpFile.Close()
+	webpSum := sha256.Sum256(webpBytes)
+	result, err = parser.Parse(context.Background(), NativeSource{webpFile, hex.EncodeToString(webpSum[:])})
+	if err != nil || !result.Coverage.Complete {
+		t.Fatalf("relocated WebP bundle failed: %v %s", err, result.Status)
+	}
+	for name, bytes := range codecs {
+		t.Run(name, func(t *testing.T) {
+			lib := filepath.Join(libdir, name)
+			if err := os.Remove(lib); err != nil {
+				t.Fatal(err)
+			}
+			unavailable(t)
+			poisoned := append([]byte(nil), bytes...)
+			poisoned[len(poisoned)/2] ^= 1
+			if err := os.WriteFile(lib, poisoned, 0700); err != nil {
+				t.Fatal(err)
+			}
+			unavailable(t)
+			if err := os.WriteFile(lib, bytes, 0500); err != nil {
+				t.Fatal(err)
+			}
+		})
 	}
 }

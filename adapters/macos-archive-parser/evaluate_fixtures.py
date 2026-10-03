@@ -44,4 +44,14 @@ for source in sorted(fixtures.iterdir()):
   item['field_locations']=fields;item['matched_fields']=sum(x['matched'] for x in fields)
  summary['files'].append(item);summary['engine']=wire['engine']
 seconds=[f['seconds'] for f in summary['files']];summary['timing']={'median':statistics.median(seconds),'maximum':max(seconds),'total':round(sum(seconds),3)}
-(output/'summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2));print(json.dumps({'files':len(summary['files']),'timing':summary['timing'],'field_checks':sum(len(x.get('field_locations',[])) for x in summary['files']),'matched':sum(x.get('matched_fields',0) for x in summary['files'])},indent=2))
+integrity={'engine':summary['engine'],'files':[]}
+for source in sorted((fixtures/'integrity').iterdir()):
+ wire,seconds=run(helper,source)
+ expected_complete=source.name.startswith('valid-')
+ assert wire['coverage']['complete']==expected_complete,source.name
+ if not expected_complete:assert wire['status']=='invalid',source.name
+ folder=output/'integrity'/source.name;folder.mkdir(parents=True,exist_ok=True)
+ (folder/'wire.json').write_text(json.dumps(wire,ensure_ascii=False,indent=2))
+ integrity['files'].append({'file':source.name,'sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'source_bytes':source.stat().st_size,'status':wire['status'],'complete':wire['coverage']['complete'],'expected_complete':expected_complete,'observations':len(wire['segments']),'seconds':round(seconds,3)})
+(output/'integrity-summary.json').write_text(json.dumps(integrity,ensure_ascii=False,indent=2))
+(output/'summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2));print(json.dumps({'files':len(summary['files']),'timing':summary['timing'],'field_checks':sum(len(x.get('field_locations',[])) for x in summary['files']),'matched':sum(x.get('matched_fields',0) for x in summary['files']),'integrity_cases':len(integrity['files']),'valid_integrity_cases':sum(x['complete'] for x in integrity['files'])},indent=2))

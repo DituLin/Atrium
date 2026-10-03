@@ -2,7 +2,7 @@
   "native": {
     "engine": {
       "helper": "atrium-native/1",
-      "build": "170fbb014fb3582957b6e40b4f5d36ee7d46b3a32e59ab58c2e64af31c6c8c7a",
+      "build": "bcd463b9318ea0ee7ff17884fc46c8d46d1d02140798e4cab105877331cef390",
       "os_build": "24C101",
       "vision_revision": 3,
       "languages": [
@@ -114,7 +114,7 @@
     "allows_copying": true
   },
   "detected_format": "pdf",
-  "parser_version": "archive-native/1/7aa7f99757deaadf20a60ca11e7dbef02250f712c721a457df34c6526f2b6341",
+  "parser_version": "archive-native/1/465c2748ef6e8d096a0ea47b49ee3e11c265730beb3559d1fe58cba488d3758d",
   "status": "parsed",
   "segments": [
     {
@@ -155,7 +155,7 @@
           }
         ]
       },
-      "id": "bb9729f1e3450de6ab4be9c78fb4d4d0c18b2f08c1a04ee175075a8ae69d0ae0",
+      "id": "91479ddf65990c21d276df50d67e2de5bc2d772d1d0df026b4231d51d9aea6ed",
       "text": "ALPHA 12.34",
       "locator": {
         "page": {
@@ -214,7 +214,7 @@
           }
         ]
       },
-      "id": "43a98a31f838bba2af8f1b2c54f2c824cddf9038fc2e9f7669657d9d0c6a8122",
+      "id": "6792fec88e4b8056cfc0060089ad33d638b213598094bcce37bfd1dde5314a63",
       "text": "",
       "locator": {
         "page": {
@@ -273,7 +273,7 @@
           }
         ]
       },
-      "id": "fde8246597a3764c2463b9c268450924436a2d2b8dae3c97b8293341c9604daa",
+      "id": "7da91e76beb6c29f819bcfa1c391c79155a61ab70094d4ed24362d026d490e0e",
       "text": "BETA 56.78",
       "locator": {
         "page": {
@@ -332,7 +332,7 @@
           }
         ]
       },
-      "id": "d982637a68d61c1b4ac14e8bda9cabd9a023099ffc5ddf86982ca4fa0acc8fb7",
+      "id": "1b0a182d65f4e1e4922ad1fa4a5b0981dc321a94c59ecf7e41230ece90b9048b",
       "text": "",
       "locator": {
         "page": {
@@ -391,7 +391,7 @@
           }
         ]
       },
-      "id": "ee461006458568830c59ccb1b3a3260cf522c0c7ba192835ba8ed7f1cb41cb9e",
+      "id": "882b96271eb70410737ea76444072a04bbb10648c8466b89672951357ee19247",
       "text": "ALPHA 12.34",
       "locator": {
         "page": {
@@ -450,7 +450,7 @@
           }
         ]
       },
-      "id": "56b27fa612526d96fcd83c38853e73ea4c544296d356d3b984f173c6def072d0",
+      "id": "1eb65241ba11efaaa6d412179785fee9ccb71ad3369b169305694572f605f450",
       "text": "BETA 56.78",
       "locator": {
         "page": {
@@ -509,7 +509,7 @@
           }
         ]
       },
-      "id": "c6fc80e32b29be135b3d3e94fa9589809579b6f7949c65213d8af56d86b9b056",
+      "id": "016f6835750064cc5526c76ab92b443a73f661f04d5a09ce121e75e6a01dce67",
       "text": "BETA 56.78",
       "locator": {
         "page": {
@@ -568,7 +568,7 @@
           }
         ]
       },
-      "id": "1695909cd60fb8f25c09210f8f77ce4b34a732223820f875712c631d4ac71e46",
+      "id": "17c8eba83117d08b28945ac3d29e2e6fd3563d94b0b085b461ebcfe047a51633",
       "text": "",
       "locator": {
         "page": {
@@ -627,7 +627,7 @@
           }
         ]
       },
-      "id": "f19dba3613ff05553c7a24892c3911f2acb699464ea88392693c686664fa8ca9",
+      "id": "1134d961419ae7932cebc66cce8a7b813ca886c9c9cad3238b924ebcb394b692",
       "text": "ALPHA 12.34",
       "locator": {
         "page": {
@@ -686,7 +686,7 @@
           }
         ]
       },
-      "id": "5032754890a7b24d131d12b62d3adfd42b1e42ee257d46c28cdf149b83e45965",
+      "id": "cdf9cae15c27ef5fe54b0d8729ab571d4ebf007bc2a1be0efdc9892c422155db",
       "text": "ALPHA 12.34",
       "locator": {
         "page": {
@@ -745,7 +745,7 @@
           }
         ]
       },
-      "id": "b1d9e2e19c27b23a3c260572ddde0847135621d405f6ccba652c8e32b96e088f",
+      "id": "9dee85114e787b3c17cb8dec00de2733bd3e507e5b1c0faed37b57a765a93b8c",
       "text": "BETA 56.78",
       "locator": {
         "page": {
@@ -804,7 +804,7 @@
           }
         ]
       },
-      "id": "de652f04c614cb5a9ec7ac84f1336377f495453a78acfa4f2a23e4d3cfce4d77",
+      "id": "d95b9c20f55732482854562591339922c3e8f04989269dbc449c921e4c6217a4",
       "text": "",
       "locator": {
         "page": {

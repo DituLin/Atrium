@@ -416,7 +416,7 @@ func decodeNative(b []byte, size int64) (nativeWire, error) {
 	if _, err := hex.DecodeString(w.Engine.Build); err != nil {
 		return bad()
 	}
-	allowedCodes := map[string]bool{"": true, "no_text_detected": true, "invalid_input": true, "unsupported_image": true, "multiframe_image": true, "source_bytes": true, "image_dimensions": true, "page_limit": true, "text_limit": true, "segment_limit": true, "page_failed": true, "locked_pdf": true, "parser_unavailable": true, "annotations_forms_excluded": true}
+	allowedCodes := map[string]bool{"": true, "no_text_detected": true, "invalid_input": true, "unsupported_image": true, "multiframe_image": true, "source_bytes": true, "image_dimensions": true, "jpeg_resources": true, "webp_resources": true, "unsupported_jpeg_precision": true, "page_limit": true, "text_limit": true, "segment_limit": true, "page_failed": true, "locked_pdf": true, "parser_unavailable": true, "annotations_forms_excluded": true}
 	if !allowedCodes[w.Code] || (w.Counts.SourceBytes != size && !(w.Code == "parser_unavailable" && w.Counts.SourceBytes == 0)) || w.Counts.Segments != len(w.Segments) || len(w.Segments) > 20000 || w.Counts.TextBytes > nativeTextLimit || w.Counts.TextBytes < 0 || w.Coverage.TotalPages < 0 || w.Coverage.TotalPages > 2147483647 || w.Coverage.ProcessedPages < 0 || w.Coverage.ProcessedPages > w.Coverage.TotalPages || len(w.Pages) > 100 {
 		return bad()
 	}

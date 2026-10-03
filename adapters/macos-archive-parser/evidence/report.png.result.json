@@ -2,7 +2,7 @@
   "native": {
     "engine": {
       "helper": "atrium-native/1",
-      "build": "170fbb014fb3582957b6e40b4f5d36ee7d46b3a32e59ab58c2e64af31c6c8c7a",
+      "build": "bcd463b9318ea0ee7ff17884fc46c8d46d1d02140798e4cab105877331cef390",
       "os_build": "24C101",
       "vision_revision": 3,
       "languages": [
@@ -33,7 +33,7 @@
     "allows_copying": true
   },
   "detected_format": "image",
-  "parser_version": "archive-native/1/7aa7f99757deaadf20a60ca11e7dbef02250f712c721a457df34c6526f2b6341",
+  "parser_version": "archive-native/1/465c2748ef6e8d096a0ea47b49ee3e11c265730beb3559d1fe58cba488d3758d",
   "status": "parsed",
   "segments": [
     {
@@ -56,7 +56,7 @@
           }
         ]
       },
-      "id": "1a734e717a7ad4b49014b216fdb5091d3b72278a17888eea9138f8d09d7afc65",
+      "id": "5ca2dd41afec3948e08fc587f85995eb5ba447706a1a065befdd827b5004de85",
       "text": "合成健康报告 SYNTHETIC REPORT",
       "locator": {
         "page": {
@@ -97,7 +97,7 @@
           }
         ]
       },
-      "id": "bb2ef8c617f9f4cd54837e1940f0ce86a3fe2f5ab3380e14f4ab505b566fd472",
+      "id": "1143b11813929580ce1544882ecee853e01f133b444c852fba8ed6e4de1bd095",
       "text": "姓名：林明 Alice Lin",
       "locator": {
         "page": {
@@ -138,7 +138,7 @@
           }
         ]
       },
-      "id": "bf66f7b91361f655839a63d87ee55518ab65db8d1484ada6d4dcfa0bdbf1390d",
+      "id": "f3126e9c171443f2d3bad65fbe6d88613c152c5696f209e642180bdd09039ab1",
       "text": "出生日期：1988-03-12",
       "locator": {
         "page": {
@@ -179,7 +179,7 @@
           }
         ]
       },
-      "id": "ce5c94ba39bc3ad9eee396965c6e64e772e99b210b2977838abee57b1f5154cf",
+      "id": "988edb4d8e1fe764b952cad0fe4db3c91e08ba9c4cc5ef873aa7d42bb1ddceb1",
       "text": "报告日期：2026-10-04",
       "locator": {
         "page": {
@@ -220,7 +220,7 @@
           }
         ]
       },
-      "id": "5aa59dd9a1ecfd717f91c000570a642c4ff5ce9f0355298d6d61bcc31e29a4b7",
+      "id": "7805cbad64a498c73c0a8e3bf564d2d064f053c5a37bab50a34ee85d44195220",
       "text": "参考区间",
       "locator": {
         "page": {
@@ -261,7 +261,7 @@
           }
         ]
       },
-      "id": "9dc2147c590e8b4c4407708ef659012f00676fb003acbf23873ccc4bcd87333c",
+      "id": "74bd107b94eca1bbeb47844b8a4068266ae0431153a9dc526511596e6ac2de7b",
       "text": "数值",
       "locator": {
         "page": {
@@ -302,7 +302,7 @@
           }
         ]
       },
-      "id": "583f836a31d120b5a3742c7201f5b4700c3592a1be3650b1fc328b7b1d4a5a1a",
+      "id": "f9a1112434bb3724843972a15eb0c411224820537d6bf0fa74d7831292a15d07",
       "text": "单位",
       "locator": {
         "page": {
@@ -343,7 +343,7 @@
           }
         ]
       },
-      "id": "7bbb16c43d3764da78885baf424180ce73fcff7fffb80c234cafa5c06a843435",
+      "id": "0f2b45106248cdd6cbe2d35c721a80f6a25cfb34efa2eba242aac141926fdf7a",
       "text": "项目",
       "locator": {
         "page": {
@@ -384,7 +384,7 @@
           }
         ]
       },
-      "id": "780e4a807419935e5550b1f7a28bb57c4ac79a93817fe921e480bb390f4cc53a",
+      "id": "594f67fdf9445724073256ca987116cd5f26c20c6b03e777cb9e2eb693f209bb",
       "text": "145.6",
       "locator": {
         "page": {
@@ -425,7 +425,7 @@
           }
         ]
       },
-      "id": "c42c0ae4bf54c6273d072535c9dcebbf11d87ca4ccb42335e1f1694f6ece0ac4",
+      "id": "66b4f81c0615e8068a484f672800c0bb2f0e47d9d2726f6e7c95032eae298b2b",
       "text": "血红蛋白",
       "locator": {
         "page": {
@@ -466,7 +466,7 @@
           }
         ]
       },
-      "id": "a0431bfbd5a127d9cfa80f51629eac4b139ff456851c66fc909b6664b1d5b223",
+      "id": "685c049e02d7615e3d602d18b5ac3225728dd50626a359e82e7f675a03a1b296",
       "text": "130-175",
       "locator": {
         "page": {
@@ -507,7 +507,7 @@
           }
         ]
       },
-      "id": "a2b0d8711e53139d7cdda6834482425b1a46034c161cabbc9050a9dc6fc40e6d",
+      "id": "4d61c7525aef70ff09b3093e8677555b0eff06fc5c67d86d8cfd01bbc51d968d",
       "text": "g/L",
       "locator": {
         "page": {
@@ -548,7 +548,7 @@
           }
         ]
       },
-      "id": "4a0f91d0a8b1329f1255c929698904c7ba778269e3952a76f4b6e4cebc6a5b15",
+      "id": "5ebe49423a179e66ece4634e05bacaa0b096fbe26bfe618b7afc9efd223ea0a5",
       "text": "1234.50",
       "locator": {
         "page": {
@@ -589,7 +589,7 @@
           }
         ]
       },
-      "id": "07acec34fc0761117f7f29cb40727a00a5ef6d816b66f0770be8ae7cc78d4cee",
+      "id": "cadc7b84c06ec7e142a7889e4c885e76461a66da1c768cac4121edc9eedd07b2",
       "text": "费用 Amount",
       "locator": {
         "page": {
@@ -630,7 +630,7 @@
           }
         ]
       },
-      "id": "610bc10c6fd6408e22987b56afa0728998bba6b0ecf32518642daad48a1d2ea8",
+      "id": "025b4689beccd4e11e2871d5447dd5b3421ad67283aa20d8a95531021ee22c71",
       "text": "CNY",
       "locator": {
         "page": {
@@ -671,7 +671,7 @@
           }
         ]
       },
-      "id": "5d9641a800f165f38283aac45c6f9e04e24edce63e95f8e597ac43bf40491c70",
+      "id": "dd79fa86ad455c3273f43dd7b07292485a4f9f50f7bf150c24b11931406ec644",
       "text": "-2.75",
       "locator": {
         "page": {
@@ -712,7 +712,7 @@
           }
         ]
       },
-      "id": "af88f1b211874432552bd850f3b66c696a4aac2de82aa4015afa3e70343495e4",
+      "id": "f62b2649b35ffdbb4fae078b95ac9c75a32c229e37587cd9776bc0a9e783587e",
       "text": "变化 Delta",
       "locator": {
         "page": {
@@ -753,7 +753,7 @@
           }
         ]
       },
-      "id": "3fc6e74fb9559f6621db45d1613e876fca46eff1550d2dd5398c3f22f739e2e9",
+      "id": "fbec035a34f2a82cf51dec7edfbdeb0a0165ab3d963839af2fffcbc933c22dfd",
       "text": "mmol/L",
       "locator": {
         "page": {
@@ -794,7 +794,7 @@
           }
         ]
       },
-      "id": "ed3ac9168df8049dd2561396b4c26a21d2272681b3af6a535791b143b1da2f39",
+      "id": "1235912ee1690bff8b152c4a14c97e97bc4ff917ae1117e1596cdce15f456f14",
       "text": "医生：王华 Dr Wang",
       "locator": {
         "page": {

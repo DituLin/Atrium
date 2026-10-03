@@ -8,12 +8,25 @@ consumer. T07 and T09 own those steps. Existing `archive.Parse` behavior is unch
 ## Build and use
 
 Requires the existing Apple Command Line Tools and macOS with Vision Accurate
-revision 3 plus `zh-Hans` and `en-US`. No Swift modules or downloaded dependencies
-are needed. Tested on macOS 15.2 (24C101), Apple clang 16, arm64.
+revision 3 plus `zh-Hans` and `en-US`. The repository bundles pinned arm64
+libjpeg-turbo 3.1.4.1, libwebp 1.6.0 and its sharpyuv dependency; the build needs
+no download, package installation or Swift modules. Tested on macOS 15.2
+(24C101), Apple clang 16, arm64. The native build fails on other architectures.
 
 ```sh
 adapters/macos-archive-parser/build.sh /absolute/trusted/path/atrium-native-parser
 ```
+
+The build also copies the three unchanged codec libraries into a fixed sibling
+`lib/` directory. Relocate that complete bundle together. The helper hashes every
+library against compiled SHA-256 pins before loading the fixed absolute paths;
+missing, altered or incompatible libraries produce `parser_unavailable`. No Codex
+Python installation or environment-selected codec is needed at runtime. Preserve
+the vendored library signatures/bytes when signing the helper, or sign libraries
+first, update the reviewed pins and rebuild the helper. License notices and exact
+source/binary provenance are in `vendor/libjpeg-turbo/PROVENANCE.md` and
+`vendor/libwebp/PROVENANCE.md`. The build copies their accompanying notices into
+`lib/licenses/`; distribute the whole `lib/` directory with the helper.
 
 Trusted application configuration supplies that absolute regular executable path
 (no symlinks). The authorized caller opens a **fresh** immutable original using
@@ -34,7 +47,7 @@ opens an original path. `NativeParserError.Code` exposes only fixed codes:
 `parser_unavailable`, `parser_invalid_source`, `parser_canceled`, `parser_timeout`,
 `parser_output_limit`, `parser_protocol`, or `parser_failed`. Cancellation/deadline
 errors also unwrap to the context error. stderr, NSError, arguments, and recognized
-text are not interpolated into errors. Missing platform/helper/revision/languages
+text are not interpolated into errors. Missing platform/helper/revision/languages/codecs
 produce `parser_unavailable`; originals remain owned by the caller.
 
 The adapter is synchronous and admits **one helper process globally**. Its 120s
@@ -77,7 +90,8 @@ optional fields are absent.
   engine-version fingerprint, group position and evidence; no Vision UUID is used.
   OS/helper/settings changes change the fingerprint and IDs. Actual repeated local
   runs are tested, but cross-OS OCR reproducibility is not promised.
-- The fingerprint records source/build-script/compiler/SDK build hash, OS build,
+- The fingerprint records source/build-script/public-ABI-headers/codec-bytes/compiler/SDK
+  build hash, OS build,
   helper version, Vision revision, languages, Accurate and language correction off.
   Geometry/grouping policy is scoped by `archive-native/1`.
 - No character offsets are emitted. PDFKit's internal `selectionForRange` is
@@ -113,6 +127,8 @@ PDFPage.drawWithBox into this transform.
 | Result text including preferred text and all alternatives | 2 MiB UTF-8 |
 | Source observations / result groups | 20,000 / <=20,000 |
 | stdout / stderr | 8 MiB / 64 KiB |
+| JPEG progressive virtual coefficient budget / scan cap | 512 MiB / 128 |
+| PNG or RIFF chunk count | 65,536 |
 
 ImageIO caching is disabled before type/frame/dimension/EXIF preflight. Positive,
 finite, integral dimensions and division-based pixel limits precede thumbnail
@@ -120,11 +136,34 @@ decode. ImageIO applies EXIF transforms and Vision receives Up. Multiframe forma
 are unsupported; the helper never calls the first frame a complete document.
 The allowlist is PNG, JPEG, WebP, single-page TIFF, GIF, HEIC/HEIF and BMP as ImageIO
 provides them. Actual format validation here covers PNG/JPEG/WebP and multi-TIFF
-rejection; other allowlisted codecs are not claimed tested. Traditional Chinese
-has not been validated and is not a configured language.
+rejection; other allowlisted codecs are not claimed tested or independently
+validated for compressed completeness. Traditional Chinese has not been validated
+and is not a configured language.
+
+A nonnil ImageIO thumbnail or a “complete” ImageIO status does not establish
+compressed completeness. Before thumbnail/OCR, PNG validation checks chunk CRCs,
+required ordering, zlib checksum/end, exact decompressed scanline lengths, filters
+and Adam7 passes. It streams through a 32 KiB output buffer, without unfiltering
+or allocating a full pixel plane. JPEG validation uses the mature libjpeg decoder,
+fails on recovery warnings, drains all 1/8-scaled scanlines and requires successful
+finish; appended or metadata-embedded EOI bytes cannot substitute for this check.
+WebP requires exact RIFF/chunk/padding framing and successful libwebp full decode
+with a four-byte, 1×1 external scaled output. Reframing truncated VP8/VP8L data
+therefore cannot make ImageIO recovery count as complete. These checks establish
+codec completion, not authenticity or absence of every possible pixel alteration.
+
+Malformed compressed data returns `invalid/invalid_input`, with incomplete coverage
+and no OCR evidence. JPEG allocation/backing-store or scan limits return
+`limit_exceeded/jpeg_resources`; WebP allocation errors return
+`limit_exceeded/webp_resources`. Unsupported JPEG precision/components return
+`unsupported/unsupported_jpeg_precision`. The original descriptor remains owned
+by the caller. Valid baseline/progressive/grayscale/CMYK JPEG, PNG and WebP retain
+the usual complete workflow.
 
 PDF pages use individual autorelease pools. Input/raster limits **do not create a
-hard bound on PDFKit/ImageIO/Vision internal allocations**. Very complex or malicious
+hard bound on PDFKit/ImageIO/Vision or codec internal allocations**. JPEG's virtual
+coefficient budget is advisory, not total RSS; lossless WebP may allocate
+source-size internal structures even with scaled output. Very complex or malicious
 PDFs can still exhaust framework resources; process failure/deadline is a failed
 parse, never a successful empty result. The initial benchmark below supports the
 120s default for these small fixtures, not a promise for 100 complex pages.
@@ -146,6 +185,10 @@ go test ./internal/archive -run TestNativeActual -count=1 -v
 "$PY" adapters/macos-archive-parser/evaluate_fixtures.py \
   /tmp/atriumos-native-helper /tmp/atriumos-fixture-renderer \
   /tmp/atriumos-t06-fixtures /tmp/atriumos-t06-visual
+xcrun clang -Wall -Wextra -Werror -O2 \
+  adapters/macos-archive-parser/test_codec_resources.c -o /tmp/atriumos-codec-resources
+/tmp/atriumos-codec-resources /tmp/lib/atrium-libjpeg-3.1.4.1.dylib \
+  /tmp/atriumos-t06-fixtures/integrity/valid-large-progressive.jpg
 ```
 
 The test renderer is a separately compiled binary with a distinct build fingerprint.
@@ -158,9 +201,9 @@ Arial Unicode / Helvetica; package versions and original hashes are in the manif
 and recorded summary. PDF generation uses invariant mode except pypdf encryption,
 whose salt may vary. Full OCR snapshots are diagnostic evidence, not golden tests.
 
-The committed `evidence/` contains a bounded representative original, selected
-actual overlays and the run summary; the complete local run remains under the
-paths above. Availability-gated tests skip without both environment variables;
+The committed `evidence/` contains bounded representative originals, selected
+actual overlays, public results, the run summary and integrity-case summary; the
+complete local run remains under the paths above. Availability-gated tests skip without both environment variables;
 that skip is not native verification. Run them on an actual supported Mac.
 
 Go failure tests independently exercise positional FD inheritance with an unlinked
@@ -171,17 +214,29 @@ no surviving descendant processes. Native fixture tests additionally verify 19
 field rectangles across 14 image variants (266 relationships), every PDF page's
 coverage, the physical transform's four corners and inverse, crop intersection,
 clipped text and non-BMP text. These are controlled reports, not real document
-accuracy or table-association claims.
+accuracy or table-association claims. Integrity regressions also retain valid
+format variants, a 36 MP progressive JPEG, forged/embedded JPEG EOI, PNG CRC/zlib/
+scanline/Adam7 cases, and WebP truncations with both outer and inner framing
+repaired. The relocation test copies the helper plus all three libraries into an
+isolated directory, parses JPEG and WebP, and verifies typed unavailability when
+each dependency is removed or modified. The C resource test distinguishes the
+same valid progressive JPEG failing at 64 MiB from succeeding at 512 MiB; it also
+checks the ABI error maps to unavailability without diagnostic text.
 
 ## Recorded run — 2026-10-04
 
 Final helper build fingerprint:
-`170fbb014fb3582957b6e40b4f5d36ee7d46b3a32e59ab58c2e64af31c6c8c7a`.
+`bcd463b9318ea0ee7ff17884fc46c8d46d1d02140798e4cab105877331cef390`.
 OS build `24C101`, Vision revision 3, zh-Hans/en-US, Accurate, language correction
 off. Fixture generator versions: Pillow 12.3.0, pypdf 6.10.0, reportlab 4.4.9.
 
 - 33/33 actual native document outcomes passed, including partial-page coverage,
   excluded annotation/widget coverage, copy restrictions, and blank/no-text PDF.
+- 38/38 additional integrity cases passed: 26 damaged JPEG/PNG/WebP inputs
+  returned invalid with incomplete coverage; all 12 valid variants remained complete.
+  The 36 MP progressive JPEG completed as a blank image in 0.559s. Original
+  half-JPEG/half-PNG review probes and fully reframed VP8/VP8L truncations were
+  independently reproduced as RED before their respective repairs, then GREEN.
 - 266/266 exact whitespace-only field matches passed their original-region IoU
   test across 14 image variants; minimum measured IoU 0.459 (threshold 0.4).
 - Four rotated nonzero-crop pages and the crop-beyond-media intersection passed
@@ -190,29 +245,43 @@ off. Fixture generator versions: Pillow 12.3.0, pypdf 6.10.0, reportlab 4.4.9.
   lines remained `native_unconfirmed`. The separate invisible-native `9.80` versus
   raster `9.30` fixture returned one review group, no preferred text, both readings.
 - Repeated actual report parses produced identical evidence IDs.
-- Helper-only 33-file warm run: median 0.302s, maximum 0.446s, total 7.881s. This
+- Helper-only 33-file run: median 0.307s, maximum 0.462s, total 7.982s. The
+  separate 38-case integrity run took 3.862s of helper execution. This
   excludes Go startup, fixture generation and overlay rendering; no cold-cache,
   full 100-page workload or hard-memory claim is made.
 - Visually inspected report original, EXIF7 overlay, rotated PDF 90-degree overlay,
   and crop-intersection overlay using the image viewer; text direction and both
   source rectangles aligned, with visibly cropped text marked for review.
 
-Fresh verification completed successfully:
+Fresh verification completed successfully after the integrity repair:
 
 ```sh
-# Native helper, real fixtures, public API and subprocess failure tests:
+# Repository regressions including real fixtures, public API and process failures:
 ATRIUM_NATIVE_HELPER=/tmp/atriumos-native-helper \
 ATRIUM_NATIVE_FIXTURES=/tmp/atriumos-t06-fixtures \
 ATRIUM_NATIVE_EVIDENCE=/tmp/atriumos-t06-evidence \
-go test ./internal/archive -run TestNative -count=1
-# Repository regressions, race coverage and cross-platform compile:
-go test ./...
+go test ./... -count=1
+# Race coverage and cross-platform compile:
 go test -race ./internal/archive -count=1
 GOOS=linux GOARCH=amd64 go test -c ./internal/archive -o /tmp/atriumos-t06-linux.test
 git diff --check
 ```
 
-The actual fixture suite completed in 17.606s; archive race run completed in
-12.293s. The process tests verified no surviving child PID after timeout or after
+The full repository run passed, including actual archive fixtures in 32.682s;
+the separate archive race run passed in 11.985s. After adding packaged license
+notices, the final bundle passed the complete native/process suite again in
+26.743s, with its fingerprint and evidence regenerated below the same paths. The unchanged external review
+probe also passed using its hardcoded `/tmp/atriumos-native-helper-spec-review`
+(rebuilt with the full sibling codec bundle):
+
+```sh
+go test -overlay=/tmp/atriumos-t06-spec-probes/overlay.json ./internal/archive \
+  -run TestSpecReviewTruncatedImage -count=1 -v
+```
+
+The permanent regressions live in `TestNativeActualImageIntegrity`; that external
+review overlay is not required to reproduce them. The resource/ABI test above
+passed, as did isolated relocation and each missing/modified dependency case.
+The process tests verified no surviving child PID after timeout or after
 an exited leader left a descendant holding its pipes. No production configuration,
 database, household document, credential, network provider or deployment was used.

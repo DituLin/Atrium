@@ -1,0 +1,34 @@
+{
+  "allows_copying": true,
+  "code": "invalid_input",
+  "counts": {
+    "segments": 0,
+    "source_bytes": 23094,
+    "text_bytes": 0
+  },
+  "coverage": {
+    "annotations": "not_applicable",
+    "complete": false,
+    "forms": "not_applicable",
+    "processed_pages": 0,
+    "total_pages": 1
+  },
+  "encrypted": false,
+  "engine": {
+    "build": "bcd463b9318ea0ee7ff17884fc46c8d46d1d02140798e4cab105877331cef390",
+    "helper": "atrium-native/1",
+    "language_correction": false,
+    "languages": [
+      "zh-Hans",
+      "en-US"
+    ],
+    "os_build": "24C101",
+    "recognition": "accurate",
+    "vision_revision": 3
+  },
+  "format": "image",
+  "pages": [],
+  "protocol": 1,
+  "segments": [],
+  "status": "invalid"
+}
