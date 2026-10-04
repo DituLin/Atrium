@@ -290,3 +290,5 @@ root 新增独立复验：worker UnknownCallSurvivesDatabaseRestart / Revocation
 root 多证件增量三项独立 GREEN（0.282 秒）：合法 national_id+passport 同一主体现在 succeeded 并保存两项保护事实，替代早先仅 waiting 的保守实现；单身份前导零/跨显示名归属与并发 typed answer 单赢家对照继续通过。实施者使用内部有界 Additional probe 聚合多身份正反证；已要求多身份指向不同候选的矛盾与原 T08 强身份反证复验，最终受影响完整/race/Linux 尚待汇总。
 
 T09 首次完整固定提交 `b91c49bafa64e9eb64d2a2cd69ea811f292ae5f6`，root 核对工作区干净（46 个 internal 路径文件）。实施者汇总全量 Go、最终受影响 store/worker/httpapi/app 回归、race、Linux amd64 编译、Node 55/55、原 T08 四 overlay 通过；最终 Native 无 skip，2 chunks/1 entity/1 event/7 observations/0 新 provider 调用。日志与真实覆盖范围保留在 internal/archiveworker/evidence/2026-10-04-t09/，不是独立审查批准。root 已启动新的独立需求审查者覆盖完整 T09 契约及触及的 T08 多身份聚合，要求实际反例验证；质量审查与 T10 继续等待需求审查。生产、42 查询、索引消费及 NAS/TV 系统验收均未据此完成。
+
+T09 独立需求审查进行中已复现两项交易当前证据缺陷，root 原样执行 /tmp/t09-independent-spec-overlay.json 的 ^TestReview 同样 RED（0.285 秒）：同文件物理锚点一致的完整金额 70→80 重提取被当作跨来源冲突，进入 waiting_input 且当前金额消失；两来源70/80冲突后撤回70来源，唯一有效80仍被冲突过滤抑制。分别涉及 amountConflict 未区分同来源修订与跨来源证明、当前冲突未按有效可见来源集合重算。完整审查仍在继续，代码保持固定 b91c49b，尚未派修复或启动质量审查/T10，不因原基线测试通过忽略这些反例。
