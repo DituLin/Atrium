@@ -276,3 +276,5 @@ root 独立运行两项发布事务定向 GREEN（0.338 秒）：ProtectedIdenti
 root 复跑交易公开隔离增量 GREEN（0.299 秒）：原公开 70/70/80 冲突用例仍通过，新增 PrivateConflictingProofDoesNotSuppressPublicAmount 将第三份 80 凭证整文设私密后，前两份公开资料仍返回 70。当前过滤按冲突来源文档的 withdrawn/tv_visible/original_restricted 判定；此证据不涵盖局部私密的独立公开冲突、首次来源私密/撤回后的跨文档引用、冲突凭证新发布替代旧版本。相关完整闭包仍需实施与独立审查，不能扩大为全部交易公开隔离已完成。
 
 root 独立执行 TestWorkerActualNativeWithRetainedCompletion GREEN（0.699 秒，无 skip）：原件 /tmp/atriumos-t06-fixtures/report.png，真实辅助程序 /tmp/atriumos-quality-review/helper，保留响应 internal/archive/understanding/evidence/2026-10-04-v2/compact/native-report.validated.json。实际临时 DB/blob/intake→真实 native parse→两块 plan（manifest 必须与保留模型输入完全一致）→保留 completion→实体决策→原子发布，task succeeded，1 entity、1 event、7 observations，new_provider_calls=0。测试在理解边界注入已保留 ChunkUnderstanding，发布仍重验 Plan/Merge；这是实际解析与存储消费者衔接，不是本轮重新经过 OpenClaw 进程/远端模型。故障与修订边界、完整全量回归及双审仍未完成。
+
+root 独立复验人工归属边界 GREEN（0.309 秒）：FieldReassignmentDoesNotSilentlyReconfirmOldSubject 将 Alice 文档单条 observation 改归 Bob 后，同文件重提取进入 waiting_input，当前 observation 保留 Bob；同组 SamePhysicalNamedSubjectWithoutDOBDoesNotAskAgain 正对照仍 succeeded。此为单字段更正与窄文档关联复用的实际发布回归，不证明所有多字段/整主体修订与后续回答路径已覆盖；T09 完整恢复与最终双审继续待完成。
