@@ -262,3 +262,5 @@ T08 首次固定实现提交 `0c90a0d598b0c0c2f36f9745617f11e117497c95`，root �
 首批开发检查：root 独立运行 ClaimKinds 不抢索引任务、产物/checkpoint CAS 与租约丢失后预算保留、extraction 来源/文档版本绑定、发布 outbox 故障全回滚与同文件第二来源不重复事件、人工值/私密修订重提取保留五项定向 store 测试，全部 GREEN（0.342 秒）。编译发布候选重验 Plan/Merge 并转换父证据物理锚点测试 GREEN（0.354 秒）。当前发布样本为无人物家庭资料，不能替代完整 T08 人物/房屋桥接或消费者端到端验收。typed 澄清、legacy 连续投影、消费者、角色/身份映射、重新核对文档版本及资源总量限制仍在实施，尚未固定 T09 代码版本或独立审查。
 
 root 独立运行首个 `TestWorkerRealTextPipelineOfflineModelBoundary` GREEN（0.583 秒）：真实临时库/blob/intake → Parse → PlanChunks → ValidateChunk → Merge → 发布任务完成，第二次领取为空。模型边界使用测试函数提供合成 extraction，明确没有调用 provider；这证明当前单一无人物文本流程，不能代表图片、真实保留响应、完整身份桥接或故障矩阵通过。T09 仍在继续开发，尚无固定提交或独立验收。
+
+下一增量 root 实跑：typed 澄清过期与 ingest-only 拒绝（当前 keep_current 路径）、legacy 撤回链乱序投影、同文件并发来源重新核对版本且复用推理、每 operation 持久次数上限及 extraction 文档绑定，五项 store GREEN（0.356 秒）；doctor_name 只保留相关角色且生日证据传入实体决策测试 GREEN（0.573 秒）。此前一次定向执行遇到新增 RebaseArchiveExtraction 测试尚缺实现的编译 RED，实施完成后以上复跑通过。typed 答案幂等/新主体、子区域私密、完整强身份映射及消费者故障矩阵仍在收敛；未据此声称 T09 完整或全量回归通过。
