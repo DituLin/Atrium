@@ -272,3 +272,5 @@ root 独立复验下一稳定增量五项 store 测试 GREEN（0.312 秒）：�
 root 新增复验：CurrentArchiveObservations 私密排除、同文独立公开字段保留且原件不可公开、dimension 私密引用闭包、完整交易身份匹配四项最终 GREEN（0.316 秒）。dimension 反例首次实际 RED：公开 80 的单位引用带出私密 70；修复将 Dimensions 转为 CanonicalEvidence，并另设 VisibilityAnchors 包含其物理依赖，保留值 SlotKey 身份不变，root 核对代码后原样复跑通过。交易测试只证明仓库辅助函数按完整 type/issuer/identifier 关联、缺 issuer 不关联；未证明实际消费者跨文档金额去重或冲突处理。隐私测试仍不替代全部格式/身份派生闭包、人工归属、故障矩阵、全量及独立双审；T09 继续实施。
 
 root 独立运行两项发布事务定向 GREEN（0.338 秒）：ProtectedIdentityFullPublicationKeepsLeadingZeros 使用两份不同主体显示名但相同受保护身份 00012/issuer 的材料，最终一个实体，保护表保留前导零，普通 observation revision 不含原身份值；TransactionPublicationDeduplicatesAmountAndKeepsConflict 使用三份相同完整交易身份的 70/70/80 SGD 材料，只有一个金额 observation，冲突保留在 alternatives，当前授权事实读取不输出未决金额。这是预构造且经验证的 bundle→真实发布事务证据，不是实际模型/worker 全链。另已交实施者验证私密冲突凭证不能改变公开事实，以及跨文档共享事实在来源撤回/私密后的证据闭包；尚未以该定向通过认定这些边界完成。
+
+root 复跑交易公开隔离增量 GREEN（0.299 秒）：原公开 70/70/80 冲突用例仍通过，新增 PrivateConflictingProofDoesNotSuppressPublicAmount 将第三份 80 凭证整文设私密后，前两份公开资料仍返回 70。当前过滤按冲突来源文档的 withdrawn/tv_visible/original_restricted 判定；此证据不涵盖局部私密的独立公开冲突、首次来源私密/撤回后的跨文档引用、冲突凭证新发布替代旧版本。相关完整闭包仍需实施与独立审查，不能扩大为全部交易公开隔离已完成。
