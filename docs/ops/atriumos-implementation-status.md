@@ -280,3 +280,5 @@ root 独立执行 TestWorkerActualNativeWithRetainedCompletion GREEN（0.699 秒
 root 独立复验人工归属边界 GREEN（0.309 秒）：FieldReassignmentDoesNotSilentlyReconfirmOldSubject 将 Alice 文档单条 observation 改归 Bob 后，同文件重提取进入 waiting_input，当前 observation 保留 Bob；同组 SamePhysicalNamedSubjectWithoutDOBDoesNotAskAgain 正对照仍 succeeded。此为单字段更正与窄文档关联复用的实际发布回归，不证明所有多字段/整主体修订与后续回答路径已覆盖；T09 完整恢复与最终双审继续待完成。
 
 root 实跑产物写入两项边界 GREEN（1.394 秒，无 short/skip）：第 261 项与持久 128 MiB 字节越界均拒绝，任务 state_version 不变、产物数量不增加。ByteLimit 用 SQLite zeroblob 构造接近上限的既存数据，证明仓库写入限额事务，不代表该种子本身是合法可复用解析产物。完整产品来源绑定、恢复故障与最终回归仍待完成。
+
+root 复验交易区域可见性三项 GREEN（0.285 秒）：公开冲突、整文私密冲突排除、UnrelatedPrivateRegionDoesNotHidePublicTransactionConflict（无关备注私密不隐藏公开金额冲突）。实施者将粗粒度 original_restricted 过滤改为冲突自身依赖区域判定。当前性检查仍在收敛：旧提取的事实可被新 active publication 保留，不能普遍用最新 extraction 等同性代替有效引用闭包；root 已要求保留旧事实/明确修正移除冲突两种对照，尚未视为完成。
