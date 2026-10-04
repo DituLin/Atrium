@@ -296,3 +296,5 @@ T09 独立需求审查进行中已复现两项交易当前证据缺陷，root �
 独立需求审查新增两项反例，root 对同一 /tmp/t09-independent-spec-overlay.json 的 ^TestReview(Incomplete|Shared) 原样复跑 RED（0.252 秒）：同文原有两个物理事件，重提取仅覆盖一个时错误 succeeded 并切 active，未因旧事件未匹配而保留原发布/澄清；共享观测 A 人工值71 后 B 仅改归属，当前读取按整条最新 user revision 替换，导致既有 AssertedValue 丢失回到原70，违反值与归属独立修订。当前共四项已复现，完整审查仍在进行；审查者真实 native 保留响应链通过，另旧 archive 进程取消测试一次 pid 文件时序失败正在单独复跑，未将其判为本次代码缺陷。
 
 T09 固定实现独立需求审查最终结论为 CHANGES REQUESTED，共五项已复现缺陷。除前述四项外，分区审查与未决主体同时出现时，生成的问题允许 create_subject，但尚未建立主体 link，提交合法答案返回 sql: no rows in result set；root 原样复跑第五项同样 RED（0.307 秒）。原实施者已接收完整五项反例与原 overlay，开始修复并增加仓库回归；必须保留原反例，固定修复提交后重新需求审查，通过后再做质量审查。审查者的 store/worker/httpapi/app、四份 T08 overlay 和实际 native helper 加保留 completion 链均通过；旧 archive 进程测试单项及完整包重跑通过（完整包 8.849 秒），不列为本次缺陷。
+
+修复增量验证：root 首轮原样执行五项独立反例，四项通过、独立归属覆盖金额仍失败（0.652 秒）；实施者继续拆分金额与归属断言后，root 再次原样执行同一 overlay，五项全部通过（0.657 秒）。这是未提交修复的局部证据，扩展顺序/私密/撤回/来源回归及固定提交复审尚待完成，T09 不据此标记批准。
