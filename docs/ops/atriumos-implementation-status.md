@@ -264,3 +264,5 @@ T08 首次固定实现提交 `0c90a0d598b0c0c2f36f9745617f11e117497c95`，root �
 root 独立运行首个 `TestWorkerRealTextPipelineOfflineModelBoundary` GREEN（0.583 秒）：真实临时库/blob/intake → Parse → PlanChunks → ValidateChunk → Merge → 发布任务完成，第二次领取为空。模型边界使用测试函数提供合成 extraction，明确没有调用 provider；这证明当前单一无人物文本流程，不能代表图片、真实保留响应、完整身份桥接或故障矩阵通过。T09 仍在继续开发，尚无固定提交或独立验收。
 
 下一增量 root 实跑：typed 澄清过期与 ingest-only 拒绝（当前 keep_current 路径）、legacy 撤回链乱序投影、同文件并发来源重新核对版本且复用推理、每 operation 持久次数上限及 extraction 文档绑定，五项 store GREEN（0.356 秒）；doctor_name 只保留相关角色且生日证据传入实体决策测试 GREEN（0.573 秒）。此前一次定向执行遇到新增 RebaseArchiveExtraction 测试尚缺实现的编译 RED，实施完成后以上复跑通过。typed 答案幂等/新主体、子区域私密、完整强身份映射及消费者故障矩阵仍在收敛；未据此声称 T09 完整或全量回归通过。
+
+进一步定向复验：root 跑 PDF 同页/坐标系唯一物理匹配（IoU ≥ 0.90，跨页/旋转拒绝）与纯文本 patient/student 主体、doctor/engineer 数值反例 GREEN（archive 0.794 秒）；辅助程序字节及插件目录资源变化使 pipeline 指纹改变两项 GREEN（archiveworker 0.328 秒）；同物理 mention 重发布复用原 link 且不接受悄悄改目标 GREEN（store 0.502 秒）。这些仍是开发期定向证据；子私密派生身份闭包、typed 完整回答路径、partial 字段分离、保护身份/交易证明、runtime/API 与完整故障验收尚待完成。
