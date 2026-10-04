@@ -292,3 +292,5 @@ root 多证件增量三项独立 GREEN（0.282 秒）：合法 national_id+passp
 T09 首次完整固定提交 `b91c49bafa64e9eb64d2a2cd69ea811f292ae5f6`，root 核对工作区干净（46 个 internal 路径文件）。实施者汇总全量 Go、最终受影响 store/worker/httpapi/app 回归、race、Linux amd64 编译、Node 55/55、原 T08 四 overlay 通过；最终 Native 无 skip，2 chunks/1 entity/1 event/7 observations/0 新 provider 调用。日志与真实覆盖范围保留在 internal/archiveworker/evidence/2026-10-04-t09/，不是独立审查批准。root 已启动新的独立需求审查者覆盖完整 T09 契约及触及的 T08 多身份聚合，要求实际反例验证；质量审查与 T10 继续等待需求审查。生产、42 查询、索引消费及 NAS/TV 系统验收均未据此完成。
 
 T09 独立需求审查进行中已复现两项交易当前证据缺陷，root 原样执行 /tmp/t09-independent-spec-overlay.json 的 ^TestReview 同样 RED（0.285 秒）：同文件物理锚点一致的完整金额 70→80 重提取被当作跨来源冲突，进入 waiting_input 且当前金额消失；两来源70/80冲突后撤回70来源，唯一有效80仍被冲突过滤抑制。分别涉及 amountConflict 未区分同来源修订与跨来源证明、当前冲突未按有效可见来源集合重算。完整审查仍在继续，代码保持固定 b91c49b，尚未派修复或启动质量审查/T10，不因原基线测试通过忽略这些反例。
+
+独立需求审查新增两项反例，root 对同一 /tmp/t09-independent-spec-overlay.json 的 ^TestReview(Incomplete|Shared) 原样复跑 RED（0.252 秒）：同文原有两个物理事件，重提取仅覆盖一个时错误 succeeded 并切 active，未因旧事件未匹配而保留原发布/澄清；共享观测 A 人工值71 后 B 仅改归属，当前读取按整条最新 user revision 替换，导致既有 AssertedValue 丢失回到原70，违反值与归属独立修订。当前共四项已复现，完整审查仍在进行；审查者真实 native 保留响应链通过，另旧 archive 进程取消测试一次 pid 文件时序失败正在单独复跑，未将其判为本次代码缺陷。
