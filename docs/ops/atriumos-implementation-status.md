@@ -282,3 +282,5 @@ root 独立复验人工归属边界 GREEN（0.309 秒）：FieldReassignmentDoes
 root 实跑产物写入两项边界 GREEN（1.394 秒，无 short/skip）：第 261 项与持久 128 MiB 字节越界均拒绝，任务 state_version 不变、产物数量不增加。ByteLimit 用 SQLite zeroblob 构造接近上限的既存数据，证明仓库写入限额事务，不代表该种子本身是合法可复用解析产物。完整产品来源绑定、恢复故障与最终回归仍待完成。
 
 root 复验交易区域可见性三项 GREEN（0.285 秒）：公开冲突、整文私密冲突排除、UnrelatedPrivateRegionDoesNotHidePublicTransactionConflict（无关备注私密不隐藏公开金额冲突）。实施者将粗粒度 original_restricted 过滤改为冲突自身依赖区域判定。当前性检查仍在收敛：旧提取的事实可被新 active publication 保留，不能普遍用最新 extraction 等同性代替有效引用闭包；root 已要求保留旧事实/明确修正移除冲突两种对照，尚未视为完成。
+
+root 新增独立复验：worker UnknownCallSurvivesDatabaseRestart / RevocationCancelsExternalCall / CallBudgetRemainsExhaustedAfterRestart 三项 GREEN（0.682 秒），用真实临时 DB/worker 与可控理解函数，注入 chunk commit trigger 中断、关闭重开库/过期租约恢复；原 reserved 预算不退款，权限撤销取消上下文且无事实发布，两次失败后重开库终止为 call_budget_exhausted。未以函数替身声称真实外部进程取消重测。ConflictReferencesSurvivePartialAndExpireOnReplacement 已改为 Parse/Plan/Validate/Merge/Publish、不同 extraction 的 uncertain 再完整纠正流程，root GREEN（0.565 秒）：旧当前冲突继续有效，纠正后移除当前引用且保留历史 alternative。HTTP revision strict shape/auth 四个拒绝子例 GREEN（0.555 秒），覆盖未知参数、缺 reason、ingest-only 和不存在文档；并非成功修订端到端验收。最后全量/跨平台与独立双审仍待完成。
