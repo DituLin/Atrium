@@ -32,3 +32,11 @@ func TestArchiveTaskProjectionIsAllowlisted(t *testing.T) {
 	}
 	require.Equal(t, "processing", p.Stage)
 }
+func TestArchiveProjectionRetainsEveryParserStatus(t *testing.T) {
+	for _, status := range []string{"partial", "empty", "encrypted", "invalid", "limit_exceeded"} {
+		p := ProjectArchiveTask(&ArchiveTask{ResultJSON: json.RawMessage(`{"parse_status":"` + status + `"}`)})
+		if p.Result == nil || p.Result.ParseStatus != status {
+			t.Fatalf("lost %s", status)
+		}
+	}
+}

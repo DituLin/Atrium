@@ -156,7 +156,7 @@ func ProjectArchiveTask(t *ArchiveTask) *ArchiveTaskProjection {
 	if json.Unmarshal(t.ResultJSON, &r) == nil {
 		out := &ArchiveTaskResult{}
 		switch r.ParseStatus {
-		case "pending", "parsed", "unsupported", "failed":
+		case "pending", "parsed", "partial", "empty", "unsupported", "encrypted", "invalid", "limit_exceeded", "failed":
 			out.ParseStatus = r.ParseStatus
 		}
 		if r.FactCount != nil && *r.FactCount >= 0 && *r.FactCount <= 1000000 {

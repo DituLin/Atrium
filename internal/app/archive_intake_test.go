@@ -120,3 +120,16 @@ func TestRuntimeShutdownClosesBlockedArchiveUpload(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, staging)
 }
+func TestRuntimeArchiveConsumerProjectsLegacyOutbox(t *testing.T) {
+	rt, _ := archiveRuntime(t, true)
+	defer rt.Shutdown()
+	ctx := context.Background()
+	now := time.Now()
+	require.NoError(t, rt.DB().FamilyRecords().PutMember(ctx, domain.FamilyMember{ID: "synthetic", Name: "Synthetic"}, now))
+	_, _, e := rt.DB().FamilyRecords().Record(ctx, "test", "runtime-archive", domain.FamilyRecordInput{MemberID: "synthetic", Category: "growth", Title: "height", OccurredAt: now, DisplayOnTV: true}, now)
+	require.NoError(t, e)
+	require.Eventually(t, func() bool {
+		var n int
+		return rt.DB().SQL().QueryRow(`SELECT count(*) FROM archive_legacy_outbox WHERE status='completed'`).Scan(&n) == nil && n == 1
+	}, 3*time.Second, 20*time.Millisecond)
+}

@@ -239,6 +239,25 @@ func (r *ArchiveTasks) Events(ctx context.Context, actor domain.IntegrationActor
 // task is runnable. Expiry
 // alone revokes worker authority, even before another worker reclaims the task.
 func (r *ArchiveTasks) Claim(ctx context.Context, household string, ttl time.Duration) (*domain.ArchiveTask, error) {
+	return r.claimKinds(ctx, household, ttl, nil)
+}
+
+// ClaimKinds only leases explicitly supported work; an empty set claims nothing.
+func (r *ArchiveTasks) ClaimKinds(ctx context.Context, household string, ttl time.Duration, kinds []string) (*domain.ArchiveTask, error) {
+	if len(kinds) == 0 {
+		return nil, nil
+	}
+	if len(kinds) > 16 {
+		return nil, domain.Errorf(domain.CodeInvalidRequest, "invalid archive pipeline request")
+	}
+	for _, k := range kinds {
+		if e := archiveIdentifiers(k); e != nil {
+			return nil, e
+		}
+	}
+	return r.claimKinds(ctx, household, ttl, kinds)
+}
+func (r *ArchiveTasks) claimKinds(ctx context.Context, household string, ttl time.Duration, kinds []string) (*domain.ArchiveTask, error) {
 	if err := archiveIdentifiers(household); err != nil {
 		return nil, err
 	}
@@ -252,7 +271,7 @@ func (r *ArchiveTasks) Claim(ctx context.Context, household string, ttl time.Dur
 			return err
 		}
 		task, err := scanArchiveTask(tx.QueryRowContext(ctx, `SELECT `+archiveTaskColumns+` FROM archive_tasks
- WHERE household_id=? AND EXISTS (
+ WHERE household_id=? AND (?='null' OR kind IN (SELECT value FROM json_each(?))) AND EXISTS (
   SELECT 1 FROM integration_principals p
   WHERE p.id=archive_tasks.principal_id AND p.policy_version=archive_tasks.policy_version
    AND p.enabled=1 AND p.revoked_at IS NULL AND p.expires_at>?
@@ -260,7 +279,7 @@ func (r *ArchiveTasks) Claim(ctx context.Context, household string, ttl time.Dur
    AND EXISTS (SELECT 1 FROM json_each(p.policy_json,'$.household_ids') WHERE value=archive_tasks.household_id)
  ) AND ((status IN ('queued','retry_wait') AND available_at<=?)
      OR (status='running' AND lease_expires_at<=?))
- ORDER BY available_at,created_at,id LIMIT 1`, household, FormatTime(now), FormatTime(now), FormatTime(now)))
+ ORDER BY available_at,created_at,id LIMIT 1`, household, entityJSON(kinds), entityJSON(kinds), FormatTime(now), FormatTime(now), FormatTime(now)))
 		if errors.Is(err, domain.ErrNotFound) {
 			out = nil
 			return nil
@@ -520,6 +539,13 @@ func (r *ArchiveTasks) ResolveWaiting(ctx context.Context, actor domain.Integrat
 		task, err := archiveTaskIn(ctx, tx, household, id)
 		if err != nil {
 			return err
+		}
+		var businessQuestions int
+		if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM archive_questions WHERE household_id=? AND task_id=?`, household, id).Scan(&businessQuestions); err != nil {
+			return err
+		}
+		if businessQuestions > 0 {
+			return domain.ErrConflict
 		}
 		if err := archiveTaskClientPermission(principal, task, "archive.organize"); err != nil {
 			return err

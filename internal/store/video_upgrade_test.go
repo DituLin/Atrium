@@ -33,7 +33,7 @@ func TestVideoUpgradePreservesExistingMediaAndScreen(t *testing.T) {
 	require.NoError(t, err)
 	n, err := db.Migrate(ctx)
 	require.NoError(t, err)
-	require.Equal(t, 10, n)
+	require.Equal(t, 11, n)
 	after, err := db.Photos().Get(ctx, photo.ID)
 	require.NoError(t, err)
 	require.Equal(t, before, after)

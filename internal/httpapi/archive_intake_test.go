@@ -394,3 +394,28 @@ func TestArchiveHTTPMarkerLikeContentIsPreserved(t *testing.T) {
 	require.EqualValues(t, len(content), receipt["size_bytes"])
 	require.Equal(t, fmt.Sprintf("%x", sha256.Sum256([]byte(content))), receipt["sha256"])
 }
+func TestArchiveClarificationRouteRejectsUntypedAnswer(t *testing.T) {
+	h := newArchiveHTTP(t, true, "archive.read", "archive.organize")
+	status, _, _ := h.request(t, "POST", "/api/v1/integrations/archives/tasks/missing/answer", "application/json", []byte(`{"action":"anything","lease_token":"stolen"}`), h.token)
+	require.Equal(t, 400, status)
+}
+
+func TestArchiveRevisionRouteStrictAuthorizationAndShape(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		permissions []string
+		body        string
+		want        int
+	}{
+		{"unknown", []string{"archive.read", "archive.organize"}, `{"document_revision":1,"kind":"private","reason":"x","lease_token":"no"}`, 400},
+		{"missing_reason", []string{"archive.read", "archive.organize"}, `{"document_revision":1,"kind":"private"}`, 400},
+		{"ingest_only", []string{"archive.ingest"}, `{"document_revision":1,"kind":"private","reason":"x"}`, 403},
+		{"missing_document", []string{"archive.read", "archive.organize"}, `{"document_revision":1,"kind":"private","reason":"x"}`, 404},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := newArchiveHTTP(t, true, tc.permissions...)
+			status, _, raw := h.request(t, "POST", "/api/v1/integrations/archives/documents/missing/revisions", "application/json", []byte(tc.body), h.token)
+			require.Equal(t, tc.want, status, raw)
+		})
+	}
+}

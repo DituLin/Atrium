@@ -149,7 +149,14 @@ func (r *ArchiveTasks) AcceptIntake(ctx context.Context, actor domain.Integratio
 			if !newDocument {
 				before = boolInt(visible)
 				visibilityVersion++
-				if _, err = tx.ExecContext(ctx, `UPDATE archive_documents SET tv_visible=0,visibility_version=? WHERE household_id=? AND id=?`, visibilityVersion, household, documentID); err != nil {
+				if _, err = tx.ExecContext(ctx, `UPDATE archive_documents SET tv_visible=0,visibility_version=?,document_revision=document_revision+1 WHERE household_id=? AND id=?`, visibilityVersion, household, documentID); err != nil {
+					return err
+				}
+				var docRevision int64
+				if err = tx.QueryRowContext(ctx, `SELECT document_revision FROM archive_documents WHERE household_id=? AND id=?`, household, documentID).Scan(&docRevision); err != nil {
+					return err
+				}
+				if err = archiveDocumentChangedIn(ctx, tx, household, documentID, docRevision); err != nil {
 					return err
 				}
 			}

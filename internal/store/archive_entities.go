@@ -153,7 +153,7 @@ type entityAttribute struct {
 func archiveAttributesIn(ctx context.Context, tx *sql.Tx, h string, public bool) ([]entityAttribute, bool, error) {
 	q := `SELECT a.id,a.entity_id,a.kind,a.value,a.precision,a.document_id,a.legacy_member_id,a.evidence_json,a.tv_visible,a.conflict FROM archive_entity_attributes a WHERE a.household_id=? AND (a.link_id IS NULL OR EXISTS(SELECT 1 FROM archive_entity_links l WHERE l.household_id=a.household_id AND l.id=a.link_id AND l.status='linked'))`
 	if public {
-		q += ` AND a.tv_visible=1 AND (EXISTS(SELECT 1 FROM archive_documents d WHERE d.household_id=a.household_id AND d.id=a.document_id AND d.tv_visible=1))`
+		q += ` AND a.tv_visible=1 AND (EXISTS(SELECT 1 FROM archive_documents d WHERE d.household_id=a.household_id AND d.id=a.document_id AND d.tv_visible=1 AND d.original_restricted=0 AND d.withdrawn=0))`
 	}
 	q += ` ORDER BY a.id LIMIT 16385`
 	rows, e := tx.QueryContext(ctx, q, h)
@@ -277,12 +277,20 @@ func archiveEntitySnapshotIn(ctx context.Context, tx *sql.Tx, h string, probes m
 		if e != nil {
 			return s, e
 		}
+
 		for other, q := range probes {
-			if other != ref && supportedIdentity(p) && supportedIdentity(q) && p.Kind == q.Kind && p.Issuer == q.Issuer && p.RuleVersion == q.RuleVersion {
-				if p.Value == q.Value {
-					r.PeerRefs = append(r.PeerRefs, other)
-				} else if exclusiveIdentity(p.Kind) {
-					r.ConflictingPeerRefs = append(r.ConflictingPeerRefs, other)
+			if other == ref {
+				continue
+			}
+			for _, left := range archiveIdentityParts(p) {
+				for _, right := range archiveIdentityParts(q) {
+					if supportedIdentity(left) && supportedIdentity(right) && left.Kind == right.Kind && left.Issuer == right.Issuer && left.RuleVersion == right.RuleVersion {
+						if left.Value == right.Value {
+							r.PeerRefs = appendUnique(r.PeerRefs, other)
+						} else if exclusiveIdentity(left.Kind) {
+							r.ConflictingPeerRefs = appendUnique(r.ConflictingPeerRefs, other)
+						}
+					}
 				}
 			}
 		}
@@ -402,7 +410,7 @@ func archiveApplyResolutionIn(ctx context.Context, tx *sql.Tx, in archive.Resolu
 	if len(identityProbes) > 0 {
 		probes = identityProbes[0]
 	}
-	s, e := archiveEntitySnapshotIn(ctx, tx, in.HouseholdID, probes)
+	s, e := archivePublicationSnapshotIn(ctx, tx, in, probes)
 	if e != nil {
 		return nil, e
 	}
@@ -453,6 +461,24 @@ func archiveApplyResolutionIn(ctx context.Context, tx *sql.Tx, in archive.Resolu
 		if d.Action == "needs_resolution" {
 			status = "needs_resolution"
 			matched = nil
+		}
+		var existingID, existingStatus string
+		var existingTarget sql.NullString
+		priorErr := tx.QueryRowContext(ctx, `SELECT id,status,matched_entity_id FROM archive_entity_links WHERE household_id=? AND document_id=? AND mention_ref=?`, in.HouseholdID, in.DocumentID, m.Ref).Scan(&existingID, &existingStatus, &existingTarget)
+		if priorErr == nil {
+			if d.Action == "needs_resolution" {
+				continue
+			}
+			if existingStatus == status && existingTarget.String == id {
+				if id != "" {
+					out[m.Ref] = id
+				}
+				continue
+			}
+			return nil, domain.ErrConflict
+		}
+		if !errors.Is(priorErr, sql.ErrNoRows) {
+			return nil, priorErr
 		}
 		linkID := domain.NewID()
 		_, e = tx.ExecContext(ctx, `INSERT INTO archive_entity_links(household_id,id,document_id,mention_ref,role,matched_entity_id,status,version,created_revision) VALUES(?,?,?,?,?,?,?,1,?)`, in.HouseholdID, linkID, in.DocumentID, m.Ref, m.Role, matched, status, p.Revision)
@@ -759,6 +785,7 @@ func archiveLegacyEntityIn(ctx context.Context, tx *sql.Tx, h, member string) (s
 // Values never leave store comparison code. These are trusted Core inputs, not
 // model candidate DTOs; even accidental JSON/String formatting omits values.
 type IdentityProbe struct {
+	Additional                []IdentityProbe `json:"-"`
 	Kind, Issuer, RuleVersion string
 	Value                     string `json:"-"`
 	Evidence                  []string
@@ -799,7 +826,53 @@ func archiveProtectedIdentityPutIn(ctx context.Context, tx *sql.Tx, h, id string
 	}
 	return archiveEntityTouchIn(ctx, tx, h, id)
 }
+func archiveIdentityParts(p IdentityProbe) []IdentityProbe {
+	if len(p.Additional) > 7 {
+		return nil
+	}
+	parts := append([]IdentityProbe{p}, p.Additional...)
+	for i := range parts {
+		if i > 0 && len(parts[i].Additional) > 0 {
+			return nil
+		}
+		parts[i].Additional = nil
+	}
+	return parts
+}
 func archiveCompareIdentityIn(ctx context.Context, tx *sql.Tx, h string, p IdentityProbe) (archive.StrongIdentityMatch, error) {
+	parts := archiveIdentityParts(p)
+	if len(parts) == 0 {
+		return archive.StrongIdentityMatch{}, nil
+	}
+	combined := archive.StrongIdentityMatch{Supported: true, Complete: true}
+	for i, part := range parts {
+		r, e := archiveCompareSingleIdentityIn(ctx, tx, h, part)
+		if e != nil {
+			return combined, e
+		}
+		combined.Supported = combined.Supported && r.Supported
+		combined.Complete = combined.Complete && r.Complete
+		combined.Conflict = combined.Conflict || r.Conflict
+		for _, id := range r.EntityIDs {
+			combined.EntityIDs = appendUnique(combined.EntityIDs, id)
+		}
+		for _, id := range r.ConflictingEntityIDs {
+			combined.ConflictingEntityIDs = appendUnique(combined.ConflictingEntityIDs, id)
+		}
+		combined.Evidence = append(combined.Evidence, r.Evidence...)
+		for _, previous := range parts[:i] {
+			if part.Kind == previous.Kind && part.Issuer == previous.Issuer && part.Value != previous.Value && exclusiveIdentity(part.Kind) {
+				combined.Conflict = true
+			}
+		}
+	}
+	sort.Strings(combined.EntityIDs)
+	sort.Strings(combined.ConflictingEntityIDs)
+	sort.Strings(combined.Evidence)
+	return combined, nil
+}
+
+func archiveCompareSingleIdentityIn(ctx context.Context, tx *sql.Tx, h string, p IdentityProbe) (archive.StrongIdentityMatch, error) {
 	r := archive.StrongIdentityMatch{Evidence: append([]string(nil), p.Evidence...)}
 	if !supportedIdentity(p) {
 		return r, nil

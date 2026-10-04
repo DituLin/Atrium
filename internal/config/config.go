@@ -215,7 +215,12 @@ type FamilyArchive struct {
 
 // Archives enables local durable intake independently of the legacy NAS exporter.
 type Archives struct {
-	Enabled       bool     `yaml:"enabled"`
-	MaxBytes      int64    `yaml:"max_bytes"`
-	UploadTimeout Duration `yaml:"upload_timeout"`
+	NativeHelperPath string   `yaml:"native_helper_path"`
+	NodePath         string   `yaml:"node_path"`
+	OpenClawPath     string   `yaml:"openclaw_path"`
+	WorkerPluginPath string   `yaml:"worker_plugin_path"`
+	ProviderPath     string   `yaml:"provider_path"`
+	Enabled          bool     `yaml:"enabled"`
+	MaxBytes         int64    `yaml:"max_bytes"`
+	UploadTimeout    Duration `yaml:"upload_timeout"`
 }

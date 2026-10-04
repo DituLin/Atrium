@@ -197,6 +197,9 @@ func (r *Runtime) runBackground(ctx context.Context) {
 	if r.commands != nil {
 		start("screen", r.runExpirer)
 	}
+	if r.cfg.Archives.Enabled {
+		start("archives", r.runArchives)
+	}
 	start("retention", r.runRetention)
 	if r.cfg.FamilyArchive.Enabled {
 		start("family_archive", r.runFamilyArchive)

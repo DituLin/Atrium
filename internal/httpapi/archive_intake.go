@@ -16,6 +16,7 @@ import (
 	"github.com/DituLin/Atrium/internal/archive"
 	"github.com/DituLin/Atrium/internal/auth"
 	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 const (
@@ -31,7 +32,10 @@ func (a *API) archiveRoutes() {
 	timeout := time.Duration(a.deps.Config.Archives.UploadTimeout)
 	a.mux.HandleFunc("POST "+prefix+"/intakes", a.archiveBodyDeadline(timeout, a.deps.Config.Archives.MaxBytes+archiveOverheadLimit, a.requireIntegrationTimeout("archive.ingest", timeout, a.archiveIntake)))
 	a.mux.HandleFunc("POST "+prefix+"/intakes/lookup", a.archiveBodyDeadline(5*time.Second, archiveMetadataLimit, a.requireIntegration("archive.ingest", a.archiveLookup)))
+	a.mux.HandleFunc("POST "+prefix+"/documents/{id}/revisions", a.archiveBodyDeadline(5*time.Second, archiveMetadataLimit, a.requireIntegration("archive.organize", a.archiveRevision)))
 	a.mux.HandleFunc("GET "+prefix+"/tasks/{id}", a.requireIntegration("archive.read", a.archiveTask))
+	a.mux.HandleFunc("GET "+prefix+"/tasks/{id}/question", a.requireIntegration("archive.read", a.archiveQuestion))
+	a.mux.HandleFunc("POST "+prefix+"/tasks/{id}/answer", a.archiveBodyDeadline(5*time.Second, archiveMetadataLimit, a.requireIntegration("archive.organize", a.archiveAnswer)))
 }
 
 // SetReadDeadline reaches the actual network body reader through statusWriter.
@@ -365,4 +369,62 @@ func (a *API) archiveTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	integrationReply(a, w, task)
+}
+
+func (a *API) archiveQuestion(w http.ResponseWriter, r *http.Request) {
+	home, e := a.deps.DB.LocalHousehold(r.Context())
+	if e != nil {
+		WriteError(w, r, e)
+		return
+	}
+	q, e := a.deps.DB.ArchiveTasks().ArchiveQuestion(r.Context(), auth.FromContext(r.Context()).IntegrationActor(), home.ID, r.PathValue("id"))
+	if e != nil {
+		WriteError(w, r, e)
+		return
+	}
+	integrationReply(a, w, q)
+}
+func (a *API) archiveAnswer(w http.ResponseWriter, r *http.Request) {
+	var answer store.ArchiveAnswer
+	if e := strictArchiveJSON(r.Body, &answer, []string{"question_id", "question_version", "waiting_task_version", "extraction_id", "document_revision", "resolution_key", "action"}, "target", "name"); e != nil {
+		WriteError(w, r, e)
+		return
+	}
+	home, e := a.deps.DB.LocalHousehold(r.Context())
+	if e != nil {
+		WriteError(w, r, e)
+		return
+	}
+	task, e := a.deps.DB.ArchiveTasks().AnswerArchiveQuestion(r.Context(), auth.FromContext(r.Context()).IntegrationActor(), home.ID, r.PathValue("id"), answer)
+	if e != nil {
+		WriteError(w, r, e)
+		return
+	}
+	integrationReply(a, w, domain.ProjectArchiveTask(task))
+}
+
+func (a *API) archiveRevision(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		DocumentRevision int64  `json:"document_revision"`
+		Kind             string `json:"kind"`
+		ObservationID    string `json:"observation_id"`
+		Value            string `json:"value"`
+		EntityID         string `json:"entity_id"`
+		Reason           string `json:"reason"`
+	}
+	if e := strictArchiveJSON(r.Body, &input, []string{"document_revision", "kind", "reason"}, "observation_id", "value", "entity_id"); e != nil {
+		WriteError(w, r, e)
+		return
+	}
+	home, e := a.deps.DB.LocalHousehold(r.Context())
+	if e != nil {
+		WriteError(w, r, e)
+		return
+	}
+	revision, e := a.deps.DB.ArchiveTasks().ReviseArchive(r.Context(), auth.FromContext(r.Context()).IntegrationActor(), home.ID, r.PathValue("id"), input.DocumentRevision, store.ArchiveRevision{Kind: input.Kind, ObservationID: input.ObservationID, Value: input.Value, EntityID: input.EntityID, Reason: input.Reason})
+	if e != nil {
+		WriteError(w, r, e)
+		return
+	}
+	integrationReply(a, w, map[string]int64{"document_revision": revision})
 }
