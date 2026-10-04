@@ -268,3 +268,5 @@ root 独立运行首个 `TestWorkerRealTextPipelineOfflineModelBoundary` GREEN�
 进一步定向复验：root 跑 PDF 同页/坐标系唯一物理匹配（IoU ≥ 0.90，跨页/旋转拒绝）与纯文本 patient/student 主体、doctor/engineer 数值反例 GREEN（archive 0.794 秒）；辅助程序字节及插件目录资源变化使 pipeline 指纹改变两项 GREEN（archiveworker 0.328 秒）；同物理 mention 重发布复用原 link 且不接受悄悄改目标 GREEN（store 0.502 秒）。这些仍是开发期定向证据；子私密派生身份闭包、typed 完整回答路径、partial 字段分离、保护身份/交易证明、runtime/API 与完整故障验收尚待完成。
 
 root 独立复验下一稳定增量五项 store 测试 GREEN（0.312 秒）：子区域私密保留文档 TV 标记且限制原件、partial 的独立完整证据发布、第二来源复用已发布产物而不转移任务身份、typed create_subject 将“妈妈”澄清为用户指定新主体并继续发布、同一物理 mention 无生日再次接收不重复询问。此前新增测试先于 ArchiveAnswer.Name 实现造成一次编译 RED，字段及流程补齐后本次通过。当前子私密测试仅验证文档标志，不能代替公开事实/身份/证据的完整可见性闭包；T08 公开身份属性暂保守排除该受限文档。完整强身份、交易证明、多事实私密投影、故障与原生保留响应全链、全量/跨平台和独立双审仍待完成，T09 未验收、生产未部署。
+
+root 新增复验：CurrentArchiveObservations 私密排除、同文独立公开字段保留且原件不可公开、dimension 私密引用闭包、完整交易身份匹配四项最终 GREEN（0.316 秒）。dimension 反例首次实际 RED：公开 80 的单位引用带出私密 70；修复将 Dimensions 转为 CanonicalEvidence，并另设 VisibilityAnchors 包含其物理依赖，保留值 SlotKey 身份不变，root 核对代码后原样复跑通过。交易测试只证明仓库辅助函数按完整 type/issuer/identifier 关联、缺 issuer 不关联；未证明实际消费者跨文档金额去重或冲突处理。隐私测试仍不替代全部格式/身份派生闭包、人工归属、故障矩阵、全量及独立双审；T09 继续实施。
