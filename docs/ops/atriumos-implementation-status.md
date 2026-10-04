@@ -22,7 +22,7 @@
 | T06 图片/PDF | 已实现并双审通过 | `7c7bee8` 获需求与质量独立批准；80 个结果、266 项定位及进程/依赖/资源检查通过，未接生产 |
 | T07 分类与事实提取 | 已完成任务级双审 | `26991d1` 获最终需求/质量批准；严格提取、长文档、归并与四领域实际合成响应/图片重放通过；未接生产消费者 |
 | T08 实体归属 | 已完成任务级双审 | `1a070c6` 获最终需求/质量批准；身份正反证、同批别名、归属事务与撤销、私密来源投影及迁移回归通过，未接生产消费者 |
-| T09 原子发布与恢复 | 实现中 | 新的单一实施者接手持久产物、消费者、原子事实发布、澄清修订与 legacy outbox；尚未验收 |
+| T09 原子发布与恢复 | 固定实现，独立需求审查中 | `b91c49b`；持久消费者、原子发布、澄清修订及 legacy outbox 已交审；尚未独立批准，质量审查待需求审查通过 |
 | T10–T18 | 未开始 | 检索、分析、渠道、TV 和恢复契约已预审；不将设计文档或旧 family 记录作为新能力通过证据 |
 
 ## 基线核对
@@ -288,3 +288,5 @@ root 新增独立复验：worker UnknownCallSurvivesDatabaseRestart / Revocation
 共享人工修订最终增量 root 独立 GREEN（0.591 秒）：扩展 ManualRevisionOfSharedObservationUsesFreshRevision 验证两份当前凭证均返回人工 AssertedValue=71、Field.Raw=70 和真实 SourceDocumentID；修订字段私密后另一凭证 public70/授权private71；新增第三份公开70不继承私密断言；撤回人工来源后授权读取恢复70。实施者报告曾复现第三份凭证错误继承 user71 的 RED，现发布仅保留本来源人工版本，跨文档优先由当前可见断言选择。此新增证据补充早先仅写入成功测试，不取代多人工断言冲突/完整双审。最终回归与文档仍在收尾。
 
 root 多证件增量三项独立 GREEN（0.282 秒）：合法 national_id+passport 同一主体现在 succeeded 并保存两项保护事实，替代早先仅 waiting 的保守实现；单身份前导零/跨显示名归属与并发 typed answer 单赢家对照继续通过。实施者使用内部有界 Additional probe 聚合多身份正反证；已要求多身份指向不同候选的矛盾与原 T08 强身份反证复验，最终受影响完整/race/Linux 尚待汇总。
+
+T09 首次完整固定提交 `b91c49bafa64e9eb64d2a2cd69ea811f292ae5f6`，root 核对工作区干净（46 个 internal 路径文件）。实施者汇总全量 Go、最终受影响 store/worker/httpapi/app 回归、race、Linux amd64 编译、Node 55/55、原 T08 四 overlay 通过；最终 Native 无 skip，2 chunks/1 entity/1 event/7 observations/0 新 provider 调用。日志与真实覆盖范围保留在 internal/archiveworker/evidence/2026-10-04-t09/，不是独立审查批准。root 已启动新的独立需求审查者覆盖完整 T09 契约及触及的 T08 多身份聚合，要求实际反例验证；质量审查与 T10 继续等待需求审查。生产、42 查询、索引消费及 NAS/TV 系统验收均未据此完成。
