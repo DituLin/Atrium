@@ -278,3 +278,5 @@ root 复跑交易公开隔离增量 GREEN（0.299 秒）：原公开 70/70/80 �
 root 独立执行 TestWorkerActualNativeWithRetainedCompletion GREEN（0.699 秒，无 skip）：原件 /tmp/atriumos-t06-fixtures/report.png，真实辅助程序 /tmp/atriumos-quality-review/helper，保留响应 internal/archive/understanding/evidence/2026-10-04-v2/compact/native-report.validated.json。实际临时 DB/blob/intake→真实 native parse→两块 plan（manifest 必须与保留模型输入完全一致）→保留 completion→实体决策→原子发布，task succeeded，1 entity、1 event、7 observations，new_provider_calls=0。测试在理解边界注入已保留 ChunkUnderstanding，发布仍重验 Plan/Merge；这是实际解析与存储消费者衔接，不是本轮重新经过 OpenClaw 进程/远端模型。故障与修订边界、完整全量回归及双审仍未完成。
 
 root 独立复验人工归属边界 GREEN（0.309 秒）：FieldReassignmentDoesNotSilentlyReconfirmOldSubject 将 Alice 文档单条 observation 改归 Bob 后，同文件重提取进入 waiting_input，当前 observation 保留 Bob；同组 SamePhysicalNamedSubjectWithoutDOBDoesNotAskAgain 正对照仍 succeeded。此为单字段更正与窄文档关联复用的实际发布回归，不证明所有多字段/整主体修订与后续回答路径已覆盖；T09 完整恢复与最终双审继续待完成。
+
+root 实跑产物写入两项边界 GREEN（1.394 秒，无 short/skip）：第 261 项与持久 128 MiB 字节越界均拒绝，任务 state_version 不变、产物数量不增加。ByteLimit 用 SQLite zeroblob 构造接近上限的既存数据，证明仓库写入限额事务，不代表该种子本身是合法可复用解析产物。完整产品来源绑定、恢复故障与最终回归仍待完成。
