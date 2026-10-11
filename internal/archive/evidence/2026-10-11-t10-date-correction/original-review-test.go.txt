@@ -1,0 +1,35 @@
+package store_test
+import (
+ "context"
+ "encoding/json"
+ "testing"
+ "github.com/DituLin/Atrium/internal/archive"
+ "github.com/DituLin/Atrium/internal/domain"
+ "github.com/DituLin/Atrium/internal/store"
+ "github.com/DituLin/Atrium/internal/store/testutil"
+ "github.com/stretchr/testify/require"
+)
+func TestReviewCorrectedDateSearch(t *testing.T) {
+ d:=testutil.NewDB(t); r:=d.ArchiveTasksWithClock(&archiveClock{now:archiveNow}); a:=archiveActor(t,d); ctx:=context.Background()
+ rec,f,x:=publicationFixture(t,d,r,"date-correct",domain.ArchiveInputText)
+ b:=literalBundle(t,"林明",[]publicationLiteral{{Name:"report_date",Value:"2026-06-15"}},"")
+ result:=b.Understanding.Chunks[0].Result; result.Fields[0].Normalizations=[]archive.Normalization{{Kind:"date",Value:"2026-06-15"}}
+ b=revalidatePublication(t,b,result); f=saveBundle(t,r,f,b); _,e:=r.PublishExtraction(ctx,f,x.ID);require.NoError(t,e)
+ obs,e:=r.CurrentArchiveObservations(ctx,a,"home-1",rec.DocumentID,false);require.NoError(t,e);require.Len(t,obs,1)
+ _,e=r.ReviseArchive(ctx,a,"home-1",rec.DocumentID,2,store.ArchiveRevision{Kind:"value",ObservationID:obs[0].ID,Value:"2026-07-20",Reason:"报告日期校正"});require.NoError(t,e)
+ _,e=indexAllArchiveSearch(ctx,r,"home-1");require.NoError(t,e)
+ p,e:=r.SearchArchives(ctx,a,"home-1",false,archive.SearchFilter{DateFrom:"2026-07-20",DateTo:"2026-07-20"},[]byte("key"));require.NoError(t,e)
+ if len(p.Items)!=1 { t.Errorf("new date missing: %+v",p) }
+ old,e:=r.SearchArchives(ctx,a,"home-1",false,archive.SearchFilter{DateFrom:"2026-06-15",DateTo:"2026-06-15"},[]byte("key"));require.NoError(t,e)
+ if len(old.Items)!=0 { t.Errorf("old date still current: %+v",old.Items[0].Dates) }
+ text,e:=r.SearchArchives(ctx,a,"home-1",false,archive.SearchFilter{Query:"2026-07-20"},[]byte("key"));require.NoError(t,e);require.Len(t,text.Items,1,"assertion itself was stored and searchable")
+}
+func TestReviewLiteralSymbolsAndHiddenCoverage(t *testing.T) {
+ d:=testutil.NewDB(t); r:=d.ArchiveTasksWithClock(&archiveClock{now:archiveNow}); a:=archiveActor(t,d);ctx:=context.Background()
+ rec,f,x:=publicationFixture(t,d,r,"hidden",domain.ArchiveInputText);f=saveBundle(t,r,f,namedPublicationBundle(t,"林明"));_,e:=r.PublishExtraction(ctx,f,x.ID);require.NoError(t,e)
+ _,e=r.ReviseArchive(ctx,a,"home-1",rec.DocumentID,2,store.ArchiveRevision{Kind:"private",Reason:"private document"});require.NoError(t,e)
+ for _,q:=range []string{"", "\"\"\"", "***", "???", "OR AND NOT", "NEAR(林明)", "\n\t", "🧪🧪🧪"} {
+ p,e:=r.SearchArchives(ctx,a,"home-1",true,archive.SearchFilter{Query:q},[]byte("key")); require.NoError(t,e);require.Empty(t,p.Items);require.True(t,p.Coverage.Complete);require.Equal(t,"ready",p.IndexStatus)
+ raw,_:=json.Marshal(p);t.Log(string(raw))
+ }
+}

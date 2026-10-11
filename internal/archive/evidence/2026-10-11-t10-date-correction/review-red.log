@@ -1,0 +1,6 @@
+--- FAIL: TestReviewCorrectedDateSearch (0.03s)
+    t10_independent_spec_test.go:22: new date missing: {Items:[] NextCursor: Coverage:{Complete:true Reason:} IndexStatus:ready}
+    t10_independent_spec_test.go:24: old date still current: [2026-06-15]
+FAIL
+FAIL	github.com/DituLin/Atrium/internal/store	0.558s
+FAIL

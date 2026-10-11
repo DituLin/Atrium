@@ -57,25 +57,26 @@ func (f SearchFilter) Normalize() (SearchFilter, error) {
 func LiteralFTS(s string) string { return `"` + strings.ReplaceAll(s, `"`, `""`) + `"` }
 
 type SearchEvidence struct {
-	ComponentID         string  `json:"component_id,omitempty"`
-	ComponentKind       string  `json:"component_kind,omitempty"`
-	AlternativeID       string  `json:"alternative_id,omitempty"`
-	AssertedValue       string  `json:"asserted_value,omitempty"`
-	AssertionID         string  `json:"assertion_id,omitempty"`
-	SourceKind          string  `json:"source_kind,omitempty"`
-	LegacyRecordID      string  `json:"legacy_record_id,omitempty"`
-	DocumentID          string  `json:"document_id"`
-	PublicationID       string  `json:"publication_id"`
-	PublicationRevision int64   `json:"publication_revision"`
-	ObservationID       string  `json:"observation_id,omitempty"`
-	ObservationRevision int64   `json:"observation_revision,omitempty"`
-	SourceExtractionID  string  `json:"source_extraction_id"`
-	SegmentID           string  `json:"segment_id"`
-	Locator             Locator `json:"locator"`
-	Start               int     `json:"start"`
-	End                 int     `json:"end"`
-	Excerpt             string  `json:"excerpt"`
-	Confirmed           bool    `json:"confirmed"`
+	SourceNormalizations []Normalization `json:"source_normalizations,omitempty"`
+	ComponentID          string          `json:"component_id,omitempty"`
+	ComponentKind        string          `json:"component_kind,omitempty"`
+	AlternativeID        string          `json:"alternative_id,omitempty"`
+	AssertedValue        string          `json:"asserted_value,omitempty"`
+	AssertionID          string          `json:"assertion_id,omitempty"`
+	SourceKind           string          `json:"source_kind,omitempty"`
+	LegacyRecordID       string          `json:"legacy_record_id,omitempty"`
+	DocumentID           string          `json:"document_id"`
+	PublicationID        string          `json:"publication_id"`
+	PublicationRevision  int64           `json:"publication_revision"`
+	ObservationID        string          `json:"observation_id,omitempty"`
+	ObservationRevision  int64           `json:"observation_revision,omitempty"`
+	SourceExtractionID   string          `json:"source_extraction_id"`
+	SegmentID            string          `json:"segment_id"`
+	Locator              Locator         `json:"locator"`
+	Start                int             `json:"start"`
+	End                  int             `json:"end"`
+	Excerpt              string          `json:"excerpt"`
+	Confirmed            bool            `json:"confirmed"`
 }
 type SearchItem struct {
 	TaskStatus       string           `json:"task_status,omitempty"`

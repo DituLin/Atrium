@@ -1,0 +1,41 @@
+?   	github.com/DituLin/Atrium/cmd/atrium	[no test files]
+ok  	github.com/DituLin/Atrium/cmd/atrium-brain-host	0.327s
+?   	github.com/DituLin/Atrium/cmd/home-mcp	[no test files]
+ok  	github.com/DituLin/Atrium/internal/app	11.730s
+ok  	github.com/DituLin/Atrium/internal/app/events	0.754s
+--- FAIL: TestNativeFloodReportsOutputLimit (3.00s)
+    native_parser_test.go:250: got archive: parser_timeout
+FAIL
+FAIL	github.com/DituLin/Atrium/internal/archive	18.194s
+ok  	github.com/DituLin/Atrium/internal/archiveworker	2.477s
+ok  	github.com/DituLin/Atrium/internal/auth	0.833s
+ok  	github.com/DituLin/Atrium/internal/auth/tlsgen	0.996s
+ok  	github.com/DituLin/Atrium/internal/backup	2.219s
+ok  	github.com/DituLin/Atrium/internal/brain	2.512s
+ok  	github.com/DituLin/Atrium/internal/brainhost	2.613s
+ok  	github.com/DituLin/Atrium/internal/briefing	2.790s
+ok  	github.com/DituLin/Atrium/internal/cli	3.414s
+ok  	github.com/DituLin/Atrium/internal/clock	2.800s
+ok  	github.com/DituLin/Atrium/internal/config	2.968s
+ok  	github.com/DituLin/Atrium/internal/diag	2.444s
+ok  	github.com/DituLin/Atrium/internal/domain	2.466s
+ok  	github.com/DituLin/Atrium/internal/family	2.743s
+ok  	github.com/DituLin/Atrium/internal/familyarchive	3.311s
+ok  	github.com/DituLin/Atrium/internal/homemcp	8.624s
+ok  	github.com/DituLin/Atrium/internal/httpapi	8.764s
+ok  	github.com/DituLin/Atrium/internal/indexer	3.720s
+ok  	github.com/DituLin/Atrium/internal/integration	3.190s
+ok  	github.com/DituLin/Atrium/internal/jobs	3.033s
+ok  	github.com/DituLin/Atrium/internal/logging	2.832s
+ok  	github.com/DituLin/Atrium/internal/media	3.978s
+?   	github.com/DituLin/Atrium/internal/media/testutil	[no test files]
+ok  	github.com/DituLin/Atrium/internal/screen	3.560s
+ok  	github.com/DituLin/Atrium/internal/source	3.562s
+ok  	github.com/DituLin/Atrium/internal/store	9.056s
+?   	github.com/DituLin/Atrium/internal/store/testutil	[no test files]
+?   	github.com/DituLin/Atrium/internal/version	[no test files]
+ok  	github.com/DituLin/Atrium/internal/video	2.592s
+ok  	github.com/DituLin/Atrium/internal/webui	2.324s
+ok  	github.com/DituLin/Atrium/internal/widget	1.739s
+ok  	github.com/DituLin/Atrium/internal/ws	2.038s
+FAIL

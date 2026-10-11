@@ -322,12 +322,24 @@ func (r *ArchiveTasks) searchProjectionIn(ctx context.Context, tx *sql.Tx, h, id
 				last := &p.Item.Evidence[len(p.Item.Evidence)-1]
 				last.AssertedValue = searchBound(body.AssertedValue, 256)
 				last.AssertionID = body.ValueAssertion.ID
+				last.SourceNormalizations = f.Normalizations
 			}
 			text = append(text, f.Name, quote, searchBound(body.AssertedValue, 256))
 		}
 		p.Item.EntityIDs = append(p.Item.EntityIDs, body.Entities...)
 		for _, n := range f.Normalizations {
-			if n.Kind == "date" || n.Kind == "date_partial" {
+			if n.Kind != "date" && n.Kind != "date_partial" {
+				continue
+			}
+			if body.ValueAssertion != nil {
+				// A current assertion replaces the source normalization for filters.
+				// Accept only explicit ISO precision; never guess missing components.
+				if searchAssertionDate(body.AssertedValue) {
+					p.Item.Dates = appendUnique(p.Item.Dates, body.AssertedValue)
+				} else {
+					p.Item.ReviewRequired = true
+				}
+			} else {
 				p.Item.Dates = appendUnique(p.Item.Dates, n.Value)
 			}
 		}
@@ -711,6 +723,25 @@ SELECT 'legacy:'||p.root_record_id,1,f.payload_json,'',1,p.entity_id,f.id FROM a
 	})
 	return page, e
 }
+
+// searchAssertionDate validates the asserted precision without broad parsing or
+// converting partial dates to a fabricated first day/month.
+func searchAssertionDate(value string) bool {
+	layout := ""
+	switch len(value) {
+	case 4:
+		layout = "2006"
+	case 7:
+		layout = "2006-01"
+	case 10:
+		layout = "2006-01-02"
+	default:
+		return false
+	}
+	parsed, err := time.Parse(layout, value)
+	return err == nil && parsed.Year() > 0 && parsed.Format(layout) == value
+}
+
 func searchMatches(i archive.SearchItem, text string, f archive.SearchFilter) bool {
 	if f.Domain != "" && i.Domain != f.Domain || f.DocumentType != "" && i.DocumentType != f.DocumentType || f.Ownership != "" && i.Ownership != f.Ownership {
 		return false

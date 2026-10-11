@@ -143,3 +143,15 @@ extractions and publication transactions. No new provider calls are used. They d
 not replace the real IM/native-model/TV acceptance dataset, NAS recovery exercise,
 or the 10,000-document P50/P95 and long-running production tests assigned to
 later tasks. No performance claim for arbitrary 10,000 x 2 MiB inputs is made.
+
+### Corrected date semantics
+
+For a field with a date/date_partial source normalization, a currently visible
+value assertion replaces that normalization in `dates` and date filters. Only
+explicit valid `YYYY-MM-DD`, `YYYY-MM`, and `YYYY` assertions are accepted; month
+and year values retain their precision and never pass a full-day range by
+inventing components. Unknown, ambiguous or invalid assertions contribute no
+current date and set `review_required`, making coverage incomplete. The source
+excerpt and `source_normalizations` remain evidence alongside `asserted_value`
+and its assertion ID. This selection occurs after the current projection's
+assertion visibility checks; private assertions cannot supply public dates.

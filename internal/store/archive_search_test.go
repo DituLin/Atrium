@@ -605,3 +605,84 @@ func TestArchiveSearchHouseholdNoticeDiffersFromUnassignedReport(t *testing.T) {
 		require.Len(t, p.Items, 1)
 	}
 }
+
+func TestArchiveSearchCorrectedDatePrecision(t *testing.T) {
+	for _, value := range []string{"2026-07-20", "2026-07", "2026", "2026-02-30", "2026-13", "26-07-20", "07-20", "日期未知", "", "2026-7-2"} {
+		t.Run(value, func(t *testing.T) {
+			ctx := context.Background()
+			d := testutil.NewDB(t)
+			r := d.ArchiveTasksWithClock(&archiveClock{now: archiveNow})
+			a := archiveActor(t, d)
+			rec, f, x := publicationFixture(t, d, r, "correct-date", domain.ArchiveInputText)
+			b := literalBundle(t, "林明", []publicationLiteral{{Name: "report_date", Value: "2026-06-15"}}, "")
+			result := b.Understanding.Chunks[0].Result
+			result.Fields[0].Normalizations = []archive.Normalization{{Kind: "date", Value: "2026-06-15"}}
+			b = revalidatePublication(t, b, result)
+			f = saveBundle(t, r, f, b)
+			_, err := r.PublishExtraction(ctx, f, x.ID)
+			require.NoError(t, err)
+			obs, err := r.CurrentArchiveObservations(ctx, a, "home-1", rec.DocumentID, false)
+			require.NoError(t, err)
+			require.Len(t, obs, 1)
+			rev, err := r.ReviseArchive(ctx, a, "home-1", rec.DocumentID, 2, store.ArchiveRevision{Kind: "value", ObservationID: obs[0].ID, Value: value, Reason: "日期更正"})
+			require.NoError(t, err)
+			_, err = indexAllArchiveSearch(ctx, r, "home-1")
+			require.NoError(t, err)
+			valid := value == "2026-07-20" || value == "2026-07" || value == "2026"
+			for _, public := range []bool{false, true} {
+				page, err := r.SearchArchives(ctx, a, "home-1", public, archive.SearchFilter{}, []byte("key"))
+				require.NoError(t, err)
+				require.Len(t, page.Items, 1)
+				if valid {
+					require.Equal(t, []string{value}, page.Items[0].Dates)
+				} else {
+					require.Empty(t, page.Items[0].Dates)
+					require.True(t, page.Items[0].ReviewRequired)
+					require.False(t, page.Coverage.Complete)
+				}
+				old, err := r.SearchArchives(ctx, a, "home-1", public, archive.SearchFilter{DateFrom: "2026-06-15", DateTo: "2026-06-15"}, []byte("key"))
+				require.NoError(t, err)
+				require.Empty(t, old.Items)
+				current, err := r.SearchArchives(ctx, a, "home-1", public, archive.SearchFilter{DateFrom: "2026-07-20", DateTo: "2026-07-20"}, []byte("key"))
+				require.NoError(t, err)
+				if value == "2026-07-20" {
+					require.Len(t, current.Items, 1)
+				} else {
+					require.Empty(t, current.Items, "partial dates must not fabricate a day")
+				}
+				ev, err := r.ArchiveEvidence(ctx, a, "home-1", public, rec.DocumentID, archive.SearchFilter{}, []byte("key"))
+				require.NoError(t, err)
+				found := false
+				for _, e := range ev.Items[0].Evidence {
+					if e.ObservationID == obs[0].ID {
+						found = true
+						require.Equal(t, "2026-06-15", e.Excerpt)
+						require.Equal(t, value, e.AssertedValue)
+						require.Equal(t, []archive.Normalization{{Kind: "date", Value: "2026-06-15"}}, e.SourceNormalizations)
+						require.NotEmpty(t, e.AssertionID)
+					}
+				}
+				require.True(t, found)
+			}
+			_, err = r.ReviseArchive(ctx, a, "home-1", rec.DocumentID, rev, store.ArchiveRevision{Kind: "private", ObservationID: obs[0].ID, Reason: "日期仅家人可见"})
+			require.NoError(t, err)
+			_, err = indexAllArchiveSearch(ctx, r, "home-1")
+			require.NoError(t, err)
+			public, err := r.SearchArchives(ctx, a, "home-1", true, archive.SearchFilter{}, []byte("key"))
+			require.NoError(t, err)
+			require.Len(t, public.Items, 1)
+			require.Empty(t, public.Items[0].Dates)
+			for _, e := range public.Items[0].Evidence {
+				require.Empty(t, e.AssertionID)
+			}
+			personal, err := r.SearchArchives(ctx, a, "home-1", false, archive.SearchFilter{}, []byte("key"))
+			require.NoError(t, err)
+			require.Len(t, personal.Items, 1)
+			if valid {
+				require.Equal(t, []string{value}, personal.Items[0].Dates)
+			} else {
+				require.Empty(t, personal.Items[0].Dates)
+			}
+		})
+	}
+}
