@@ -25,7 +25,7 @@
 | T09 原子发布与恢复 | 已完成任务级双审 | `ed69c61` 获完整质量复审及最终需求语义批准；持久消费/发布/修订/澄清/当前证据回归通过，未部署 |
 | T10 统一检索与证据 | 已完成任务级双审 | `b670982` 需求与完整质量批准；32结构化问题及授权/证据/分页/日期回归通过，未部署 |
 | T11 自然语言查询 | 已完成任务级双审 | `6e0d4cc` 需求与完整质量批准；七工具实际链路与两领域模型调用验证通过，未部署 |
-| T12 基础分析 | 固定实现，需求审查中 | `c95d31c`；精确分析、独立公开投影、快照失效与真实 MCP 联测通过，独立双审尚待完成 |
+| T12 基础分析 | 需求审查修复中 | `c95d31c` 独立审查复现三项：原文比较符丢失、同文独立合计被过滤、样本人工修订未用于分组；原实施者正在修复 |
 | T13–T18 | 未开始 | 渠道、TV、NAS恢复与上线验收待实施 |
 
 ## 基线核对
@@ -335,3 +335,5 @@ T11需求和质量均APPROVED于6e0d4cc：需求独立Brain/MCP/TLSCore/Node62�
 T12 固定 c95d31c231b5a6ceaf57d95bc0886b61b24dd303，root 核实工作树干净。实施端最终全Go、五包race及最终分析专项race、Node63/63、Linux构建通过；实际TLS Core→official MCP→Brain调用分析返回450ml及两份来源。真实CSV解析发布后的128.10+71.90=200.00不再加合计，授权CNY250/公开CNY200与USD20独立；新增/撤回/私密/重建/撤权、人工值与归属、pending legacy及错配查询回执均有回归。证据 internal/archive/evidence/2026-10-11-t12/。已派新独立需求审查者，之后仍需质量审查，未部署。
 
 发布准备已修正旧回滚说明并新增 atriumos-runbook.md，明确保全升级后资料与完整打包缺口。root将现有native helper连同lib搬至独立临时目录，在清洁环境实际解析合成PNG成功；移走JPEG依赖后结构化parser_unavailable，证据 docs/ops/evidence/2026-10-11-release-preflight/native-portability.json。此为预检，非最终签名包或T17通过。
+
+T12需求审查CHANGES REQUESTED，三个独立反例root原样复跑均RED（archive0.205秒/store0.373秒）：原文>70合法提取70后被精确求和；同文件CNY明细使无关USD账单合计被删除且覆盖完整；sample人工serum→urine后仍按原serum分组。原反例 /tmp/t12-spec-overlay.json、/tmp/t12-spec-store-overlay.json 保留，已交原实施者修复并补扩展回归。质量审查/T13等待需求修复通过，未部署。
