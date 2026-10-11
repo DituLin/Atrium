@@ -1,73 +1,172 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { clockOptions } from '../app/homeSelect';
 import { useApp } from '../app/context';
-import type { FamilyCategory, FamilyMember, FamilyRecordPage } from '../types/family';
 import { RemoteButton } from '../ui/RemoteButton';
 import { TopNav, focusTopNav } from '../ui/TopNav';
-import { onReadingKey, restoreReturnFocus } from './info/readingRegion';
-import { FamilyTrend, METRICS, seriesFor } from './family/FamilyTrend';
-
-const CATEGORIES:{id:FamilyCategory|'all';label:string;icon:string}[]=[
- {id:'all',label:'全部记录',icon:'M4 5h16M4 12h16M4 19h16'},
- {id:'growth',label:'成长',icon:'M12 20V9M12 13C5 13 4 8 4 5c6 0 8 3 8 8M12 10c0-5 4-7 8-7 0 5-3 8-8 8'},
- {id:'health',label:'健康',icon:'M12 20S3 15 3 9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6-9 11-9 11M6 12h3l2-4 3 8 2-4h3'},
- {id:'checkup',label:'体检',icon:'M8 4H5v17h14V4h-3M8 2h8v5H8zM8 12h8M8 16h5'},
- {id:'meal',label:'饮食计划',icon:'M5 3v7M8 3v7M11 3v7M5 7h6M8 10v11M18 3v18M18 3c-4 3-4 9 0 9'},
- {id:'note',label:'生活记事',icon:'M5 3h14v18H5zM9 8h6M9 12h6M9 16h3'},
-];
-export function FamilyScreen(){
- const {api,state}=useApp();const [members,setMembers]=useState<FamilyMember[]>([]);const [member,setMember]=useState('');const [category,setCategory]=useState<FamilyCategory|'all'>('all');
- const [snapshot,setSnapshot]=useState<{member:string;page:FamilyRecordPage;at:number}|null>(null);const [status,setStatus]=useState<'loading'|'ready'|'failed'>('loading');const [refresh,setRefresh]=useState(0);const [expanded,setExpanded]=useState(false);const [moreBusy,setMoreBusy]=useState(false);const [moreError,setMoreError]=useState(false);
- const reading=useRef<HTMLDivElement>(null);const controls=useRef<(HTMLButtonElement|null)[]>([]);const latest=useRef(snapshot);latest.current=snapshot;
- const more=useRef<HTMLButtonElement>(null);const refreshButton=useRef<HTMLButtonElement>(null);const requestEpoch=useRef(0);const expandedRef=useRef(false);
- useEffect(()=>{restoreReturnFocus(state.router.restoreFocus,reading.current);},[state.router.restoreFocus]);
- useEffect(()=>{
-  let active=true;let busy=false;const controller=new AbortController();const epoch=++requestEpoch.current;expandedRef.current=false;setExpanded(false);setStatus('loading');setMoreBusy(false);setMoreError(false);
-  const load=async()=>{if(busy)return;busy=true;try{
-   const result=await api.getFamilyMembers(controller.signal);if(!active||expandedRef.current)return;if(!Array.isArray(result.members))throw new Error('Invalid members response');setMembers(result.members);
-   const selected=result.members.some(m=>m.id===member)?member:result.members[0]?.id??'';
-   if(selected!==member){setMember(selected);setSnapshot(null);return;}
-   if(!selected){setSnapshot(null);setStatus('ready');return;}
-   const page=await api.getFamilyRecords(selected,'',controller.signal);if(!active||epoch!==requestEpoch.current||expandedRef.current)return;if(!Array.isArray(page.records))throw new Error('Invalid records response');setSnapshot({member:selected,page,at:Date.now()});setStatus('ready');
-  }catch{if(active&&!expandedRef.current)setStatus('failed');}finally{busy=false;}};
-  void load();const timer=window.setInterval(()=>{if(!expandedRef.current)void load();},15000);
-  return()=>{active=false;requestEpoch.current++;controller.abort();if(timer!==undefined)window.clearInterval(timer);};
- },[api,member,refresh]);
- const stale=snapshot!==null&&Date.now()-snapshot.at>60000;
- const current=snapshot?.member===member&&(!stale||expanded)?snapshot:null;
- const records=(current?.page.records??[]).filter(r=>category==='all'||r.category===category);
- const series=seriesFor(records);const selected=members.find(m=>m.id===member);const timezone=state.home?.home.timezone??'Asia/Singapore';
- const choose=(id:string)=>{if(id!==member){setSnapshot(null);setExpanded(false);setMember(id);setCategory('all');}};
- const loadMore=async()=>{
-  const current=latest.current;if(!current?.page.next_cursor||moreBusy)return;
-  // Keep the selected history window stable instead of replacing it on a poll.
-  expandedRef.current=true;setExpanded(true);
-  setMoreBusy(true);setMoreError(false);const epoch=requestEpoch.current;
-  try{const page=await api.getFamilyRecords(current.member,current.page.next_cursor);if(epoch!==requestEpoch.current)return;if(!Array.isArray(page.records))throw new Error('Invalid records response');
-   setSnapshot(old=>old?.member===current.member?{...old,page:{records:[...old.page.records,...page.records.filter(r=>!old.page.records.some(p=>p.id===r.id))],next_cursor:page.next_cursor},at:Date.now()}:old);
-  }catch{if(epoch===requestEpoch.current)setMoreError(true);}finally{if(epoch===requestEpoch.current)setMoreBusy(false);}
- };
- const sideCount=members.length+CATEGORIES.length;
- const sideDirection=(index:number,key:string)=>{if(key==='right')reading.current?.focus();if(key==='up'){if(index===0)focusTopNav('family');else controls.current[index-1]?.focus();}if(key==='down'){if(index+1<sideCount)controls.current[index+1]?.focus();else refreshButton.current?.focus();}};
- return <div className="page family-page"><TopNav onDown={()=>{const target=controls.current[0]??reading.current;target?.focus();}}/>
-  <div className="page__heading"><h1 className="page__title">{selected?`${selected.name}的家庭记录`:'家庭记录'}</h1><span className="muted family-page__status" role="status">{status==='failed'?'暂时无法更新':status==='loading'?'正在读取…':expanded?'正在查看历史记录':'每 15 秒更新'}{stale?' · 记录已过期，请刷新':''}</span></div>
-  <main className="page__body family-page__layout">
-   <aside className="family-sidebar"><h2 className="page__section-title">家人</h2>
-    {members.map((m,i)=><RemoteButton key={m.id} ref={el=>{controls.current[i]=el;}} className="family-sidebar__member" aria-pressed={member===m.id} onClick={()=>choose(m.id)} onDirection={key=>sideDirection(i,key)}><span className="family-avatar" aria-hidden="true">{m.name.slice(0,1)}</span>{m.name}</RemoteButton>)}
-    <div className="family-sidebar__categories">{CATEGORIES.map((c,i)=><RemoteButton key={c.id} ref={el=>{controls.current[members.length+i]=el;}} className="family-category" aria-pressed={category===c.id} onClick={()=>setCategory(c.id)} onDirection={key=>sideDirection(members.length+i,key)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d={c.icon}/></svg>{c.label}</RemoteButton>)}</div>
-    <RemoteButton ref={refreshButton} className="btn" onClick={()=>{setExpanded(false);setRefresh(n=>n+1);}} onDirection={key=>{if(key==='up')controls.current[sideCount-1]?.focus();if(key==='right')reading.current?.focus();}}>刷新记录</RemoteButton>
-   </aside>
-   <div className="family-content" ref={reading} role="region" aria-label="家庭记录与趋势" tabIndex={0} onKeyDown={event=>onReadingKey(event,{left:()=>controls.current[0]?.focus(),top:()=>focusTopNav('family'),bottom:()=>more.current?.focus()})}>
-    {status==='failed'&&current?<p className="family-message">连接暂不可用 · 显示最近读取的记录</p>:null}
-    {!selected&&status==='ready'?<div className="family-empty"><h2 className="serif">从一条记录开始</h2><p>家庭成员尚未设置。接入后，可通过 OpenClaw 记录成长、健康与饮食。</p></div>:null}
-    {selected&&!current&&status!=='loading'?<div className="family-empty"><h2 className="serif">暂时无法读取记录</h2><p>请检查连接后刷新。</p></div>:null}
-    {current&&!records.length?<div className="family-empty"><h2 className="serif">{current.page.records.length?'当前记录中没有这一类内容':'还没有可展示的记录'}</h2><p>通过 OpenClaw 记录生活，允许在电视展示的内容会出现在这里。</p></div>:null}
-    {series.length?<><div className="family-section-heading"><h2 className="page__section-title">成长与健康趋势</h2><span className="muted">根据已记录数据</span></div><div className="family-trends">{series.map(s=><FamilyTrend key={JSON.stringify([s.metric,s.unit])} series={s} timezone={timezone}/>)}</div></>:null}
-    {records.length?<section className="family-history"><div className="family-section-heading"><h2 className="page__section-title">{category==='meal'?'饮食安排':'生活的每一个刻度'}</h2><span className="muted">已加载 {records.length} 条{current?.page.next_cursor?' · 尚有更早记录':''}</span></div>
-     {records.map(r=><article className="family-record" key={r.id}><div className="family-record__date">{new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'long',day:'numeric',timeZone:timezone}).format(Date.parse(r.occurred_at))}<span>{CATEGORIES.find(c=>c.id===r.category)?.label}</span></div><div className="family-record__body"><h3 className="serif">{r.title}</h3>{r.measurements?.length?<p className="family-record__values">{r.measurements.map(m=>`${METRICS[m.metric]??m.metric} ${m.value} ${m.unit}`).join(' · ')}</p>:null}{r.notes?<p className="family-record__notes">{r.notes}</p>:null}<p className="family-record__sync muted"><span className={`dot dot--${r.exported_at?'ok':'warn'}`}/>{r.exported_at?'已同步到 NAS':'NAS 待同步'}</p></div></article>)}
-    </section>:null}
-    {moreError?<p className="family-message" role="alert">更早记录暂时无法读取，请重试。</p>:null}
-    {current?.page.next_cursor?<RemoteButton ref={more} className="btn family-more" aria-disabled={moreBusy} onClick={()=>void loadMore()} onDirection={key=>{if(key==='up')reading.current?.focus();if(key==='left')controls.current[0]?.focus();}}>{moreBusy?'正在读取更早记录…':'更早记录'}</RemoteButton>:null}
-   </div>
-  </main>
+import { mapRemoteKey } from '../ui/keys';
+import { onReadingKey } from './info/readingRegion';
+import { ArchiveAnalysisPanel } from './family/ArchiveAnalysisPanel';
+import { ArchiveReader } from './family/archiveReader';
+import type { ArchiveReadState } from './family/archiveReader';
+import type {ApiClient} from '../core/api';
+import type { ArchiveDetail, ArchiveFilter } from '../types/archives';
+import { DOMAINS, archiveDate, evidenceLocation, factLabel, itemTitle, ownershipLabel } from './family/archiveLabels';
+const archiveFocus=new WeakMap<ApiClient,{id:string;index:number;scroll:number}>();
+export function FamilyScreen() {
+    const { api, state, dispatch, archives } = useApp();
+    const reader = useMemo(() => new ArchiveReader(api), [api]);
+    const [metric, setMetric] = useState(reader.metric);
+    const [value, setValue] = useState<ArchiveReadState>(reader.value);
+    const [filter, setFilter] = useState<ArchiveFilter>(() => ({ ...reader.filter }));
+    const [documentID, setDocumentID] = useState('');
+    const generation = useRef(state.archiveGeneration);
+    const [verifiedGeneration, setVerifiedGeneration] = useState(state.archiveGeneration);
+    const content = useRef<HTMLDivElement>(null);
+    const controls = useRef<(HTMLButtonElement | null)[]>([]);
+    const cards = useRef<(HTMLButtonElement | null)[]>([]);
+    const back = useRef<HTMLButtonElement>(null);
+    const focusedDetail = useRef('');
+    const moreButton = useRef<HTMLButtonElement>(null);
+    const refreshButton = useRef<HTMLButtonElement>(null);
+    useEffect(() => { if (document.activeElement === document.body)
+        controls.current[0]?.focus(); }, []);
+    const anchor = useRef(archiveFocus.get(api)??{ id: '', index: 0, scroll: 0 });
+    const returning = useRef(archiveFocus.has(api));
+    useEffect(() => { const region=content.current;const off = reader.subscribe(() => setValue({ ...reader.value })); void reader.load(); return () => { archiveFocus.set(api,{...anchor.current,scroll:region?.scrollTop??anchor.current.scroll});off(); reader.stop(); }; }, [reader,api]);
+    useEffect(() => { if (generation.current !== state.archiveGeneration) {
+        generation.current = state.archiveGeneration;
+        reader.invalidate();
+        setVerifiedGeneration(state.archiveGeneration);
+        void reader.load();
+    } }, [reader, state.archiveGeneration]);
+    useEffect(() => { const resume = () => { reader.invalidate(); if (document.visibilityState !== 'hidden')
+        void reader.load(); }; document.addEventListener('visibilitychange', resume); return () => document.removeEventListener('visibilitychange', resume); }, [reader]);
+    const route = state.router.route;
+    const viewID = route.name === 'family' ? route.archiveViewId : undefined;
+    const commandID = route.name === 'family' ? route.commandId : undefined;
+    const snapshot = verifiedGeneration === state.archiveGeneration && !state.needsPairing && !state.authExpired && (!commandID || value.snapshot?.viewToken === commandID) ? value.snapshot : null;
+    useEffect(() => { if (viewID)
+        void reader.showView(viewID, commandID ?? ''); }, [reader, viewID, commandID]);
+    useEffect(() => { if (!commandID || !viewID)
+        return; if (snapshot && snapshot.viewToken === commandID)
+        dispatch({ type: 'archives.rendered', commandId: commandID, id: viewID, status: 'ready' });
+    else if (value.failed)
+        dispatch({ type: 'archives.rendered', commandId: commandID, id: null, status: 'error' }); }, [snapshot, value.failed, commandID, viewID, dispatch]);
+    useEffect(() => archives?.register(route, async (signal) => { reader.invalidate(); await reader.load(); if (signal.aborted || !reader.value.snapshot || reader.value.failed)
+        throw new Error('Archive verification failed'); await new Promise<void>(resolve => requestAnimationFrame(() => resolve())); }), [archives, route, reader]);
+    const dateLabel = (value: string) => archiveDate(value, clockOptions(state.home));
+    const current = snapshot?.detail;
+    const entities = snapshot?.entities.items ?? [];
+    const choose = (next: ArchiveFilter) => { if (viewID)
+        dispatch({ type: 'router.navigate', route: { name: 'family' } }); setFilter(next); setDocumentID(''); void reader.select(next); };
+    const open = (id: string, index: number) => { anchor.current = { id, index, scroll: content.current?.scrollTop ?? 0 }; setDocumentID(id); void reader.open(id); };
+    const close = () => { focusedDetail.current = ''; returning.current = true; setDocumentID(''); void reader.open(''); };
+    useEffect(() => { if (current && focusedDetail.current !== current.item.document_id) {
+        focusedDetail.current = current.item.document_id;
+        back.current?.focus();
+    }
+    else if (snapshot && returning.current) {
+        returning.current = false;
+        const index = snapshot.page.items.findIndex(i => i.document_id === anchor.current.id);
+        const target = cards.current[index >= 0 ? index : Math.min(anchor.current.index, snapshot.page.items.length - 1)];
+        if (content.current)
+            content.current.scrollTop = anchor.current.scroll;
+        target?.focus();
+    }
+    else if (snapshot && !documentID && document.activeElement === document.body ) {
+        const i = snapshot.page.items.findIndex(item => item.document_id === anchor.current.id);
+        (anchor.current.id?cards.current[i >= 0 ? i : Math.min(anchor.current.index, snapshot.page.items.length - 1)]??controls.current[0]:controls.current[0])?.focus();
+    } else if(!snapshot&&document.activeElement===document.body){controls.current[0]?.focus();} }, [current, snapshot, documentID]);
+    const choices = [{ label: '全家', next: { ...filter, entity_id: undefined, ownership: undefined }, active: !filter.entity_id && !filter.ownership }, ...entities.filter(e => e.kind === 'person' || e.kind === 'property').map(e => ({ label: `${e.kind === 'property' ? '房屋 · ' : ''}${e.names[0] ?? '待命名'}`, next: { ...filter, entity_id: e.id, ownership: undefined }, active: filter.entity_id === e.id })), ...(snapshot?.entities.next_cursor?[{label:'更多人物与房屋',next:filter,active:false,moreEntities:true}]:[]),{ label: '家庭共有', next: { ...filter, entity_id: undefined, ownership: 'household' }, active: filter.ownership === 'household' }, { label: '待归属', next: { ...filter, entity_id: undefined, ownership: 'unassigned' }, active: filter.ownership === 'unassigned' }, { label: '待确认', next: { ...filter, entity_id: undefined, ownership: 'waiting' }, active: filter.ownership === 'waiting' }, ...(filter.domain === 'health' ? ['volume', 'height', 'weight'].map(value => ({ label: `趋势 · ${factLabel(value)}`, next: filter, active: metric === value, metric: value })) : []), ...['', 'health', 'education', 'finance', 'property'].map(domain => ({ label: domain ? DOMAINS[domain] : '全部领域', next: { ...filter, domain: domain || undefined }, active: (filter.domain ?? '') === domain }))];
+    const sideDirection = (i: number, key: string) => { if (key === 'up') {
+        if (i === 0)
+            focusTopNav('family');
+        else
+            controls.current[i - 1]?.focus();
+    } if (key === 'down')
+        (controls.current[i + 1] ?? refreshButton.current)?.focus(); if (key === 'right')
+        (documentID ? back.current : cards.current[0] ?? content.current)?.focus(); };
+    return <div className="page family-page" onKeyDown={event => { if (documentID && mapRemoteKey(event) === 'back') {
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+    } }}>
+  <TopNav onDown={() => controls.current[0]?.focus()}/>
+  <div className="page__heading"><h1 className="page__title">全家档案</h1><span role="status" className="muted family-page__status">{value.busy ? '正在核验…' : value.failed ? '暂时无法核验' : '每 15 秒核验'} · 健康 · 教育 · 财务 · 房屋</span></div>
+  <main className="page__body family-page__layout"><aside className="family-sidebar"><h2 className="page__section-title">家庭资料</h2>
+   {choices.map((choice, i) => <RemoteButton key={`${i}-${choice.label}`} ref={el => { controls.current[i] = el; }} className="family-category" aria-pressed={choice.active} onClick={() => { if('moreEntities' in choice){void reader.moreEntities();}else if ('metric' in choice) {
+        setMetric(String(choice.metric));
+        void reader.selectMetric(String(choice.metric));
+    }
+    else
+        choose(choice.next); }} onDirection={key => sideDirection(i, key)}>{choice.label}</RemoteButton>)}
+   <RemoteButton ref={refreshButton} className="btn" onClick={() => void reader.load()} onDirection={key => { if (key === 'up')
+        controls.current[choices.length - 1]?.focus(); if (key === 'right')
+        content.current?.focus(); }}>刷新档案</RemoteButton>
+  </aside><div className="family-content" ref={content} role="region" aria-label="家庭档案与分析" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget)
+        onReadingKey(event, { left: () => controls.current[0]?.focus(), top: () => focusTopNav('family'), right: () => content.current?.querySelector<HTMLButtonElement>('.archive-preview button:not([disabled])')?.focus(), bottom: () => documentID ? content.current?.querySelector<HTMLButtonElement>('.archive-preview button:not([disabled])')?.focus() : cards.current[0]?.focus() }); }}>
+   {!snapshot ? <div className="family-empty"><h2 className="serif">{value.failed ? '等待重新核验' : '正在读取家庭档案'}</h2><p>未核验超过 30 秒的内容会自动隐藏。</p></div> : documentID ? current ? <>
+    <RemoteButton ref={back} className="btn" onClick={close} onDirection={key => { if (key === 'down')
+            content.current?.focus(); if (key === 'left')
+            controls.current[0]?.focus(); }}>返回档案</RemoteButton>
+    <h2 className="archive-title serif">{itemTitle(current.item)}</h2><p className="muted">版本 {current.item.document_revision} · {ownershipLabel(current.item.ownership)} · {current.item.dates.map(dateLabel).join(' / ') || '日期未明确'}</p>
+    <p>{current.original_saved ? '原件已保存' : '原始记录已保存'} · {current.processing === 'ready' ? '已完成识别' : current.processing === 'needs_review' ? '部分内容待确认' : current.processing === 'processing' ? '正在识别' : '暂不支持完整识别'} · NAS {current.nas_status === 'saved' ? '已同步' : '待同步'}</p>
+    {!current.coverage.complete ? <p className="family-message">分析覆盖尚不完整，待确认内容不计入确定统计。</p> : null}
+    {current.task_summary?<p className="muted">解析：{current.task_summary.parse==='parsed'?'已完成':current.task_summary.parse==='pending'?'处理中':'部分完成或暂不支持'} · 理解：{{pending:'处理中',complete:'已完成',needs_review:'待确认',unavailable:'暂不可用'}[current.task_summary.understanding]} · 归属：{ownershipLabel(current.task_summary.attribution)}</p>:null}
+    <h3 className="page__section-title">结构化内容与来源</h3><p className="muted">以下为内容摘录，非原件版式。</p>
+    {current.item.evidence.map((e, i) => <article className="archive-evidence" key={i}><h3>{factLabel(e.field_name ?? '')}</h3><p>{e.asserted_value ?? e.excerpt}</p>{e.asserted_value && e.asserted_value !== e.excerpt ? <p className="muted">原文：{e.excerpt}</p> : null}<small>{evidenceLocation(e)}{e.confirmed ? ' · 已确认' : ' · 待核实'}</small></article>)}
+    <ArchivePreview key={`${value.epoch}:${current.generation}:${current.item.document_revision}`} detail={current} onRead={() => content.current?.focus()}/>
+   </> : <p>该档案暂不可读取。</p> : <>
+    {!filter.ownership ? <ArchiveAnalysisPanel analysis={snapshot.analysis} dateLabel={dateLabel}/> : <p className="muted">待归属与待确认内容不纳入确定统计。</p>}
+    {!snapshot.page.items.length ? <div className="family-empty"><h2 className="serif">还没有可展示的档案</h2><p>直接发送文本、图片或文件，系统会识别内容和归属，无需先建立家人档案。</p></div> : null}
+    {!snapshot.page.coverage.complete?<p className="muted">{snapshot.page.coverage.reason==='presentation_window_limit'?'已达到当前阅读窗口上限，请按人物或领域缩小范围。':'部分档案尚待识别或确认。'}</p>:null}
+                <div className="family-history">{snapshot.page.items.map((item, i) => <RemoteButton key={item.document_id} ref={el => { cards.current[i] = el; }} className="family-record archive-card" onFocus={() => { anchor.current = { id: item.document_id, index: i, scroll: content.current?.scrollTop ?? 0 }; }} onClick={() => open(item.document_id, i)} onDirection={key => { if (key === 'left')
+            controls.current[0]?.focus(); if (key === 'up')
+            (i ? cards.current[i - 1] : content.current)?.focus(); if (key === 'down')
+            (cards.current[i + 1] ?? moreButton.current)?.focus(); }}><span className="family-record__date">{item.dates.map(dateLabel).join(' / ') || '日期未明确'}<span>{DOMAINS[item.domain] ?? '待分类'}</span></span><span className="family-record__body"><span className="archive-card__title serif">{itemTitle(item)}</span><span className="archive-card__text">{item.evidence.slice(0, 2).map(e => `${factLabel(e.field_name ?? '')} ${e.asserted_value ?? e.excerpt}`).join(' · ') || '原件已保存，正在识别'}</span><span className="muted">{ownershipLabel(item.ownership)} · 版本 {item.document_revision}{item.review_required ? ' · 待核实' : ''}</span></span></RemoteButton>)}</div>
+    {snapshot.page.next_cursor ? <RemoteButton ref={moreButton} className="btn family-more" disabled={value.busy} onClick={() => void reader.more()} onDirection={key => { if (key === 'up')
+            cards.current[snapshot.page.items.length - 1]?.focus(); if (key === 'left')
+            controls.current[0]?.focus(); }}>更早档案</RemoteButton> : null}
+   </>}
+  </div></main>
  </div>;
+}
+function ArchivePreview({ detail, onRead }: {
+    detail: ArchiveDetail;
+    onRead: () => void;
+}) {
+    const previous = useRef<HTMLButtonElement>(null);
+    const next = useRef<HTMLButtonElement>(null);
+    const pagingFocus = useRef<'previous' | 'next' | null>(null);
+    const { api } = useApp();
+    const [page, setPage] = useState(1);
+    const [pages, setPages] = useState(1);
+    const [image, setImage] = useState('');
+    const [failed, setFailed] = useState(false);
+    useEffect(() => { const requested = pagingFocus.current; if (!requested)
+        return; pagingFocus.current = null; const target = requested === 'previous' ? (page > 1 ? previous.current : next.current) : (page < pages ? next.current : previous.current); if (target && !target.disabled)
+        target.focus();
+    else
+        onRead(); }, [page, pages, onRead]);
+    useEffect(() => {
+        if (detail.preview !== 'pages')
+            return;
+        let active = true;
+        let url = '';
+        const controller = new AbortController();
+        void api.getArchivePreview(detail.item.document_id, detail.item.document_revision, page, controller.signal).then(result => { if (!active)
+            return; url = URL.createObjectURL(result.blob); setPages(result.pages); setImage(url); }).catch(() => { if (active)
+            setFailed(true); });
+        return () => { active = false; controller.abort(); if (url)
+            URL.revokeObjectURL(url); };
+    }, [api, detail.item.document_id, detail.item.document_revision, detail.preview, page]);
+    if (detail.preview !== 'pages')
+        return <p className="family-message">{detail.preview === 'restricted' ? '当前公开范围不包含整页预览。' : detail.preview === 'unsupported' ? '原件已保存，暂不支持预览。' : '文本、表格与 Office 文件以上方结构化定位展示。'}</p>;
+    return <section className="archive-preview"><h3 className="page__section-title">原件预览 · 第 {page} / {pages} 页</h3>{failed ? <p>原件已保存，当前无法生成预览。</p> : image ? <img src={image} alt={`档案原件第 ${page} 页`} onError={() => setFailed(true)}/> : <p>正在准备预览…</p>}<RemoteButton ref={previous} onDirection={key => { if (key === 'right')
+        next.current?.focus();
+    else
+        onRead(); }} className="btn" disabled={page <= 1} onClick={() => { setImage(''); setFailed(false); pagingFocus.current = 'previous'; setPage(p => p - 1); }}>上一页</RemoteButton><RemoteButton ref={next} onDirection={key => { if (key === 'left' && page > 1)
+        previous.current?.focus();
+    else
+        onRead(); }} className="btn" disabled={page >= pages} onClick={() => { setImage(''); setFailed(false); pagingFocus.current = 'next'; setPage(p => p + 1); }}>下一页</RemoteButton></section>;
 }

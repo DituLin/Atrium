@@ -35,6 +35,7 @@ type adapter struct {
 	busy          map[string]bool
 }
 type args struct {
+	QueryRef           string `json:"query_ref"`
 	TaskID             string `json:"task_id"`
 	QuestionID         string `json:"question_id"`
 	QuestionVersion    int64  `json:"question_version"`
@@ -102,6 +103,7 @@ var definitions = []toolDef{
 	{"home_list_family_records", []string{"member_id"}, []string{"limit", "cursor"}, false},
 	{"home_record_family_entry", []string{"member_id", "request_id", "category", "occurred_at", "title", "display_on_tv"}, []string{"notes", "measurements", "supersedes_id", "revision_reason", "retracted"}, true},
 	{"home_get_status", nil, nil, false}, {"home_list_screens", nil, nil, false}, {"home_get_screen", []string{"screen_id"}, nil, false}, {"home_get_nas_status", nil, nil, false}, {"home_list_photos", nil, []string{"collection", "limit", "cursor"}, false}, {"home_get_photo", []string{"photo_id"}, nil, false},
+	{"home_show_archive_query", []string{"screen_id", "query_ref", "operation_id"}, []string{"wait_ms"}, true},
 	{"home_navigate_screen", []string{"screen_id", "route", "operation_id"}, []string{"collection", "wait_ms"}, true}, {"home_show_photo", []string{"screen_id", "photo_id", "operation_id"}, []string{"wait_ms"}, true}, {"home_refresh_screen", []string{"screen_id", "operation_id"}, []string{"wait_ms"}, true}, {"home_get_command", []string{"command_id"}, nil, false}, {"home_get_operation", []string{"operation_id"}, nil, false},
 }
 
@@ -470,6 +472,24 @@ func (a *adapter) control(ctx context.Context, d toolDef, in args) *mcp.CallTool
 		kind = "show"
 	}
 	payload := integration.CommandPayload{Route: in.Route, Collection: in.Collection, PhotoID: in.PhotoID}
+	if d.name == "home_show_archive_query" {
+		b, status, e := a.request(ctx, "POST", "archives/views", map[string]any{"query_ref": in.QueryRef, "screen_id": in.ScreenID, "operation_id": in.OperationID})
+		if e != nil {
+			return transportFailure(e, in.OperationID)
+		}
+		if status != 200 {
+			return decode("archive_view", b, status)
+		}
+		var envelope integration.Response[struct {
+			ID        string    `json:"archive_view_id"`
+			ExpiresAt time.Time `json:"expires_at"`
+		}]
+		if json.Unmarshal(b, &envelope) != nil || envelope.Data.ID != in.OperationID || envelope.Data.ExpiresAt.IsZero() {
+			return failure("outcome_unknown", "Archive view unavailable.", in.OperationID)
+		}
+		kind = "archive"
+		payload = integration.CommandPayload{ArchiveViewID: envelope.Data.ID}
+	}
 	if in.Route == "photos" && in.Collection == "" {
 		return failure("invalid_arguments", "A photos action requires an explicit collection.", in.OperationID)
 	}

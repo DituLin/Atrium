@@ -70,7 +70,12 @@ export function decideCommand(state: RouterState, command: ScreenCommand): Comma
     return reject(command, state, 'superseded');
   }
   switch (command.kind) {
-    case 'navigate': {
+    case 'archive': {
+ const p=command.payload as {archive_view_id?:unknown};
+ if(!isValidPhotoId(p.archive_view_id)||Object.keys(p).length!==1)return reject(command,state,'invalid_payload');
+ return {kind:'apply',route:{name:'family',archiveViewId:p.archive_view_id,commandId:command.command_id},command,resourceId:p.archive_view_id};
+ }
+ case 'navigate': {
       const route = parseNavigate(command.payload);
       return route ? { kind: 'apply', route, command } : reject(command, state, 'invalid_route');
     }
@@ -113,7 +118,7 @@ export function appliedAck(
  * `viewer.rendered`, and only then is the command applied (W-302).
  */
 export function needsRenderConfirmation(route: AppRoute): boolean {
-  return route.name === 'photo';
+  return route.name === 'photo'||route.name==='family'&&Boolean(route.archiveViewId);
 }
 
 export interface PendingAck {

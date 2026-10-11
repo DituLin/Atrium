@@ -31,6 +31,7 @@ var identifier = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$`)
 
 // Action is a bounded screen intent. Operation IDs are never model arguments.
 type Action struct {
+	QueryRef   string `json:"query_ref,omitempty"`
 	Tool       string `json:"tool"`
 	ScreenID   string `json:"screen_id"`
 	Route      string `json:"route,omitempty"`
@@ -43,6 +44,10 @@ func (a Action) validate() error {
 		return errors.New("invalid screen ID")
 	}
 	switch a.Tool {
+	case "home_show_archive_query":
+		if identifier.MatchString(a.QueryRef) && a.Route == "" && a.Collection == "" && a.PhotoID == "" {
+			return nil
+		}
 	case "home_refresh_screen":
 		if a.Route == "" && a.Collection == "" && a.PhotoID == "" {
 			return nil

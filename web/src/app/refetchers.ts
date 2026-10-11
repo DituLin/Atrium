@@ -22,6 +22,7 @@ import type { AppAction, AppState } from './state';
 
 export interface RefetchPorts {
   videos?: VideoRefresh;
+ archives?:VideoRefresh;
   house?: HouseLoader;
   overview?: OverviewLoader;
   api: ApiClient;
@@ -120,6 +121,7 @@ export function createRefetchers(ports: RefetchPorts): Refetchers {
     if (target.name === 'house') { await house(); return; }
     const jobs: Array<Promise<void>> = [home()];
     switch (target.name) {
+ case 'family': if(!ports.archives)throw new Error('Archive reader unavailable');jobs.push(ports.archives.load(target));break;
       case 'dashboard':
         if (getState().slideshow.seed) jobs.push(slideshow());
         break;

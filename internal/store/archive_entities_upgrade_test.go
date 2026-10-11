@@ -32,7 +32,7 @@ func TestEntityUpgradeFromTwelvePreservesLegacyAndOriginals(t *testing.T) {
 	require.NoError(t, e)
 	n, e := d.Migrate(ctx)
 	require.NoError(t, e)
-	require.Equal(t, 4, n)
+	require.Equal(t, 5, n)
 	n, e = d.Migrate(ctx)
 	require.NoError(t, e)
 	require.Zero(t, n)

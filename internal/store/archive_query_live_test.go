@@ -88,7 +88,7 @@ func TestArchiveLiveQueryTwoDomains(t *testing.T) {
 		Name string `json:"name"`
 	}
 	require.NoError(t, json.Unmarshal(b, &inventory))
-	require.Len(t, inventory, 21)
+	require.Len(t, inventory, 22)
 	names := []string{}
 	for _, v := range inventory {
 		names = append(names, v.Name)

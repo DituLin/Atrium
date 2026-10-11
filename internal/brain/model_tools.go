@@ -64,7 +64,7 @@ func ModelTools(inventory []*mcp.Tool) ([]*mcp.Tool, error) {
 		}
 		schema["required"] = required
 		schema["additionalProperties"] = false
-		if tool.Name == "home_refresh_screen" || tool.Name == "home_show_photo" || tool.Name == "home_navigate_screen" {
+		if tool.Name == "home_show_archive_query" || tool.Name == "home_refresh_screen" || tool.Name == "home_show_photo" || tool.Name == "home_navigate_screen" {
 			clone.Description = "Request an authorized screen action. The host assigns durable operation identity. accepted means pending; only applied confirms completion. Repeat the same call reference only to query the original outcome."
 		}
 		out = append(out, &clone)

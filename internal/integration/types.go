@@ -89,9 +89,10 @@ type Home struct {
 
 // CommandPayload carries only whitelisted screen actions.
 type CommandPayload struct {
-	Route      string `json:"route,omitempty"`
-	Collection string `json:"collection,omitempty"`
-	PhotoID    string `json:"photo_id,omitempty"`
+	ArchiveViewID string `json:"archive_view_id,omitempty"`
+	Route         string `json:"route,omitempty"`
+	Collection    string `json:"collection,omitempty"`
+	PhotoID       string `json:"photo_id,omitempty"`
 }
 
 // CommandResult is the acknowledged result, with any unauthorized content redacted.

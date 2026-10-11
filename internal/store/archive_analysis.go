@@ -129,6 +129,9 @@ func (r *ArchiveTasks) analyzeArchives(ctx context.Context, a archiveSearchActor
 	hash := sha256.Sum256(raw)
 	result.InputDigest = hex.EncodeToString(hash[:])
 	result.SnapshotID = domain.NewID()
+	if a.ScreenID == "" {
+		result.QueryRef = result.SnapshotID
+	}
 	body, e := json.Marshal(result)
 	if e != nil {
 		return result, e
@@ -156,6 +159,16 @@ func (r *ArchiveTasks) analyzeArchives(ctx context.Context, a archiveSearchActor
 		// Snapshots are disposable; keep a bounded recent set without retaining stale private totals indefinitely.
 		if _, e = tx.ExecContext(ctx, `DELETE FROM archive_analysis_snapshots WHERE household_id=? AND (epoch<>? OR generation<>? OR id IN (SELECT id FROM archive_analysis_snapshots WHERE household_id=? ORDER BY created_at DESC,id DESC LIMIT -1 OFFSET 127))`, h, epoch, generation, h); e != nil {
 			return e
+		}
+		if a.ScreenID == "" {
+			if e = pruneArchiveQueriesIn(ctx, tx, now); e != nil {
+				return e
+			}
+			f := archive.SearchFilter{Query: q.Query, EntityID: q.EntityID, Domain: q.Domain, DocumentType: q.DocumentType, DateFrom: q.DateFrom, DateTo: q.DateTo, Limit: 10}
+			filter, _ := json.Marshal(f)
+			if _, e = tx.ExecContext(ctx, `INSERT INTO archive_query_receipts(id,household_id,principal_id,credential_id,filter_json,analysis_json,expires_at) VALUES(?,?,?,?,?,?,?)`, result.QueryRef, h, a.Integration.PrincipalID, a.Integration.CredentialID, string(filter), string(query), FormatTime(now.Add(10*time.Minute))); e != nil {
+				return e
+			}
 		}
 		_, e = tx.ExecContext(ctx, `INSERT INTO archive_analysis_snapshots(household_id,id,authority,public,epoch,generation,algorithm_version,query_json,input_digest,result_json,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)`, h, result.SnapshotID, who, public, epoch, generation, archive.AnalysisAlgorithmVersion, string(query), result.InputDigest, string(body), now.UTC().Format(time.RFC3339Nano))
 		return e

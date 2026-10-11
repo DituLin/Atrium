@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/DituLin/Atrium/internal/archive"
+	"github.com/DituLin/Atrium/internal/domain"
 	"github.com/DituLin/Atrium/internal/integration"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"testing"
@@ -28,7 +29,7 @@ func TestArchiveModelArgumentsAreBusinessOnly(t *testing.T) {
 	}
 }
 func TestArchiveReceiptPreservesIncompleteCoverageAndSources(t *testing.T) {
-	env := integration.Response[integration.ArchiveSearch]{SchemaVersion: "1", ObservedAt: time.Now(), Availability: "available", Data: integration.ArchiveSearch{SchemaVersion: integration.ArchiveQueryVersion, SearchPage: archive.SearchPage{Items: []archive.SearchItem{}, Coverage: archive.SearchCoverage{Complete: false, Reason: "indexing"}, IndexStatus: "indexing"}}}
+	env := integration.Response[integration.ArchiveSearch]{SchemaVersion: "1", ObservedAt: time.Now(), Availability: "available", Data: integration.ArchiveSearch{SchemaVersion: integration.ArchiveQueryVersion, SearchPage: archive.SearchPage{QueryRef: domain.NewID(), Generation: "1:1", Items: []archive.SearchItem{}, Coverage: archive.SearchCoverage{Complete: false, Reason: "indexing"}, IndexStatus: "indexing"}}}
 	res, e := receiptResult("home_search_archives", map[string]any{"query": "体检"}, &mcp.CallToolResult{StructuredContent: env})
 	if e != nil {
 		t.Fatal(e)

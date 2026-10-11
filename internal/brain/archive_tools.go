@@ -174,6 +174,9 @@ func validArchiveReceipt(tool string, args map[string]any, data any) bool {
 		}
 		return true
 	case *integration.ArchiveSearch:
+		if tool == "home_search_archives" && (d.QueryRef == "" || domain.ValidateArchiveIdentifier(d.QueryRef) != nil || d.Generation == "") {
+			return false
+		}
 		if d.SchemaVersion != integration.ArchiveQueryVersion || len(d.Items) > 25 || d.IndexStatus == "" || (!d.Coverage.Complete && d.Coverage.Reason == "") {
 			return false
 		}

@@ -165,13 +165,14 @@ type CommandKind string
 const (
 	CommandNavigate CommandKind = "navigate"
 	CommandShow     CommandKind = "show"
+	CommandArchive  CommandKind = "archive"
 	CommandRefresh  CommandKind = "refresh"
 )
 
 // Valid reports whether the value is a known command kind.
 func (c CommandKind) Valid() bool {
 	switch c {
-	case CommandNavigate, CommandShow, CommandRefresh:
+	case CommandNavigate, CommandShow, CommandRefresh, CommandArchive:
 		return true
 	}
 	return false
@@ -381,16 +382,17 @@ type Topic string
 
 // Change topics (technical design §9).
 const (
-	TopicHome   Topic = "home"
-	TopicPhotos Topic = "photos"
-	TopicNAS    Topic = "nas"
-	TopicScreen Topic = "screen"
+	TopicArchives Topic = "archives"
+	TopicHome     Topic = "home"
+	TopicPhotos   Topic = "photos"
+	TopicNAS      Topic = "nas"
+	TopicScreen   Topic = "screen"
 )
 
 // Valid reports whether the value is a known topic.
 func (t Topic) Valid() bool {
 	switch t {
-	case TopicHome, TopicPhotos, TopicNAS, TopicScreen:
+	case TopicHome, TopicPhotos, TopicNAS, TopicScreen, TopicArchives:
 		return true
 	}
 	return false

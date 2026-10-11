@@ -16,6 +16,7 @@ export interface AppContextValue {
   dispatch: (action: AppAction) => void;
   api: ApiClient;
   videos?: VideoRefresh;
+ archives?: VideoRefresh;
   house: HouseLoader;
   overview: OverviewLoader;
   clientVersion: string;

@@ -279,6 +279,7 @@ func (e *Executor) observe(ctx context.Context, record ActionRecord, result *mcp
 }
 
 var modelArgumentFields = map[string][]string{
+	"home_show_archive_query":      {"screen_id", "query_ref"},
 	"home_analyze_archives":        {"operation", "count", "metric", "query", "entity_id", "domain", "document_type", "date_from", "date_to"},
 	"home_search_archives":         {"query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership", "limit", "cursor"},
 	"home_search_archive_entities": {"query", "entity_id", "limit", "cursor"},
@@ -383,7 +384,7 @@ func validateArguments(name string, input map[string]any) (map[string]any, *Acti
 		}
 	}
 	switch name {
-	case "home_refresh_screen", "home_show_photo", "home_navigate_screen":
+	case "home_show_archive_query", "home_refresh_screen", "home_show_photo", "home_navigate_screen":
 		a := &Action{Tool: name}
 		var err error
 		a.ScreenID, err = stringArg("screen_id", true)
@@ -399,6 +400,10 @@ func validateArguments(name string, input map[string]any) (map[string]any, *Acti
 			return nil, nil, err
 		}
 		a.PhotoID, err = stringArg("photo_id", false)
+		if err != nil {
+			return nil, nil, err
+		}
+		a.QueryRef, err = stringArg("query_ref", false)
 		if err != nil {
 			return nil, nil, err
 		}

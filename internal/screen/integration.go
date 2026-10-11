@@ -90,16 +90,20 @@ func (s *Service) IssueIntegration(ctx context.Context, principalID, operationID
 }
 func (s *Service) validateIntegrationPayload(kind domain.CommandKind, p domain.CommandPayload) error {
 	switch kind {
+	case domain.CommandArchive:
+		if p.ArchiveViewID != "" && p.PhotoID == "" && p.Route == "" && p.Collection == "" {
+			return nil
+		}
 	case domain.CommandRefresh:
 		if p == (domain.CommandPayload{}) {
 			return nil
 		}
 	case domain.CommandNavigate:
-		if p.PhotoID == "" && (p.Route != domain.RoutePhotos || p.Collection != "") {
+		if p.ArchiveViewID == "" && p.PhotoID == "" && (p.Route != domain.RoutePhotos || p.Collection != "") {
 			return s.validateNavigate(&p)
 		}
 	case domain.CommandShow:
-		if p.PhotoID != "" && p.Route == "" && p.Collection == "" {
+		if p.ArchiveViewID == "" && p.PhotoID != "" && p.Route == "" && p.Collection == "" {
 			return nil
 		}
 	}
@@ -126,6 +130,10 @@ func (s *Service) authorizeIntegration(ctx context.Context, tx *sql.Tx, principa
 	}
 	if active == 0 {
 		return domain.Errorf(domain.CodeNotFound, "screen unavailable")
+	}
+	if cmd.Kind == domain.CommandArchive {
+		_, err := s.db.ArchiveTasksWithClock(archiveViewClock(s.now)).AuthorizeArchiveViewIn(ctx, tx, principalID, cmd.ScreenID, cmd.Payload.ArchiveViewID)
+		return err
 	}
 	if cmd.Kind == domain.CommandShow {
 		_, err := s.db.Photos().WithTx(tx).GetScoped(ctx, p.Policy.SourceIDs, cmd.Payload.PhotoID)
@@ -180,3 +188,7 @@ func (s *Service) getIntegration(ctx context.Context, principalID, id string, op
 	}
 	return cmd, nil
 }
+
+type archiveViewClock func() time.Time
+
+func (c archiveViewClock) Now() time.Time { return c() }

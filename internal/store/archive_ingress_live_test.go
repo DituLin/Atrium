@@ -84,7 +84,7 @@ func TestArchiveIngressRealCoreAndHostInventory(t *testing.T) {
 		Name string `json:"name"`
 	}
 	require.NoError(t, json.Unmarshal(out, &tools))
-	require.Len(t, tools, 21)
+	require.Len(t, tools, 22)
 	found := false
 	for _, tool := range tools {
 		if tool.Name == "home_analyze_archives" {

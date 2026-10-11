@@ -29,6 +29,7 @@ export { DATA_CHANGED_THROTTLE_MS } from './dataChanged';
 
 export interface ConnectionDeps {
   videos?: VideoRefresh;
+ archives?: VideoRefresh;
   api: ApiClient;
   house: HouseLoader;
   overview?: OverviewLoader;
@@ -45,7 +46,7 @@ export interface WsHandle {
 }
 
 export function useConnection(deps: ConnectionDeps): WsHandle {
-  const { api, house, overview, videos, clientVersion, dispatch, enabled } = deps;
+  const { api, house, overview, videos, archives, clientVersion, dispatch, enabled } = deps;
   // The socket callbacks must read the freshest state without re-creating the
   // client on every render, so state is mirrored through a ref after commit.
   const stateRef = useRef(deps.state);
@@ -57,9 +58,10 @@ export function useConnection(deps: ConnectionDeps): WsHandle {
 
   // A `show` command is acked only once its image has decoded (§7.2); the
   // viewer's render signal is fed to the executor from here.
-  const renderedId = deps.state.viewer.renderedId;
-  const viewerStatus = deps.state.viewer.status;
-  const viewerCommandId = deps.state.viewer.commandId;
+  const archiveRoute=deps.state.router.route.name==='family'&&deps.state.router.route.archiveViewId?deps.state.router.route:null;
+ const renderedId = archiveRoute?deps.state.archiveRender.id:deps.state.viewer.renderedId;
+  const viewerStatus = archiveRoute?deps.state.archiveRender.status:deps.state.viewer.status;
+  const viewerCommandId = archiveRoute?archiveRoute.commandId??null:deps.state.viewer.commandId;
   useEffect(() => {
     sessionRef.current?.settleRender(renderedId, viewerStatus, viewerCommandId);
   }, [renderedId, viewerStatus, viewerCommandId]);
@@ -71,7 +73,7 @@ export function useConnection(deps: ConnectionDeps): WsHandle {
     if (!enabled) return;
 
     const getState = (): AppState => stateRef.current;
-    const refetchers = createRefetchers({ api, dispatch, getState, house, overview, videos });
+    const refetchers = createRefetchers({ api, dispatch, getState, house, overview, videos, archives });
     // Change notifications are throttled per target (W-205); the refetcher
     // lives with the socket so it is torn down with it.
     const handlers = toRefetchHandlers(refetchers);
@@ -79,6 +81,7 @@ export function useConnection(deps: ConnectionDeps): WsHandle {
     const houseVisible = () => selectScreen(getState()) === 'house' && document.visibilityState !== 'hidden';
     const refetch = createTopicRefetcher({ ...handlers, overview: () => { if (overviewVisible()) handlers.overview(); }, house: () => { if (houseVisible()) handlers.house(); } });
     const notifyChanged = (topics: readonly DataChangedTopic[]): void => {
+      if(topics.includes('archives')) dispatch({type:'archives.invalidate'});
       if (topics.includes('nas') || topics.includes('home')) { house.invalidate(); overview?.invalidate(); }
       refetch.notify(topics, {
         houseActive: houseVisible(),
@@ -126,7 +129,7 @@ export function useConnection(deps: ConnectionDeps): WsHandle {
       sessionRef.current = null;
       refetch.cancel();
     };
-  }, [api, house, overview, videos, clientVersion, dispatch, enabled, retryNonce]);
+  }, [api, house, overview, videos, archives, clientVersion, dispatch, enabled, retryNonce]);
 
   return useMemo<WsHandle>(
     () => ({

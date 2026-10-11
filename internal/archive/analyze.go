@@ -114,6 +114,7 @@ type AnalysisGroup struct {
 }
 type AnalysisResult struct {
 	SchemaVersion    string           `json:"schema_version"`
+	QueryRef         string           `json:"query_ref,omitempty"`
 	SnapshotID       string           `json:"snapshot_id,omitempty"`
 	AlgorithmVersion string           `json:"algorithm_version"`
 	Query            AnalysisQuery    `json:"query"`

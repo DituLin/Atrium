@@ -29,17 +29,19 @@ import (
 // Deps are the collaborators the HTTP layer needs. Everything is an explicit
 // field so tests can substitute fakes without touching package state.
 type Deps struct {
-	Archives *archive.Intake
-	Config   *config.Config
-	DB       *store.DB
-	Logger   *slog.Logger
-	Auth     *auth.Authenticator
-	Pairing  *auth.PairingService
-	Home     *clock.Home
-	Snapshot *widget.Composer
-	House    *family.HouseComposer
-	Overview *briefing.Composer
-	Now      func() time.Time
+	Archives       *archive.Intake
+	ArchiveBlobs   *archive.BlobStore
+	ArchivePreview archive.NativeParser
+	Config         *config.Config
+	DB             *store.DB
+	Logger         *slog.Logger
+	Auth           *auth.Authenticator
+	Pairing        *auth.PairingService
+	Home           *clock.Home
+	Snapshot       *widget.Composer
+	House          *family.HouseComposer
+	Overview       *briefing.Composer
+	Now            func() time.Time
 	// Insecure is true when tls.mode = off; it drops the Secure cookie flag.
 	Insecure bool
 	// StartedAt feeds uptime in diagnostics.

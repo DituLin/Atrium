@@ -100,6 +100,8 @@ type SearchCoverage struct {
 	Reason   string `json:"reason,omitempty"`
 }
 type SearchPage struct {
+	QueryRef    string         `json:"query_ref,omitempty"`
+	Generation  string         `json:"generation,omitempty"`
 	Items       []SearchItem   `json:"items"`
 	NextCursor  string         `json:"next_cursor,omitempty"`
 	Coverage    SearchCoverage `json:"coverage"`

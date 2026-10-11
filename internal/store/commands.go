@@ -111,11 +111,19 @@ func (c *Commands) MarkDelivered(ctx context.Context, id string, now time.Time) 
 
 // Resolve sets a terminal status exactly once; later calls are no-ops.
 func (c *Commands) Resolve(ctx context.Context, id string, status domain.CommandStatus, errCode string, result *domain.CommandResult, now time.Time) (bool, error) {
+	return c.resolveWith(ctx, c.db.sql, id, status, errCode, result, now)
+}
+func (c *Commands) ResolveInTx(ctx context.Context, tx *sql.Tx, id string, status domain.CommandStatus, errCode string, result *domain.CommandResult, now time.Time) (bool, error) {
+	return c.resolveWith(ctx, tx, id, status, errCode, result, now)
+}
+func (c *Commands) resolveWith(ctx context.Context, q interface {
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
+}, id string, status domain.CommandStatus, errCode string, result *domain.CommandResult, now time.Time) (bool, error) {
 	blob, err := marshalResult(result)
 	if err != nil {
 		return false, err
 	}
-	res, err := c.db.sql.ExecContext(ctx, `
+	res, err := q.ExecContext(ctx, `
 		UPDATE screen_commands SET status = ?, error_code = ?, result = COALESCE(?, result), resolved_at = ?
 		WHERE id = ? AND status = 'accepted'`,
 		string(status), nullString(errCode), blob, FormatTime(now), id)

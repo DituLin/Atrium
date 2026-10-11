@@ -45,6 +45,7 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
     return { api: client, dispatch: send, house, overview };
   }, [reduce]);
   const videos = useMemo(() => new VideoRefresh(), []);
+ const archives = useMemo(() => new VideoRefresh(), []);
   const stateRef = useRef(state);
   useEffect(() => {
     stateRef.current = state;
@@ -94,7 +95,7 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
   // auth cache has not expired. Pairing screens never open one.
   const connectionEnabled =
     !state.needsPairing && !state.authExpired && authTransport.hasCredential();
-  const ws = useConnection({ api, clientVersion: CLIENT_VERSION, state, dispatch, house, overview, videos, enabled: connectionEnabled });
+  const ws = useConnection({ api, clientVersion: CLIENT_VERSION, state, dispatch, house, overview, videos, archives, enabled: connectionEnabled });
 
   // Home shows the first family notice, so the overview also polls there.
   const overviewScreen = selectScreen(state);
@@ -117,8 +118,8 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
   }, [state.needsPairing]);
 
   const value = useMemo<AppContextValue>(
-    () => ({ state, dispatch, api, house, overview, videos, clientVersion: CLIENT_VERSION, goBack }),
-    [state, api, house, overview, videos, goBack, dispatch],
+    () => ({ state, dispatch, api, house, overview, videos, archives, clientVersion: CLIENT_VERSION, goBack }),
+    [state, api, house, overview, videos, archives, goBack, dispatch],
   );
 
   return <AppContext.Provider value={value}>{props.children}</AppContext.Provider>;

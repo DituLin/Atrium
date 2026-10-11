@@ -10,6 +10,7 @@ import (
 
 func (a *API) archiveSearchRoutes() {
 	a.archiveAnalysisRoutes()
+	a.archiveScreenRoutes()
 	prefix := APIPrefix + "/integrations/archives"
 	for _, route := range []struct{ path, kind string }{{"/search", "search"}, {"/entities", "entities"}, {"/documents/{id}/evidence", "evidence"}} {
 		kind := route.kind

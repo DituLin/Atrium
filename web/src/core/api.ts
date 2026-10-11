@@ -1,3 +1,4 @@
+import type {ArchiveFilter, ArchivePage, ArchiveEntities, ArchiveDetail, ArchiveAnalysis, ArchiveAnalysisQuery} from '../types/archives';
 import type { FamilyMember, FamilyRecordPage } from '../types/family';
 /**
  * HTTP client for `/api/v1` (design §8). All auth transport goes through
@@ -180,6 +181,37 @@ export class ApiClient {
     return this.get<HomeResponse>(`${API_BASE}/home`);
   }
 
+  private async archiveGet<T>(path:string,signal?:AbortSignal):Promise<T>{
+   const envelope=await this.request<{schema_version:string;availability:string;data:T}>(path,{method:'GET',headers:{Accept:'application/json'},cache:'no-store',signal},true);
+   if(envelope.schema_version!=='1'||envelope.availability!=='available'||!envelope.data)throw new Error('Invalid archive response');
+   return envelope.data;
+  }
+  getArchiveView(id:string,signal?:AbortSignal,cursor?:string):Promise<{archive_view_id:string;page:ArchivePage;analysis:ArchiveAnalysis}>{
+   return this.archiveGet(`${API_BASE}/archives/views/${encodeURIComponent(id)}${archiveQuery({cursor})}`,signal);
+  }
+  getArchives(filter: ArchiveFilter, signal?: AbortSignal): Promise<ArchivePage> {
+    return this.archiveGet(`${API_BASE}/archives/search${archiveQuery(filter)}`,signal);
+  }
+  getArchiveEntities(signal?: AbortSignal,cursor?:string): Promise<ArchiveEntities> {
+    return this.archiveGet(`${API_BASE}/archives/entities${archiveQuery({limit:25,cursor})}`,signal);
+  }
+  getArchiveDocument(id:string, signal?:AbortSignal):Promise<ArchiveDetail> {
+    return this.archiveGet(`${API_BASE}/archives/documents/${encodeURIComponent(id)}`,signal);
+  }
+  analyzeArchives(query:ArchiveAnalysisQuery, signal?:AbortSignal):Promise<ArchiveAnalysis> {
+    return this.archiveGet(`${API_BASE}/archives/analysis${archiveQuery(query)}`,signal);
+  }
+  async getArchivePreview(id:string, version:number, page:number, signal?:AbortSignal):Promise<{blob:Blob;pages:number}> {
+    const generation=this.generation;
+    const response=await this.fetchImpl(`${API_BASE}/archives/documents/${encodeURIComponent(id)}/versions/${version}/pages/${page}`,this.transport.decorate({method:'GET',signal,cache:'no-store'}));
+    this.assertCurrent(generation);
+    if(response.status===401){this.invalidateAuthorization();this.onUnauthorized?.();}
+    if(!response.ok)throw await toApiError(response,'preview_unavailable');
+    const blob=await response.blob();this.assertCurrent(generation);
+    if(signal?.aborted)throw new DOMException('Request cancelled','AbortError');
+    if(blob.type!=='image/png'||blob.size>6*1024*1024)throw new Error('Invalid preview');
+    return {blob,pages:Number(response.headers.get('X-Archive-Pages')??'1')};
+  }
   getFamilyMembers(signal?: AbortSignal): Promise<{members: FamilyMember[]}> {
     return this.request(`${API_BASE}/family/members`, {method:'GET',headers:{Accept:'application/json'},cache:'no-store',...(signal?{signal}:{})},true);
   }
@@ -304,4 +336,9 @@ async function toApiError(response: Response, fallbackCode: string): Promise<Api
     parseRetryAfter(response.headers.get('Retry-After')),
     details,
   );
+}
+
+function archiveQuery(value: object):string {
+ const query=new URLSearchParams();Object.keys(value).forEach(key=>{const item=(value as Record<string,unknown>)[key];if(item!==undefined&&item!=='')query.set(key,String(item));});
+ const text=query.toString();return text?`?${text}`:'';
 }

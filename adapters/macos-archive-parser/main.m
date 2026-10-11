@@ -109,7 +109,21 @@ static void saveFixtureRaster(CGImageRef image, NSUInteger page) {
     }
 }
 #endif
+static NSUInteger previewPage;
+static NSData *previewPNG;
 static BOOL recognize(CGImageRef image, NSUInteger page) {
+    if (previewPage) {
+        if (page != previewPage) return NO;
+        NSMutableData *bytes = [NSMutableData new];
+        CGImageDestinationRef destination = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)bytes, CFSTR("public.png"), 1, NULL);
+        if (!destination) return NO;
+        CGImageDestinationAddImage(destination, image, NULL);
+        BOOL ok = CGImageDestinationFinalize(destination);
+        CFRelease(destination);
+        if (!ok || bytes.length > 6 * 1024 * 1024) return NO;
+        previewPNG = bytes;
+        return YES;
+    }
 #ifdef ATRIUM_FIXTURE_RENDER
     saveFixtureRaster(image, page);
 #endif
@@ -337,7 +351,7 @@ static void pdfData(NSData *data) {
     }
     result[@"encrypted"] = @(doc.isEncrypted);
     result[@"allows_copying"] = @(doc.allowsCopying);
-    if (doc.isLocked) {
+    if (doc.isLocked || (previewPage && doc.isEncrypted)) {
         outcome(@"encrypted", @"locked_pdf");
         return;
     }
@@ -354,6 +368,7 @@ static void pdfData(NSData *data) {
     coverage[@"total_pages"] = @(count);
     NSUInteger processed = 0;
     for (NSUInteger i = 0; i < count && !stopped; i++) {
+        if (previewPage && i + 1 != previewPage) continue;
         @autoreleasepool {
             @try {
                 PDFPage *p = [doc pageAtIndex:i];
@@ -431,7 +446,7 @@ static void pdfData(NSData *data) {
                 page[@"ocr_complete"] = @(ok);
                 if (ok)
                     processed++;
-                if (stopped)
+                if (stopped || previewPage)
                     continue;
                 NSString *pageText = p.string ?: @"";
                 if (pageText.length > TextLimit) {
@@ -488,8 +503,12 @@ int main(int argc, const char *argv[]) {
             return 2;
         NSData *configData = [NSData dataWithBytes:config length:(NSUInteger)n];
         id cfg = [NSJSONSerialization JSONObjectWithData:configData options:0 error:NULL];
-        if (![cfg isKindOfClass:NSDictionary.class] || ![cfg isEqual:@{@"protocol" : @1}])
-            return 2;
+        if (![cfg isKindOfClass:NSDictionary.class] || ![cfg[@"protocol"] isKindOfClass:NSNumber.class] || CFGetTypeID((__bridge CFTypeRef)cfg[@"protocol"]) == CFBooleanGetTypeID()) return 2;
+        if (![cfg isEqual:@{@"protocol" : @1}]) {
+            NSNumber *page = cfg[@"preview_page"];
+            if ([(NSDictionary *)cfg count] != 2 || ![cfg[@"protocol"] isEqual:@1] || ![page isKindOfClass:NSNumber.class] || CFGetTypeID((__bridge CFTypeRef)page) == CFBooleanGetTypeID() || page.doubleValue != page.integerValue || page.integerValue < 1 || page.integerValue > 100) return 2;
+            previewPage = page.unsignedIntegerValue;
+        }
         struct stat st;
         if (fstat(3, &st) || !S_ISREG(st.st_mode) || st.st_size < 0)
             return 2;
@@ -561,6 +580,12 @@ int main(int argc, const char *argv[]) {
         } @catch (NSException *exception) {
             (void)exception;
             outcome(@"invalid", @"invalid_input");
+        }
+        if (previewPage) {
+            if (!previewPNG) return 6;
+            NSData *output = [NSJSONSerialization dataWithJSONObject:@{@"protocol":@1,@"page":@(previewPage),@"total_pages":result[@"coverage"][@"total_pages"],@"png":[previewPNG base64EncodedStringWithOptions:0]} options:0 error:NULL];
+            if (!output || output.length > 8 * 1024 * 1024) return 4;
+            return fwrite(output.bytes, 1, output.length, stdout) == output.length ? 0 : 5;
         }
         if ([result[@"status"] isEqual:@"parsed"] && segments.count == 0)
             outcome(@"empty", @"no_text_detected");

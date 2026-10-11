@@ -563,7 +563,11 @@ type archiveSearchActor struct {
 }
 
 func (r *ArchiveTasks) SearchArchives(ctx context.Context, a domain.IntegrationActor, h string, public bool, f archive.SearchFilter, key []byte) (archive.SearchPage, error) {
-	return r.searchArchives(ctx, archiveSearchActor{Integration: a}, h, public, f, key, "")
+	page, e := r.searchArchives(ctx, archiveSearchActor{Integration: a}, h, public, f, key, "")
+	if e == nil {
+		page.QueryRef, e = r.saveArchiveQuery(ctx, a, h, f)
+	}
+	return page, e
 }
 func (r *ArchiveTasks) SearchArchivesForScreen(ctx context.Context, id, hash, h string, f archive.SearchFilter, key []byte) (archive.SearchPage, error) {
 	return r.searchArchives(ctx, archiveSearchActor{ScreenID: id, ScreenHash: hash}, h, true, f, key, "")
@@ -610,6 +614,7 @@ func (r *ArchiveTasks) searchArchives(ctx context.Context, a archiveSearchActor,
 		if e = tx.QueryRowContext(ctx, `SELECT epoch,generation,index_revision FROM archive_search_state WHERE household_id=?`, h).Scan(&epoch, &generation, &indexVersion); e != nil {
 			return e
 		}
+		page.Generation = fmt.Sprintf("%d:%d", epoch, generation)
 		criteria := f
 		criteria.Cursor = ""
 		bind, _ := json.Marshal([]any{h, identity, public, criteria, document})
@@ -715,6 +720,9 @@ SELECT 'legacy:'||p.root_record_id,1,f.payload_json,'',1,p.entity_id,f.id FROM a
 				c.After = last
 				page.NextCursor = signSearchCursor(c, key)
 				break
+			}
+			if a.ScreenID != "" {
+				item.TaskStatus = ""
 			}
 			page.Items = append(page.Items, item)
 			last = id
@@ -852,6 +860,9 @@ func (r *ArchiveTasks) archiveEvidence(ctx context.Context, a archiveSearchActor
 				out.NextCursor = signSearchCursor(c, key)
 				break
 			}
+		}
+		if a.ScreenID != "" {
+			p.Item.TaskStatus = ""
 		}
 		out.Items = append(out.Items, p.Item)
 		if p.Item.MetadataOnly || p.Item.Truncated || p.Item.ReviewRequired || p.Item.ParseStatus != "parsed" {

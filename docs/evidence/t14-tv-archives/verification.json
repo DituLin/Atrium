@@ -1,0 +1,93 @@
+{
+  "scope": "T14 synthetic implementation verification; not production deployment or real model/IM acceptance",
+  "verified_at": "2026-10-11T06:11:58.176238+00:00",
+  "results": [
+    {
+      "command": "go test ./...",
+      "result": "passed",
+      "note": "Final complete run; prior high-load NativeFlood timeout was independently rerun without changing assertion (0.21 seconds), then complete Go suite passed."
+    },
+    {
+      "command": "go test -race ./internal/store ./internal/httpapi ./internal/screen ./internal/brain ./internal/homemcp ./internal/app/events",
+      "result": "passed",
+      "seconds": {
+        "store": 190.288,
+        "httpapi": 65.712,
+        "screen": 17.729,
+        "brain": 3.492,
+        "homemcp": 6.367,
+        "events": 1.438
+      }
+    },
+    {
+      "command": "go test -race ./internal/store -run TestArchiveScreen|TestScreenArchive|TestArchiveAnalysisReceiptTV -count=1",
+      "result": "passed",
+      "seconds": 4.308
+    },
+    {
+      "command": "npm --prefix web test",
+      "result": "passed",
+      "files": 65,
+      "tests": 457
+    },
+    {
+      "command": "npm --prefix web run typecheck; npm --prefix web run lint; npm --prefix web run build",
+      "result": "passed",
+      "lint_warnings": 0
+    },
+    {
+      "command": "node --test adapters/openclaw/*.test.mjs",
+      "result": "passed",
+      "tests": 91
+    },
+    {
+      "command": "GOOS=linux GOARCH=amd64 go build ./...",
+      "result": "passed"
+    },
+    {
+      "command": "ATRIUM_T14_PREVIEW_HELPER=... ATRIUM_NATIVE_FIXTURES=... go test ./internal/archive -run ^TestNativePreview -count=1 -v",
+      "result": "passed",
+      "seconds": 1.882,
+      "coverage": [
+        "real report PNG",
+        "four PDF pages crop/rotation dimensions",
+        "bad page",
+        "locked and encrypted PDFs",
+        "over 100 pages",
+        "malformed PDF",
+        "hash mismatch",
+        "child cancellation"
+      ]
+    },
+    {
+      "command": "ATRIUM_T14_SHOW_DIR=... go test ./internal/httpapi -run ^TestT14LiveBrainArchiveShow$ -count=1 -v",
+      "result": "passed",
+      "seconds": 0.22,
+      "coverage": "real synthetic Core/MCP/Brain-host/WS/browser DOM accepted-to-applied chain; not model inference"
+    },
+    {
+      "command": "go test ./internal/store -run ^TestArchivePreviewRechecksWithdrawalAfterRenderer$ -count=1 -v",
+      "result": "passed",
+      "seconds": 0.42,
+      "coverage": "withheld renderer completes after withdrawal; HTTP refuses raster, no-store maintained"
+    },
+    {
+      "command": "go test -race ./internal/store -run TestArchivePreviewRechecksWithdrawalAfterRenderer|TestArchiveScreenHTTP|TestScreenArchiveDetail -count=1",
+      "result": "passed",
+      "coverage": "post-render withdrawal HTTP fence, GET/HEAD cookie and bearer authorization, screen detail/public closure"
+    }
+  ],
+  "compatibility": {
+    "Chrome66": "build target and existing legacy API/CSS guard tests; no Chrome66 runtime available",
+    "Chrome154": "real browser acceptance",
+    "OnePlusWebView119": "real normal-paired side-loaded preview app and physical ADB directional keys"
+  },
+  "not_claimed": [
+    "real model classification",
+    "WeChat/Discord external transport",
+    "NAS original synchronization",
+    "production DB migration or deployment",
+    "instantaneous revocation",
+    "verified redaction artifacts"
+  ]
+}

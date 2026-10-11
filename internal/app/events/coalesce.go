@@ -14,10 +14,11 @@ const CoalesceWindow = 250 * time.Millisecond
 
 // topicOrder fixes the emitted order so payloads are byte-stable.
 var topicOrder = map[domain.Topic]int{
-	domain.TopicHome:   0,
-	domain.TopicPhotos: 1,
-	domain.TopicNAS:    2,
-	domain.TopicScreen: 3,
+	domain.TopicArchives: 4,
+	domain.TopicHome:     0,
+	domain.TopicPhotos:   1,
+	domain.TopicNAS:      2,
+	domain.TopicScreen:   3,
 }
 
 // NormalizeTopics drops unknown and duplicate topics and sorts the rest.

@@ -18,7 +18,7 @@ export type AppRoute =
   | { name: 'dashboard' }
   | { name: 'settings' }
   | { name: 'house' }
-  | { name: 'family' }
+  | { name: 'family';archiveViewId?:string;commandId?:string }
   | { name: 'briefing' }
   | { name: 'videos' }
   | { name: 'video'; videoId: string }
@@ -108,7 +108,8 @@ export function toRouteState(route: AppRoute): RouteState {
 }
 
 export function routesEqual(a: AppRoute, b: AppRoute): boolean {
-  return routeToPath(a) === routeToPath(b);
+  if(a.name==='family'&&b.name==='family')return a.archiveViewId===b.archiveViewId&&a.commandId===b.commandId;
+ return routeToPath(a) === routeToPath(b);
 }
 
 /**

@@ -1,0 +1,39 @@
+import {describe,it,expect,vi,afterEach} from 'vitest';
+import {ArchiveReader} from './archiveReader';
+import type {ApiClient} from '../../core/api';
+import type {ArchivePage} from '../../types/archives';
+
+const page:ArchivePage={items:[],generation:'1:1',coverage:{complete:true},index_status:'ready'};
+function api(){return {getArchives:vi.fn().mockResolvedValue(page),getArchiveEntities:vi.fn().mockResolvedValue({items:[],coverage:{complete:true}}),analyzeArchives:vi.fn().mockResolvedValue({data_epoch:1,generation:1,groups:[{value:'200',currency:'CNY'}],coverage:{complete:true}}),getArchiveDocument:vi.fn()} as unknown as ApiClient;}
+afterEach(()=>vi.useRealTimers());
+describe('archive authorization lifetime',()=>{
+ it('hides stale content at 30s even while history is expanded and unrelated requests work',async()=>{
+  vi.useFakeTimers();const a=api();const reader=new ArchiveReader(a);await reader.load();expect(reader.value.snapshot).not.toBeNull();
+  vi.mocked(a.getArchives).mockRejectedValue(new Error('offline'));
+  await vi.advanceTimersByTimeAsync(30001);expect(reader.value.snapshot).toBeNull();reader.stop();
+ });
+ it('invalidates synchronously and rejects a response from the old authorization',async()=>{
+  vi.useFakeTimers();const a=api();const reader=new ArchiveReader(a);await reader.load();
+  let resolve!:(p:ArchivePage)=>void;vi.mocked(a.getArchives).mockReturnValue(new Promise(r=>{resolve=r;}));const old=reader.load();reader.invalidate();expect(reader.value.snapshot).toBeNull();resolve(page);await old;expect(reader.value.snapshot).toBeNull();reader.stop();
+ });
+ it('rebuilds every loaded page without deriving totals from that page',async()=>{
+  vi.useFakeTimers();const a=api();vi.mocked(a.getArchives).mockResolvedValueOnce({...page,next_cursor:'second'}).mockResolvedValueOnce({...page,next_cursor:'second'}).mockResolvedValueOnce(page);
+  const reader=new ArchiveReader(a);await reader.load();await reader.more();expect(vi.mocked(a.getArchives).mock.calls).toHaveLength(3);expect(reader.value.snapshot?.analysis.groups[0]?.value).toBe('200');reader.stop();
+ });
+});
+
+it('refuses a mixed list and analysis generation instead of showing stale totals',async()=>{
+ vi.useFakeTimers();const a=api();vi.mocked(a.analyzeArchives).mockResolvedValue({data_epoch:2,generation:1,groups:[],coverage:{complete:true}} as never);
+ const reader=new ArchiveReader(a);await reader.load();expect(reader.value.snapshot).toBeNull();expect(reader.value.failed).toBe(true);reader.stop();
+});
+it('expires the verified content from request start rather than slow response arrival',async()=>{
+ vi.useFakeTimers();const a=api();const reader=new ArchiveReader(a);
+ vi.mocked(a.getArchives).mockImplementation(async()=>{await new Promise(r=>setTimeout(r,11000));return page;});
+ const pending=reader.load();await vi.advanceTimersByTimeAsync(11000);await pending;expect(reader.value.snapshot?.at).toBe(Date.now()-11000);
+ vi.mocked(a.getArchives).mockRejectedValue(new Error('offline'));await vi.advanceTimersByTimeAsync(19000);expect(reader.value.snapshot).toBeNull();reader.stop();
+});
+it('revalidates expanded entity filters instead of keeping names from old pages',async()=>{
+ vi.useFakeTimers();const a=api();vi.mocked(a.getArchiveEntities).mockResolvedValueOnce({items:[],next_cursor:'people-next',coverage:{complete:true}}).mockResolvedValueOnce({items:[],next_cursor:'people-next',coverage:{complete:true}}).mockResolvedValueOnce({items:[{id:'house',kind:'property',names:['合成房屋'],aliases:[]}],coverage:{complete:true}});
+ const reader=new ArchiveReader(a);await reader.load();await reader.moreEntities();expect(reader.value.snapshot?.entities.items[0]?.names).toEqual(['合成房屋']);
+ vi.mocked(a.getArchiveEntities).mockResolvedValue({items:[],coverage:{complete:true}});reader.invalidate();expect(reader.value.snapshot).toBeNull();await reader.load();expect(reader.value.snapshot?.entities.items).toEqual([]);reader.stop();
+});

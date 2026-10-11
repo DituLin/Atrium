@@ -66,8 +66,11 @@ func decodeActionEvidence(record ActionRecord, result *mcp.CallToolResult) (acti
 	if record.CommandID != "" && record.CommandID != d.ID {
 		return actionEvidence{}, ErrCommandConflict
 	}
-	expectedKind := map[string]string{"home_refresh_screen": "refresh", "home_navigate_screen": "navigate", "home_show_photo": "show"}[record.Action.Tool]
+	expectedKind := map[string]string{"home_show_archive_query": "archive", "home_refresh_screen": "refresh", "home_navigate_screen": "navigate", "home_show_photo": "show"}[record.Action.Tool]
 	if expectedKind == "" || d.Kind != expectedKind || d.Payload.Route != record.Action.Route || d.Payload.Collection != record.Action.Collection || d.Payload.PhotoID != record.Action.PhotoID {
+		return invalid()
+	}
+	if record.Action.Tool == "home_show_archive_query" && (!identifier.MatchString(d.Payload.ArchiveViewID) || record.OperationID != "" && d.Payload.ArchiveViewID != record.OperationID) {
 		return invalid()
 	}
 	switch d.Status {
@@ -141,6 +144,8 @@ func appliedActionText(action Action) string {
 	switch action.Tool {
 	case "home_refresh_screen":
 		return "屏幕已确认刷新。"
+	case "home_show_archive_query":
+		return "屏幕已确认展示当前公开档案查询结果。"
 	case "home_show_photo":
 		return "屏幕已确认展示照片 " + action.PhotoID + "。"
 	case "home_navigate_screen":

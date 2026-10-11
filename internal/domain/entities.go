@@ -196,9 +196,10 @@ type Command struct {
 
 // CommandPayload carries kind-specific parameters.
 type CommandPayload struct {
-	Route      RouteName `json:"route,omitempty"`
-	Collection string    `json:"collection,omitempty"`
-	PhotoID    string    `json:"photo_id,omitempty"`
+	ArchiveViewID string    `json:"archive_view_id,omitempty"`
+	Route         RouteName `json:"route,omitempty"`
+	Collection    string    `json:"collection,omitempty"`
+	PhotoID       string    `json:"photo_id,omitempty"`
 }
 
 // CommandResult is the client-reported or server-observed outcome.
