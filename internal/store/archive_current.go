@@ -30,6 +30,16 @@ func (r *ArchiveTasks) CurrentArchiveObservations(ctx context.Context, a domain.
 		if _, e = r.authorizeArchiveClient(ctx, tx, a, h, "archive.read", now); e != nil {
 			return e
 		}
+		out, e = archiveCurrentObservationsIn(ctx, tx, h, doc, public)
+		return e
+	})
+	return out, e
+}
+
+func archiveCurrentObservationsIn(ctx context.Context, tx *sql.Tx, h, doc string, public bool) ([]ArchiveCurrentObservation, error) {
+	out := []ArchiveCurrentObservation{}
+	e := func() error {
+		var e error
 		var publication sql.NullString
 		var revision int64
 		var visible, withdrawn bool
@@ -155,7 +165,7 @@ func (r *ArchiveTasks) CurrentArchiveObservations(ctx context.Context, a domain.
 			}
 		}
 		return rows.Err()
-	})
+	}()
 	return out, e
 }
 

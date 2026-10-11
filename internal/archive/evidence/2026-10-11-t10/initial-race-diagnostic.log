@@ -1,0 +1,86 @@
+--- FAIL: TestArchiveSearchFourDomainQuestions (1.63s)
+    --- FAIL: TestArchiveSearchFourDomainQuestions/Q02_health (0.01s)
+        archive_search_test.go:209: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:209
+            	Error:      	Received unexpected error:
+            	            	sql: Scan error on column index 4, name "CASE WHEN ?='' THEN 1 WHEN length(?)>2 THEN (s.id IN (SELECT rowid FROM archive_search_fts WHERE archive_search_fts MATCH ?) OR instr(coalesce(s.text,''),?)>0) ELSE instr(coalesce(s.text,''),?)>0 END": sql/driver: couldn't convert <nil> (<nil>) into type bool
+            	Test:       	TestArchiveSearchFourDomainQuestions/Q02_health
+    --- FAIL: TestArchiveSearchFourDomainQuestions/Q03_health (0.01s)
+        archive_search_test.go:209: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:209
+            	Error:      	Received unexpected error:
+            	            	sql: Scan error on column index 4, name "CASE WHEN ?='' THEN 1 WHEN length(?)>2 THEN (s.id IN (SELECT rowid FROM archive_search_fts WHERE archive_search_fts MATCH ?) OR instr(coalesce(s.text,''),?)>0) ELSE instr(coalesce(s.text,''),?)>0 END": sql/driver: couldn't convert <nil> (<nil>) into type bool
+            	Test:       	TestArchiveSearchFourDomainQuestions/Q03_health
+    --- FAIL: TestArchiveSearchFourDomainQuestions/Q15_education (0.01s)
+        archive_search_test.go:209: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:209
+            	Error:      	Received unexpected error:
+            	            	sql: Scan error on column index 4, name "CASE WHEN ?='' THEN 1 WHEN length(?)>2 THEN (s.id IN (SELECT rowid FROM archive_search_fts WHERE archive_search_fts MATCH ?) OR instr(coalesce(s.text,''),?)>0) ELSE instr(coalesce(s.text,''),?)>0 END": sql/driver: couldn't convert <nil> (<nil>) into type bool
+            	Test:       	TestArchiveSearchFourDomainQuestions/Q15_education
+    --- FAIL: TestArchiveSearchFourDomainQuestions/Q19_finance (0.01s)
+        archive_search_test.go:209: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:209
+            	Error:      	Received unexpected error:
+            	            	sql: Scan error on column index 4, name "CASE WHEN ?='' THEN 1 WHEN length(?)>2 THEN (s.id IN (SELECT rowid FROM archive_search_fts WHERE archive_search_fts MATCH ?) OR instr(coalesce(s.text,''),?)>0) ELSE instr(coalesce(s.text,''),?)>0 END": sql/driver: couldn't convert <nil> (<nil>) into type bool
+            	Test:       	TestArchiveSearchFourDomainQuestions/Q19_finance
+    --- FAIL: TestArchiveSearchFourDomainQuestions/Q23_finance (0.01s)
+        archive_search_test.go:209: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:209
+            	Error:      	Received unexpected error:
+            	            	sql: Scan error on column index 4, name "CASE WHEN ?='' THEN 1 WHEN length(?)>2 THEN (s.id IN (SELECT rowid FROM archive_search_fts WHERE archive_search_fts MATCH ?) OR instr(coalesce(s.text,''),?)>0) ELSE instr(coalesce(s.text,''),?)>0 END": sql/driver: couldn't convert <nil> (<nil>) into type bool
+            	Test:       	TestArchiveSearchFourDomainQuestions/Q23_finance
+    --- FAIL: TestArchiveSearchFourDomainQuestions/Q25_property (0.01s)
+        archive_search_test.go:210: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:210
+            	Error:      	"[]" should have 1 item(s), but has 0
+            	Test:       	TestArchiveSearchFourDomainQuestions/Q25_property
+    --- FAIL: TestArchiveSearchFourDomainQuestions/Q26_property (0.01s)
+        archive_search_test.go:210: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:210
+            	Error:      	"[]" should have 1 item(s), but has 0
+            	Test:       	TestArchiveSearchFourDomainQuestions/Q26_property
+    --- FAIL: TestArchiveSearchFourDomainQuestions/Q27_property (0.01s)
+        archive_search_test.go:210: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:210
+            	Error:      	"[]" should have 1 item(s), but has 0
+            	Test:       	TestArchiveSearchFourDomainQuestions/Q27_property
+    --- FAIL: TestArchiveSearchFourDomainQuestions/Q28_property (0.01s)
+        archive_search_test.go:210: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:210
+            	Error:      	"[]" should have 1 item(s), but has 0
+            	Test:       	TestArchiveSearchFourDomainQuestions/Q28_property
+    --- FAIL: TestArchiveSearchFourDomainQuestions/Q29_property (0.01s)
+        archive_search_test.go:210: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:210
+            	Error:      	"[]" should have 1 item(s), but has 0
+            	Test:       	TestArchiveSearchFourDomainQuestions/Q29_property
+    --- FAIL: TestArchiveSearchFourDomainQuestions/Q30_property (0.01s)
+        archive_search_test.go:210: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:210
+            	Error:      	"[]" should have 1 item(s), but has 0
+            	Test:       	TestArchiveSearchFourDomainQuestions/Q30_property
+    --- FAIL: TestArchiveSearchFourDomainQuestions/Q31_property (0.01s)
+        archive_search_test.go:210: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:210
+            	Error:      	"[]" should have 1 item(s), but has 0
+            	Test:       	TestArchiveSearchFourDomainQuestions/Q31_property
+    --- FAIL: TestArchiveSearchFourDomainQuestions/Q32_property (0.01s)
+        archive_search_test.go:210: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:210
+            	Error:      	"[]" should have 1 item(s), but has 0
+            	Test:       	TestArchiveSearchFourDomainQuestions/Q32_property
+    archive_search_test.go:226: 
+        	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:226
+        	Error:      	Should be true
+        	Test:       	TestArchiveSearchFourDomainQuestions
+--- FAIL: TestArchiveSearchSerializedPageBudgetAndCredentialRotation (2.37s)
+    archive_search_test.go:434: 
+        	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:434
+        	Error:      	"1" is not greater than "1"
+        	Test:       	TestArchiveSearchSerializedPageBudgetAndCredentialRotation
+FAIL
+FAIL	github.com/DituLin/Atrium/internal/store	118.797s
+ok  	github.com/DituLin/Atrium/internal/httpapi	60.958s
+ok  	github.com/DituLin/Atrium/internal/app	17.931s
+ok  	github.com/DituLin/Atrium/internal/archiveworker	4.752s
+FAIL

@@ -28,6 +28,7 @@ func (a *API) archiveRoutes() {
 	if a.deps.Config == nil || !a.deps.Config.Archives.Enabled || a.deps.Archives == nil {
 		return
 	}
+	a.archiveSearchRoutes()
 	prefix := APIPrefix + "/integrations/archives"
 	timeout := time.Duration(a.deps.Config.Archives.UploadTimeout)
 	a.mux.HandleFunc("POST "+prefix+"/intakes", a.archiveBodyDeadline(timeout, a.deps.Config.Archives.MaxBytes+archiveOverheadLimit, a.requireIntegrationTimeout("archive.ingest", timeout, a.archiveIntake)))

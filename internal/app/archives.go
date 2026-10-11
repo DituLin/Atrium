@@ -22,6 +22,9 @@ func (r *Runtime) runArchives(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-tick.C:
+			if _, e := r.db.ArchiveTasks().IndexArchives(ctx, h.ID, 32); e != nil && ctx.Err() == nil {
+				r.log.Warn("archive search indexing deferred", "component", "archives")
+			}
 			if _, e := r.db.ProjectPendingLegacyArchives(ctx, 32); e != nil && ctx.Err() == nil {
 				r.log.Warn("archive legacy projection failed", "component", "archives")
 			}
