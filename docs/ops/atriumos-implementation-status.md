@@ -348,3 +348,7 @@ T12最终公式修复50c4305cfd3662b8da8197eaa44aba58bf034cbd，真实XLSX仓库
 T12完整质量审查发现后置70左右仍被精确计算，root原样独立overlay RED0.254秒。5fa2de8修复有界同component后置限定符/原证据绑定单位、分母及句界隔离，算法/5 schema/1；全Go、analysis四包race、Node63/Linux及五个原overlay通过。原质量复审APPROVED（原overlay0.305秒，分析真实MCP/Node7通过）；最终需求语义复验APPROVED（原四overlay、后置/人工更正、F01/账单/私密闭包通过）。T12完成任务级双审，已派新的T13唯一实施者开展可信微信/Discord附件接入，明确先隔离nativeboundary验证，真实用户新消息及生产部署仍待后续，未冒称上线。
 
 T13实施中发现T12遗漏的真实CLI接线：cmd/atrium-brain-host/main.go:72仍要求len(tools)==20，而加入analysis后库存21，实际启动会返回unexpected model tool inventory。root读代码确认；既有TLSCore→MCP→Brain executor测试并未覆盖CLI startup，前述验收范围据此明确收窄。已交T13唯一实施者一并修复，要求共享工具名称集合完整性验证及实际CLI→MCP子进程启动回归，避免另一代码写手冲突。未部署此回归。
+
+T13固定提交474edb817c2fff1a83d8ef57fbbaaec0823abb2e，root确认工作树干净并启动独立需求审查，质量审查待其通过。持久native capture/inbox/spool/reconcile、正常消息意图工具与回执、固定渠道补丁及CLI库存完整性修复已交审。实施端全Go、Node87/87、四包race（store177.833秒）、Linux构建通过；实际TLS Core与构建CLI/MCP子进程启动通过。微信实际monitor隔离副本验证capture先于cursor、两槽崩溃恢复；Discord实际dispatcher/SDK隔离验证消费后仅补两槽上传，模型次数保持1。两次实际隔离OpenClaw/DeepSeek正常工具轮以合成可信上下文分别选择private/inherit，root读取原始回执确认。证据 adapters/openclaw/evidence/2026-10-11-t13/；native transport/admission doubles和模型wrapper边界明确，仍未真实用户新消息验收或生产启用。
+
+T14准备：root已按锁文件安装Web依赖，旧FamilyScreen四项测试及生产构建/Chrome66 CSS guard通过，未改Web源码。npm audit生产依赖无报告；开发工具依赖存在5项报告（含Vitest/Tinypool），未自动执行破坏性升级，发布前按实际开发工具使用范围处理。这些为基线，不代表新TV档案体验通过。
