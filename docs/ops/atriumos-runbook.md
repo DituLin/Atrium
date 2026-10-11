@@ -4,7 +4,7 @@
 
 ## 发布包
 
-同一固定提交必须提供 Core、维护 CLI、Brain host、MCP、OpenClaw 适配器、匹配渠道版本的补丁、Web 资源，以及 macOS 原生解析 helper、固定版本 codec 依赖和许可。记录提交、各文件摘要、渠道版本和签名验证结果。
+同一固定提交必须提供 Core、维护 CLI、Brain host、MCP、OpenClaw 适配器、匹配渠道版本的补丁、Web 资源，以及 macOS 原生解析 helper、固定版本 codec 依赖和许可。T13 新增的 `atrium-spool-read`、附件接入模块、补丁脚本与版本/文件摘要 pins 也属于运行依赖，不能留在开发工作区中引用。记录提交、各文件摘要、渠道版本和签名验证结果。
 
 2026-10-11 代码检查：现有 `make release` 构建 Core/MCP/Brain 并执行 `web-sync`，但不先构建 Web，也没有打包渠道补丁和原生 helper。因此不能直接把这个目标的输出视为完整发布包。T17 需补齐构建和打包，验证脱离开发目录及 Codex runtime 后的实际运行。
 
