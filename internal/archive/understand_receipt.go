@@ -12,15 +12,21 @@ import (
 //go:embed understanding/prompt-v2.txt
 var understandingPrompt string
 
+//go:embed understanding/prompt-v2-pre-t15.txt
+var previousUnderstandingPrompt string
+
 //go:embed understanding/extraction-v2.schema.json
 var understandingSchemaText string
 
 // The fingerprint records the trusted extraction policy without paths or auth.
 func UnderstandingConfigurationFingerprint() string {
+	return understandingFingerprintForPrompt(understandingPrompt)
+}
+func understandingFingerprintForPrompt(prompt string) string {
 	return digestJSON(struct {
 		Model, Prompt, Schema, Route string
 		MaxTokens                    int
-	}{UnderstandingModel, understandingPrompt, understandingSchemaText, "deepseek/direct-provider/aliases:deepseek-v4-flash,deepseek-flash/zero-tools/reasoning:low/temperature:0/response-format:json_object/evidence-only:1", 12000})
+	}{UnderstandingModel, prompt, understandingSchemaText, "deepseek/direct-provider/aliases:deepseek-v4-flash,deepseek-flash/zero-tools/reasoning:low/temperature:0/response-format:json_object/evidence-only:1", 12000})
 }
 
 type CompletionUsage struct {
@@ -60,7 +66,7 @@ func validReceipt(r *CompletionReceipt) bool {
 		return true
 	}
 	b, err := hex.DecodeString(r.InputDigest)
-	return r.InvocationID != "" && len(r.InvocationID) <= 160 && err == nil && len(b) == sha256.Size && r.ConfigurationFingerprint == UnderstandingConfigurationFingerprint() && r.Provider == "deepseek" && r.RequestedModel == UnderstandingModel && r.Model == "deepseek-v4-flash" && (r.ResponseModel == "deepseek-flash" || r.ResponseModel == "deepseek-v4-flash") && r.StopReason == "stop" && r.Execution.Mode == "direct-provider" && r.Execution.Owner.Kind == "provider" && r.Execution.Owner.ID == "deepseek" && validUsage(r.Usage)
+	return r.InvocationID != "" && len(r.InvocationID) <= 160 && err == nil && len(b) == sha256.Size && (r.ConfigurationFingerprint == UnderstandingConfigurationFingerprint() || r.ConfigurationFingerprint == understandingFingerprintForPrompt(previousUnderstandingPrompt)) && r.Provider == "deepseek" && r.RequestedModel == UnderstandingModel && r.Model == "deepseek-v4-flash" && (r.ResponseModel == "deepseek-flash" || r.ResponseModel == "deepseek-v4-flash") && r.StopReason == "stop" && r.Execution.Mode == "direct-provider" && r.Execution.Owner.Kind == "provider" && r.Execution.Owner.ID == "deepseek" && validUsage(r.Usage)
 }
 func (r WorkerResponse) receipt() *CompletionReceipt {
 	return &CompletionReceipt{InvocationID: r.InvocationID, InputDigest: r.InputDigest, Provider: r.Provider, RequestedModel: r.RequestedModel, Model: r.Model, ResponseModel: r.ResponseModel, StopReason: r.StopReason, Execution: r.Execution, Usage: r.Usage, ConfigurationFingerprint: r.ConfigurationFingerprint}
@@ -80,6 +86,9 @@ func validatedResponse(p UnderstandingPlan, c UnderstandingChunk, response Worke
 }
 
 func completionInputBytes(c UnderstandingChunk) int {
+	return completionInputBytesForPrompt(c, understandingPrompt)
+}
+func completionInputBytesForPrompt(c UnderstandingChunk, prompt string) int {
 	var schema bytes.Buffer
 	_ = json.Compact(&schema, []byte(understandingSchemaText))
 	data, _ := json.Marshal(struct {
@@ -95,7 +104,7 @@ func completionInputBytes(c UnderstandingChunk) int {
 		Reasoning      string              `json:"reasoning"`
 		Temperature    int                 `json:"temperature"`
 		ResponseFormat map[string]string   `json:"responseFormat"`
-	}{UnderstandingModel, understandingPrompt + "\nJSON schema:\n" + schema.String(), []map[string]string{{"role": "user", "content": string(data)}}, "atrium.archive-understand.v1", 12000, "low", 0, map[string]string{"type": "json_object"}}
+	}{UnderstandingModel, prompt + "\nJSON schema:\n" + schema.String(), []map[string]string{{"role": "user", "content": string(data)}}, "atrium.archive-understand.v1", 12000, "low", 0, map[string]string{"type": "json_object"}}
 	b, _ := json.Marshal(request)
 	return len(b)
 }

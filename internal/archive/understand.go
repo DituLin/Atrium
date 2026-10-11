@@ -120,6 +120,9 @@ func (p UnderstandingPlan) manifestDigest() string { p.ManifestDigest = ""; retu
 // PlanChunks snapshots a trusted ParseResult. JSON serialization is bounded by
 // actual wire size, not a character heuristic. It never trims whitespace.
 func PlanChunks(parsed ParseResult) (UnderstandingPlan, error) {
+	return planChunksForPrompt(parsed, understandingPrompt)
+}
+func planChunksForPrompt(parsed ParseResult, prompt string) (UnderstandingPlan, error) {
 	var p UnderstandingPlan
 	if !validUnderstandingParserVersion(parsed.ParserVersion) {
 		return p, understandingError("understand_parse_version")
@@ -164,14 +167,14 @@ func PlanChunks(parsed ParseResult) (UnderstandingPlan, error) {
 			return false
 		}
 		c := UnderstandingChunk{ProtocolVersion: WorkerProtocol, InvocationID: strings.Repeat("a", 160), InputDigest: strings.Repeat("a", 64), SchemaVersion: UnderstandingSchema, ExtractionVersion: UnderstandingVersion, ChunkVersion: ChunkVersion, ParseDigest: p.ParseDigest, Index: 255, Owned: v, Context: []EvidenceView{}}
-		return completionInputBytes(c) <= MaxChunkInput
+		return completionInputBytesForPrompt(c, prompt) <= MaxChunkInput
 	}
 	rawAdd := func(group []EvidenceView) error {
 		if !sizeOK(group) {
 			return understandingError("understand_group_limit")
 		}
 		test := append(append([]EvidenceView{}, current...), group...)
-		if !sizeOK(test) || len(current) > 0 && contextBudgetBytes(p.ParseDigest, test) > MaxChunkInput-(8<<10) {
+		if !sizeOK(test) || len(current) > 0 && contextBudgetBytesForPrompt(p.ParseDigest, test, prompt) > MaxChunkInput-(8<<10) {
 			if err := flush(); err != nil {
 				return err
 			}
@@ -267,7 +270,7 @@ func PlanChunks(parsed ParseResult) (UnderstandingPlan, error) {
 				for lo <= hi {
 					mid := (lo + hi) / 2
 					f := fragment(v, runes, start, mid)
-					if sizeOK([]EvidenceView{f}) && contextBudgetBytes(p.ParseDigest, []EvidenceView{f}) <= MaxChunkInput-(8<<10) {
+					if sizeOK([]EvidenceView{f}) && contextBudgetBytesForPrompt(p.ParseDigest, []EvidenceView{f}, prompt) <= MaxChunkInput-(8<<10) {
 						best = mid
 						lo = mid + 1
 					} else {
@@ -299,7 +302,7 @@ func PlanChunks(parsed ParseResult) (UnderstandingPlan, error) {
 	if err := flush(); err != nil {
 		return UnderstandingPlan{}, err
 	}
-	addUnderstandingContext(&p)
+	addUnderstandingContextForPrompt(&p, prompt)
 	p.ManifestDigest = p.manifestDigest()
 	return p, nil
 }
@@ -441,13 +444,19 @@ func allEvidenceStringsValid(v reflect.Value) bool {
 }
 
 func contextBudgetBytes(parseDigest string, views []EvidenceView) int {
-	return completionInputBytes(UnderstandingChunk{ProtocolVersion: WorkerProtocol, InvocationID: strings.Repeat("a", 160), InputDigest: strings.Repeat("a", 64), SchemaVersion: UnderstandingSchema, ExtractionVersion: UnderstandingVersion, ChunkVersion: ChunkVersion, ParseDigest: parseDigest, Index: 255, Owned: views, Context: []EvidenceView{}})
+	return contextBudgetBytesForPrompt(parseDigest, views, understandingPrompt)
+}
+func contextBudgetBytesForPrompt(parseDigest string, views []EvidenceView, prompt string) int {
+	return completionInputBytesForPrompt(UnderstandingChunk{ProtocolVersion: WorkerProtocol, InvocationID: strings.Repeat("a", 160), InputDigest: strings.Repeat("a", 64), SchemaVersion: UnderstandingSchema, ExtractionVersion: UnderstandingVersion, ChunkVersion: ChunkVersion, ParseDigest: parseDigest, Index: 255, Owned: views, Context: []EvidenceView{}}, prompt)
 }
 
 // Context is a read-only copy of existing host views. Header and nearby boundary
 // units help retain a report's subject and row label/unit relationships. They
 // never alter the owned partition, and remain inside every actual wire budget.
 func addUnderstandingContext(p *UnderstandingPlan) {
+	addUnderstandingContextForPrompt(p, understandingPrompt)
+}
+func addUnderstandingContextForPrompt(p *UnderstandingPlan, prompt string) {
 	all := []EvidenceView{}
 	positions := map[string]int{}
 	groups := map[string][]EvidenceView{}
@@ -530,7 +539,7 @@ func addUnderstandingContext(p *UnderstandingPlan) {
 			trial := *c
 			trial.Context = append(append([]EvidenceView{}, c.Context...), group...)
 			b, _ := json.Marshal(trial.Evidence())
-			if len(trial.Owned)+len(trial.Context) <= 128 && len(b) <= maxEvidenceBytes && completionInputBytes(trial) <= MaxChunkInput-256 {
+			if len(trial.Owned)+len(trial.Context) <= 128 && len(b) <= maxEvidenceBytes && completionInputBytesForPrompt(trial, prompt) <= MaxChunkInput-256 {
 				c.Context = trial.Context
 			}
 		}

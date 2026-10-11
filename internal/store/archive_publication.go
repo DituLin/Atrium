@@ -158,8 +158,13 @@ func (r *ArchiveTasks) PublishExtraction(ctx context.Context, f ArchiveWorkFence
 		}
 
 		for _, ev := range candidate.Events {
+			dateReview, err := archiveBillDateNeedsReviewIn(ctx, tx, f.HouseholdID, ev.Fields)
+			if err != nil {
+				return err
+			}
+			review = review || dateReview
 			var event string
-			err := tx.QueryRowContext(ctx, `SELECT id FROM archive_subject_events WHERE household_id=? AND document_id=? AND anchor_key=?`, f.HouseholdID, x.DocumentID, ev.AnchorKey).Scan(&event)
+			err = tx.QueryRowContext(ctx, `SELECT id FROM archive_subject_events WHERE household_id=? AND document_id=? AND anchor_key=?`, f.HouseholdID, x.DocumentID, ev.AnchorKey).Scan(&event)
 			if errors.Is(err, sql.ErrNoRows) {
 				continue
 			}
@@ -262,7 +267,7 @@ func (r *ArchiveTasks) PublishExtraction(ctx context.Context, f ArchiveWorkFence
 					observationEvent = canonicalEvent
 					slot = "supported-transaction-amount/1"
 					for _, proofField := range ev.Fields {
-						if proofField.Name == "transaction_id" || proofField.Name == "transaction_type" || proofField.Name == "issuer" {
+						if proofField.Name == "transaction_id" || proofField.Name == "transaction_type" || proofField.Name == "issuer" || proofField.Name == "bill_id" || proofField.Name == "bill_date" || proofField.Name == "date" || proofField.Name == "日期" {
 							field.VisibilityAnchors = append(field.VisibilityAnchors, proofField.VisibilityAnchors...)
 						}
 					}

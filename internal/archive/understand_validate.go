@@ -488,7 +488,7 @@ func validateNormalization(n Normalization, f ExtractedField, views map[string]E
 			continue
 		}
 		if n.Kind == "date_partial" {
-			if n.Value == f.Raw && r.Quote == f.Raw && partialDate.MatchString(n.Value) {
+			if value := normalizedPartialDate(f.Raw); value != "" && r.Quote == f.Raw && n.Value == value {
 				return true
 			}
 			continue
@@ -992,4 +992,26 @@ func overlappingReportAnchors(events []MergedEvent) bool {
 		}
 	}
 	return false
+}
+
+// normalizedPartialDate converts only explicit source components. It never
+// supplies a missing year/day and does not consult another evidence reference.
+var chineseYearMonth = regexp.MustCompile(`^([0-9]{4})年(?:([1-9]|0[1-9]|1[0-2])月)?$`)
+
+func normalizedPartialDate(raw string) string {
+	if partialDate.MatchString(raw) {
+		return raw
+	}
+	m := chineseYearMonth.FindStringSubmatch(raw)
+	if m == nil || m[1] == "0000" {
+		return ""
+	}
+	if m[2] == "" {
+		return m[1]
+	}
+	month := m[2]
+	if len(month) == 1 {
+		month = "0" + month
+	}
+	return m[1] + "-" + month
 }

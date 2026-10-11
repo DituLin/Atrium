@@ -45,6 +45,33 @@ func archiveTransactionEventIn(ctx context.Context, tx *sql.Tx, h, event, public
 	_, e = tx.ExecContext(ctx, `INSERT INTO archive_event_equivalences VALUES(?,?,?,?) ON CONFLICT(household_id,event_id) DO UPDATE SET canonical_event_id=excluded.canonical_event_id,proof_json=excluded.proof_json`, h, event, canonical, entityJSON(proof))
 	return canonical, e
 }
+
+// A referenced bill may share a charge only when its source-supported date
+// agrees with every current supporting source. Never silently coalesce a reused
+// bill number across dates, or change the identity of an already shared amount.
+func archiveBillDateNeedsReviewIn(ctx context.Context, tx *sql.Tx, h string, fields []archive.PublicationField) (bool, error) {
+	proof := archive.TransactionIdentity(fields)
+	if proof == nil || proof.Type != "bill" {
+		return false, nil
+	}
+	rows, err := tx.QueryContext(ctx, `SELECT q.proof_json FROM archive_event_equivalences q JOIN archive_subject_events ev ON ev.household_id=q.household_id AND ev.id=q.event_id JOIN archive_documents d ON d.household_id=ev.household_id AND d.id=ev.document_id WHERE q.household_id=? AND d.withdrawn=0 AND json_extract(q.proof_json,'$.Type')=? AND json_extract(q.proof_json,'$.Issuer')=? AND json_extract(q.proof_json,'$.Identifier')=? AND EXISTS(SELECT 1 FROM archive_publication_observations p JOIN archive_observations o ON o.household_id=p.household_id AND o.id=p.observation_id WHERE p.household_id=d.household_id AND p.publication_id=d.active_publication_id AND o.event_id=q.canonical_event_id AND o.slot_key='supported-transaction-amount/1')`, h, proof.Type, proof.Issuer, proof.Identifier)
+	if err != nil {
+		return false, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var raw string
+		if err := rows.Scan(&raw); err != nil {
+			return false, err
+		}
+		var prior archive.TransactionProof
+		if json.Unmarshal([]byte(raw), &prior) != nil || prior.Date != proof.Date {
+			return true, nil
+		}
+	}
+	return false, rows.Err()
+}
+
 func archiveAmountSignature(f archive.PublicationField) string {
 	value := ""
 	currency := ""
@@ -104,7 +131,7 @@ func archiveTransactionChangeNeedsReviewIn(ctx context.Context, tx *sql.Tx, h, e
 
 func archiveTransactionProofMatches(raw string, p *archive.TransactionProof) bool {
 	var old archive.TransactionProof
-	return p != nil && json.Unmarshal([]byte(raw), &old) == nil && old.Type == p.Type && old.Issuer == p.Issuer && old.Identifier == p.Identifier
+	return p != nil && json.Unmarshal([]byte(raw), &old) == nil && old.Type == p.Type && old.Issuer == p.Issuer && old.Identifier == p.Identifier && old.Date == p.Date
 }
 
 // Identity migration must never remove a current amount without exactly one

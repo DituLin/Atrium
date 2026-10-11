@@ -10,10 +10,34 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func (w *Worker) ConfigurationFingerprint() (string, error) {
 	artifacts := map[string]string{}
+	// A provider's peer SDK link may point only at the configured OpenClaw
+	// installation. Hash that complete bounded installation, including dependency
+	// bytes, rather than ignoring node_modules or trusting a package version.
+	runtimeRoot := ""
+	if w.Adapter.OpenClawPath != "" {
+		entry, err := filepath.EvalSymlinks(w.Adapter.OpenClawPath)
+		if err != nil {
+			return "", err
+		}
+		candidate := filepath.Dir(entry)
+		raw, err := os.ReadFile(filepath.Join(candidate, "package.json"))
+		var pkg struct {
+			Name string `json:"name"`
+		}
+		if err == nil && json.Unmarshal(raw, &pkg) == nil && pkg.Name == "openclaw" {
+			runtimeRoot = candidate
+			digest, err := artifactDigestWithPolicy(candidate, "", candidate, 100000, 2<<30)
+			if err != nil {
+				return "", err
+			}
+			artifacts["openclaw-runtime"] = digest
+		}
+	}
 	for name, path := range map[string]string{"native": w.Native.HelperPath, "node": w.Adapter.NodePath, "openclaw": w.Adapter.OpenClawPath, "plugin": w.Adapter.PluginPath, "provider": w.Adapter.ProviderPath} {
 		if path == "" {
 			artifacts[name] = "unconfigured"
@@ -28,7 +52,13 @@ func (w *Worker) ConfigurationFingerprint() (string, error) {
 			}
 			path = resolved
 		}
-		digest, e := artifactDigest(path)
+		var digest string
+		var e error
+		if name == "provider" && runtimeRoot != "" {
+			digest, e = artifactDigestWithPolicy(path, runtimeRoot, "", 4096, 128<<20)
+		} else {
+			digest, e = artifactDigest(path)
+		}
 		if e != nil {
 			return "", e
 		}
@@ -47,6 +77,9 @@ func (w *Worker) ConfigurationFingerprint() (string, error) {
 }
 
 func artifactDigest(path string) (string, error) {
+	return artifactDigestWithPolicy(path, "", "", 4096, 128<<20)
+}
+func artifactDigestWithPolicy(path, peerRuntime, runtimeRoot string, maxFiles int, maxBytes int64) (string, error) {
 	h := sha256.New()
 	var bytes int64
 	count := 0
@@ -58,18 +91,46 @@ func artifactDigest(path string) (string, error) {
 			return nil
 		}
 		count++
-		if count > 4096 {
+		if count > maxFiles {
 			return domain.ErrConflict
 		}
 		info, e := d.Info()
 		if e != nil {
 			return e
 		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			rel, err := filepath.Rel(path, p)
+			if err != nil {
+				return err
+			}
+			resolved, err := filepath.EvalSymlinks(p)
+			if err != nil {
+				return err
+			}
+			allowed := peerRuntime != "" && rel == filepath.Join("node_modules", "openclaw") && resolved == peerRuntime
+			if runtimeRoot != "" {
+				targetRel, err := filepath.Rel(runtimeRoot, resolved)
+				if err != nil || targetRel == ".." || strings.HasPrefix(targetRel, ".."+string(filepath.Separator)) || filepath.IsAbs(targetRel) {
+					return domain.ErrConflict
+				}
+				target, err := os.Stat(resolved)
+				if err != nil || !target.Mode().IsRegular() {
+					return domain.ErrConflict
+				}
+				// WalkDir hashes the real target independently. Hash the binding too.
+				allowed = true
+			}
+			if !allowed {
+				return domain.ErrConflict
+			}
+			h.Write([]byte("link:" + rel + "\x00" + resolved + "\x00"))
+			return nil
+		}
 		if !info.Mode().IsRegular() {
 			return domain.ErrConflict
 		}
 		bytes += info.Size()
-		if bytes > 128<<20 {
+		if bytes > maxBytes {
 			return domain.ErrConflict
 		}
 		rel, e := filepath.Rel(path, p)

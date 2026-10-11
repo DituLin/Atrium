@@ -28,7 +28,7 @@ type AnalysisQuery struct {
 }
 
 func (q AnalysisQuery) Normalize() (AnalysisQuery, error) {
-	q.Metric = strings.TrimSpace(q.Metric)
+	q.Metric = CanonicalFieldName(strings.TrimSpace(q.Metric))
 	q.Query = strings.TrimSpace(q.Query)
 	if _, e := (SearchFilter{Ownership: q.Ownership, EntityID: q.EntityID, Domain: q.Domain, DocumentType: q.DocumentType, Query: q.Query, DateFrom: q.DateFrom, DateTo: q.DateTo}).Normalize(); e != nil {
 		return q, e

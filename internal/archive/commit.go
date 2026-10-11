@@ -8,7 +8,7 @@ import (
 )
 
 const PublicationAnchorRule = "physical-parent/1"
-const PublicationVersion = "archive-publication/5"
+const PublicationVersion = "archive-publication/6"
 
 // PhysicalAnchor intentionally excludes generated segment IDs, model names,
 // dates and chunk boundaries. Offsets are in the original parent component.
@@ -23,6 +23,7 @@ type PublicationDimension struct {
 	Evidence  []CanonicalEvidence
 }
 type PublicationField struct {
+	SourceName              string `json:",omitempty"`
 	DerivedDependencies     []DerivedValue
 	VisibilityAnchors       []PhysicalAnchor
 	RequiresReview          bool
@@ -92,7 +93,21 @@ func physicalEvidence(parsed ParseResult, refs []CanonicalEvidence) ([]PhysicalA
 // every field independently to parent evidence. It never allocates business IDs.
 func CompilePublication(home, document string, parsed ParseResult, p UnderstandingPlan, u Understanding) (PublicationCandidate, error) {
 	out := PublicationCandidate{Resolution: ResolutionInput{HouseholdID: home, DocumentID: document}, Labels: u.Labels, Status: u.Status, Coverage: u.Coverage, RequiresReview: len(u.LinkIssues) > 0}
-	expected, e := PlanChunks(parsed)
+	prompt := understandingPrompt
+	policy := ""
+	for _, ch := range u.Chunks {
+		if ch.Receipt != nil {
+			fp := ch.Receipt.ConfigurationFingerprint
+			if policy != "" && policy != fp {
+				return out, understandingError("publication_policy")
+			}
+			policy = fp
+		}
+	}
+	if policy == understandingFingerprintForPrompt(previousUnderstandingPrompt) {
+		prompt = previousUnderstandingPrompt
+	}
+	expected, e := planChunksForPrompt(parsed, prompt)
 	if e != nil {
 		return out, e
 	}
@@ -162,7 +177,7 @@ func CompilePublication(home, document string, parsed ParseResult, p Understandi
 			if e != nil {
 				return out, e
 			}
-			pf := PublicationField{Ref: scopedRef(c.Index, f.ID), SlotKey: digestJSON(anchors), Name: f.Name, Raw: f.Raw, Evidence: refs, Anchors: anchors, Normalizations: f.Normalizations, VisibilityAnchors: append([]PhysicalAnchor(nil), anchors...)}
+			pf := PublicationField{Ref: scopedRef(c.Index, f.ID), SlotKey: digestJSON(anchors), Name: CanonicalFieldName(f.Name), SourceName: f.Name, Raw: f.Raw, Evidence: refs, Anchors: anchors, Normalizations: f.Normalizations, VisibilityAnchors: append([]PhysicalAnchor(nil), anchors...)}
 			for _, dimension := range f.Dimensions {
 				refs, e := canonical(c.Index, dimension.Evidence)
 				if e != nil {
@@ -209,11 +224,11 @@ func CompilePublication(home, document string, parsed ParseResult, p Understandi
 				if archiveSubjectField(m.Role, f.Name) {
 					subjects[m.Ref] = true
 				}
-				if f.Name == "full_address" && f.Raw == m.Name {
+				if CanonicalFieldName(f.Name) == "full_address" && f.Raw == m.Name {
 					m.Kind = "property"
 					m.FullAddress = true
 				}
-				if f.Name == "birth_date" || f.Name == "date_of_birth" {
+				if isBirthField(f.Name) {
 					for _, n := range f.Normalizations {
 						precision := ""
 						if n.Kind == "date" {
@@ -238,6 +253,7 @@ func CompilePublication(home, document string, parsed ParseResult, p Understandi
 				}
 				mentions[key] = m
 			}
+			sourceBillLabels(parsed, &pf)
 			fields[pf.Ref] = pf
 			out.Resolution.Fields = append(out.Resolution.Fields, ResolutionField{Ref: pf.Ref, SubjectRefs: pf.Subjects})
 		}
@@ -328,7 +344,7 @@ func archiveSubjectField(role, field string) bool {
 	role = NameKey(role)
 	field = NameKey(field)
 	switch role {
-	case "doctor", "physician", "医生", "engineer", "工程师", "teacher", "老师", "教师", "signer", "签字人":
+	case "doctor", "physician", "医生", "engineer", "工程师", "teacher", "老师", "教师", "signer", "签字人", "payee", "issuer", "收款方", "收款人", "counterparty", "supplier":
 		return false
 	}
 	if field == "" || field == "name" || strings.HasSuffix(field, "_name") || strings.Contains(field, "signature") {
@@ -339,12 +355,18 @@ func archiveSubjectField(role, field string) bool {
 
 type TransactionProof struct {
 	Identifier, Type, Issuer string
+	Date                     string `json:",omitempty"`
 	Evidence                 []CanonicalEvidence
 }
 
 // TransactionIdentity recognizes only the supported complete proof tuple. Name,
 // date, equal amounts or a bare identifier are never cross-file merge evidence.
 func TransactionIdentity(fields []PublicationField) *TransactionProof {
+	for _, f := range fields {
+		if f.Name == "bill_id" {
+			return billIdentity(fields)
+		}
+	}
 	p := &TransactionProof{}
 	seen := map[string]bool{}
 	for _, f := range fields {
@@ -408,4 +430,38 @@ func ProtectedIdentityValues(fields []PublicationField) []ProtectedIdentityValue
 		}
 	}
 	return out
+}
+
+// isBirthField recognizes exact equivalent semantic labels while preserving the
+// original model field name and source quotation in every stored observation.
+func isBirthField(name string) bool {
+	switch name {
+	case "birth_date", "date_of_birth", "出生日期", "出生年月日", "生日":
+		return true
+	}
+	return false
+}
+
+// CanonicalFieldName maps only explicit equivalent labels used by deterministic
+// identity/metric consumers. Open labels remain open. SourceName and immutable
+// model products retain the original spelling; this never changes raw evidence.
+func CanonicalFieldName(name string) string {
+	switch name {
+	case "birth_date", "date_of_birth", "出生日期", "出生年月日", "生日":
+		return "birth_date"
+	case "amount", "金额", "费用", "付款金额", "支付金额", "账单金额", "transaction_amount", "payment_amount":
+		return "amount"
+	case "volume", "奶量", "喂奶量", "feeding_volume":
+		return "volume"
+	case "bill_id", "bill_number", "bill_no", "账单编号", "账单号", "账单", "付款所引用账单编号", "引用账单编号":
+		return "bill_id"
+	case "issuer", "收款方", "收款人", "开票方", "payee":
+		return "issuer"
+	case "bill_date", "账单日期":
+		return "bill_date"
+	case "full_address", "房屋地址", "完整地址":
+		return "full_address"
+	default:
+		return name
+	}
 }

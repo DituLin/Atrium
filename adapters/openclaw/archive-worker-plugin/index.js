@@ -1,5 +1,5 @@
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
-import { runArchiveWorker } from "../archive-worker.mjs";
+import { runArchiveWorker } from "./worker.mjs";
 export default definePluginEntry({
   id: "atrium-archive-worker",
   name: "Atrium Archive Worker",
