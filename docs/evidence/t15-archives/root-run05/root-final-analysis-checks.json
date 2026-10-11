@@ -1,0 +1,55 @@
+[
+  {
+    "label": "education_math",
+    "passed": true,
+    "actual": {
+      "percent": [
+        "88.00"
+      ]
+    },
+    "expected": {
+      "percent": "88"
+    },
+    "coverage": {
+      "scope": "archived_only",
+      "complete": true,
+      "included": 1,
+      "excluded": 0,
+      "reasons": []
+    },
+    "query": {
+      "operation": "ratio",
+      "domain": "education",
+      "query": "秋季",
+      "metric": "数学"
+    },
+    "at": "2026-10-11T07:58:04.334077+00:00"
+  },
+  {
+    "label": "health_volume",
+    "passed": true,
+    "actual": {
+      "ml": [
+        "140"
+      ]
+    },
+    "expected": {
+      "ml": "140"
+    },
+    "coverage": {
+      "scope": "archived_only",
+      "complete": true,
+      "included": 2,
+      "excluded": 0,
+      "reasons": []
+    },
+    "query": {
+      "operation": "sum",
+      "domain": "health",
+      "metric": "volume",
+      "date_from": "2026-10-03",
+      "date_to": "2026-10-03"
+    },
+    "at": "2026-10-11T07:58:04.361164+00:00"
+  }
+]

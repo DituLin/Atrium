@@ -1,0 +1,155 @@
+{
+  "schema_version": "1",
+  "observed_at": "2026-10-11T15:58:04.333456+08:00",
+  "availability": "available",
+  "data": {
+    "schema_version": "archive-analysis/1",
+    "query_ref": "01M4MZG31D62EXXTCEYX32NZ1H",
+    "snapshot_id": "01M4MZG31D62EXXTCEYX32NZ1H",
+    "algorithm_version": "archive-analysis/6",
+    "query": {
+      "operation": "ratio",
+      "metric": "数学",
+      "domain": "education",
+      "query": "秋季",
+      "timezone": "Asia/Singapore"
+    },
+    "projection": "authorized",
+    "data_epoch": 94,
+    "generation": 1,
+    "input_digest": "ee352b0363d1567cd12c46a62b42af291c46b8e75318ce0bb80f2c3c15829c81",
+    "groups": [
+      {
+        "metric": "数学",
+        "unit": "percent",
+        "sample": "owners:01M4MZD2TB4KMBVJ7KM1QER766;",
+        "value": "88.00",
+        "date_precision": "unknown",
+        "numerator": "132",
+        "denominator": "150",
+        "rounding": "half_away_from_zero/2",
+        "evidence": [
+          {
+            "field_name": "数学",
+            "component_id": "d74db39b5888c95da60917375232345385a1cc07347b05907068ac73294ce286/numeric_raw",
+            "component_kind": "numeric_raw",
+            "document_id": "01M4MZ5RF5ENDJRGCPWNVQQ02G",
+            "publication_id": "01M4MZFN9YQQGBFJSYQ1CVR3F0",
+            "publication_revision": 2,
+            "observation_id": "01M4MZFN9Y572MNC6DP5MHE3BE",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZD3NCBN0FBE1KV3XQW2JS",
+            "segment_id": "d74db39b5888c95da60917375232345385a1cc07347b05907068ac73294ce286",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "成绩",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "B5"
+              }
+            },
+            "start": 0,
+            "end": 3,
+            "excerpt": "132",
+            "confirmed": true
+          },
+          {
+            "field_name": "数学",
+            "component_id": "859e6eccf36adcfe989a1736ebbd59d6a91186b4044964a0d599654baddb9b2a/cell_text",
+            "component_kind": "cell_text",
+            "document_id": "01M4MZ5RF5ENDJRGCPWNVQQ02G",
+            "publication_id": "01M4MZFN9YQQGBFJSYQ1CVR3F0",
+            "publication_revision": 2,
+            "observation_id": "01M4MZFN9Y572MNC6DP5MHE3BE",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZD3NCBN0FBE1KV3XQW2JS",
+            "segment_id": "859e6eccf36adcfe989a1736ebbd59d6a91186b4044964a0d599654baddb9b2a",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "成绩",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "A5"
+              }
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "数学",
+            "confirmed": true
+          },
+          {
+            "field_name": "满分",
+            "component_id": "7ca6118295f37e04ec91f2203cb89e2b87661de4ad7bbb438759014a48766998/numeric_raw",
+            "component_kind": "numeric_raw",
+            "document_id": "01M4MZ5RF5ENDJRGCPWNVQQ02G",
+            "publication_id": "01M4MZFN9YQQGBFJSYQ1CVR3F0",
+            "publication_revision": 2,
+            "observation_id": "01M4MZFN9Z4JAE7MCJKCP1RMXH",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZD3NCBN0FBE1KV3XQW2JS",
+            "segment_id": "7ca6118295f37e04ec91f2203cb89e2b87661de4ad7bbb438759014a48766998",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "成绩",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "C5"
+              }
+            },
+            "start": 0,
+            "end": 3,
+            "excerpt": "150",
+            "confirmed": true
+          },
+          {
+            "field_name": "满分",
+            "component_id": "9421af3688c39ed34131e9ff057fde43c3ff2e7b29cb79f6847a5cc454430f4a/cell_text",
+            "component_kind": "cell_text",
+            "document_id": "01M4MZ5RF5ENDJRGCPWNVQQ02G",
+            "publication_id": "01M4MZFN9YQQGBFJSYQ1CVR3F0",
+            "publication_revision": 2,
+            "observation_id": "01M4MZFN9Z4JAE7MCJKCP1RMXH",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZD3NCBN0FBE1KV3XQW2JS",
+            "segment_id": "9421af3688c39ed34131e9ff057fde43c3ff2e7b29cb79f6847a5cc454430f4a",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "成绩",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "C4"
+              }
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "满分",
+            "confirmed": true
+          }
+        ]
+      }
+    ],
+    "coverage": {
+      "scope": "archived_only",
+      "complete": true,
+      "included": 1,
+      "excluded": 0,
+      "reasons": []
+    }
+  }
+}
