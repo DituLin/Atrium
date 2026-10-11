@@ -137,7 +137,7 @@ func (r *ArchiveTasks) analyzeArchives(ctx context.Context, a archiveSearchActor
 		return result, e
 	}
 	if len(body) > 32<<10 {
-		return archive.AnalysisResult{}, domain.Errorf(domain.CodeConflict, "analysis result exceeds bound; narrow query")
+		return archive.AnalysisResult{}, domain.Errorf(domain.CodeConflict, "analysis result exceeds bound; narrow query").WithDetails(map[string]any{"reason": "analysis_response_limit"})
 	}
 	query, _ := json.Marshal(q)
 	e = r.db.InWriteTx(ctx, func(tx *sql.Tx) error {

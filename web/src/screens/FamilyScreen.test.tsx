@@ -4,7 +4,7 @@ import {expect,it,vi} from 'vitest';
 import {AppContext} from '../app/context';
 import {appReducer,createInitialState} from '../app/state';
 import type {AppAction,AppState} from '../app/state';
-import type {ApiClient} from '../core/api';
+import {ApiError, type ApiClient} from '../core/api';
 import type {ArchiveItem,ArchivePage} from '../types/archives';
 import {FamilyScreen} from './FamilyScreen';
 const item=(id:string,domain:string):ArchiveItem=>({document_id:id,document_revision:2,domain,document_type:'record',ownership:'household',parse_status:'parsed',entity_ids:[],dates:['2026-10'],evidence:[{field_name:'title',excerpt:`合成${id}`,confirmed:true,locator:{},start:0,end:3}],metadata_only:false,truncated:false,review_required:false});
@@ -54,4 +54,9 @@ it('replaces an earlier query only with the new query DOM and ignores reset resp
  vi.mocked(h.api.getArchiveView).mockImplementation(()=>new Promise(resolve=>{finish=resolve as typeof finish;}));showQuery(h,'discarded');
  fireEvent.click(screen.getByRole('button',{name:'财务'}));await screen.findByRole('button',{name:/合成finance/});
  await act(async()=>finish(queryResult('discarded')));expect(screen.queryByRole('button',{name:/合成discarded/})).toBeNull();expect(h.state().archiveRender.status).not.toBe('ready');expect(h.state().router.route).toEqual({name:'family'});
+});
+
+it('shows verified cards with an explicit analysis limit instead of hiding the archive page',async()=>{
+ const h=setup();vi.mocked(h.api.analyzeArchives).mockRejectedValue(new ApiError(409,'conflict','bounded',null,{reason:'analysis_response_limit'}));
+ await screen.findByRole('button',{name:/合成health/});expect(screen.getByText(/下方档案已核验，统计暂不可用/)).toBeTruthy();expect(screen.queryByText('等待重新核验')).toBeNull();expect(screen.queryByText('200')).toBeNull();
 });

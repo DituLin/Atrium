@@ -127,7 +127,7 @@ export function FamilyScreen() {
     {current.item.evidence.map((e, i) => <article className="archive-evidence" key={i}><h3>{factLabel(e.field_name ?? '')}</h3><p>{e.asserted_value ?? e.excerpt}</p>{e.asserted_value && e.asserted_value !== e.excerpt ? <p className="muted">原文：{e.excerpt}</p> : null}<small>{evidenceLocation(e)}{e.confirmed ? ' · 已确认' : ' · 待核实'}</small></article>)}
     <ArchivePreview key={`${value.epoch}:${current.generation}:${current.item.document_revision}`} detail={current} onRead={() => content.current?.focus()}/>
    </> : <p>该档案暂不可读取。</p> : <>
-    {!filter.ownership ? <ArchiveAnalysisPanel analysis={snapshot.analysis} dateLabel={dateLabel}/> : <p className="muted">待归属与待确认内容不纳入确定统计。</p>}
+    {!filter.ownership ? snapshot.analysis ? <ArchiveAnalysisPanel analysis={snapshot.analysis} dateLabel={dateLabel}/> : <p className="family-message">统计范围较大，可通过微信或 Discord 指定日期范围查询。下方档案已核验，统计暂不可用。</p> : <p className="muted">待归属与待确认内容不纳入确定统计。</p>}
     {!snapshot.page.items.length ? <div className="family-empty"><h2 className="serif">还没有可展示的档案</h2><p>直接发送文本、图片或文件，系统会识别内容和归属，无需先建立家人档案。</p></div> : null}
     {!snapshot.page.coverage.complete?<p className="muted">{snapshot.page.coverage.reason==='presentation_window_limit'?'已达到当前阅读窗口上限，请按人物或领域缩小范围。':'部分档案尚待识别或确认。'}</p>:null}
                 <div ref={results} data-archive-view-token={snapshot.viewToken} className="family-history">{snapshot.page.items.map((item, i) => <RemoteButton key={item.document_id} ref={el => { cards.current[i] = el; }} className="family-record archive-card" onFocus={() => { anchor.current = { id: item.document_id, index: i, scroll: content.current?.scrollTop ?? 0 }; }} onClick={() => open(item.document_id, i)} onDirection={key => { if (key === 'left')

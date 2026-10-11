@@ -1,6 +1,6 @@
 import {describe,it,expect,vi,afterEach} from 'vitest';
 import {ArchiveReader} from './archiveReader';
-import type {ApiClient} from '../../core/api';
+import {ApiError, type ApiClient} from '../../core/api';
 import type {ArchivePage} from '../../types/archives';
 
 const page:ArchivePage={items:[],generation:'1:1',coverage:{complete:true},index_status:'ready'};
@@ -18,7 +18,7 @@ describe('archive authorization lifetime',()=>{
  });
  it('rebuilds every loaded page without deriving totals from that page',async()=>{
   vi.useFakeTimers();const a=api();vi.mocked(a.getArchives).mockResolvedValueOnce({...page,next_cursor:'second'}).mockResolvedValueOnce({...page,next_cursor:'second'}).mockResolvedValueOnce(page);
-  const reader=new ArchiveReader(a);await reader.load();await reader.more();expect(vi.mocked(a.getArchives).mock.calls).toHaveLength(3);expect(reader.value.snapshot?.analysis.groups[0]?.value).toBe('200');reader.stop();
+  const reader=new ArchiveReader(a);await reader.load();await reader.more();expect(vi.mocked(a.getArchives).mock.calls).toHaveLength(3);expect(reader.value.snapshot?.analysis?.groups[0]?.value).toBe('200');reader.stop();
  });
 });
 
@@ -40,4 +40,15 @@ it('revalidates expanded entity filters instead of keeping names from old pages'
 
 it('uses elapsed time for revalidation and expiry despite wall clock rollback',async()=>{
  vi.useFakeTimers();const a=api();const reader=new ArchiveReader(a);await reader.load();vi.mocked(a.getArchives).mockRejectedValue(new Error('offline'));vi.setSystemTime(new Date(Date.now()-3600000));await vi.advanceTimersByTimeAsync(16000);expect(vi.mocked(a.getArchives).mock.calls.length).toBeGreaterThan(1);await vi.advanceTimersByTimeAsync(15000);expect(reader.value.snapshot).toBeNull();reader.stop();
+});
+
+it('keeps freshly verified archives when the full analysis exceeds the response bound',async()=>{
+ vi.useFakeTimers();const a=api();vi.mocked(a.analyzeArchives).mockRejectedValue(new ApiError(409,'conflict','bounded',null,{reason:'analysis_response_limit'}));
+ const reader=new ArchiveReader(a);await reader.load();expect(reader.value.failed).toBe(false);expect(reader.value.snapshot?.analysis).toBeNull();expect(reader.value.snapshot?.page.generation).toBe('1:1');expect(a.getArchives).toHaveBeenCalledTimes(2);reader.stop();
+});
+it('does not downgrade authorization or generation conflicts to unavailable statistics',async()=>{
+ vi.useFakeTimers();for(const error of [new ApiError(403,'forbidden','revoked'),new ApiError(409,'conflict','generation changed')]){const a=api();vi.mocked(a.analyzeArchives).mockRejectedValue(error);const reader=new ArchiveReader(a);await reader.load();expect(reader.value.snapshot).toBeNull();expect(reader.value.failed).toBe(true);reader.stop();}
+});
+it('rejects a generation change while revalidating a bounded analysis fallback',async()=>{
+ vi.useFakeTimers();const a=api();vi.mocked(a.analyzeArchives).mockRejectedValue(new ApiError(409,'conflict','bounded',null,{reason:'analysis_response_limit'}));vi.mocked(a.getArchives).mockResolvedValueOnce(page).mockResolvedValueOnce({...page,generation:'2:1'});const reader=new ArchiveReader(a);await reader.load();expect(reader.value.snapshot).toBeNull();expect(reader.value.failed).toBe(true);reader.stop();
 });

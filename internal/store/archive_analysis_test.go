@@ -342,3 +342,25 @@ func analysisVolumeBundle(t *testing.T, value string) store.ArchivePublicationBu
 func analysisNamedVolumeBundle(t *testing.T, name string) store.ArchivePublicationBundle {
 	return analysisWithVolumeUnit(t, namedPublicationBundle(t, name))
 }
+
+func TestArchiveAnalysisLargeLegacyHistoryReportsResponseBound(t *testing.T) {
+	d := testutil.NewDB(t)
+	ctx := context.Background()
+	r := d.ArchiveTasksWithClock(&archiveClock{now: archiveNow})
+	h, err := d.LocalHousehold(ctx)
+	require.NoError(t, err)
+	a := newArchiveActor(t, d, "bounded-analyst", []string{"archive.read", "archive.analyze"}, []string{h.ID})
+	require.NoError(t, d.FamilyRecords().PutMember(ctx, domain.FamilyMember{ID: "baby", Name: "Synthetic baby"}, archiveNow))
+	for i := 0; i < 81; i++ {
+		rec, _, err := d.FamilyRecords().Record(ctx, "synthetic", fmt.Sprint(i), domain.FamilyRecordInput{MemberID: "baby", Category: "growth", Title: "Synthetic feeding", Notes: strings.Repeat("synthetic detail ", 80), OccurredAt: archiveNow.Add(time.Duration(i) * time.Hour), DisplayOnTV: true, Measurements: []domain.FamilyMeasurement{{Metric: "volume", Value: 70, Unit: "ml"}}}, archiveNow)
+		require.NoError(t, err)
+		require.NoError(t, d.ProjectLegacyArchive(ctx, rec.ID))
+	}
+	for _, q := range []archive.AnalysisQuery{{Operation: "count", Count: "documents", Timezone: "Asia/Singapore"}, {Operation: "sum", Metric: "volume", Timezone: "Asia/Singapore"}} {
+		_, err := r.AnalyzeArchives(ctx, a, h.ID, false, q)
+		var apiErr *domain.Error
+		require.ErrorAs(t, err, &apiErr)
+		require.Equal(t, domain.CodeConflict, apiErr.Code)
+		require.Equal(t, "analysis_response_limit", apiErr.Details["reason"])
+	}
+}

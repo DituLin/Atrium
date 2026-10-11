@@ -1,11 +1,11 @@
-import type { ApiClient } from '../../core/api';
+import { ApiError, type ApiClient } from '../../core/api';
 import type { ArchiveAnalysis, ArchiveDetail, ArchiveEntities, ArchiveFilter, ArchivePage } from '../../types/archives';
 export interface ArchiveSnapshot {
     viewToken: string;
     filter: ArchiveFilter;
     page: ArchivePage;
     entities: ArchiveEntities;
-    analysis: ArchiveAnalysis;
+    analysis: ArchiveAnalysis | null;
     detail: ArchiveDetail | null;
     at: number;
 }
@@ -101,9 +101,13 @@ export class ArchiveReader {
             page.next_cursor = cursor;
             if(this.pages===20&&cursor){page.next_cursor=undefined;page.coverage={complete:false,reason:'presentation_window_limit'};}
             const query = { ownership: filter.ownership, domain: filter.domain, entity_id: filter.entity_id, query: filter.query };
+            const analysisRequest = view ? Promise.resolve(view.analysis) : this.api.analyzeArchives(filter.ownership ? { ...query, operation: 'count', count: 'documents' } : filter.domain === 'finance' ? { ...query, operation: 'sum', metric: 'amount' } : filter.domain === 'education' ? { ...query, operation: 'ratio', metric: 'score' } : filter.domain === 'health' ? { ...query, operation: 'series', metric: this.metric } : { ...query, operation: 'count', count: 'documents' }, controller.signal).catch((error: unknown) => {
+                if (error instanceof ApiError && error.status === 409 && error.code === 'conflict' && error.details?.reason === 'analysis_response_limit') return null;
+                throw error;
+            });
             const [entities, analysis, detail] = await Promise.all([
                 this.api.getArchiveEntities(controller.signal),
-                view ? Promise.resolve(view.analysis) : this.api.analyzeArchives(filter.ownership ? { ...query, operation: 'count', count: 'documents' } : filter.domain === 'finance' ? { ...query, operation: 'sum', metric: 'amount' } : filter.domain === 'education' ? { ...query, operation: 'ratio', metric: 'score' } : filter.domain === 'health' ? { ...query, operation: 'series', metric: this.metric } : { ...query, operation: 'count', count: 'documents' }, controller.signal),
+                analysisRequest,
                 documentID ? this.api.getArchiveDocument(documentID, controller.signal) : Promise.resolve(null),
             ]);
             let entityCursor=entities.next_cursor;const entityCursors=new Set<string>();
@@ -112,8 +116,12 @@ export class ArchiveReader {
              const next=await this.api.getArchiveEntities(controller.signal,entityCursor);entities.items=entities.items.concat(next.items);entityCursor=next.next_cursor;entities.coverage.complete=entities.coverage.complete&&next.coverage.complete;
             }
             entities.next_cursor=this.entityPages<10?entityCursor:undefined;
-            if (`${analysis.data_epoch}:${analysis.generation}` !== generation)
+            if (analysis && `${analysis.data_epoch}:${analysis.generation}` !== generation)
                 throw new Error('Analysis generation changed');
+            if (!analysis) {
+                const verified = await this.api.getArchives({ ...filter, limit: 1 }, controller.signal);
+                if (verified.generation !== generation) throw new Error('Generation changed');
+            }
             if (detail && detail.generation !== generation)
                 throw new Error('Generation changed');
             if (this.viewID)
