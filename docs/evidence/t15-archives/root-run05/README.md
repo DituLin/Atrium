@@ -17,3 +17,7 @@
 自然语言 12–15 进一步暴露两处入口问题，均未记通过：12/15 虽 exit=0 且 Core 分析 available，插件 renderer 仍硬编码 algorithm /5，拒绝 /6 正确回执；13/14 证据默认 limit25 包在 MCP 同时序列化 text 和 structured 后超过 32 KiB，回退分页又耗尽 8 次单轮工具预算。完整失败/部分成功回执均保留。Core 精确统计的局部通过不等于 IM 回复通过。修复及针对性重跑待完成，不重写本批原始证据。
 
 OnePlus 验证结束后已卸载临时 preview 包，移除仅本轮 forward/reverse，恢复正式 App。
+
+财务基线检查未通过：授权端 CNY 250.00000000000001、公开端 CNY 200.00000000000001，USD 均 20；coverage 含 unproven_duplicate_candidates。金额尾数直接来自 F01 原件 B3 的 `71.90000000000001`，精确算术没有自行舍入，正常夹具需修正序列化并保留旧文件。F02 没有进入合并后的证据，不能将排除待核实付款当作正确去重。两份完整分析回执保留。
+
+归并诊断补充：`unproven_duplicate_candidates` 当前也会对多个财务事件保守出现，因此不能单凭该 reason 判定付款未归并。独立检查实际持久图进一步确认 F01 缺少 bill transaction proof，F02 持有独立 amount observation/canonical event；这才是本轮失败的依据。修复后的验收将核对 canonical event、金额 observation 及两份来源证明，而不仅是金额合计或覆盖提示。
