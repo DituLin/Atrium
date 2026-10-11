@@ -8,7 +8,7 @@ import (
 )
 
 const PublicationAnchorRule = "physical-parent/1"
-const PublicationVersion = "archive-publication/4"
+const PublicationVersion = "archive-publication/5"
 
 // PhysicalAnchor intentionally excludes generated segment IDs, model names,
 // dates and chunk boundaries. Offsets are in the original parent component.

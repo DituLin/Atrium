@@ -1,0 +1,11 @@
+=== RUN   TestQualityValueDoesNotConfirmUnresolvedOwner
+--- PASS: TestQualityValueDoesNotConfirmUnresolvedOwner (0.25s)
+=== RUN   TestQualityCorrectedTransactionIdentityDoesNotConflate
+--- PASS: TestQualityCorrectedTransactionIdentityDoesNotConflate (0.15s)
+=== RUN   TestQualityValueAfterActualMergeUndo
+--- PASS: TestQualityValueAfterActualMergeUndo (0.15s)
+=== RUN   TestQualityMissingAmountOnIdentityJoinDoesNotDeleteCurrentFact
+    t09_quality_recheck_test.go:59: status waiting_input
+--- PASS: TestQualityMissingAmountOnIdentityJoinDoesNotDeleteCurrentFact (0.07s)
+PASS
+ok  	github.com/DituLin/Atrium/internal/store	1.706s

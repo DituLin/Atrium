@@ -80,6 +80,11 @@ proof. A changed identifier/type/issuer retires an exclusive source's old lookup
 atomically. Existing shared sources or human assertions require review before
 splitting the old identity; the old active publication remains intact. Uncertain
 amount coverage can carry an older proof without asserting a replacement.
+An identity change also requires exactly one safe replacement amount with decimal
+and currency evidence and resolved subjects. Missing or pending replacements
+retain the original active publication and ask for clarification. Native slot
+ambiguity is reconciled before this check, before any equivalence or current
+reference changes.
 
 Manual value/ownership/privacy/withdraw actions require current read+organize,
 expected document revision, and a reason. They create independent audit revisions.

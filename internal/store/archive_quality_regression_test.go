@@ -265,3 +265,89 @@ func TestArchiveCorrectedTransactionCanJoinExistingNewIdentity(t *testing.T) {
 	}
 	require.Equal(t, []string{"80"}, amounts)
 }
+
+func TestArchiveIdentityMigrationRequiresSafeReplacementAmount(t *testing.T) {
+	for _, scenario := range []string{"missing", "unnormalized", "missing_currency", "unresolved_subject", "complete"} {
+		t.Run(scenario, func(t *testing.T) {
+			d := testutil.NewDB(t)
+			r := d.ArchiveTasksWithClock(&archiveClock{now: archiveNow})
+			ctx := context.Background()
+			actor := archiveActor(t, d)
+			subject := ""
+			if scenario == "unresolved_subject" {
+				subject = "Alice"
+			}
+			bundle := func(id, value string) store.ArchivePublicationBundle {
+				return literalBundle(t, subject, []publicationLiteral{{"transaction_id", id}, {"transaction_type", "payment"}, {"issuer", "Bank A"}, {"amount", value}}, "SGD")
+			}
+			first := bundle("0012", "70")
+			if subject != "" {
+				result := first.Understanding.Chunks[0].Result
+				result.Subjects = []archive.LocalSubject{}
+				for i := range result.Fields {
+					result.Fields[i].SubjectRefs = []string{}
+				}
+				for i := range result.Events {
+					result.Events[i].SubjectRefs = []string{}
+				}
+				first = revalidatePublication(t, first, result)
+			}
+			rec, f, x := publicationFixture(t, d, r, "source", domain.ArchiveInputFile)
+			f = saveBundle(t, r, f, first)
+			_, e := r.PublishExtraction(ctx, f, x.ID)
+			require.NoError(t, e)
+			_, f, x = publicationFixture(t, d, r, "target", domain.ArchiveInputText)
+			f = saveBundle(t, r, f, literalBundle(t, "", []publicationLiteral{{"transaction_id", "0013"}, {"transaction_type", "payment"}, {"issuer", "Bank A"}, {"amount", "80"}}, "SGD"))
+			_, e = r.PublishExtraction(ctx, f, x.ID)
+			require.NoError(t, e)
+			var previous string
+			require.NoError(t, d.SQL().QueryRow(`SELECT active_publication_id FROM archive_documents WHERE id=?`, rec.DocumentID).Scan(&previous))
+			next := bundle("0013", "80")
+			result := next.Understanding.Chunks[0].Result
+			if scenario == "unresolved_subject" {
+				result.Subjects[0].Ambiguous = true
+			}
+			switch scenario {
+			case "missing":
+				result.Fields = result.Fields[:3]
+				result.Events[0].FieldRefs = result.Events[0].FieldRefs[:3]
+			case "unnormalized":
+				result.Fields[3].Normalizations = []archive.Normalization{}
+			case "missing_currency":
+				result.Fields[3].Dimensions = []archive.LiteralDimension{}
+			}
+			next = revalidatePublication(t, next, result)
+			_, f, x = publicationFixture(t, d, r, "corrected", domain.ArchiveInputFile)
+			f = saveBundle(t, r, f, next)
+			done, e := r.PublishExtraction(ctx, f, x.ID)
+			require.NoError(t, e)
+			var current string
+			require.NoError(t, d.SQL().QueryRow(`SELECT active_publication_id FROM archive_documents WHERE id=?`, rec.DocumentID).Scan(&current))
+			want := "70"
+			if scenario == "complete" {
+				require.Equal(t, domain.ArchiveTaskSucceeded, done.Status)
+				require.NotEqual(t, previous, current)
+				want = "80"
+			} else {
+				require.Equal(t, domain.ArchiveTaskWaitingInput, done.Status)
+				require.Equal(t, previous, current)
+			}
+			items, e := r.CurrentArchiveObservations(ctx, actor, "home-1", rec.DocumentID, false)
+			require.NoError(t, e)
+			amounts := []string{}
+			for _, item := range items {
+				var body struct{ Field archive.PublicationField }
+				require.NoError(t, json.Unmarshal(item.Body, &body))
+				if body.Field.Name == "amount" {
+					amounts = append(amounts, body.Field.Raw)
+				}
+			}
+			require.Equal(t, []string{want}, amounts)
+			if scenario == "unresolved_subject" {
+				q, e := r.ArchiveQuestion(ctx, actor, "home-1", f.TaskID)
+				require.NoError(t, e)
+				require.Contains(t, q.Actions, "create_subject")
+			}
+		})
+	}
+}

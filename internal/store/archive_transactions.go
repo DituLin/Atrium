@@ -20,7 +20,7 @@ func archiveTransactionEventIn(ctx context.Context, tx *sql.Tx, h, event, public
 		return "", e
 	}
 	if e == nil && !archiveTransactionProofMatches(oldProof, proof) {
-		review, err := archiveTransactionChangeNeedsReviewIn(ctx, tx, h, event, fields)
+		review, err := archiveTransactionChangeNeedsReviewIn(ctx, tx, h, event, fields, nil)
 		if err != nil {
 			return "", err
 		}
@@ -67,7 +67,7 @@ func archiveAmountSignature(f archive.PublicationField) string {
 // A physical event may change its transaction proof only while its old amount
 // is exclusive to this document. Splitting a shared fact or migrating human
 // assertions across identities requires explicit review instead of auto-merge.
-func archiveTransactionChangeNeedsReviewIn(ctx context.Context, tx *sql.Tx, h, event string, fields []archive.PublicationField) (bool, error) {
+func archiveTransactionChangeNeedsReviewIn(ctx context.Context, tx *sql.Tx, h, event string, fields []archive.PublicationField, unresolved map[string]bool) (bool, error) {
 	var canonical, previous, doc string
 	e := tx.QueryRowContext(ctx, `SELECT q.canonical_event_id,q.proof_json,ev.document_id FROM archive_event_equivalences q JOIN archive_subject_events ev ON ev.household_id=q.household_id AND ev.id=q.event_id WHERE q.household_id=? AND q.event_id=?`, h, event).Scan(&canonical, &previous, &doc)
 	if errors.Is(e, sql.ErrNoRows) {
@@ -91,6 +91,9 @@ func archiveTransactionChangeNeedsReviewIn(ctx context.Context, tx *sql.Tx, h, e
 	if archiveTransactionProofMatches(previous, proof) {
 		return false, nil
 	}
+	if !archiveTransactionReplacementReady(fields, unresolved) {
+		return true, nil
+	}
 	if canonical != event {
 		return true, nil
 	}
@@ -102,4 +105,25 @@ func archiveTransactionChangeNeedsReviewIn(ctx context.Context, tx *sql.Tx, h, e
 func archiveTransactionProofMatches(raw string, p *archive.TransactionProof) bool {
 	var old archive.TransactionProof
 	return p != nil && json.Unmarshal([]byte(raw), &old) == nil && old.Type == p.Type && old.Issuer == p.Issuer && old.Identifier == p.Identifier
+}
+
+// Identity migration must never remove a current amount without exactly one
+// confirmed, publishable replacement. Use the same subject/field gate as publish.
+func archiveTransactionReplacementReady(fields []archive.PublicationField, unresolved map[string]bool) bool {
+	count := 0
+	for _, field := range fields {
+		if field.Name != "amount" {
+			continue
+		}
+		count++
+		if field.RequiresReview || archiveAmountSignature(field) == "" {
+			return false
+		}
+		for _, ref := range field.Subjects {
+			if unresolved[ref] {
+				return false
+			}
+		}
+	}
+	return count == 1
 }

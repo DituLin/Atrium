@@ -166,7 +166,12 @@ func (r *ArchiveTasks) PublishExtraction(ctx context.Context, f ArchiveWorkFence
 			if err != nil {
 				return err
 			}
-			needsReview, err := archiveTransactionChangeNeedsReviewIn(ctx, tx, f.HouseholdID, event, ev.Fields)
+			// Reconcile before migration safety checks: native ambiguity can mark
+			// an otherwise complete replacement amount as requiring review.
+			if err = archiveReconcileObservationSlotsIn(ctx, tx, f.HouseholdID, event, ev.Fields); err != nil {
+				return err
+			}
+			needsReview, err := archiveTransactionChangeNeedsReviewIn(ctx, tx, f.HouseholdID, event, ev.Fields, unresolved)
 			if err != nil {
 				return err
 			}
@@ -222,9 +227,6 @@ func (r *ArchiveTasks) PublishExtraction(ctx context.Context, f ArchiveWorkFence
 				_, e = tx.ExecContext(ctx, `INSERT INTO archive_subject_events VALUES(?,?,?,?,?,?,?)`, f.HouseholdID, eventID, x.DocumentID, ev.AnchorKey, archive.PublicationAnchorRule, entityJSON(ev.Anchors), ev.Type)
 			}
 			if e != nil {
-				return e
-			}
-			if e = archiveReconcileObservationSlotsIn(ctx, tx, f.HouseholdID, eventID, ev.Fields); e != nil {
 				return e
 			}
 			canonicalEvent, e := archiveTransactionEventIn(ctx, tx, f.HouseholdID, eventID, publication, ev.Fields)

@@ -61,3 +61,10 @@ func TestArchiveNativeSlotCorrectionReusesObservationIdentity(t *testing.T) {
 		return nil
 	}))
 }
+
+func TestArchiveTransactionReplacementRejectsPendingField(t *testing.T) {
+	fields := []archive.PublicationField{{Name: "amount", Raw: "80", Normalizations: []archive.Normalization{{Kind: "decimal", Value: "80"}}, Dimensions: []archive.PublicationDimension{{Kind: "currency", Raw: "SGD"}}}}
+	require.True(t, archiveTransactionReplacementReady(fields, nil))
+	fields[0].RequiresReview = true
+	require.False(t, archiveTransactionReplacementReady(fields, nil), "unconfirmed source cannot authorize destructive canonical migration")
+}
