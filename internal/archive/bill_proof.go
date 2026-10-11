@@ -75,6 +75,7 @@ func sourceBillLabels(parsed ParseResult, f *PublicationField) {
 		f.Name = name
 	}
 	original := append([]CanonicalEvidence(nil), f.Evidence...)
+	verifiedLabels := map[CanonicalEvidence]bool{}
 	add := func(s Segment, start, end int) {
 		for _, v := range componentViews(s, original[0].ParseDigest, parsed.ParserVersion) {
 			runes := []rune(v.Text)
@@ -86,6 +87,7 @@ func sourceBillLabels(parsed ParseResult, f *PublicationField) {
 				continue
 			}
 			ref := canonicalEvidence(v, EvidenceReference{Start: start, End: end, Quote: quote})
+			verifiedLabels[ref] = true
 			for _, old := range f.Evidence {
 				if old == ref {
 					return
@@ -109,7 +111,7 @@ func sourceBillLabels(parsed ParseResult, f *PublicationField) {
 			}
 			if value.Locator.CSV != nil || value.Locator.XLSX != nil {
 				for _, header := range parsed.Segments {
-					if sameHeaderColumn(value.Locator, header.Locator) {
+					if sameHeaderColumn(value.Locator, header.Locator) && continuousHeaderColumn(parsed, value, header) {
 						add(header, 0, len([]rune(header.Text)))
 					}
 				}
@@ -138,6 +140,14 @@ func sourceBillLabels(parsed ParseResult, f *PublicationField) {
 				start += len([]rune(prefix[:offset]))
 				add(value, start, start+len([]rune(trim)))
 			}
+		}
+	}
+	// Model-supplied labels require the same physical relationship as labels
+	// discovered here. Keep the original evidence, but never authorize a
+	// transaction merge using an unrelated header elsewhere in the document.
+	for _, ev := range original {
+		if billLabelKind(ev.Quote) == name && !verifiedLabels[ev] {
+			f.RequiresReview = true
 		}
 	}
 }

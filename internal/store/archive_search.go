@@ -711,11 +711,18 @@ SELECT 'legacy:'||p.root_record_id,1,f.payload_json,'',1,p.entity_id,f.id FROM a
 				item.Evidence = item.Evidence[:3]
 				item.Truncated = true
 			}
+			boundArchiveSummary(&item, f.EntityID)
+			if item.Truncated {
+				page.Coverage = archive.SearchCoverage{Complete: false, Reason: "partial_or_pending"}
+			}
 			candidate := page
 			candidate.Items = append(append([]archive.SearchItem{}, page.Items...), item)
 			c.After = id
 			candidate.NextCursor = signSearchCursor(c, key)
 			wire, _ := json.Marshal(candidate)
+			if len(page.Items) == 0 && len(wire) > 8<<10 {
+				return domain.Errorf(domain.CodePreviewUnavailable, "archive item exceeds bounded page; open original")
+			}
 			if len(page.Items) >= f.Limit || len(wire) > 8<<10 {
 				c.After = last
 				page.NextCursor = signSearchCursor(c, key)
@@ -858,10 +865,14 @@ func (r *ArchiveTasks) archiveEvidence(ctx context.Context, a archiveSearchActor
 			return domain.ErrConflict
 		}
 		p.Item.Evidence = []archive.SearchEvidence{}
+		boundArchiveMetadata(&p.Item, f.EntityID)
 		for i := offset; i < len(all); i++ {
 			p.Item.Evidence = append(p.Item.Evidence, all[i])
 			probe, _ := json.Marshal(p.Item)
-			if len(p.Item.Evidence) > f.Limit || len(probe) > 8<<10 {
+			if len(p.Item.Evidence) == 1 && len(probe) > 6<<10 {
+				return domain.Errorf(domain.CodePreviewUnavailable, "single archive evidence exceeds bounded page; open original")
+			}
+			if len(p.Item.Evidence) > f.Limit || len(probe) > 6<<10 {
 				p.Item.Evidence = p.Item.Evidence[:len(p.Item.Evidence)-1]
 				c.After = fmt.Sprint(i)
 				out.NextCursor = signSearchCursor(c, key)
@@ -988,6 +999,22 @@ func (r *ArchiveTasks) searchEntities(ctx context.Context, a archiveSearchActor,
 				item.Aliases = item.Aliases[:16]
 				out.Coverage = archive.SearchCoverage{Complete: false, Reason: "entity_labels_truncated"}
 			}
+			// Bound a single entity before paging so a legal long alias set cannot
+			// produce an empty page with a cursor that never advances.
+			for {
+				b, _ := json.Marshal(item)
+				if len(b) <= 4<<10 {
+					break
+				}
+				out.Coverage = archive.SearchCoverage{Complete: false, Reason: "entity_labels_truncated"}
+				if len(item.Aliases) > 0 {
+					item.Aliases = item.Aliases[:len(item.Aliases)-1]
+				} else if len(item.Names) > 1 {
+					item.Names = item.Names[:len(item.Names)-1]
+				} else {
+					return domain.Errorf(domain.CodePreviewUnavailable, "entity label exceeds bounded page")
+				}
+			}
 			candidate := out
 			candidate.Items = append(append([]archive.SearchEntity{}, out.Items...), *item)
 			c.After = id
@@ -1077,4 +1104,45 @@ func legacySearchProjectionIn(ctx context.Context, tx *sql.Tx, h, id string, pub
 	}
 	out.Item, out.Text, e = legacySearchItem(id, canonical, record, raw)
 	return out, e
+}
+
+// Page summaries are bounded separately from immutable evidence. Omitted
+// metadata is explicitly marked and never used as a complete relationship list.
+func boundArchiveMetadata(item *archive.SearchItem, requestedEntity string) {
+	for {
+		meta := *item
+		meta.Evidence = nil
+		b, _ := json.Marshal(meta)
+		if len(b) <= 2<<10 {
+			return
+		}
+		item.Truncated = true
+		if len(item.Dates) > 0 {
+			item.Dates = item.Dates[:len(item.Dates)-1]
+			continue
+		}
+		if len(item.EntityIDs) > 1 {
+			remove := len(item.EntityIDs) - 1
+			if item.EntityIDs[remove] == requestedEntity {
+				remove--
+			}
+			item.EntityIDs = append(append([]string{}, item.EntityIDs[:remove]...), item.EntityIDs[remove+1:]...)
+			continue
+		}
+		return
+	}
+}
+func boundArchiveSummary(item *archive.SearchItem, requestedEntity string) {
+	boundArchiveMetadata(item, requestedEntity)
+	for {
+		b, _ := json.Marshal(item)
+		if len(b) <= 6<<10 || len(item.Evidence) == 0 {
+			break
+		}
+		item.Evidence = item.Evidence[:len(item.Evidence)-1]
+		item.Truncated = true
+	}
+	if len(item.Evidence) == 0 {
+		item.MetadataOnly = true
+	}
 }
