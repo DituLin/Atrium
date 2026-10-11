@@ -1,0 +1,186 @@
+{
+  "format": "atriumos-local-deployment-v1",
+  "verified_at": "2026-10-11T09:15:44.320186+00:00",
+  "runtime_commit": "3fb9d38fdeb245515e514f28f134ea91669e15d9",
+  "deployment": "local_live",
+  "release": {
+    "files_verified": 57,
+    "manifest_sha256": "5690cc88cceb271756c6ae3d133ff7cd005cf6b2619cecefb836caa47c52aa01",
+    "stable_binaries": [
+      {
+        "path": "atrium",
+        "strict_signature_valid": true,
+        "matches_release": true
+      },
+      {
+        "path": "atrium-maintenance",
+        "strict_signature_valid": true,
+        "matches_release": true
+      },
+      {
+        "path": "brain/home-mcp",
+        "strict_signature_valid": true,
+        "matches_release": true
+      },
+      {
+        "path": "brain/atrium-brain-host",
+        "strict_signature_valid": true,
+        "matches_release": true
+      }
+    ],
+    "plugin_matches_release": true,
+    "native_helper_strict_signature_valid": true,
+    "core_designated_requirement_preserved": true
+  },
+  "health": {
+    "/health/live": {
+      "http_status": 200,
+      "status": "ok",
+      "runtime_commit": "3fb9d38fdeb245515e514f28f134ea91669e15d9"
+    },
+    "/health/ready": {
+      "http_status": 200,
+      "status": "ok",
+      "runtime_commit": "3fb9d38fdeb245515e514f28f134ea91669e15d9"
+    }
+  },
+  "services": {
+    "com.atrium.core": {
+      "state": "running"
+    },
+    "ai.openclaw.gateway": {
+      "state": "running"
+    }
+  },
+  "provider": {
+    "name": "DeepSeek",
+    "protected_env_directory_mode": "0700",
+    "protected_env_file_mode": "0600",
+    "single_key_declaration": true,
+    "key_absent_from_plist": true
+  },
+  "archives_enabled": true,
+  "database": {
+    "schema": 17,
+    "preupgrade_records": 81,
+    "current_records": 82,
+    "all_preupgrade_record_rows_preserved": true,
+    "integrity": "ok",
+    "foreign_key_violations": 0,
+    "initial_migration_old_tables_unchanged": 22
+  },
+  "policy_changes": [
+    {
+      "version_before": 1,
+      "version_after": 2,
+      "old_allowlists_preserved": true,
+      "old_permissions_preserved": true,
+      "added_permissions": [
+        "archive.analyze",
+        "archive.ingest",
+        "archive.organize",
+        "archive.read"
+      ]
+    }
+  ],
+  "backups": [
+    {
+      "path": "~/Atrium/releases/predeploy-20261011-164054",
+      "schema": 8,
+      "records": 81,
+      "files": 836,
+      "cross_database_quiesced": true,
+      "operational_state_preserved": true
+    },
+    {
+      "path": "~/Atrium/releases/predeploy-20261011-165314",
+      "schema": 17,
+      "records": 81,
+      "files": 852,
+      "cross_database_quiesced": true,
+      "operational_state_preserved": true
+    }
+  ],
+  "channels": {
+    "probe_observed_at": 1791709694002,
+    "accounts": {
+      "discord": [
+        {
+          "enabled": true,
+          "configured": true,
+          "running": true,
+          "connected": true,
+          "error_present": false
+        },
+        {
+          "enabled": true,
+          "configured": true,
+          "running": true,
+          "connected": true,
+          "error_present": false
+        }
+      ],
+      "openclaw-weixin": [
+        {
+          "enabled": true,
+          "configured": true,
+          "running": true,
+          "connected": null,
+          "error_present": false
+        }
+      ]
+    },
+    "pinned_patch_targets_verified": 10,
+    "pinned_patch_targets_remaining": 0
+  },
+  "human_sample": {
+    "channel": "openclaw-weixin",
+    "kind": "text_feeding_record",
+    "processed": true,
+    "family_record_persisted": true,
+    "health_archive_search_match": true,
+    "tv_visibility": true,
+    "scoped_analysis": {
+      "complete": true,
+      "scope": "archived_only",
+      "included": 6,
+      "excluded": 0
+    },
+    "attachments_proven": false,
+    "discord_delivery_proven": false
+  },
+  "tv": {
+    "official_application": "io.atrium.tv",
+    "typed_command_status": "applied",
+    "real_dom_acknowledgement": true,
+    "detail_contains_human_record": true,
+    "model_turn": false,
+    "statistics_limit_fallback_verified": true,
+    "screenshots_private_only": true
+  },
+  "verification": {
+    "final_web_test_files": 65,
+    "final_web_tests": 465,
+    "final_typecheck": "passed",
+    "final_store_httpapi_tests": "passed",
+    "bounded_response_regression": "passed",
+    "prior_combined_full_go_tests": "passed",
+    "relocated_native_formats": [
+      "PDF",
+      "PNG",
+      "JPEG",
+      "WebP"
+    ],
+    "missing_codec_returns_incomplete_parser_unavailable": true,
+    "old_schema8_binary_rejected_on_schema17": true
+  },
+  "pending": [
+    "full_immutable_NAS_archive_snapshot_and_restore",
+    "real_human_attachment_delivery",
+    "real_human_discord_delivery",
+    "remaining_T15_model_cases",
+    "one_hour_continuous_acceptance",
+    "ten_thousand_document_performance_acceptance",
+    "T18_final_audit"
+  ]
+}

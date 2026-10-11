@@ -1,12 +1,14 @@
 # AtriumOS 发布与恢复
 
-状态：发布准备中，尚未部署。本文记录发布要求和已核实的脚本缺口，不表示 T17 已验收。
+状态：2026-10-11 本机已部署 `3fb9d38fdeb245515e514f28f134ea91669e15d9`，Core 和 OpenClaw 网关运行，档案开关已启用。完整 T17 验收仍未完成。下文带时间的预检及“尚未切换”描述保留当时状态，当前结果见“发布结果”。
 
 ## 发布包
 
 同一固定提交必须提供 Core、维护 CLI、Brain host、MCP、OpenClaw 适配器、匹配渠道版本的补丁、Web 资源，以及 macOS 原生解析 helper、固定版本 codec 依赖和许可。T13 新增的 `atrium-spool-read`、附件接入模块、补丁脚本与版本/文件摘要 pins 也属于运行依赖，不能留在开发工作区中引用。记录提交、各文件摘要、渠道版本和签名验证结果。
 
 2026-10-11 代码检查：现有 `make release` 构建 Core/MCP/Brain 并执行 `web-sync`，但不先构建 Web，也没有打包渠道补丁和原生 helper。因此不能直接把这个目标的输出视为完整发布包。T17 需补齐构建和打包，验证脱离开发目录及 Codex runtime 后的实际运行。
+
+本次正式部署使用已补齐的 `deploy/build-release.sh`，从固定提交导出源码，先构建 Web 再嵌入 Core，包含匹配插件、spool reader、渠道补丁与 pins、原生 helper、codecs 和许可。最终签名后清单有 57 个文件，部署后逐一复核字节数与 SHA-256；稳定运行路径的四个二进制与发布包一致并通过严格签名验证。
 
 同日预检：复制此前构建的 helper 与完整 `lib/` 到新临时目录，在 `/tmp` 工作目录及仅有 PATH/LANG/LC_ALL 的环境中，通过 FD 3 输入仓库合成 `report.png`，返回 `parsed`，无 stderr。移走必需 JPEG codec 后返回结构化 `unsupported/parser_unavailable`，无 stderr。摘要保留于 [native-portability.json](evidence/2026-10-11-release-preflight/native-portability.json)。这是现有 helper 的搬移与缺依赖预检，尚非最终签名发布包验收。
 
@@ -44,9 +46,19 @@
 
 ## 发布结果
 
-待填写实际发布提交、包摘要、备份位置、迁移核对、渠道/TV/NAS 结果、性能数据及回滚演练。当前没有上线完成结论。
+2026-10-11 本机正式运行版本为 `3fb9d38fdeb245515e514f28f134ea91669e15d9`，不可变包位于 `~/Atrium/releases/atriumos-3fb9d38`。`/health/live` 与 `/health/ready` 均返回 200/ok 和该提交；Core 与 OpenClaw 网关均为 launchd running。Core 通过 `--provider-env-file` 从目录0700、文件0600的单键文件读取 DeepSeek 凭据，plist 中不保存密钥。helper、worker plugin、网关插件及 spool reader 均指向正式发布资源。
 
-## 2026-10-11 开始部署（尚未切换）
+正式切换前取得停接入、跨库静止的完整操作备份 `~/Atrium/releases/predeploy-20261011-164054`（schema8、81条记录、836文件），热修前再取得 `predeploy-20261011-165314`（schema17、81条记录、852文件）。备份包含配置、TLS/凭据、程序、Brain 与 OpenClaw 接收和操作状态；均有清单且限制访问。首次迁移 schema8→17 后，原22张表全部行内容一致；最后核对时，原81条家庭记录逐行集合均保留，新增真实微信记录后共82条，integrity=ok、外键违规0。旧屏幕、来源、成员 allowlist 和已有权限保持，只为既有服务身份合并四项 archive 权限及家庭范围。
+
+Weixin2.4.9/Discord2026.9.8 的固定补丁均已安装；最终 `--check` 为 verified=10、changed=0。实际渠道 probe 显示微信 configured/running、两个 Discord 账号 connected/running，均无 lastError。用户发送的新微信文字喂奶消息已被原生接收桥捕获并完成普通消息处理，新增家庭记录及健康档案投影，授权检索命中。这证明该文字消息链路；没有附件槽，不能据此宣称真实文件上传或 Discord 新消息通过。
+
+OnePlus 正式 `io.atrium.tv` 已显示新版公开档案及该新增记录详情；实际 Core→MCP→Brain host→WebSocket→设备 DOM 回执为 applied。该投屏验证使用类型化 host 调用，未冒充自然语言模型触发。上线时复现宽范围分析超过32KiB响应上限导致整个档案页不可用，`3fb9d38` 增加精确的 `analysis_response_limit` 原因；普通列表仅对该原因保留已重新核验代次的资料并说明统计暂不可用，其他授权/代次冲突仍失效。指定日期范围的实际统计与设备查询页通过。最终 Web65文件/465测试、typecheck、store/httpapi及有界响应回归通过；此前组合版本全量 Go 通过。最终签名 native 包搬移后 PDF/PNG/JPEG/WebP 解析通过，故意缺 codec 返回不完整的 parser_unavailable。
+
+外部 schema guard 的实际演练允许旧版本打开 schema8 备份，拒绝旧版本打开 schema17 活库；没有用旧程序直接打开升级后的资料。完整 NAS 档案快照/恢复、剩余 T15 模型用例、一小时持续验收、一万份资料性能及 T18 最终审计仍未完成。此次“本机已上线”不代表全部家庭 AgentOS 目标或 T15–T18 验收完成。
+
+可提交的脱敏证据见 [部署摘要](evidence/2026-10-11-local-deployment/deployment-summary.json) 和 [验证边界](evidence/2026-10-11-local-deployment/README.md)。包含真实资料的截图、API结果与接收标识仅保留本机私有目录 `~/Atrium/releases/verification-20261011-3fb9d38` 及受保护临时证据，不提交仓库。
+
+## 2026-10-11 开始部署时的记录（历史）
 
 用户明确要求开始部署后，已创建受保护在线预部署快照 `~/Atrium/releases/predeploy-20261011-161230`：实际 schema 8、81 条家庭记录，共 33 文件约 114.7 MB；Core 与两个 Brain SQLite 各自使用在线一致备份，完整性和外键检查通过。包含现有程序、配置、TLS/凭据、插件与 launchd 文件；没有复制约 12 GB 的可重建预览缓存。此快照未跨库停机，正式切换前还需短暂停接入并保全最新操作状态；不将它称为最终灾备点。脱敏摘要见 `deployment-start.json`。
 
