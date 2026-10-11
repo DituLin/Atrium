@@ -94,14 +94,17 @@ from looking like "every photo was deleted".
 
 ## Upgrade and rollback
 
-```
-atrium backup now                       # once backups land in H1
-sudo cp bin/atrium /usr/local/bin/atrium
-launchctl kickstart -k gui/$UID/com.atrium.core
-```
+For the AtriumOS archive upgrade, follow the release procedure in
+[`docs/ops/atriumos-runbook.md`](../docs/ops/atriumos-runbook.md). That procedure
+is being implemented; the existing `make release` target alone is not a complete
+archive release package.
 
-Migrations run forward only. To roll back, restore the previous binary together
-with the backup taken before the upgrade.
+Migrations run forward only. Before replacing a binary, take a consistent backup
+and rehearse the upgrade in an isolated directory. Before rollback, preserve the
+post-upgrade database, original files, and Brain intake state, including items
+not yet synchronized to the NAS. Restoring only the pre-upgrade backup can lose
+newly received records. An older binary must not open a newer, unsupported schema;
+restore to a separate directory and verify compatibility before switching service.
 
 ## Uninstall
 
