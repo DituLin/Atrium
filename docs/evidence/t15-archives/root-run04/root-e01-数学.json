@@ -1,0 +1,33 @@
+{
+  "schema_version": "1",
+  "observed_at": "2026-10-11T15:26:57.601684+08:00",
+  "availability": "available",
+  "data": {
+    "schema_version": "archive-analysis/1",
+    "query_ref": "01M4MXQ4215YJ37D72CRMKY81C",
+    "snapshot_id": "01M4MXQ4215YJ37D72CRMKY81C",
+    "algorithm_version": "archive-analysis/5",
+    "query": {
+      "operation": "ratio",
+      "metric": "数学",
+      "domain": "education",
+      "query": "春季",
+      "timezone": "Asia/Singapore"
+    },
+    "projection": "authorized",
+    "data_epoch": 91,
+    "generation": 1,
+    "input_digest": "2bca34c9bed075bacb4179d7817c819a251493250dd2ea9edf23b8628d340ccc",
+    "groups": [],
+    "coverage": {
+      "scope": "archived_only",
+      "complete": false,
+      "included": 0,
+      "excluded": 1,
+      "reasons": [
+        "missing_or_invalid_denominator",
+        "partial_or_pending_sources"
+      ]
+    }
+  }
+}
