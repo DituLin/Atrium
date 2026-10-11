@@ -51,6 +51,10 @@ func Open(ctx context.Context, path string) (*DB, error) {
 		return nil, fmt.Errorf("store: ping: %w", err)
 	}
 	db := &DB{sql: sqlDB, path: path}
+	if _, err := db.ValidateSchema(ctx); err != nil {
+		_ = sqlDB.Close()
+		return nil, err
+	}
 	if err := db.verifyPragmas(ctx); err != nil {
 		_ = sqlDB.Close()
 		return nil, err
@@ -159,30 +163,17 @@ func (d *DB) Migrate(ctx context.Context) (int, error) {
 	)`); err != nil {
 		return 0, fmt.Errorf("store: create schema_migrations: %w", err)
 	}
-	applied := map[int]struct{}{}
-	rows, err := d.sql.QueryContext(ctx, "SELECT version FROM schema_migrations")
-	if err != nil {
-		return 0, fmt.Errorf("store: read schema_migrations: %w", err)
-	}
-	defer func() { _ = rows.Close() }()
-	for rows.Next() {
-		var v int
-		if err := rows.Scan(&v); err != nil {
-			return 0, fmt.Errorf("store: scan schema_migrations: %w", err)
-		}
-		applied[v] = struct{}{}
-	}
-	if err := rows.Err(); err != nil {
-		return 0, fmt.Errorf("store: iterate schema_migrations: %w", err)
-	}
-
 	migrations, err := Migrations()
+	if err != nil {
+		return 0, err
+	}
+	applied, err := d.ValidateSchema(ctx)
 	if err != nil {
 		return 0, err
 	}
 	count := 0
 	for _, m := range migrations {
-		if _, ok := applied[m.Version]; ok {
+		if m.Version <= applied {
 			continue
 		}
 		if err := d.applyMigration(ctx, m); err != nil {
@@ -247,4 +238,45 @@ func (d *DB) InTx(ctx context.Context, fn func(*sql.Tx) error) error {
 		return fmt.Errorf("store: commit: %w", err)
 	}
 	return nil
+}
+
+// ValidateSchema refuses unknown or incomplete migration histories without writing.
+// A compatible database has exactly a prefix of this binary's embedded migrations.
+func (d *DB) ValidateSchema(ctx context.Context) (int, error) {
+	return ValidateSchemaHandle(ctx, d.sql)
+}
+
+// ValidateSchemaHandle permits read-only snapshot verification without opening
+// or mutating the file through the normal WAL connection path.
+func ValidateSchemaHandle(ctx context.Context, handle *sql.DB) (int, error) {
+	known, err := Migrations()
+	if err != nil {
+		return 0, err
+	}
+	var exists int
+	if err = handle.QueryRowContext(ctx, "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='schema_migrations'").Scan(&exists); err != nil {
+		return 0, err
+	}
+	if exists == 0 {
+		return 0, nil
+	}
+	rows, err := handle.QueryContext(ctx, "SELECT version,name FROM schema_migrations ORDER BY version")
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+	i, last := 0, 0
+	for rows.Next() {
+		var v int
+		var name string
+		if err = rows.Scan(&v, &name); err != nil {
+			return 0, err
+		}
+		if i >= len(known) || known[i].Version != v || known[i].Name != name {
+			return 0, fmt.Errorf("store: incompatible schema migration history")
+		}
+		i++
+		last = v
+	}
+	return last, rows.Err()
 }

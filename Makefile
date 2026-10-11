@@ -89,3 +89,8 @@ release-brain-host:
 	@mkdir -p $(BIN_DIR)
 	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -o $(BIN_DIR)/atrium-brain-host-darwin-arm64 ./cmd/atrium-brain-host
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -o $(BIN_DIR)/atrium-brain-host-darwin-amd64 ./cmd/atrium-brain-host
+
+# Fixed-commit, complete local release; runtime paths must be explicitly pinned.
+.PHONY: release-package
+release-package:
+	./deploy/build-release.sh "$(RELEASE_DIR)" "$(or $(RELEASE_SHA),HEAD)"

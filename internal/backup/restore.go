@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/DituLin/Atrium/internal/store"
 	_ "modernc.org/sqlite" // database/sql driver, for verifying a snapshot
 )
 
@@ -92,6 +93,9 @@ func verifySnapshot(ctx context.Context, path string) (int, error) {
 	}
 	if check != "ok" {
 		return 0, fmt.Errorf("backup: snapshot failed its integrity check: %s", check)
+	}
+	if _, err := store.ValidateSchemaHandle(ctx, db); err != nil {
+		return 0, err
 	}
 	var migrations int
 	if err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM schema_migrations").Scan(&migrations); err != nil {

@@ -34,6 +34,7 @@ func NewRoot() *cobra.Command {
 
 	root.AddCommand(
 		newVersionCmd(),
+		newMaintenanceCmd(g),
 		newInitCmd(g),
 		newServeCmd(g),
 		newTLSCmd(g),

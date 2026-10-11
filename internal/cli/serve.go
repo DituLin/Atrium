@@ -16,10 +16,14 @@ import (
 )
 
 func newServeCmd(g *globalFlags) *cobra.Command {
+	var providerEnv string
 	cmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Run the HTTP server and background workers",
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if err := loadProviderEnv(providerEnv); err != nil {
+				return err
+			}
 			cfg, err := g.loadConfig()
 			if err != nil {
 				return err
@@ -54,6 +58,7 @@ func newServeCmd(g *globalFlags) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&g.dataDir, "data-dir", "", "data directory (overrides the config value)")
+	cmd.Flags().StringVar(&providerEnv, "provider-env-file", "", "owned 0600 file containing only DEEPSEEK_API_KEY")
 	cmd.Flags().BoolVar(&g.dev, "dev", false, "also log to the console")
 	return cmd
 }
