@@ -24,7 +24,7 @@
 | T08 实体归属 | 已完成任务级双审 | `1a070c6` 获最终需求/质量批准；身份正反证、同批别名、归属事务与撤销、私密来源投影及迁移回归通过，未接生产消费者 |
 | T09 原子发布与恢复 | 已完成任务级双审 | `ed69c61` 获完整质量复审及最终需求语义批准；持久消费/发布/修订/澄清/当前证据回归通过，未部署 |
 | T10 统一检索与证据 | 已完成任务级双审 | `b670982` 需求与完整质量批准；32结构化问题及授权/证据/分页/日期回归通过，未部署 |
-| T11 自然语言查询 | 实施中 | 查询/证据/实体/任务/澄清与修订工具全链接入，实际两领域模型调用待验证 |
+| T11 自然语言查询 | 实现固定，独立需求审查中 | `6e0d4cc`；七工具全链、真实两领域模型2调用、Go/race/Linux/Node62通过；未双审或部署 |
 | T12–T18 | 未开始 | 分析、渠道、TV、NAS恢复与上线验收待实施 |
 
 ## 基线核对
@@ -324,3 +324,7 @@ T10日期修复 `b670982ef9ff6e3667bfe42e20b2ee3d27e8ff0d` 已获独立需求APP
 2026-10-11 用户再次明确最终目标为上线。只读部署基线核验：launchd com.atrium.core 运行，HTTPS /health/ready 返回ok、版本3d51eff-dirty+3d51eff；生产schema_migrations最大8，family_records总行数78（不等同78个当前事件），NAS SMB /Volumes/home 已挂载，AtriumFamily与Photos目录存在；OnePlus设备2b9d849a在线，但pidof io.atrium.tv无进程，不据此声称TV应用已运行。T17核对范围由早期六条记录更新为部署前最新完整快照全部记录/修订，防止遗漏新增数据。未改生产配置、数据库、挂载或设备状态。
 
 T10完整质量APPROVED：ed69c6..b670982全范围无Critical/Important；store/http搜索与snapshot独立回归1.430/0.777秒，新独立字面特殊字符、证据分页终止无重复、三类受保护身份不入公开/授权检索摘录0.618秒通过。T10完成任务级双审；已启动T11唯一实施者，要求完整MCP/Brain/OpenClaw inventory/executor/receipt-renderer接线及隔离Core合成资料的真实两领域模型调用，不冒称T15全链或T17上线。
+
+T11固定 `6e0d4cc3941beae4b02b4c7e26d81b11a2c7ca3f`：七新工具使模型库存13→20，host控制身份与resolutionkey，版本化coverage回执，真实Brain→MCP→TLSCore→SQLite联测含stale澄清/新主体/修订/撤权。真实隔离OpenClaw自主查询education数学及health血红蛋白两次工具调用，2份Core回执，9.434秒，failed/timed_out均false；root实际读取capture和最终来源文本确认。用户呈现中文领域/定位+紧凑R.D.E来源，完整ID保留structured receipts；original不当作待确认候选。最终全Go、六包race（store130.549秒）、Linux、Node62/62通过。证据 internal/brain/evidence/2026-10-11-t11/，首轮并行native超时诊断保留，串行全Go复跑通过。已启动独立需求审查，之后质量，未部署。
+
+续跑状态核验：get_goal返回usageLimited（非active），但账户工具ordinaryUsageAllowed=true；当前用户明确继续上线，本轮执行与子任务继续，不声称自动目标续跑已恢复，且不擅自消费额度重置。
