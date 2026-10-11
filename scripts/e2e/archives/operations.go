@@ -159,17 +159,60 @@ func operations(ctx context.Context, d *store.DB, blobs *archive.BlobStore, dir 
 			if e != nil {
 				return out, e
 			}
-			found := false
-			for _, g := range a.Groups {
-				if g.Currency == "CNY" && g.Value == "200.00" {
-					found = true
-				}
+			expected := map[string]string{"CNY": "200.00", "USD": "20.00"}
+			if len(a.Groups) != 2 {
+				return out, fmt.Errorf("public currency group set mismatch")
 			}
-			if !found {
-				return out, fmt.Errorf("public CNY 200.00 not established")
+			seen := map[string]bool{}
+			for _, g := range a.Groups {
+				if seen[g.Currency] || expected[g.Currency] != g.Value {
+					return out, fmt.Errorf("public currency amount mismatch")
+				}
+				seen[g.Currency] = true
+				if g.Currency == "CNY" {
+					docs := map[string]bool{}
+					observations := map[string]bool{}
+					for _, ev := range g.Evidence {
+						docs[ev.DocumentID] = true
+						if ev.ObservationID != "" {
+							observations[ev.ObservationID] = true
+						}
+					}
+					if len(docs) != 2 || !docs[s.Receipts["F01"].DocumentID] || !docs[s.Receipts["F02"].DocumentID] || len(observations) != 2 {
+						return out, fmt.Errorf("public CNY contribution identities mismatch")
+					}
+				}
 			}
 			return out, nil
 		})
+	} else if phase == "restart-prepare" {
+		evidence, e := prepareRestart(ctx, d, blobs, dir, s, false)
+		must(e)
+		writeJSON(filepath.Join(dir, "restart-setup.json"), evidence)
+	} else if phase == "restart-verify" {
+		check("40", func() (any, error) { return verifyRestart(ctx, d, dir, s) })
+	} else if phase == "revoke-inflight" {
+		check("41", func() (any, error) { return prepareRestart(ctx, d, blobs, dir, s, true) })
+	} else if phase == "clarify" || phase == "duplicate-before" {
+		var evidence any
+		var err error
+		if phase == "clarify" {
+			evidence, err = clarify(ctx, d, dir, s, false)
+		} else {
+			evidence, err = duplicateIdentity(ctx, d, dir, s, false)
+		}
+		must(err)
+		writeJSON(filepath.Join(dir, phase+"-setup.json"), evidence)
+	} else if phase == "clarify-verify" {
+		check("30", func() (any, error) { return clarify(ctx, d, dir, s, true) })
+	} else if phase == "private-subcontent" {
+		check("35", func() (any, error) { return privateSubcontent(ctx, d, s) })
+	} else if phase == "duplicate-verify" {
+		for _, id := range []string{"31", "32", "34"} {
+			check(id, func() (any, error) { return duplicateIdentity(ctx, d, dir, s, true) })
+		}
+	} else if phase == "formula" {
+		check("23", func() (any, error) { return formula(ctx, blobs, s, dir) })
 	} else if phase == "withdraw" {
 		check("36", func() (any, error) {
 			doc := s.Receipts["H01"].DocumentID

@@ -8,7 +8,7 @@ import (
 )
 
 const PublicationAnchorRule = "physical-parent/1"
-const PublicationVersion = "archive-publication/7"
+const PublicationVersion = "archive-publication/8"
 
 // PhysicalAnchor intentionally excludes generated segment IDs, model names,
 // dates and chunk boundaries. Offsets are in the original parent component.
@@ -106,6 +106,9 @@ func CompilePublication(home, document string, parsed ParseResult, p Understandi
 	}
 	if policy == understandingFingerprintForPrompt(previousUnderstandingPrompt) {
 		prompt = previousUnderstandingPrompt
+	}
+	if policy == understandingFingerprintForPrompt(previousHeaderPrompt) {
+		prompt = previousHeaderPrompt
 	}
 	expected, e := planChunksForPrompt(parsed, prompt)
 	if e != nil {
@@ -206,14 +209,9 @@ func CompilePublication(home, document string, parsed ParseResult, p Understandi
 				}
 			}
 			if ownedName && archivePrimarySubjectRole(sub.Role) {
-				for _, event := range c.Result.Events {
-					for _, ref := range event.SubjectRefs {
-						if ref == sub.ID {
-							subjects[m.Ref] = true
-						}
-					}
-				}
+				subjects[m.Ref] = true
 			}
+
 			mentions[scopedRef(c.Index, sub.ID)] = m
 		}
 	}

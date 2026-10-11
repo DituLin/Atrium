@@ -109,7 +109,7 @@ func main() {
 	must(e)
 	defer blobs.Close()
 	switch action {
-	case "intake":
+	case "intake", "replace":
 		if len(os.Args) < 4 {
 			panic("fixtures directory required")
 		}
@@ -144,7 +144,20 @@ func main() {
 			if f.Private {
 				intent = "private"
 			}
-			m := domain.ArchiveIntakeMetadata{ArchiveSourceIdentity: domain.ArchiveSourceIdentity{Kind: f.Kind, Channel: "synthetic-wechat", Account: "test", Conversation: "test", Sender: "test", ProviderMessageID: f.ID}, OriginalName: f.File, VisibilityIntent: intent}
+			messageID := f.ID
+			if action == "replace" {
+				prior, ok := s.Receipts[f.ID]
+				if !ok {
+					panic("replacement requires prior receipt")
+				}
+				writeJSON(filepath.Join(dir, fmt.Sprintf("source-replacement-%s-%d.json", f.ID, time.Now().UnixNano())), map[string]any{"prior": prior, "new_sha256": ref.SHA256, "reason": "synthetic fixture correction or processing regression resubmission; prior original and model history retained"})
+				var revision int64
+				must(d.SQL().QueryRowContext(ctx, `SELECT document_revision FROM archive_documents WHERE household_id=? AND id=?`, s.Home, prior.DocumentID).Scan(&revision))
+				_, e := d.ArchiveTasks().ReviseArchive(ctx, s.Actor, s.Home, prior.DocumentID, revision, store.ArchiveRevision{Kind: "withdraw", Reason: "superseded synthetic acceptance source; retained audit history"})
+				must(e)
+				messageID = f.ID + "-revision-" + ref.SHA256[:16]
+			}
+			m := domain.ArchiveIntakeMetadata{ArchiveSourceIdentity: domain.ArchiveSourceIdentity{Kind: f.Kind, Channel: "synthetic-wechat", Account: "test", Conversation: "test", Sender: "test", ProviderMessageID: messageID}, OriginalName: f.File, VisibilityIntent: intent}
 			rec, e := d.ArchiveTasks().AcceptIntake(ctx, s.Actor, s.Home, 1, m, ref)
 			must(e)
 			s.Receipts[f.ID] = *rec
@@ -187,7 +200,7 @@ func main() {
 		report(ctx, d, dir, s)
 		must(workerErr)
 	case "operations":
-		if len(os.Args) != 4 {
+		if len(os.Args) < 4 || len(os.Args) > 5 {
 			panic("operation phase required")
 		}
 		operations(ctx, d, blobs, dir, s, os.Args[3])

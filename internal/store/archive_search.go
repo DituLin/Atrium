@@ -716,7 +716,7 @@ SELECT 'legacy:'||p.root_record_id,1,f.payload_json,'',1,p.entity_id,f.id FROM a
 			c.After = id
 			candidate.NextCursor = signSearchCursor(c, key)
 			wire, _ := json.Marshal(candidate)
-			if len(page.Items) >= f.Limit || len(wire) > 30<<10 {
+			if len(page.Items) >= f.Limit || len(wire) > 8<<10 {
 				c.After = last
 				page.NextCursor = signSearchCursor(c, key)
 				break
@@ -861,7 +861,7 @@ func (r *ArchiveTasks) archiveEvidence(ctx context.Context, a archiveSearchActor
 		for i := offset; i < len(all); i++ {
 			p.Item.Evidence = append(p.Item.Evidence, all[i])
 			probe, _ := json.Marshal(p.Item)
-			if len(p.Item.Evidence) > f.Limit || len(probe) > 28<<10 {
+			if len(p.Item.Evidence) > f.Limit || len(probe) > 8<<10 {
 				p.Item.Evidence = p.Item.Evidence[:len(p.Item.Evidence)-1]
 				c.After = fmt.Sprint(i)
 				out.NextCursor = signSearchCursor(c, key)
@@ -993,7 +993,7 @@ func (r *ArchiveTasks) searchEntities(ctx context.Context, a archiveSearchActor,
 			c.After = id
 			candidate.NextCursor = signSearchCursor(c, key)
 			wire, _ := json.Marshal(candidate)
-			if len(out.Items) >= f.Limit || len(wire) > 30<<10 {
+			if len(out.Items) >= f.Limit || len(wire) > 8<<10 {
 				c.After = last
 				out.NextCursor = signSearchCursor(c, key)
 				break

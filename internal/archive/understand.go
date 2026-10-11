@@ -477,9 +477,25 @@ func addUnderstandingContextForPrompt(p *UnderstandingPlan, prompt string) {
 		return "document"
 	}
 	headers := map[string][]int{}
+	headerLimit := 4
+	semanticHeaders := prompt == understandingPrompt
+	if semanticHeaders {
+		headerLimit = 8
+	}
 	for i, v := range all {
 		key := pageKey(v)
-		if len(headers[key]) < 4 {
+		if semanticHeaders && (v.Structure.Locator.XLSX != nil || v.Structure.Locator.CSV != nil) {
+			if v.ComponentKind != "cell_text" && v.ComponentKind != "body" {
+				continue
+			}
+			if v.Structure.Locator.XLSX != nil && strings.TrimLeft(v.Structure.Locator.XLSX.Cell, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") != "1" {
+				continue
+			}
+			if v.Structure.Locator.CSV != nil && v.Structure.Locator.CSV.Record != 1 {
+				continue
+			}
+		}
+		if len(headers[key]) < headerLimit {
 			headers[key] = append(headers[key], i)
 		}
 	}
@@ -497,8 +513,8 @@ func addUnderstandingContextForPrompt(p *UnderstandingPlan, prompt string) {
 			if !pages[key] {
 				pages[key] = true
 				h := headers[key]
-				if len(h) > 4 {
-					h = h[:4]
+				if len(h) > headerLimit {
+					h = h[:headerLimit]
 				}
 				candidate = append(candidate, h...)
 			}

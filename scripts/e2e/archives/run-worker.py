@@ -40,6 +40,7 @@ for suffix,data in [('input.json',request),('output.json',p.stdout[:262144]),('s
  with os.fdopen(f,'wb') as h:h.write(data)
 sys.stdout.buffer.write(p.stdout);sys.stderr.buffer.write(p.stderr);sys.exit(p.returncode)
 ''');wrapper.chmod(0o700)
+    if '--prepare' in sys.argv[3:]:raise SystemExit(0)
     env=os.environ.copy();env['DEEPSEEK_API_KEY']=provider_key();env['ATRIUM_E2E_NODE']=str(wrapper)
     env['ATRIUM_NATIVE_HELPER']='/tmp/atriumos-t14-preview/helper'
     env['ATRIUM_DEEPSEEK_PLUGIN']=str(Path.home()/'.openclaw.pre-migration/npm/projects/openclaw-deepseek-provider-2481ed984b/node_modules/@openclaw/deepseek-provider')

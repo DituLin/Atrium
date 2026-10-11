@@ -1,0 +1,546 @@
+[
+  {
+    "schema_version": 1,
+    "invocation_id": "4a7a255f-836b-4363-9e22-dc8d6e6ca337",
+    "run_id": "de0c49415f302a5ed5c1894afc06169ab84feb8abf9e3a0da71dac0f55ec580e",
+    "tool": "home_analyze_archives",
+    "arguments": {
+      "date_from": "2026-10-03",
+      "date_to": "2026-10-03",
+      "domain": "health",
+      "entity_id": "01M4MZAZ2Z2BSAT542QDG4JX35",
+      "metric": "volume",
+      "operation": "sum"
+    },
+    "tool_result": {
+      "structuredContent": {
+        "schema_version": "1",
+        "observed_at": "2026-10-11T16:00:03.163727+08:00",
+        "availability": "available",
+        "data": {
+          "schema_version": "archive-analysis/1",
+          "query_ref": "01M4MZKQ2VPHKA883SEATNXZQ9",
+          "snapshot_id": "01M4MZKQ2VPHKA883SEATNXZQ9",
+          "algorithm_version": "archive-analysis/6",
+          "query": {
+            "operation": "sum",
+            "metric": "volume",
+            "entity_id": "01M4MZAZ2Z2BSAT542QDG4JX35",
+            "domain": "health",
+            "date_from": "2026-10-03",
+            "date_to": "2026-10-03",
+            "timezone": "Asia/Singapore"
+          },
+          "projection": "authorized",
+          "data_epoch": 97,
+          "generation": 1,
+          "input_digest": "d99736d8888763972e8380a2886c0e2c2da804f18e118c1061089ecb357fe117",
+          "groups": [
+            {
+              "metric": "volume",
+              "unit": "ml",
+              "sample": "owners:01M4MZAZ2Z2BSAT542QDG4JX35;",
+              "value": "140",
+              "evidence": [
+                {
+                  "field_name": "volume",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5RE9ZNCQG97S297MP6JE",
+                  "publication_id": "01M4MZAZ2Z4KJTYB53P37HKZAB",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZAZ2ZCM0DDRPQVR03EW02",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZAFX9XV8J6CXYWEGQNMTK",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 43,
+                  "end": 45,
+                  "excerpt": "奶量",
+                  "confirmed": true
+                },
+                {
+                  "field_name": "volume",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5RE9ZNCQG97S297MP6JE",
+                  "publication_id": "01M4MZAZ2Z4KJTYB53P37HKZAB",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZAZ2ZCM0DDRPQVR03EW02",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZAFX9XV8J6CXYWEGQNMTK",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 46,
+                  "end": 48,
+                  "excerpt": "70",
+                  "confirmed": true
+                },
+                {
+                  "field_name": "记录日期",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5RE9ZNCQG97S297MP6JE",
+                  "publication_id": "01M4MZAZ2Z4KJTYB53P37HKZAB",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZAZ2ZJC3Y6YF4YY7295D2",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZAFX9XV8J6CXYWEGQNMTK",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 27,
+                  "end": 31,
+                  "excerpt": "记录日期",
+                  "confirmed": true
+                },
+                {
+                  "field_name": "记录日期",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5RE9ZNCQG97S297MP6JE",
+                  "publication_id": "01M4MZAZ2Z4KJTYB53P37HKZAB",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZAZ2ZJC3Y6YF4YY7295D2",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZAFX9XV8J6CXYWEGQNMTK",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 32,
+                  "end": 42,
+                  "excerpt": "2026-10-03",
+                  "confirmed": true
+                },
+                {
+                  "field_name": "volume",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5REDA4WKDH5H6D9DV26T",
+                  "publication_id": "01M4MZBNXF34KTGDYSJA6GPN7Y",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZBNXGA960YZBDP9ZT1FEQ",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZB009X5RMWK9DBC738H4H",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 43,
+                  "end": 45,
+                  "excerpt": "奶量",
+                  "confirmed": true
+                },
+                {
+                  "field_name": "volume",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5REDA4WKDH5H6D9DV26T",
+                  "publication_id": "01M4MZBNXF34KTGDYSJA6GPN7Y",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZBNXGA960YZBDP9ZT1FEQ",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZB009X5RMWK9DBC738H4H",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 46,
+                  "end": 48,
+                  "excerpt": "70",
+                  "confirmed": true
+                },
+                {
+                  "field_name": "记录日期",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5REDA4WKDH5H6D9DV26T",
+                  "publication_id": "01M4MZBNXF34KTGDYSJA6GPN7Y",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZBNXG5PN347V5C92KPQMJ",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZB009X5RMWK9DBC738H4H",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 27,
+                  "end": 31,
+                  "excerpt": "记录日期",
+                  "confirmed": true
+                },
+                {
+                  "field_name": "记录日期",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5REDA4WKDH5H6D9DV26T",
+                  "publication_id": "01M4MZBNXF34KTGDYSJA6GPN7Y",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZBNXG5PN347V5C92KPQMJ",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZB009X5RMWK9DBC738H4H",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 32,
+                  "end": 42,
+                  "excerpt": "2026-10-03",
+                  "confirmed": true
+                }
+              ]
+            }
+          ],
+          "coverage": {
+            "scope": "archived_only",
+            "complete": true,
+            "included": 2,
+            "excluded": 0,
+            "reasons": []
+          }
+        }
+      }
+    }
+  },
+  {
+    "schema_version": 1,
+    "invocation_id": "4a7a255f-836b-4363-9e22-dc8d6e6ca337",
+    "run_id": "de0c49415f302a5ed5c1894afc06169ab84feb8abf9e3a0da71dac0f55ec580e",
+    "tool": "home_analyze_archives",
+    "arguments": {
+      "count": "events",
+      "date_from": "2026-10-03",
+      "date_to": "2026-10-03",
+      "domain": "health",
+      "entity_id": "01M4MZAZ2Z2BSAT542QDG4JX35",
+      "operation": "count"
+    },
+    "tool_result": {
+      "structuredContent": {
+        "schema_version": "1",
+        "observed_at": "2026-10-11T16:00:03.195443+08:00",
+        "availability": "available",
+        "data": {
+          "schema_version": "archive-analysis/1",
+          "query_ref": "01M4MZKQ3VFBCZV9PQSCZBQAYS",
+          "snapshot_id": "01M4MZKQ3VFBCZV9PQSCZBQAYS",
+          "algorithm_version": "archive-analysis/6",
+          "query": {
+            "operation": "count",
+            "count": "events",
+            "entity_id": "01M4MZAZ2Z2BSAT542QDG4JX35",
+            "domain": "health",
+            "date_from": "2026-10-03",
+            "date_to": "2026-10-03",
+            "timezone": "Asia/Singapore"
+          },
+          "projection": "authorized",
+          "data_epoch": 97,
+          "generation": 1,
+          "input_digest": "d99736d8888763972e8380a2886c0e2c2da804f18e118c1061089ecb357fe117",
+          "groups": [
+            {
+              "metric": "events",
+              "value": "2",
+              "evidence": [
+                {
+                  "field_name": "volume",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5RE9ZNCQG97S297MP6JE",
+                  "publication_id": "01M4MZAZ2Z4KJTYB53P37HKZAB",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZAZ2ZCM0DDRPQVR03EW02",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZAFX9XV8J6CXYWEGQNMTK",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 43,
+                  "end": 45,
+                  "excerpt": "奶量",
+                  "confirmed": true
+                },
+                {
+                  "field_name": "volume",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5RE9ZNCQG97S297MP6JE",
+                  "publication_id": "01M4MZAZ2Z4KJTYB53P37HKZAB",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZAZ2ZCM0DDRPQVR03EW02",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZAFX9XV8J6CXYWEGQNMTK",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 46,
+                  "end": 48,
+                  "excerpt": "70",
+                  "confirmed": true
+                },
+                {
+                  "field_name": "记录日期",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5RE9ZNCQG97S297MP6JE",
+                  "publication_id": "01M4MZAZ2Z4KJTYB53P37HKZAB",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZAZ2ZJC3Y6YF4YY7295D2",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZAFX9XV8J6CXYWEGQNMTK",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 27,
+                  "end": 31,
+                  "excerpt": "记录日期",
+                  "confirmed": true
+                },
+                {
+                  "field_name": "记录日期",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5RE9ZNCQG97S297MP6JE",
+                  "publication_id": "01M4MZAZ2Z4KJTYB53P37HKZAB",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZAZ2ZJC3Y6YF4YY7295D2",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZAFX9XV8J6CXYWEGQNMTK",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 32,
+                  "end": 42,
+                  "excerpt": "2026-10-03",
+                  "confirmed": true
+                },
+                {
+                  "field_name": "birth_date",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5REDA4WKDH5H6D9DV26T",
+                  "publication_id": "01M4MZBNXF34KTGDYSJA6GPN7Y",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZBNXFZJNZBP3GEXPPFD60",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZB009X5RMWK9DBC738H4H",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 11,
+                  "end": 15,
+                  "excerpt": "出生日期",
+                  "confirmed": true
+                },
+                {
+                  "field_name": "birth_date",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5REDA4WKDH5H6D9DV26T",
+                  "publication_id": "01M4MZBNXF34KTGDYSJA6GPN7Y",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZBNXFZJNZBP3GEXPPFD60",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZB009X5RMWK9DBC738H4H",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 16,
+                  "end": 26,
+                  "excerpt": "2026-06-01",
+                  "confirmed": true
+                },
+                {
+                  "field_name": "记录日期",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5REDA4WKDH5H6D9DV26T",
+                  "publication_id": "01M4MZBNXF34KTGDYSJA6GPN7Y",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZBNXG5PN347V5C92KPQMJ",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZB009X5RMWK9DBC738H4H",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 27,
+                  "end": 31,
+                  "excerpt": "记录日期",
+                  "confirmed": true
+                },
+                {
+                  "field_name": "记录日期",
+                  "component_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162/body",
+                  "component_kind": "body",
+                  "document_id": "01M4MZ5REDA4WKDH5H6D9DV26T",
+                  "publication_id": "01M4MZBNXF34KTGDYSJA6GPN7Y",
+                  "publication_revision": 2,
+                  "observation_id": "01M4MZBNXG5PN347V5C92KPQMJ",
+                  "observation_revision": 1,
+                  "source_extraction_id": "01M4MZB009X5RMWK9DBC738H4H",
+                  "segment_id": "448fb770f0f1c06c02b2090d1bb0322334105c1e09b3e45ab22075763e233162",
+                  "locator": {
+                    "kind": "text",
+                    "text": {
+                      "start": 0,
+                      "end": 52,
+                      "unit": "unicode_scalar"
+                    },
+                    "csv": null,
+                    "docx": null,
+                    "xlsx": null
+                  },
+                  "start": 32,
+                  "end": 42,
+                  "excerpt": "2026-10-03",
+                  "confirmed": true
+                }
+              ]
+            }
+          ],
+          "coverage": {
+            "scope": "archived_only",
+            "complete": true,
+            "included": 2,
+            "excluded": 0,
+            "reasons": []
+          }
+        }
+      }
+    }
+  }
+]

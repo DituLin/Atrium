@@ -1,6 +1,9 @@
 package archive
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 func billLabelKind(label string) string {
 	switch strings.ToLower(strings.TrimSpace(strings.TrimRight(label, ":："))) {
@@ -65,7 +68,11 @@ func sourceBillLabels(parsed ParseResult, f *PublicationField) {
 		name = "bill_date"
 	}
 	if name != "bill_id" && name != "issuer" && name != "bill_date" {
-		return
+		name = inferredBillRole(parsed, *f)
+		if name == "" {
+			return
+		}
+		f.Name = name
 	}
 	original := append([]CanonicalEvidence(nil), f.Evidence...)
 	add := func(s Segment, start, end int) {
@@ -151,4 +158,86 @@ func sameHeaderColumn(value, header Locator) bool {
 		return vc != "" && vc == hc && hr == "1" && vr != "1"
 	}
 	return false
+}
+
+// inferredBillRole is limited to a model-extracted literal cell and an explicit
+// header in a continuous, visible, unmerged column. A gap or another header
+// terminates that region; company names alone never establish counterparty role.
+func inferredBillRole(parsed ParseResult, f PublicationField) string {
+	if len(f.Normalizations) > 0 || len(f.Dimensions) > 0 || f.Raw == "" || f.RequiresReview {
+		return ""
+	}
+	role := ""
+	positions := map[string]bool{}
+	for _, ev := range f.Evidence {
+		if ev.Quote == f.Raw {
+			positions[ev.ParentSegmentID+"/"+ev.ComponentID+"/"+strconv.Itoa(ev.Start)] = true
+		}
+	}
+	if len(positions) != 1 {
+		return ""
+	}
+	for _, ev := range f.Evidence {
+		if ev.Quote != f.Raw {
+			continue
+		}
+		for _, value := range parsed.Segments {
+			if value.ID != ev.ParentSegmentID || value.Text != f.Raw || ev.Start != 0 || ev.End != len([]rune(f.Raw)) {
+				continue
+			}
+			for _, header := range parsed.Segments {
+				if !sameHeaderColumn(value.Locator, header.Locator) || !continuousHeaderColumn(parsed, value, header) {
+					continue
+				}
+				kind := billLabelKind(header.Text)
+				if kind != "issuer" {
+					continue
+				}
+				if role != "" && role != kind {
+					return ""
+				}
+				role = kind
+			}
+		}
+	}
+	return role
+}
+func continuousHeaderColumn(parsed ParseResult, value, header Segment) bool {
+	safe := func(s Segment) bool {
+		return s.Visual == nil && (s.Cell == nil || (!s.Cell.RowHidden && !s.Cell.ColumnHidden && !s.Cell.ColumnHiddenUnresolved && s.Cell.MergeRange == "" && s.Cell.Formula == nil))
+	}
+	if !safe(value) || !safe(header) {
+		return false
+	}
+	row := func(s Segment) int {
+		if s.Locator.CSV != nil {
+			return s.Locator.CSV.Record
+		}
+		if s.Locator.XLSX != nil {
+			cell := s.Locator.XLSX.Cell
+			i := 0
+			for i < len(cell) && cell[i] >= 'A' && cell[i] <= 'Z' {
+				i++
+			}
+			n, _ := strconv.Atoi(cell[i:])
+			return n
+		}
+		return 0
+	}
+	end := row(value)
+	if end < 2 || end > 10000 {
+		return false
+	}
+	seen := map[int]bool{}
+	for _, s := range parsed.Segments {
+		n := row(s)
+		if n < 2 || n > end || !sameHeaderColumn(s.Locator, header.Locator) {
+			continue
+		}
+		if !safe(s) || s.Text == "" || billLabelKind(s.Text) != "" || seen[n] {
+			return false
+		}
+		seen[n] = true
+	}
+	return len(seen) == end-1
 }

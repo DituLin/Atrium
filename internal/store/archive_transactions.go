@@ -7,6 +7,8 @@ import (
 	"errors"
 	"github.com/DituLin/Atrium/internal/archive"
 	"github.com/DituLin/Atrium/internal/domain"
+	"math/big"
+	"regexp"
 )
 
 func archiveTransactionEventIn(ctx context.Context, tx *sql.Tx, h, event, publication string, fields []archive.PublicationField) (string, error) {
@@ -72,6 +74,8 @@ func archiveBillDateNeedsReviewIn(ctx context.Context, tx *sql.Tx, h string, fie
 	return false, rows.Err()
 }
 
+var archiveTransactionDecimal = regexp.MustCompile(`^[+-]?[0-9]{1,72}(?:\.[0-9]{1,18})?$`)
+
 func archiveAmountSignature(f archive.PublicationField) string {
 	value := ""
 	currency := ""
@@ -88,7 +92,14 @@ func archiveAmountSignature(f archive.PublicationField) string {
 	if value == "" || currency == "" {
 		return ""
 	}
-	return entityJSON([]string{value, currency})
+	if !archiveTransactionDecimal.MatchString(value) {
+		return ""
+	}
+	exact, ok := new(big.Rat).SetString(value)
+	if !ok {
+		return ""
+	}
+	return entityJSON([]string{exact.RatString(), currency})
 }
 
 // A physical event may change its transaction proof only while its old amount

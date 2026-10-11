@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { renderReceipts,validateReceipts } from './receipt-renderer.mjs';
@@ -31,8 +32,16 @@ test('typed clarification presents family choices without implementation fields'
  const text=renderReceipts([r]);assert.match(text,/妈妈/);assert.match(text,/建立新档案主体/);assert.doesNotMatch(text,/create_subject|question_version/);
 });
 test('analysis renders exact Core totals, denominator and archived coverage',()=>{
- const data={schema_version:'archive-analysis/1',algorithm_version:'archive-analysis/5',snapshot_id:'s1',query:{operation:'ratio',metric:'score'},projection:'authorized',groups:[{metric:'score',value:'88.00',unit:'percent',numerator:'132',denominator:'150',rounding:'half_away_from_zero/2',evidence:[{document_id:'d1',segment_id:'seg1',excerpt:'132',start:0,end:3,locator:{kind:'text',text:{start:0}}}]}],coverage:{scope:'archived_only',complete:false,reasons:['partial_or_pending_sources'],included:1,excluded:1}};
+ const data={schema_version:'archive-analysis/1',algorithm_version:'archive-analysis/6',snapshot_id:'s1',query:{operation:'ratio',metric:'score'},projection:'authorized',groups:[{metric:'score',value:'88.00',unit:'percent',numerator:'132',denominator:'150',rounding:'half_away_from_zero/2',evidence:[{document_id:'d1',segment_id:'seg1',excerpt:'132',start:0,end:3,locator:{kind:'text',text:{start:0}}}]}],coverage:{scope:'archived_only',complete:false,reasons:['partial_or_pending_sources'],included:1,excluded:1}};
  const r=receipt('home_analyze_archives',data,{operation:'ratio',metric:'score'});
  const rows=validateReceipts(JSON.stringify(r)+'\n',invocation);const text=renderReceipts(rows);
  assert.match(text,/88.00/);assert.match(text,/132.*150/);assert.match(text,/已归档/);assert.match(text,/不完整/);assert.match(text,/来源/);
+});
+
+test('retained actual analysis/6 receipts render numbers and reject unknown algorithms',()=>{
+ const rows=JSON.parse(readFileSync(new URL('./testdata/t15-analysis-6-receipts.json',import.meta.url),'utf8'));
+ const verified=validateReceipts(rows.map(r=>JSON.stringify(r)).join('\n')+'\n',rows[0].invocation_id);
+ const text=renderReceipts(verified);assert.match(text,/140/);assert.match(text,/来源/);assert.doesNotMatch(text,/未取得可核实结果/);
+ for(const r of verified)r.tool_result.structuredContent.data.algorithm_version='archive-analysis/unknown';
+ assert.match(renderReceipts(verified),/未取得可核实结果/);
 });

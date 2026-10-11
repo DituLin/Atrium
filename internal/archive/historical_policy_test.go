@@ -142,3 +142,122 @@ func TestReportSectionEquivalenceRejectsUncertainAndPartialAnchors(t *testing.T)
 		})
 	}
 }
+
+func TestRealNotificationWithoutInventedEventStillResolvesPatient(t *testing.T) {
+	raw, e := os.ReadFile("testdata/t15-run05-a01-retained.json")
+	require.NoError(t, e)
+	var b struct {
+		Parsed        ParseResult
+		Plan          UnderstandingPlan
+		Understanding Understanding
+	}
+	require.NoError(t, json.Unmarshal(raw, &b))
+	c, e := CompilePublication("synthetic", "doc", b.Parsed, b.Plan, b.Understanding)
+	require.NoError(t, e)
+	require.Len(t, c.Resolution.Mentions, 1)
+	require.True(t, c.Resolution.Mentions[0].Subject)
+	require.Empty(t, c.Events)
+	require.Empty(t, c.Resolution.Fields)
+}
+func TestRealBillValueUsesExplicitSourceColumnRole(t *testing.T) {
+	raw, e := os.ReadFile("testdata/t15-run05-f01-retained.json")
+	require.NoError(t, e)
+	var b struct {
+		Parsed        ParseResult
+		Plan          UnderstandingPlan
+		Understanding Understanding
+	}
+	require.NoError(t, json.Unmarshal(raw, &b))
+	c, e := CompilePublication("synthetic", "doc", b.Parsed, b.Plan, b.Understanding)
+	require.NoError(t, e)
+	found := false
+	for _, ev := range c.Events {
+		for _, f := range ev.Fields {
+			if f.Name == "bill_id" && f.Raw == "TEST-BILL-001" {
+				p := TransactionIdentity(ev.Fields)
+				require.NotNil(t, p)
+				require.Equal(t, "示例物业", p.Issuer)
+				found = true
+			}
+		}
+	}
+	require.True(t, found)
+}
+
+func TestSemanticTableHeadersAreNotDisplacedByFormatMetadata(t *testing.T) {
+	raw, e := os.ReadFile("testdata/t15-run05-f01-retained.json")
+	require.NoError(t, e)
+	var b struct{ Parsed ParseResult }
+	require.NoError(t, json.Unmarshal(raw, &b))
+	plan, e := PlanChunks(b.Parsed)
+	require.NoError(t, e)
+	found := false
+	for _, c := range plan.Chunks {
+		hasValue := false
+		hasHeader := false
+		for _, v := range c.Owned {
+			if v.Structure.Locator.XLSX != nil && v.Structure.Locator.XLSX.Cell == "C2" && v.Text == "示例物业" {
+				hasValue = true
+			}
+		}
+		if !hasValue {
+			continue
+		}
+		for _, v := range c.Evidence() {
+			if v.Text == "收款方" {
+				hasHeader = true
+			}
+		}
+		require.True(t, hasHeader, "explicit same-column semantic header must reach real model")
+		found = true
+	}
+	require.True(t, found)
+}
+
+func TestInferredCounterpartyRoleStopsAtUnprovenTableBoundaries(t *testing.T) {
+	raw, e := os.ReadFile("testdata/t15-run05-f01-retained.json")
+	require.NoError(t, e)
+	for _, kind := range []string{"gap", "hidden", "merged", "different_label"} {
+		t.Run(kind, func(t *testing.T) {
+			var b struct {
+				Parsed        ParseResult
+				Plan          UnderstandingPlan
+				Understanding Understanding
+			}
+			require.NoError(t, json.Unmarshal(raw, &b))
+			c, e := CompilePublication("synthetic", "doc", b.Parsed, b.Plan, b.Understanding)
+			require.NoError(t, e)
+			var field PublicationField
+			for _, ev := range c.Events {
+				for _, f := range ev.Fields {
+					if f.SourceName == "物业" {
+						field = f
+					}
+				}
+			}
+			require.NotEmpty(t, field.Ref)
+			field.Name = "物业"
+			for i := range b.Parsed.Segments {
+				seg := &b.Parsed.Segments[i]
+				if seg.Locator.XLSX == nil {
+					continue
+				}
+				if seg.Locator.XLSX.Cell == "C1" && kind == "different_label" {
+					seg.Text = "房屋地址"
+				}
+				if seg.Locator.XLSX.Cell != "C2" {
+					continue
+				}
+				switch kind {
+				case "gap":
+					seg.Locator.XLSX.Cell = "C200"
+				case "hidden":
+					seg.Cell.RowHidden = true
+				case "merged":
+					seg.Cell.MergeRange = "C2:C3"
+				}
+			}
+			require.Empty(t, inferredBillRole(b.Parsed, field))
+		})
+	}
+}

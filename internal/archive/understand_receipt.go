@@ -15,6 +15,9 @@ var understandingPrompt string
 //go:embed understanding/prompt-v2-pre-t15.txt
 var previousUnderstandingPrompt string
 
+//go:embed understanding/prompt-v2-pre-header.txt
+var previousHeaderPrompt string
+
 //go:embed understanding/extraction-v2.schema.json
 var understandingSchemaText string
 
@@ -66,7 +69,7 @@ func validReceipt(r *CompletionReceipt) bool {
 		return true
 	}
 	b, err := hex.DecodeString(r.InputDigest)
-	return r.InvocationID != "" && len(r.InvocationID) <= 160 && err == nil && len(b) == sha256.Size && (r.ConfigurationFingerprint == UnderstandingConfigurationFingerprint() || r.ConfigurationFingerprint == understandingFingerprintForPrompt(previousUnderstandingPrompt)) && r.Provider == "deepseek" && r.RequestedModel == UnderstandingModel && r.Model == "deepseek-v4-flash" && (r.ResponseModel == "deepseek-flash" || r.ResponseModel == "deepseek-v4-flash") && r.StopReason == "stop" && r.Execution.Mode == "direct-provider" && r.Execution.Owner.Kind == "provider" && r.Execution.Owner.ID == "deepseek" && validUsage(r.Usage)
+	return r.InvocationID != "" && len(r.InvocationID) <= 160 && err == nil && len(b) == sha256.Size && (r.ConfigurationFingerprint == UnderstandingConfigurationFingerprint() || r.ConfigurationFingerprint == understandingFingerprintForPrompt(previousUnderstandingPrompt) || r.ConfigurationFingerprint == understandingFingerprintForPrompt(previousHeaderPrompt)) && r.Provider == "deepseek" && r.RequestedModel == UnderstandingModel && r.Model == "deepseek-v4-flash" && (r.ResponseModel == "deepseek-flash" || r.ResponseModel == "deepseek-v4-flash") && r.StopReason == "stop" && r.Execution.Mode == "direct-provider" && r.Execution.Owner.Kind == "provider" && r.Execution.Owner.ID == "deepseek" && validUsage(r.Usage)
 }
 func (r WorkerResponse) receipt() *CompletionReceipt {
 	return &CompletionReceipt{InvocationID: r.InvocationID, InputDigest: r.InputDigest, Provider: r.Provider, RequestedModel: r.RequestedModel, Model: r.Model, ResponseModel: r.ResponseModel, StopReason: r.StopReason, Execution: r.Execution, Usage: r.Usage, ConfigurationFingerprint: r.ConfigurationFingerprint}

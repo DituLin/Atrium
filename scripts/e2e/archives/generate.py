@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Create only fictional source files. Expected answers are never sent to workers."""
-import argparse, hashlib, json, shutil
+import argparse, hashlib, json, shutil, re
 from pathlib import Path
 from io import BytesIO
 from zipfile import ZipFile, ZIP_DEFLATED, ZipInfo
@@ -72,6 +72,8 @@ def generate(out):
                     text=raw.decode();old='<f>SUM(B2:B3)</f><v></v>'
                     assert old in text
                     text=text.replace(old,'<f>SUM(B2:B3)</f>'+('<v>200</v>' if cached else ''))
+                    for cell,value in [('B2','128.10'),('B3','71.90')]:
+                        text,n=re.subn(r'(<c\b[^>]*\br="'+cell+r'"[^>]*><v>)[^<]+(</v>)',lambda m:m[1]+value+m[2],text);assert n==1
                     raw=text.encode()
                 target.writestr(member,raw)
         add(id,id+'.xlsx')
@@ -87,7 +89,7 @@ def generate(out):
     wr=PdfWriter();wr.append(PdfReader(out/'H01.pdf'));wr.encrypt('synthetic-password');wr.write(out/'A02-encrypted.pdf');add('A02-encrypted','A02-encrypted.pdf')
     (out/'A02-corrupt.docx').write_bytes(b'PK\x03\x04synthetic truncated zip');add('A02-corrupt','A02-corrupt.docx')
     (out/'A02-unknown.bin').write_bytes(b'ATRIUM SYNTHETIC UNKNOWN FORMAT\x00\xff');add('A02-unknown','A02-unknown.bin')
-    (out/'manifest.json').write_text(json.dumps({'synthetic_only':True,'fixture_version':'t15-v4','fixtures':files},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    (out/'manifest.json').write_text(json.dumps({'synthetic_only':True,'fixture_version':'t15-v5','fixtures':files},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({'generated':len(files),'directory':str(out)}))
 
 if __name__=='__main__':
