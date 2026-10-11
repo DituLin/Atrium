@@ -25,7 +25,7 @@
 | T09 原子发布与恢复 | 已完成任务级双审 | `ed69c61` 获完整质量复审及最终需求语义批准；持久消费/发布/修订/澄清/当前证据回归通过，未部署 |
 | T10 统一检索与证据 | 已完成任务级双审 | `b670982` 需求与完整质量批准；32结构化问题及授权/证据/分页/日期回归通过，未部署 |
 | T11 自然语言查询 | 已完成任务级双审 | `6e0d4cc` 需求与完整质量批准；七工具实际链路与两领域模型调用验证通过，未部署 |
-| T12 基础分析 | 实施中 | 精确十进制与当前有效证据去重、count/sum/latest/series/ratio、授权/公开独立投影和版本快照待验收 |
+| T12 基础分析 | 固定实现，需求审查中 | `c95d31c`；精确分析、独立公开投影、快照失效与真实 MCP 联测通过，独立双审尚待完成 |
 | T13–T18 | 未开始 | 渠道、TV、NAS恢复与上线验收待实施 |
 
 ## 基线核对
@@ -331,3 +331,7 @@ T11固定 `6e0d4cc3941beae4b02b4c7e26d81b11a2c7ca3f`：七新工具使模型库�
 续跑状态核验：get_goal返回usageLimited（非active），但账户工具ordinaryUsageAllowed=true；当前用户明确继续上线，本轮执行与子任务继续，不声称自动目标续跑已恢复，且不擅自消费额度重置。
 
 T11需求和质量均APPROVED于6e0d4cc：需求独立Brain/MCP/TLSCore/Node62通过，七工具伪造host字段/coverage/null/revise边界overlay0.351秒通过；质量独立授权/typed调用及Node档案ask24/24通过，新错误taskID/保存同步状态/null时间/非法版本/超32KiB回执均拒绝。已启动T12唯一实施者，完整基础分析+T11工具回执接线；保留精确数值、当前证据/人工断言/隐私闭包和快照失效要求，未部署。
+
+T12 固定 c95d31c231b5a6ceaf57d95bc0886b61b24dd303，root 核实工作树干净。实施端最终全Go、五包race及最终分析专项race、Node63/63、Linux构建通过；实际TLS Core→official MCP→Brain调用分析返回450ml及两份来源。真实CSV解析发布后的128.10+71.90=200.00不再加合计，授权CNY250/公开CNY200与USD20独立；新增/撤回/私密/重建/撤权、人工值与归属、pending legacy及错配查询回执均有回归。证据 internal/archive/evidence/2026-10-11-t12/。已派新独立需求审查者，之后仍需质量审查，未部署。
+
+发布准备已修正旧回滚说明并新增 atriumos-runbook.md，明确保全升级后资料与完整打包缺口。root将现有native helper连同lib搬至独立临时目录，在清洁环境实际解析合成PNG成功；移走JPEG依赖后结构化parser_unavailable，证据 docs/ops/evidence/2026-10-11-release-preflight/native-portability.json。此为预检，非最终签名包或T17通过。
