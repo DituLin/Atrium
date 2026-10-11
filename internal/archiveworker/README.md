@@ -65,18 +65,28 @@ cannot silently reconfirm the old owner.
 Only complete supported transaction type/issuer/identifier proof can unify events
 across documents. Equal amounts alone never deduplicate. Equal proven amounts
 share an observation ID but retain each proof's source revision. Conflicting
-amounts are immutable alternatives, referenced explicitly by current publications.
-Partial re-extraction carries those references; a complete corrected amount
-replaces the current conflict reference. Historic alternatives remain auditable.
+amounts retain their own immutable source revisions as well as alternatives.
+A complete same-document correction replaces its prior current value before
+comparison with other current sources. Current conflict status is recomputed
+from the currently visible, non-withdrawn proof set; historical alternatives do
+not permanently suppress a surviving valid proof. Partial re-extraction carries
+old current references. Historic values and alternatives remain auditable.
 
 Manual value/ownership/privacy/withdraw actions require current read+organize,
 expected document revision, and a reason. They create independent audit revisions.
 `AssertedValue` is user supplied; `Field.Raw` remains the actual original quote.
 Manual observation revisions are allocated globally under the transaction lock.
-For shared observations, current visible manual assertions take precedence in
-revision order, with their actual SourceDocumentID, extraction and publication
-provenance. Private assertions do not suppress public source values, and withdrawn
-assertion sources no longer supply the current assertion. Re-extraction preserves
+For shared observations, value and ownership assertions are selected independently
+in global observation-revision order and then composed. Stored manual bodies keep
+separate ValueAssertionID and OwnershipAssertionID references. Current projections
+return each axis's immutable audit ID, actor, source document, authored publication,
+current carrying publication and authored observation revision. Field.Raw stays a
+real source quotation; AssertedValue stays a user assertion. A later ownership
+change cannot erase a prior value correction, or vice versa. Private assertions
+do not suppress public source values, and withdrawn assertion sources no longer
+supply either axis. The observation's base provenance is not a synthetic combined
+revision: consumers must retain both ValueAssertion and OwnershipAssertion when
+present. Re-extraction preserves
 local human overrides and cannot copy another proof's private override as its own
 source evidence.
 
@@ -116,6 +126,11 @@ Enabled routes under `/api/v1/integrations/archives`:
   kind-specific observation_id/value/entity_id. Strict JSON rejects unknown,
   duplicated and null fields. The repository independently rechecks read+organize.
 
+Partition matching must cover both old and new physical events, so omission of
+an old event also requires review. When an unresolved subject accompanies a
+partition question, an advertised subject answer can atomically create its
+explicit audited mention association without publishing the unconfirmed partition.
+The resumed task still waits for partition review and retains the old active facts.
 Ambiguous event partitions and uncertain field evidence offer `keep_current`;
 manual revisions can correct existing facts. They do not silently accept a new
 model partition. Missing subject evidence does not block independent safe fields

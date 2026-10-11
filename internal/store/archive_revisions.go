@@ -105,9 +105,11 @@ func (r *ArchiveTasks) ReviseArchive(ctx context.Context, a domain.IntegrationAc
 				body["UserAssertion"] = json.RawMessage(entityJSON(change))
 				if change.Kind == "value" {
 					body["AssertedValue"] = json.RawMessage(entityJSON(change.Value))
+					body["ValueAssertionID"] = json.RawMessage(entityJSON(id))
 				}
 				if change.Kind == "reassign" {
 					body["Entities"] = json.RawMessage(entityJSON([]string{change.EntityID}))
+					body["OwnershipAssertionID"] = json.RawMessage(entityJSON(id))
 				}
 				if e = tx.QueryRowContext(ctx, `SELECT COALESCE(MAX(revision),0)+1 FROM archive_observation_revisions WHERE household_id=? AND observation_id=?`, h, change.ObservationID).Scan(&observationRevision); e != nil {
 					return e

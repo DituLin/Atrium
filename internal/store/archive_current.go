@@ -118,8 +118,14 @@ func (r *ArchiveTasks) CurrentArchiveObservations(ctx context.Context, a domain.
 					continue
 				}
 			}
-			if assertion, ok := assertions[item.ID]; ok {
-				item = assertion
+			assertion := assertions[item.ID]
+			item, e = archiveComposeAssertions(item, assertion)
+			if e != nil {
+				return e
+			}
+			total += len(item.Body) - len(bodyJSON)
+			if total > 4<<20 {
+				return domain.ErrConflict
 			}
 
 			if total > 4<<20 || len(out) >= 4096 {
@@ -132,7 +138,7 @@ func (r *ArchiveTasks) CurrentArchiveObservations(ctx context.Context, a domain.
 			if e = json.Unmarshal(item.Body, &body); e != nil {
 				return e
 			}
-			safe := !conflicts[item.ID] || item.AssertionKind == "user"
+			safe := !conflicts[item.ID] || assertion.Value != nil
 			if item.AssertionKind != "user" {
 				for _, mention := range body.Field.Subjects {
 					target := confirmed[mention]
@@ -194,28 +200,49 @@ func archivePrivateAnchorsIn(ctx context.Context, tx *sql.Tx, h, doc string) ([]
 	return out, rows.Err()
 }
 
-// A shared observation's active human assertions are globally ordered by the
-// transactionally allocated immutable revision. Return its actual provenance;
-// never relabel the asserted value as another source's quotation.
-func archiveCurrentAssertionsIn(ctx context.Context, tx *sql.Tx, h, publication string, public bool) (map[string]ArchiveCurrentObservation, error) {
-	rows, e := tx.QueryContext(ctx, `SELECT r.observation_id,r.revision,r.extraction_id,r.body_json,d.id,d.document_revision,d.active_publication_id,o.event_id FROM archive_documents d JOIN archive_publication_observations p ON p.household_id=d.household_id AND p.publication_id=d.active_publication_id JOIN archive_observation_revisions r ON r.household_id=p.household_id AND r.observation_id=p.observation_id AND r.revision=p.revision JOIN archive_observations o ON o.household_id=r.household_id AND o.id=r.observation_id WHERE d.household_id=? AND d.withdrawn=0 AND r.assertion_kind='user' AND (?=0 OR d.tv_visible=1) AND EXISTS(SELECT 1 FROM archive_publication_observations target WHERE target.household_id=p.household_id AND target.publication_id=? AND target.observation_id=p.observation_id) ORDER BY r.revision DESC LIMIT 4097`, h, public, publication)
+// Value and ownership are independent sticky assertions. Each is selected from
+// its immutable audit entry and authored observation revision, while a current
+// publication of that same source must still carry the observation at or after
+// that revision. Global observation revision orders replacements within an axis.
+type ArchiveAssertionProvenance struct {
+	ID, Kind, Actor, DocumentID, PublicationID, ActivePublicationID, ExtractionID string
+	DocumentRevision, ObservationRevision                                         int64
+}
+type archiveCurrentAssertion struct {
+	Source     ArchiveCurrentObservation
+	Provenance ArchiveAssertionProvenance
+	Change     ArchiveRevision
+}
+type archiveAssertionSet struct{ Value, Ownership *archiveCurrentAssertion }
+
+func archiveCurrentAssertionsIn(ctx context.Context, tx *sql.Tx, h, publication string, public bool) (map[string]archiveAssertionSet, error) {
+	rows, e := tx.QueryContext(ctx, `SELECT r.observation_id,r.revision,r.extraction_id,r.body_json,d.id,m.document_revision,authored.id,o.event_id,m.id,m.actor,m.kind,m.body_json,d.active_publication_id FROM archive_manual_revisions m JOIN archive_documents d ON d.household_id=m.household_id AND d.id=m.document_id JOIN archive_publications authored ON authored.household_id=m.household_id AND authored.document_id=m.document_id AND authored.document_revision=m.document_revision JOIN archive_publication_observations p ON p.household_id=authored.household_id AND p.publication_id=authored.id AND p.observation_id=json_extract(m.body_json,'$.ObservationID') JOIN archive_observation_revisions r ON r.household_id=p.household_id AND r.observation_id=p.observation_id AND r.revision=p.revision JOIN archive_observations o ON o.household_id=p.household_id AND o.id=p.observation_id WHERE m.household_id=? AND m.kind IN ('value','reassign') AND d.withdrawn=0 AND (?=0 OR d.tv_visible=1) AND EXISTS(SELECT 1 FROM archive_publication_observations current JOIN archive_observation_revisions active ON active.household_id=current.household_id AND active.observation_id=current.observation_id AND active.revision=current.revision WHERE current.household_id=p.household_id AND current.publication_id=d.active_publication_id AND current.observation_id=p.observation_id AND current.revision>=r.revision AND (json_extract(active.body_json,CASE m.kind WHEN 'value' THEN '$.ValueAssertionID' ELSE '$.OwnershipAssertionID' END)=m.id OR json_extract(active.body_json,CASE m.kind WHEN 'value' THEN '$.ValueAssertionID' ELSE '$.OwnershipAssertionID' END) IS NULL)) AND EXISTS(SELECT 1 FROM archive_publication_observations target WHERE target.household_id=p.household_id AND target.publication_id=? AND target.observation_id=p.observation_id) ORDER BY r.revision DESC LIMIT 4097`, h, public, publication)
 	if e != nil {
 		return nil, e
 	}
-	items := []ArchiveCurrentObservation{}
+	items := []archiveCurrentAssertion{}
 	total := 0
 	for rows.Next() {
-		var item ArchiveCurrentObservation
-		var raw string
-		e = rows.Scan(&item.ID, &item.Revision, &item.ExtractionID, &raw, &item.SourceDocumentID, &item.DocumentRevision, &item.PublicationID, &item.EventID)
+		var a archiveCurrentAssertion
+		var raw, change string
+		e = rows.Scan(&a.Source.ID, &a.Source.Revision, &a.Source.ExtractionID, &raw, &a.Source.SourceDocumentID, &a.Source.DocumentRevision, &a.Source.PublicationID, &a.Source.EventID, &a.Provenance.ID, &a.Provenance.Actor, &a.Provenance.Kind, &change, &a.Provenance.ActivePublicationID)
 		if e != nil {
 			rows.Close()
 			return nil, e
 		}
-		item.Body = json.RawMessage(raw)
-		item.AssertionKind = "user"
-		total += len(raw)
-		items = append(items, item)
+		a.Source.Body = json.RawMessage(raw)
+		a.Source.AssertionKind = "user"
+		if e = json.Unmarshal([]byte(change), &a.Change); e != nil {
+			rows.Close()
+			return nil, e
+		}
+		a.Provenance.DocumentID = a.Source.SourceDocumentID
+		a.Provenance.DocumentRevision = a.Source.DocumentRevision
+		a.Provenance.PublicationID = a.Source.PublicationID
+		a.Provenance.ExtractionID = a.Source.ExtractionID
+		a.Provenance.ObservationRevision = a.Source.Revision
+		total += len(raw) + len(change)
+		items = append(items, a)
 		if total > 4<<20 || len(items) > 4096 {
 			rows.Close()
 			return nil, domain.ErrConflict
@@ -226,24 +253,25 @@ func archiveCurrentAssertionsIn(ctx context.Context, tx *sql.Tx, h, publication 
 	if e != nil {
 		return nil, e
 	}
-	out := map[string]ArchiveCurrentObservation{}
+	out := map[string]archiveAssertionSet{}
 	cache := map[string][]archive.PhysicalAnchor{}
-	for _, item := range items {
-		if _, ok := out[item.ID]; ok {
+	for _, a := range items {
+		set := out[a.Source.ID]
+		if a.Change.Kind == "value" && set.Value != nil || a.Change.Kind == "reassign" && set.Ownership != nil {
 			continue
 		}
 		safe := true
 		if public {
-			secrets, ok := cache[item.SourceDocumentID]
+			secrets, ok := cache[a.Source.SourceDocumentID]
 			if !ok {
-				secrets, e = archivePrivateAnchorsIn(ctx, tx, h, item.SourceDocumentID)
+				secrets, e = archivePrivateAnchorsIn(ctx, tx, h, a.Source.SourceDocumentID)
 				if e != nil {
 					return nil, e
 				}
-				cache[item.SourceDocumentID] = secrets
+				cache[a.Source.SourceDocumentID] = secrets
 			}
 			var b struct{ Field archive.PublicationField }
-			if e = json.Unmarshal(item.Body, &b); e != nil {
+			if e = json.Unmarshal(a.Source.Body, &b); e != nil {
 				return nil, e
 			}
 			for _, secret := range secrets {
@@ -255,29 +283,83 @@ func archiveCurrentAssertionsIn(ctx context.Context, tx *sql.Tx, h, publication 
 			}
 		}
 		if safe {
-			out[item.ID] = item
+			copy := a
+			if a.Change.Kind == "value" {
+				set.Value = &copy
+			} else {
+				set.Ownership = &copy
+			}
+			out[a.Source.ID] = set
 		}
 	}
 	return out, nil
 }
+func archiveComposeAssertions(item ArchiveCurrentObservation, set archiveAssertionSet) (ArchiveCurrentObservation, error) {
+	if set.Value == nil && set.Ownership == nil {
+		return item, nil
+	}
+	if set.Value != nil {
+		item = set.Value.Source
+	}
+	var body map[string]json.RawMessage
+	if e := json.Unmarshal(item.Body, &body); e != nil {
+		return item, e
+	}
+	// Never borrow an unrelated axis from the last whole-body user revision.
+	delete(body, "UserAssertion")
+	delete(body, "AssertedValue")
+	delete(body, "ValueAssertionID")
+	delete(body, "OwnershipAssertionID")
+	if set.Value != nil {
+		body["AssertedValue"] = json.RawMessage(entityJSON(set.Value.Change.Value))
+		body["ValueAssertion"] = json.RawMessage(entityJSON(set.Value.Provenance))
+	}
+	if set.Ownership != nil {
+		body["Entities"] = json.RawMessage(entityJSON([]string{set.Ownership.Change.EntityID}))
+		body["OwnershipAssertion"] = json.RawMessage(entityJSON(set.Ownership.Provenance))
+	}
+	item.Body = json.RawMessage(entityJSON(body))
+	item.AssertionKind = "user"
+	return item, nil
+}
 
+// Current source values, not the historical fact that an alternative once
+// existed, determine whether a shared transaction is presently contradictory.
 func archiveCurrentConflictsIn(ctx context.Context, tx *sql.Tx, h, publication string, public bool) (map[string]bool, error) {
-	rows, e := tx.QueryContext(ctx, `SELECT a.observation_id,ad.id,a.body_json FROM archive_observation_alternatives a JOIN archive_extractions ax ON ax.household_id=a.household_id AND ax.id=a.extraction_id JOIN archive_documents ad ON ad.household_id=ax.household_id AND ad.id=ax.document_id JOIN archive_publication_alternatives pa ON pa.household_id=ad.household_id AND pa.publication_id=ad.active_publication_id AND pa.observation_id=a.observation_id AND pa.extraction_id=a.extraction_id WHERE a.household_id=? AND ad.withdrawn=0 AND (?=0 OR ad.tv_visible=1) AND EXISTS(SELECT 1 FROM archive_publication_observations po WHERE po.household_id=a.household_id AND po.publication_id=? AND po.observation_id=a.observation_id) LIMIT 4097`, h, public, publication)
+	proofs, e := archiveCurrentAmountProofsIn(ctx, tx, h, publication, "", "", public)
 	if e != nil {
 		return nil, e
 	}
-	type alternative struct{ id, doc, body string }
-	alternatives := []alternative{}
+	signatures := map[string]string{}
+	out := map[string]bool{}
+	for _, proof := range proofs {
+		if previous, ok := signatures[proof.ID]; ok && previous != proof.Signature {
+			out[proof.ID] = true
+		}
+		signatures[proof.ID] = proof.Signature
+	}
+	return out, nil
+}
+
+type archiveAmountProof struct{ ID, DocumentID, Signature string }
+
+func archiveCurrentAmountProofsIn(ctx context.Context, tx *sql.Tx, h, publication, observation, excludeDocument string, public bool) ([]archiveAmountProof, error) {
+	rows, e := tx.QueryContext(ctx, `SELECT p.observation_id,d.id,r.body_json FROM archive_documents d JOIN archive_publication_observations p ON p.household_id=d.household_id AND p.publication_id=d.active_publication_id JOIN archive_observations o ON o.household_id=p.household_id AND o.id=p.observation_id JOIN archive_observation_revisions r ON r.household_id=p.household_id AND r.observation_id=p.observation_id AND r.revision=p.revision WHERE d.household_id=? AND d.withdrawn=0 AND d.id<>? AND o.slot_key='supported-transaction-amount/1' AND (?=0 OR d.tv_visible=1) AND (?='' OR p.observation_id=?) AND (?='' OR EXISTS(SELECT 1 FROM archive_publication_observations target WHERE target.household_id=p.household_id AND target.publication_id=? AND target.observation_id=p.observation_id)) LIMIT 4097`, h, excludeDocument, public, observation, observation, publication, publication)
+	if e != nil {
+		return nil, e
+	}
+	type rawProof struct{ id, doc, body string }
+	raws := []rawProof{}
 	total := 0
 	for rows.Next() {
-		var a alternative
-		if e = rows.Scan(&a.id, &a.doc, &a.body); e != nil {
+		var p rawProof
+		if e = rows.Scan(&p.id, &p.doc, &p.body); e != nil {
 			rows.Close()
 			return nil, e
 		}
-		total += len(a.body)
-		alternatives = append(alternatives, a)
-		if total > 4<<20 || len(alternatives) > 4096 {
+		total += len(p.body)
+		raws = append(raws, p)
+		if total > 4<<20 || len(raws) > 4096 {
 			rows.Close()
 			return nil, domain.ErrConflict
 		}
@@ -287,22 +369,22 @@ func archiveCurrentConflictsIn(ctx context.Context, tx *sql.Tx, h, publication s
 	if e != nil {
 		return nil, e
 	}
-	out := map[string]bool{}
+	out := []archiveAmountProof{}
 	cache := map[string][]archive.PhysicalAnchor{}
-	for _, a := range alternatives {
+	for _, p := range raws {
+		var b struct{ Field archive.PublicationField }
+		if e = json.Unmarshal([]byte(p.body), &b); e != nil {
+			return nil, e
+		}
 		safe := true
 		if public {
-			secrets, ok := cache[a.doc]
+			secrets, ok := cache[p.doc]
 			if !ok {
-				secrets, e = archivePrivateAnchorsIn(ctx, tx, h, a.doc)
+				secrets, e = archivePrivateAnchorsIn(ctx, tx, h, p.doc)
 				if e != nil {
 					return nil, e
 				}
-				cache[a.doc] = secrets
-			}
-			var b struct{ Field archive.PublicationField }
-			if e = json.Unmarshal([]byte(a.body), &b); e != nil {
-				return nil, e
+				cache[p.doc] = secrets
 			}
 			for _, secret := range secrets {
 				for _, anchor := range b.Field.VisibilityAnchors {
@@ -313,7 +395,7 @@ func archiveCurrentConflictsIn(ctx context.Context, tx *sql.Tx, h, publication s
 			}
 		}
 		if safe {
-			out[a.id] = true
+			out = append(out, archiveAmountProof{p.id, p.doc, archiveAmountSignature(b.Field)})
 		}
 	}
 	return out, nil

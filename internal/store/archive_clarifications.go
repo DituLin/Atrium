@@ -207,6 +207,16 @@ func (r *ArchiveTasks) AnswerArchiveQuestion(ctx context.Context, a domain.Integ
 			// from source extraction. It does not pretend the supplied name was quoted.
 			var link string
 			e = tx.QueryRowContext(ctx, `SELECT id FROM archive_entity_links WHERE household_id=? AND document_id=? AND mention_ref=?`, h, q.DocumentID, q.MentionRef).Scan(&link)
+			if errors.Is(e, sql.ErrNoRows) {
+				// The partition may still be under review: create only the
+				// explicitly answered mention, not the unpublished event/facts.
+				// q was loaded under current document/resolution/delegation fences.
+				if q.MentionRef == "" || q.EntityKind == "" {
+					return domain.ErrConflict
+				}
+				link = domain.NewID()
+				_, e = tx.ExecContext(ctx, `INSERT INTO archive_entity_links(household_id,id,document_id,mention_ref,role,matched_entity_id,status,version,created_revision) VALUES(?,?,?,?,?,NULL,'needs_resolution',1,?)`, h, link, q.DocumentID, q.MentionRef, q.SubjectRole, rr)
+			}
 			if e != nil {
 				return e
 			}

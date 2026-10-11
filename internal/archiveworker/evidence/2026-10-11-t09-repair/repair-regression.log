@@ -1,0 +1,58 @@
+=== RUN   TestArchiveSpecRegressionTransactionCorrection
+    archive_spec_regression_test.go:29: publish 70 succeeded
+    archive_spec_regression_test.go:29: publish 80 succeeded
+--- PASS: TestArchiveSpecRegressionTransactionCorrection (0.02s)
+=== RUN   TestArchiveSpecRegressionWithdrawConflictingSource
+--- PASS: TestArchiveSpecRegressionWithdrawConflictingSource (0.02s)
+=== RUN   TestArchiveSpecRegressionIncompletePartition
+--- PASS: TestArchiveSpecRegressionIncompletePartition (0.02s)
+=== RUN   TestArchiveSpecRegressionSharedReassignPreservesValue
+--- PASS: TestArchiveSpecRegressionSharedReassignPreservesValue (0.02s)
+=== RUN   TestArchiveSpecRegressionSubjectQuestionAfterPartitionReview
+--- PASS: TestArchiveSpecRegressionSubjectQuestionAfterPartitionReview (0.02s)
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=70/private_value
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=70/private_owner
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=70/withdraw_value
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=70/withdraw_owner
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=80/private_value
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=80/private_owner
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=80/withdraw_value
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=80/withdraw_owner
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=70/private_value
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=70/private_owner
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=70/withdraw_value
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=70/withdraw_owner
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=80/private_value
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=80/private_owner
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=80/withdraw_value
+=== RUN   TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=80/withdraw_owner
+--- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges (0.41s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=70/private_value (0.02s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=70/private_owner (0.02s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=70/withdraw_value (0.03s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=70/withdraw_owner (0.04s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=80/private_value (0.02s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=80/private_owner (0.02s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=80/withdraw_value (0.02s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=false/source=80/withdraw_owner (0.02s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=70/private_value (0.03s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=70/private_owner (0.02s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=70/withdraw_value (0.02s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=70/withdraw_owner (0.02s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=80/private_value (0.02s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=80/private_owner (0.02s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=80/withdraw_value (0.02s)
+    --- PASS: TestArchiveIndependentAssertionsComposeAcrossVisibilityChanges/reverse=true/source=80/withdraw_owner (0.03s)
+=== RUN   TestArchivePartitionSubjectAnswerLeavesPartitionUnconfirmed
+--- PASS: TestArchivePartitionSubjectAnswerLeavesPartitionUnconfirmed (0.02s)
+=== RUN   TestArchiveTransactionCurrentProofSetRecomputesAfterReplacementOrVisibility
+=== RUN   TestArchiveTransactionCurrentProofSetRecomputesAfterReplacementOrVisibility/replace
+=== RUN   TestArchiveTransactionCurrentProofSetRecomputesAfterReplacementOrVisibility/private
+=== RUN   TestArchiveTransactionCurrentProofSetRecomputesAfterReplacementOrVisibility/withdraw
+--- PASS: TestArchiveTransactionCurrentProofSetRecomputesAfterReplacementOrVisibility (0.08s)
+    --- PASS: TestArchiveTransactionCurrentProofSetRecomputesAfterReplacementOrVisibility/replace (0.03s)
+    --- PASS: TestArchiveTransactionCurrentProofSetRecomputesAfterReplacementOrVisibility/private (0.02s)
+    --- PASS: TestArchiveTransactionCurrentProofSetRecomputesAfterReplacementOrVisibility/withdraw (0.02s)
+PASS
+ok  	github.com/DituLin/Atrium/internal/store	1.362s

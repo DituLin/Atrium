@@ -1,0 +1,5 @@
+ok  	github.com/DituLin/Atrium/internal/archive	47.764s
+ok  	github.com/DituLin/Atrium/internal/archiveworker	4.156s
+ok  	github.com/DituLin/Atrium/internal/store	83.336s
+ok  	github.com/DituLin/Atrium/internal/httpapi	55.070s
+ok  	github.com/DituLin/Atrium/internal/app	17.275s

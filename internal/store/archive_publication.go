@@ -152,6 +152,10 @@ func (r *ArchiveTasks) PublishExtraction(ctx context.Context, f ArchiveWorkFence
 					used[match] = true
 				}
 			}
+			if len(used) != len(old) {
+				review = true
+			}
+
 		}
 
 		if review {
@@ -291,13 +295,16 @@ func (r *ArchiveTasks) PublishExtraction(ctx context.Context, f ArchiveWorkFence
 						return e
 					}
 				}
-				amountConflict := false
-				if transactionAmount && n > 0 {
-					var previous struct{ Field archive.PublicationField }
-					if e = json.Unmarshal([]byte(prev), &previous); e != nil {
-						return e
+				if transactionAmount {
+					proofs, err := archiveCurrentAmountProofsIn(ctx, tx, f.HouseholdID, "", id, x.DocumentID, false)
+					if err != nil {
+						return err
 					}
-					if archiveAmountSignature(previous.Field) != archiveAmountSignature(field) {
+					conflict := false
+					for _, proof := range proofs {
+						conflict = conflict || proof.Signature != archiveAmountSignature(field)
+					}
+					if conflict {
 						_, e = tx.ExecContext(ctx, `INSERT OR IGNORE INTO archive_observation_alternatives VALUES(?,?,?,?)`, f.HouseholdID, id, x.ID, body)
 						if e != nil {
 							return e
@@ -307,11 +314,10 @@ func (r *ArchiveTasks) PublishExtraction(ctx context.Context, f ArchiveWorkFence
 							return e
 						}
 						pending = true
-						amountConflict = true
-						body = prev
 					}
 				}
-				if assertion != "user" && !amountConflict && (!reflect.DeepEqual(prev, body) || (transactionAmount && previousExtraction != x.ID)) {
+
+				if assertion != "user" && (!reflect.DeepEqual(prev, body) || (transactionAmount && previousExtraction != x.ID)) {
 					n++
 					_, e = tx.ExecContext(ctx, `INSERT INTO archive_observation_revisions VALUES(?,?,?,?,?, 'source')`, f.HouseholdID, id, n, x.ID, body)
 					if e != nil {
