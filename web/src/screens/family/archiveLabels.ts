@@ -3,7 +3,7 @@ import { wallClockParts } from '../../core/clock';
 import type { ClockFormatOptions } from '../../core/clock';
 import { METRICS } from './FamilyTrend';
 export const DOMAINS: Record<string, string> = { health: '健康', education: '教育', finance: '财务', property: '房屋', other: '其他', unknown: '待分类' };
-const LABELS: Record<string, string> = { ...METRICS, amount: '金额', volume: '奶量', formula: '配方奶', breast_milk: '母乳', lactulose: '乳果糖', score: '成绩', hemoglobin: '血红蛋白', date: '日期', invoice_number: '单据编号', payment: '付款', warranty_end: '保修截止', documents: '档案', events: '事项', observations: '记录' };
+const LABELS: Record<string, string> = { ...METRICS, amount: '金额', volume: '奶量', formula: '配方奶', breastmilk: '母乳', breast_milk: '母乳', lactulose: '乳果糖', score: '成绩', hemoglobin: '血红蛋白', date: '日期', invoice_number: '单据编号', payment: '付款', warranty_end: '保修截止', documents: '档案', events: '事项', observations: '记录' };
 export function factLabel(name: string) { return LABELS[name] ?? (/[\u3400-\u9fff]/.test(name) ? name : '记录内容'); }
 export function archiveDate(value: string, clock?: ClockFormatOptions): string {
     if (/^\d{4}$/.test(value))

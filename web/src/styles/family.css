@@ -58,4 +58,8 @@
 .milk-period .btn { margin-left:calc(12 * var(--u)); }
 .milk-period .btn[aria-pressed=true] { background:var(--silk); color:var(--celadon); }
 .milk-trend > .muted { font-size:calc(23 * var(--u)); }
-.milk-trend .family-trend { margin-left:0; margin-right:0; }
+.milk-trend .family-trend { display:inline-block; vertical-align:top; box-sizing:border-box; width:calc(50% - 12 * var(--u)); padding:calc(18 * var(--u)); margin:0 calc(12 * var(--u)) calc(16 * var(--u)) 0; }
+.milk-trend .family-trend h3 { margin:0; font-size:calc(23 * var(--u)); line-height:1.35; }
+.milk-trend .family-trend__value { font-size:calc(54 * var(--u)); margin:calc(10 * var(--u)) 0 calc(6 * var(--u)); }
+.milk-trend .family-trend > .muted { font-size:calc(23 * var(--u)); margin:calc(8 * var(--u)) 0; }
+.milk-trend .family-trend__plot { height:calc(175 * var(--u)); margin-top:calc(10 * var(--u)); }
