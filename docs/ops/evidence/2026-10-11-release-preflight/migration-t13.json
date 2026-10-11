@@ -1,0 +1,15 @@
+{
+  "checked_at": "2026-10-11T05:24:02.250075+00:00",
+  "revision": "d19bb760491d9e15da0b9f0f054f87e6cabe1617",
+  "scope": "consistent read-only production DB snapshot; migration on independent copy only; no services started",
+  "before_schema": 8,
+  "after_schema": 16,
+  "original_tables_checked": 22,
+  "changed_original_tables_excluding_migrations": [],
+  "family_rows_before": 80,
+  "family_rows_after": 80,
+  "family_all_rows_equal": true,
+  "integrity_ok": true,
+  "foreign_key_violations": 0,
+  "new_tables": 50
+}
