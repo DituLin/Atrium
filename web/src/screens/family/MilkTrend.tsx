@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { RemoteButton } from '../../ui/RemoteButton';
 import type { MilkPeriod, MilkTrendData } from './feedingTrend';
+import { factLabel } from './archiveLabels';
 
 const periods: { id: MilkPeriod; label: string }[] = [{ id: 'day', label: '日' }, { id: 'week', label: '周' }, { id: 'month', label: '月' }];
 export function MilkTrend({ data, period, busy, timezone, onPeriod, onLeft, onUp, onDown, onRead }: {
@@ -11,7 +12,7 @@ export function MilkTrend({ data, period, busy, timezone, onPeriod, onLeft, onUp
     const series = new Map<string, MilkTrendData['groups']>();
     for (const group of data?.groups ?? []) {
         if (!group.date || !group.unit || group.currency || !Number.isFinite(Number(group.value)) || !Number.isFinite(Date.parse(group.date))) continue;
-        const key = JSON.stringify([group.unit, group.sample]);
+        const key = JSON.stringify([group.metric, group.unit, group.sample]);
         const values = series.get(key) ?? [];
         values.push(group); series.set(key, values);
     }
@@ -37,6 +38,7 @@ export function MilkTrend({ data, period, busy, timezone, onPeriod, onLeft, onUp
             const x = (date: string) => minTime === maxTime ? 300 : 60 + (Date.parse(date) - minTime) / (maxTime - minTime) * 500;
             const y = (value: string) => high === low ? 85 : 145 - (Number(value) - low) / (high - low) * 115;
             return <article className="family-trend" key={key}>
+                <h3>{factLabel(latest.metric)}</h3>
                 <div className="family-trend__value serif">{latest.value}<small>{latest.unit}</small></div>
                 <p className="muted">{period === 'day' ? '最新一次' : '最近有记录的一天'} · {dateLabel(latest.date!)}{latest.sample ? ` · ${latest.sample}` : ''}</p>
                 <svg className="family-trend__plot" viewBox="0 0 600 180" role="img" aria-label={`奶量趋势，${points.length} ${period === 'day' ? '次记录' : '天有记录'}，最新 ${latest.value} ${latest.unit}`}>

@@ -8,6 +8,9 @@ export interface MilkTrendData {
     groups: ArchiveAnalysis['groups'];
     complete: boolean;
 }
+// Legacy measurements retain their original metric names. A health volume
+// such as water, medicine or puree must not become a feeding measurement.
+const milkMetrics = ['volume', 'formula', 'breastmilk', 'breast_milk'];
 
 /** Query complete authorized days, never total only the visible archive page.
  * Core performs every decimal sum. Four concurrent requests keep monthly
@@ -25,7 +28,7 @@ export async function readMilkTrend(api: ApiClient, filter: ArchiveFilter, perio
             if (signal.aborted) throw new DOMException('Request cancelled', 'AbortError');
             const index = next++;
             const date = dates[index];
-            results[index] = await api.analyzeArchives({ operation: period === 'day' ? 'series' : 'sum', metric: 'volume', domain: 'health', entity_id: filter.entity_id, query: filter.query, date_from: date, date_to: date }, signal);
+            results[index] = await api.analyzeArchives({ operation: period === 'day' ? 'series' : 'sum', domain: 'health', entity_id: filter.entity_id, query: filter.query, date_from: date, date_to: date }, signal);
         }
     }));
     const first = results[0];
@@ -35,7 +38,7 @@ export async function readMilkTrend(api: ApiClient, filter: ArchiveFilter, perio
     const groups: ArchiveAnalysis['groups'] = [];
     results.forEach((result, index) => {
         for (const group of result.groups) {
-            if (group.metric === 'volume') groups.push(period === 'day' ? group : { ...group, date: dates[index], date_precision: 'day' });
+            if (milkMetrics.includes(group.metric)) groups.push(period === 'day' ? group : { ...group, date: dates[index], date_precision: 'day' });
         }
     });
     return {
