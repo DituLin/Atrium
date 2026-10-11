@@ -10,7 +10,7 @@ import (
 )
 
 const AnalysisVersion = "archive-analysis/1"
-const AnalysisAlgorithmVersion = "archive-analysis/2"
+const AnalysisAlgorithmVersion = "archive-analysis/3"
 
 // AnalysisQuery is a bounded business query. Projection and authority are host supplied.
 type AnalysisQuery struct {
@@ -54,6 +54,9 @@ func (q AnalysisQuery) Normalize() (AnalysisQuery, error) {
 }
 
 type AnalysisFact struct {
+	AggregateBoundary                                                      map[string]string
+	AggregateBoundaryUnknown                                               bool
+	BoundaryEvidence                                                       []SearchEvidence
 	DenominatorNonExact                                                    bool
 	Unavailable                                                            bool
 	NonExact                                                               bool
@@ -64,6 +67,21 @@ type AnalysisFact struct {
 	Metric, Value, Unit, Currency, Domain, Sample, Date, Role, Denominator string
 	Evidence, RoleEvidence, DenominatorEvidence                            []SearchEvidence
 }
+
+// CompatibleAggregateBoundary requires complete agreement about explicit current
+// event scope. An absent or ambiguous identity is not evidence of equivalence.
+func CompatibleAggregateBoundary(a, b AnalysisFact) bool {
+	if a.AggregateBoundaryUnknown || b.AggregateBoundaryUnknown || len(a.AggregateBoundary) != len(b.AggregateBoundary) {
+		return false
+	}
+	for key, value := range a.AggregateBoundary {
+		if value == "" || b.AggregateBoundary[key] != value {
+			return false
+		}
+	}
+	return true
+}
+
 type AnalysisInput struct {
 	Facts     []AnalysisFact
 	Documents []string
@@ -286,7 +304,7 @@ func Analyze(q AnalysisQuery, in AnalysisInput) (AnalysisResult, error) {
 		members := map[string]bool{}
 		for _, id := range f.AggregateMembers {
 			m, ok := byID[id]
-			if !ok || m.Unavailable || members[id] || m.Role != "line_item" || len(m.RoleEvidence) == 0 || m.NonExact || m.Metric != f.Metric || m.Currency != f.Currency || m.Unit != f.Unit || m.Sample != f.Sample {
+			if !ok || !CompatibleAggregateBoundary(f, m) || m.Unavailable || members[id] || m.Role != "line_item" || len(m.RoleEvidence) == 0 || m.NonExact || m.Metric != f.Metric || m.Currency != f.Currency || m.Unit != f.Unit || m.Sample != f.Sample {
 				return false
 			}
 			n, _, ok := exactDecimal(m.Value)
@@ -312,7 +330,21 @@ func Analyze(q AnalysisQuery, in AnalysisInput) (AnalysisResult, error) {
 				r.Coverage.Excluded++
 				continue
 			}
-			if f.Role == "payment" || f.Role == "total" && aggregateCovered(f) {
+			covered := f.Role == "total" && aggregateCovered(f)
+			if f.Role == "payment" || covered {
+				if covered {
+					// Keep the current boundary/label proof for the excluded summary with
+					// the included member, so deduplication remains inspectable.
+					for _, group := range groups {
+						for _, member := range group.facts {
+							if member.ObservationID == f.AggregateMembers[0] {
+								group.group.Evidence = append(group.group.Evidence, f.AggregateEvidence...)
+								group.group.Evidence = append(group.group.Evidence, f.BoundaryEvidence...)
+								break
+							}
+						}
+					}
+				}
 				r.Coverage.Excluded++
 				continue
 			}
@@ -354,6 +386,7 @@ func Analyze(q AnalysisQuery, in AnalysisInput) (AnalysisResult, error) {
 		}
 		a.facts = append(a.facts, f)
 		a.group.Evidence = append(a.group.Evidence, f.Evidence...)
+		a.group.Evidence = append(a.group.Evidence, f.BoundaryEvidence...)
 		a.group.Evidence = append(a.group.Evidence, f.RoleEvidence...)
 		r.Coverage.Included++
 	}

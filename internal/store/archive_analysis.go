@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -241,7 +242,7 @@ func (r *ArchiveTasks) analysisFactsIn(ctx context.Context, tx *sql.Tx, h, doc s
 			case "sample", "specimen", "subject", "project", "item", "unit", "currency", "full_score", "maximum_score", "满分":
 				hiddenDimensions[peer.EventID] = true
 			}
-			if analysisEventDateField(body.Field.Name) {
+			if analysisEventDateField(body.Field.Name) || analysisBoundaryField(body.Field.Name) != "" {
 				hiddenDimensions[peer.EventID] = true
 			}
 		}
@@ -279,7 +280,12 @@ func (r *ArchiveTasks) analysisFactsIn(ctx context.Context, tx *sql.Tx, h, doc s
 		if b.ValueAssertion != nil {
 			value = b.AssertedValue
 		}
-		item := archive.AnalysisFact{Unavailable: hiddenDimensions[o.EventID], NonExact: nonExactValues[o.ID], DocumentID: doc, EventID: o.EventID, ObservationID: o.ID, Revision: o.Revision, Metric: f.Name, Value: value, Domain: p.Item.Domain, Evidence: evidence(o.ID)}
+		item := archive.AnalysisFact{AggregateBoundary: map[string]string{}, Unavailable: hiddenDimensions[o.EventID], NonExact: nonExactValues[o.ID], DocumentID: doc, EventID: o.EventID, ObservationID: o.ID, Revision: o.Revision, Metric: f.Name, Value: value, Domain: p.Item.Domain, Evidence: evidence(o.ID)}
+		if len(b.Entities) > 0 {
+			owners := append([]string{}, b.Entities...)
+			sort.Strings(owners)
+			item.AggregateBoundary["owners"] = strings.Join(owners, ",")
+		}
 		if item.Domain == "health" || item.Domain == "education" {
 			item.Sample = "owners:" + strings.Join(b.Entities, ",") + ";"
 		}
@@ -308,7 +314,10 @@ func (r *ArchiveTasks) analysisFactsIn(ctx context.Context, tx *sql.Tx, h, doc s
 					continue
 				}
 			}
-			if len(evidence(peer.ID)) == 0 {
+			if len(evidence(peer.ID)) == 0 || pb.Field.RequiresReview {
+				if analysisBoundaryField(pb.Field.Name) != "" {
+					item.AggregateBoundaryUnknown = true
+				}
 				continue
 			}
 			for _, n := range pb.Field.Normalizations {
@@ -324,6 +333,14 @@ func (r *ArchiveTasks) analysisFactsIn(ctx context.Context, tx *sql.Tx, h, doc s
 			peerValue := pb.Field.Raw
 			if pb.ValueAssertion != nil {
 				peerValue = pb.AssertedValue
+			}
+			if key := analysisBoundaryField(pb.Field.Name); key != "" {
+				v := strings.TrimSpace(peerValue)
+				if old, exists := item.AggregateBoundary[key]; exists && old != v || v == "" {
+					item.AggregateBoundaryUnknown = true
+				}
+				item.AggregateBoundary[key] = v
+				item.BoundaryEvidence = append(item.BoundaryEvidence, evidence(peer.ID)...)
 			}
 			for _, dim := range f.Dimensions {
 				for _, de := range dim.Evidence {
@@ -362,6 +379,9 @@ func (r *ArchiveTasks) analysisFactsIn(ctx context.Context, tx *sql.Tx, h, doc s
 		}
 		if len(dates) == 1 {
 			item.Date = dates[0]
+			item.AggregateBoundary["event_date"] = dates[0]
+		} else if len(dates) > 1 {
+			item.AggregateBoundaryUnknown = true
 		}
 		// Roles must appear in current, visible evidence. Model field names alone do not establish them.
 		for _, ev := range item.Evidence {
@@ -686,16 +706,45 @@ func analysisTableAggregates(facts []archive.AnalysisFact) {
 			if f.Role == "total" {
 				break
 			}
-			if f.Role != "line_item" || len(f.RoleEvidence) == 0 || f.Metric != total.Metric || f.Unit != total.Unit || f.Currency != total.Currency || f.Sample != total.Sample {
+			if !archive.CompatibleAggregateBoundary(*total, f) || f.Role != "line_item" || len(f.RoleEvidence) == 0 || f.Metric != total.Metric || f.Unit != total.Unit || f.Currency != total.Currency || f.Sample != total.Sample {
 				members = nil
 				break
 			}
 			members = append(members, f.ObservationID)
 			refs = append(refs, f.RoleEvidence...)
+			refs = append(refs, f.BoundaryEvidence...)
 		}
 		if len(members) > 0 {
 			total.AggregateMembers = members
 			total.AggregateEvidence = refs
 		}
 	}
+}
+
+// Names describe boundary axes; values come only from current visible assertions
+// with field evidence. Alias normalization never infers identity from amounts.
+func analysisBoundaryField(name string) string {
+	name = strings.ToLower(strings.TrimSpace(name))
+	switch name {
+	case "invoice_id", "invoice_number", "invoice_no", "bill_id", "bill_number", "bill_no", "账单号", "发票号", "发票号码":
+		return "invoice"
+	case "transaction_id", "transaction_number", "transaction_no", "交易号", "交易编号", "流水号":
+		return "transaction"
+	case "order_id", "order_number", "order_no", "订单号":
+		return "order"
+	case "statement_id", "statement_number", "对账单号":
+		return "statement"
+	case "receipt_id", "receipt_number", "receipt_no", "收据号":
+		return "receipt"
+	case "account_id", "account_number", "账户号", "账号":
+		return "account"
+	case "merchant", "vendor", "payee", "counterparty", "商户", "收款方", "交易对方":
+		return "counterparty"
+	}
+	// A separately extracted identifier is explicit event-scope evidence even if
+	// this version has no alias for its application-specific spelling.
+	if strings.HasSuffix(name, "_id") || strings.HasSuffix(name, "_number") || strings.HasSuffix(name, "_no") {
+		return name
+	}
+	return ""
 }

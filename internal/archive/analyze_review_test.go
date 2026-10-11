@@ -33,3 +33,31 @@ func TestAnalysisReviewQualifiedDenominator(t *testing.T) {
 		t.Fatalf("qualified denominator became exact: %+v %v", r, e)
 	}
 }
+
+func TestAnalysisExplicitBoundaryRequiredForAggregate(t *testing.T) {
+	for _, axis := range []string{"invoice", "transaction", "owners", "event_date", "unknown", "missing"} {
+		t.Run(axis, func(t *testing.T) {
+			a, b := af("a", "10.00", ""), af("b", "10.00", "")
+			a.Currency = "CNY"
+			b.Currency = "CNY"
+			a.Role = "line_item"
+			b.Role = "total"
+			a.RoleEvidence = a.Evidence
+			b.RoleEvidence = b.Evidence
+			a.AggregateBoundary = map[string]string{axis: "A"}
+			b.AggregateBoundary = map[string]string{axis: "B"}
+			if axis == "unknown" {
+				a.AggregateBoundaryUnknown = true
+			}
+			if axis == "missing" {
+				b.AggregateBoundary = nil
+			}
+			b.AggregateMembers = []string{"a"}
+			b.AggregateEvidence = b.Evidence
+			r, e := Analyze(AnalysisQuery{Operation: "sum", Metric: "volume", Timezone: "UTC"}, AnalysisInput{Facts: []AnalysisFact{a, b}, Complete: true})
+			if e != nil || len(r.Groups) != 1 || r.Groups[0].Value != "20.00" {
+				t.Fatalf("boundary %s overwritten by aggregation: %+v %v", axis, r, e)
+			}
+		})
+	}
+}
