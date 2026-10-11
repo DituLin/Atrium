@@ -113,8 +113,27 @@ func TestArchivePrivateAndHumanValueSurviveReextract(t *testing.T) {
 	require.True(t, restricted)
 	var body, kind string
 	require.NoError(t, d.SQL().QueryRow(`SELECT r.body_json,r.assertion_kind FROM archive_documents d JOIN archive_publication_observations p ON p.publication_id=d.active_publication_id JOIN archive_observation_revisions r ON r.observation_id=p.observation_id AND r.revision=p.revision WHERE d.id=?`, rec.DocumentID).Scan(&body, &kind))
-	require.Equal(t, "user", kind)
-	require.Contains(t, body, "75")
+	require.Equal(t, "source", kind)
+	require.Contains(t, body, `"Raw":"80"`)
+	require.NotContains(t, body, "AssertedValue")
+	items, e := r.CurrentArchiveObservations(ctx, a, "home-1", rec.DocumentID, false)
+	require.NoError(t, e)
+	require.Len(t, items, 1)
+	var current struct {
+		Field          archive.PublicationField
+		AssertedValue  string
+		ValueAssertion *store.ArchiveAssertionProvenance
+	}
+	require.NoError(t, json.Unmarshal(items[0].Body, &current))
+	require.Equal(t, "80", current.Field.Raw)
+	require.Equal(t, "75", current.AssertedValue)
+	require.NotNil(t, current.ValueAssertion)
+	var audited string
+	require.NoError(t, d.SQL().QueryRow(`SELECT body_json FROM archive_manual_revisions WHERE id=?`, current.ValueAssertion.ID).Scan(&audited))
+	require.Contains(t, audited, `"Value":"75"`)
+	public, e := r.CurrentArchiveObservations(ctx, a, "home-1", rec.DocumentID, true)
+	require.NoError(t, e)
+	require.Empty(t, public)
 }
 func TestArchiveTypedClarificationRejectsStaleAndIngestOnly(t *testing.T) {
 	d := testutil.NewDB(t)

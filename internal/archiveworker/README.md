@@ -86,9 +86,12 @@ change cannot erase a prior value correction, or vice versa. Private assertions
 do not suppress public source values, and withdrawn assertion sources no longer
 supply either axis. The observation's base provenance is not a synthetic combined
 revision: consumers must retain both ValueAssertion and OwnershipAssertion when
-present. Re-extraction preserves
-local human overrides and cannot copy another proof's private override as its own
-source evidence.
+present. Complete re-extraction always advances the immutable source evidence,
+including after value or ownership edits. Current reads compose sticky human
+overrides over the current carrying source revision; the assertion provenance
+continues to identify the original authored revision. Both authored and current
+source visibility dependencies must permit a public assertion. Another proof's
+private override is never copied into extracted source evidence.
 
 Subregion privacy blocks unredacted originals/pages/context immediately while
 independent public facts remain eligible. Value, unit/currency dimension and

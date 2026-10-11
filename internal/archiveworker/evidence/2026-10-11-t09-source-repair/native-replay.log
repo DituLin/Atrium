@@ -1,0 +1,5 @@
+=== RUN   TestWorkerActualNativeWithRetainedCompletion
+    native_replay_test.go:73: real_native_chunks=2 entities=1 events=1 observations=7 retained_completion=true new_provider_calls=0
+--- PASS: TestWorkerActualNativeWithRetainedCompletion (0.43s)
+PASS
+ok  	github.com/DituLin/Atrium/internal/archiveworker	0.615s

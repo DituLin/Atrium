@@ -1,0 +1,26 @@
+=== RUN   TestArchivePrivateAndHumanValueSurviveReextract
+--- PASS: TestArchivePrivateAndHumanValueSurviveReextract (0.02s)
+=== RUN   TestArchiveManualAxesDoNotFreezeReextractedSource
+=== RUN   TestArchiveManualAxesDoNotFreezeReextractedSource/value=false/single
+=== RUN   TestArchiveManualAxesDoNotFreezeReextractedSource/value=false/private_source
+=== RUN   TestArchiveManualAxesDoNotFreezeReextractedSource/value=false/private_peer
+=== RUN   TestArchiveManualAxesDoNotFreezeReextractedSource/value=false/withdraw_source
+=== RUN   TestArchiveManualAxesDoNotFreezeReextractedSource/value=false/withdraw_peer
+=== RUN   TestArchiveManualAxesDoNotFreezeReextractedSource/value=true/single
+=== RUN   TestArchiveManualAxesDoNotFreezeReextractedSource/value=true/private_source
+=== RUN   TestArchiveManualAxesDoNotFreezeReextractedSource/value=true/private_peer
+=== RUN   TestArchiveManualAxesDoNotFreezeReextractedSource/value=true/withdraw_source
+=== RUN   TestArchiveManualAxesDoNotFreezeReextractedSource/value=true/withdraw_peer
+--- PASS: TestArchiveManualAxesDoNotFreezeReextractedSource (0.38s)
+    --- PASS: TestArchiveManualAxesDoNotFreezeReextractedSource/value=false/single (0.03s)
+    --- PASS: TestArchiveManualAxesDoNotFreezeReextractedSource/value=false/private_source (0.05s)
+    --- PASS: TestArchiveManualAxesDoNotFreezeReextractedSource/value=false/private_peer (0.05s)
+    --- PASS: TestArchiveManualAxesDoNotFreezeReextractedSource/value=false/withdraw_source (0.04s)
+    --- PASS: TestArchiveManualAxesDoNotFreezeReextractedSource/value=false/withdraw_peer (0.04s)
+    --- PASS: TestArchiveManualAxesDoNotFreezeReextractedSource/value=true/single (0.03s)
+    --- PASS: TestArchiveManualAxesDoNotFreezeReextractedSource/value=true/private_source (0.03s)
+    --- PASS: TestArchiveManualAxesDoNotFreezeReextractedSource/value=true/private_peer (0.04s)
+    --- PASS: TestArchiveManualAxesDoNotFreezeReextractedSource/value=true/withdraw_source (0.04s)
+    --- PASS: TestArchiveManualAxesDoNotFreezeReextractedSource/value=true/withdraw_peer (0.04s)
+PASS
+ok  	github.com/DituLin/Atrium/internal/store	0.578s

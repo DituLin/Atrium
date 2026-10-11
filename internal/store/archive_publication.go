@@ -7,7 +7,6 @@ import (
 	"errors"
 	"github.com/DituLin/Atrium/internal/archive"
 	"github.com/DituLin/Atrium/internal/domain"
-	"reflect"
 )
 
 type ArchivePublicationBundle struct {
@@ -260,35 +259,13 @@ func (r *ArchiveTasks) PublishExtraction(ctx context.Context, f ArchiveWorkFence
 					Entities []string
 				}{field, entities})
 				var n int64
-				var prev, assertion, previousExtraction string
-				e = tx.QueryRowContext(ctx, `SELECT revision,body_json,assertion_kind,extraction_id FROM archive_observation_revisions WHERE household_id=? AND observation_id=? ORDER BY revision DESC LIMIT 1`, f.HouseholdID, id).Scan(&n, &prev, &assertion, &previousExtraction)
+				var prev, previousExtraction string
+				e = tx.QueryRowContext(ctx, `SELECT revision,body_json,extraction_id FROM archive_observation_revisions WHERE household_id=? AND observation_id=? ORDER BY revision DESC LIMIT 1`, f.HouseholdID, id).Scan(&n, &prev, &previousExtraction)
 				if e != nil && !errors.Is(e, sql.ErrNoRows) {
 					return e
 				}
-				// Human assertions belong to their audited source publication.
-				// A different proof must never inherit private human prose as
-				// if extracted from that proof; current reads resolve visible
-				// shared assertions separately with their actual provenance.
-				if transactionAmount {
-					ownManual := false
-					if prior.Valid {
-						var ownRevision int64
-						var ownBody, ownKind, ownExtraction string
-						err := tx.QueryRowContext(ctx, `SELECT r.revision,r.body_json,r.assertion_kind,r.extraction_id FROM archive_publication_observations p JOIN archive_observation_revisions r ON r.household_id=p.household_id AND r.observation_id=p.observation_id AND r.revision=p.revision WHERE p.household_id=? AND p.publication_id=? AND p.observation_id=?`, f.HouseholdID, prior.String, id).Scan(&ownRevision, &ownBody, &ownKind, &ownExtraction)
-						if err != nil && !errors.Is(err, sql.ErrNoRows) {
-							return err
-						}
-						if err == nil && ownKind == "user" {
-							n, prev, assertion, previousExtraction = ownRevision, ownBody, ownKind, ownExtraction
-							ownManual = true
-						}
-					}
-					if !ownManual && assertion == "user" {
-						if e = tx.QueryRowContext(ctx, `SELECT body_json,assertion_kind,extraction_id FROM archive_observation_revisions WHERE household_id=? AND observation_id=? AND assertion_kind='source' ORDER BY revision DESC LIMIT 1`, f.HouseholdID, id).Scan(&prev, &assertion, &previousExtraction); e != nil {
-							return e
-						}
-					}
-				}
+				// Source revisions advance independently from audited human assertions.
+				// Current reads compose each visible manual axis over the latest source.
 				if transactionAmount {
 					_, e = tx.ExecContext(ctx, `DELETE FROM archive_publication_alternatives WHERE household_id=? AND publication_id=? AND observation_id=?`, f.HouseholdID, publication, id)
 					if e != nil {
@@ -317,7 +294,7 @@ func (r *ArchiveTasks) PublishExtraction(ctx context.Context, f ArchiveWorkFence
 					}
 				}
 
-				if assertion != "user" && (!reflect.DeepEqual(prev, body) || (transactionAmount && previousExtraction != x.ID)) {
+				if prev != body || previousExtraction != x.ID {
 					n++
 					_, e = tx.ExecContext(ctx, `INSERT INTO archive_observation_revisions VALUES(?,?,?,?,?, 'source')`, f.HouseholdID, id, n, x.ID, body)
 					if e != nil {

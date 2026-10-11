@@ -370,3 +370,122 @@ func TestArchiveTransactionCurrentProofSetRecomputesAfterReplacementOrVisibility
 		})
 	}
 }
+
+func TestArchiveManualAxesDoNotFreezeReextractedSource(t *testing.T) {
+	for _, withValue := range []bool{false, true} {
+		for _, scenario := range []string{"single", "private_source", "private_peer", "withdraw_source", "withdraw_peer"} {
+			t.Run(fmt.Sprintf("value=%t/%s", withValue, scenario), func(t *testing.T) {
+				d := testutil.NewDB(t)
+				r := d.ArchiveTasksWithClock(&archiveClock{now: archiveNow})
+				ctx := context.Background()
+				actor := archiveActor(t, d)
+				bundle := func(v string) store.ArchivePublicationBundle {
+					return literalBundle(t, "", []publicationLiteral{{"transaction_id", "0012"}, {"transaction_type", "payment"}, {"issuer", "Bank A"}, {"amount", v}}, "SGD")
+				}
+				rec, f, x := publicationFixture(t, d, r, "source", domain.ArchiveInputFile)
+				source := rec.DocumentID
+				f = saveBundle(t, r, f, bundle("70"))
+				_, e := r.PublishExtraction(ctx, f, x.ID)
+				require.NoError(t, e)
+				peer := ""
+				if scenario != "single" {
+					rec, pf, px := publicationFixture(t, d, r, "peer", domain.ArchiveInputText)
+					peer = rec.DocumentID
+					pf = saveBundle(t, r, pf, bundle("70"))
+					_, e = r.PublishExtraction(ctx, pf, px.ID)
+					require.NoError(t, e)
+				}
+				_, pf, px := publicationFixture(t, d, r, "owner", domain.ArchiveInputText)
+				pf = saveBundle(t, r, pf, namedPublicationBundle(t, "Bob"))
+				_, e = r.PublishExtraction(ctx, pf, px.ID)
+				require.NoError(t, e)
+				var owner, obs string
+				require.NoError(t, d.SQL().QueryRow(`SELECT entity_id FROM archive_entity_attributes WHERE value='Bob' LIMIT 1`).Scan(&owner))
+				require.NoError(t, d.SQL().QueryRow(`SELECT id FROM archive_observations WHERE slot_key='supported-transaction-amount/1'`).Scan(&obs))
+				rev, e := r.ReviseArchive(ctx, actor, "home-1", source, 2, store.ArchiveRevision{Kind: "reassign", ObservationID: obs, EntityID: owner, Reason: "owner only"})
+				require.NoError(t, e)
+				if withValue {
+					_, e = r.ReviseArchive(ctx, actor, "home-1", source, rev, store.ArchiveRevision{Kind: "value", ObservationID: obs, Value: "71", Reason: "independent value"})
+					require.NoError(t, e)
+				}
+				var authoredPublication string
+				require.NoError(t, d.SQL().QueryRow(`SELECT active_publication_id FROM archive_documents WHERE id=?`, source).Scan(&authoredPublication))
+				_, f, x = publicationFixture(t, d, r, "reextract", domain.ArchiveInputFile)
+				f = saveBundle(t, r, f, bundle("80"))
+				_, e = r.PublishExtraction(ctx, f, x.ID)
+				require.NoError(t, e)
+				currentExtraction := x.ID
+				var currentBody, kind, extraction string
+				require.NoError(t, d.SQL().QueryRow(`SELECT r.body_json,r.assertion_kind,r.extraction_id FROM archive_documents d JOIN archive_publication_observations p ON p.publication_id=d.active_publication_id JOIN archive_observation_revisions r ON r.observation_id=p.observation_id AND r.revision=p.revision WHERE d.id=? AND p.observation_id=?`, source, obs).Scan(&currentBody, &kind, &extraction))
+				require.Equal(t, "source", kind)
+				require.Equal(t, currentExtraction, extraction)
+				require.Contains(t, currentBody, `"Raw":"80"`)
+				require.NotContains(t, currentBody, "AssertedValue")
+				check := func(doc string, public, found, manual bool, raw string) {
+					t.Helper()
+					items, e := r.CurrentArchiveObservations(ctx, actor, "home-1", doc, public)
+					require.NoError(t, e)
+					seen := false
+					for _, item := range items {
+						if item.ID != obs {
+							continue
+						}
+						seen = true
+						var b struct {
+							Field                              archive.PublicationField
+							Entities                           []string
+							AssertedValue                      string
+							ValueAssertion, OwnershipAssertion *store.ArchiveAssertionProvenance
+						}
+						require.NoError(t, json.Unmarshal(item.Body, &b))
+						require.Equal(t, raw, b.Field.Raw)
+						if manual {
+							require.Equal(t, []string{owner}, b.Entities)
+							require.NotNil(t, b.OwnershipAssertion)
+							require.Equal(t, source, b.OwnershipAssertion.DocumentID)
+							if withValue {
+								require.Equal(t, "71", b.AssertedValue)
+								require.NotNil(t, b.ValueAssertion)
+								require.Equal(t, authoredPublication, b.ValueAssertion.PublicationID)
+								require.Equal(t, currentExtraction, item.ExtractionID)
+								require.NotEqual(t, item.ExtractionID, b.ValueAssertion.ExtractionID)
+							} else {
+								require.Empty(t, b.AssertedValue)
+							}
+						} else {
+							require.Empty(t, b.Entities)
+							require.Empty(t, b.AssertedValue)
+							require.Nil(t, b.ValueAssertion)
+							require.Nil(t, b.OwnershipAssertion)
+						}
+					}
+					require.Equal(t, found, seen)
+				}
+				check(source, true, scenario == "single" || withValue, true, "80")
+				if scenario == "single" {
+					return
+				}
+				hide, remaining := peer, source
+				if strings.HasSuffix(scenario, "source") {
+					hide, remaining = source, peer
+				}
+				action := "private"
+				if strings.HasPrefix(scenario, "withdraw") {
+					action = "withdraw"
+				}
+				var documentRevision int64
+				require.NoError(t, d.SQL().QueryRow(`SELECT document_revision FROM archive_documents WHERE id=?`, hide).Scan(&documentRevision))
+				_, e = r.ReviseArchive(ctx, actor, "home-1", hide, documentRevision, store.ArchiveRevision{Kind: action, Reason: "visibility after new source"})
+				require.NoError(t, e)
+				if hide == source {
+					check(remaining, true, true, false, "70")
+				} else {
+					check(remaining, true, true, true, "80")
+				}
+				if action == "private" {
+					check(remaining, false, withValue, true, "80")
+				}
+			})
+		}
+	}
+}
