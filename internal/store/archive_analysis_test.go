@@ -110,7 +110,9 @@ func TestArchiveAnalysisLegacy450AndLatest70(t *testing.T) {
 	require.Equal(t, "70", result.Groups[0].Value)
 }
 func analysisCSVBundle(t *testing.T) store.ArchivePublicationBundle {
-	text := "项目,金额,币种\n费用,128.10,CNY\n费用,71.90,CNY\n合计,200.00,CNY\n"
+	return analysisCSVTextBundle(t, "项目,金额,币种\n费用,128.10,CNY\n费用,71.90,CNY\n合计,200.00,CNY\n")
+}
+func analysisCSVTextBundle(t *testing.T, text string) store.ArchivePublicationBundle {
 	parsed, e := archive.Parse(context.Background(), archive.ParseSource{Reader: strings.NewReader(text), Size: int64(len(text)), SHA256: strings.Repeat("a", 64), FormatHint: "csv"}, archive.DefaultParseLimits())
 	require.NoError(t, e)
 	plan, e := archive.PlanChunks(parsed)
@@ -127,12 +129,12 @@ func analysisCSVBundle(t *testing.T) store.ArchivePublicationBundle {
 		}
 		ext.Coverage = append(ext.Coverage, archive.UnitCoverage{ViewID: v.ViewID, Disposition: "extracted"})
 	}
-	for row := 2; row <= 4; row++ {
+	for row := 2; row <= strings.Count(text, "\n"); row++ {
 		id := fmt.Sprintf("f%d", row)
 		num := refs[fmt.Sprintf("%d:2", row)]
 		cur := refs[fmt.Sprintf("%d:3", row)]
 		label := refs[fmt.Sprintf("%d:1", row)]
-		ext.Fields = append(ext.Fields, archive.ExtractedField{ID: id, Name: "amount", Raw: num.Quote, SubjectRefs: []string{}, Normalizations: []archive.Normalization{{Kind: "decimal", Value: num.Quote}}, Evidence: []archive.EvidenceReference{num}, Dimensions: []archive.LiteralDimension{{Kind: "currency", Raw: "CNY", Evidence: []archive.EvidenceReference{cur}}}})
+		ext.Fields = append(ext.Fields, archive.ExtractedField{ID: id, Name: "amount", Raw: num.Quote, SubjectRefs: []string{}, Normalizations: []archive.Normalization{{Kind: "decimal", Value: num.Quote}}, Evidence: []archive.EvidenceReference{num}, Dimensions: []archive.LiteralDimension{{Kind: "currency", Raw: cur.Quote, Evidence: []archive.EvidenceReference{cur}}}})
 		ext.Events = append(ext.Events, archive.EventProposal{ID: "e" + id, Type: "expense", FieldRefs: []string{id}, SubjectRefs: []string{}, SectionEvidence: []archive.EvidenceReference{label, num, cur}})
 	}
 	for i, cov := range ext.Coverage {

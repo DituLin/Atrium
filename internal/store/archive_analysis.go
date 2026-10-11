@@ -156,7 +156,7 @@ func (r *ArchiveTasks) analyzeArchives(ctx context.Context, a archiveSearchActor
 		if _, e = tx.ExecContext(ctx, `DELETE FROM archive_analysis_snapshots WHERE household_id=? AND (epoch<>? OR generation<>? OR id IN (SELECT id FROM archive_analysis_snapshots WHERE household_id=? ORDER BY created_at DESC,id DESC LIMIT -1 OFFSET 127))`, h, epoch, generation, h); e != nil {
 			return e
 		}
-		_, e = tx.ExecContext(ctx, `INSERT INTO archive_analysis_snapshots(household_id,id,authority,public,epoch,generation,algorithm_version,query_json,input_digest,result_json,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)`, h, result.SnapshotID, who, public, epoch, generation, archive.AnalysisVersion, string(query), result.InputDigest, string(body), now.UTC().Format(time.RFC3339Nano))
+		_, e = tx.ExecContext(ctx, `INSERT INTO archive_analysis_snapshots(household_id,id,authority,public,epoch,generation,algorithm_version,query_json,input_digest,result_json,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)`, h, result.SnapshotID, who, public, epoch, generation, archive.AnalysisAlgorithmVersion, string(query), result.InputDigest, string(body), now.UTC().Format(time.RFC3339Nano))
 		return e
 	})
 	if e != nil {
@@ -178,7 +178,7 @@ func (r *ArchiveTasks) analysisSnapshot(ctx context.Context, a archiveSearchActo
 			return e
 		}
 		var raw string
-		e = tx.QueryRowContext(ctx, `SELECT s.result_json FROM archive_analysis_snapshots s JOIN archive_search_state g ON g.household_id=s.household_id AND g.epoch=s.epoch AND g.generation=s.generation WHERE s.household_id=? AND s.id=? AND s.authority=? AND s.public=? AND s.algorithm_version=?`, h, id, who, public, archive.AnalysisVersion).Scan(&raw)
+		e = tx.QueryRowContext(ctx, `SELECT s.result_json FROM archive_analysis_snapshots s JOIN archive_search_state g ON g.household_id=s.household_id AND g.epoch=s.epoch AND g.generation=s.generation WHERE s.household_id=? AND s.id=? AND s.authority=? AND s.public=? AND s.algorithm_version=?`, h, id, who, public, archive.AnalysisAlgorithmVersion).Scan(&raw)
 		if e == sql.ErrNoRows {
 			return domain.ErrNotFound
 		}
@@ -210,6 +210,41 @@ func (r *ArchiveTasks) analysisFactsIn(ctx context.Context, tx *sql.Tx, h, doc s
 		}
 		bodies[o.ID] = b
 		events[o.EventID] = append(events[o.EventID], o)
+	}
+	nonExactValues := map[string]bool{}
+	for _, o := range observations {
+		b := bodies[o.ID]
+		if b.ValueAssertion != nil {
+			continue
+		}
+		bundle, err := searchBundleIn(ctx, tx, h, o.ExtractionID)
+		if err != nil {
+			return nil, err
+		}
+		nonExactValues[o.ID] = analysisQualifiedValue(bundle.Parsed, b.Field)
+	}
+	hiddenDimensions := map[string]bool{}
+	if public {
+		all, err := archiveCurrentObservationsIn(ctx, tx, h, doc, false)
+		if err != nil {
+			return nil, err
+		}
+		for _, peer := range all {
+			if _, visible := bodies[peer.ID]; visible {
+				continue
+			}
+			var body currentBody
+			if err = json.Unmarshal(peer.Body, &body); err != nil {
+				return nil, err
+			}
+			switch body.Field.Name {
+			case "sample", "specimen", "subject", "project", "item", "unit", "currency", "full_score", "maximum_score", "满分":
+				hiddenDimensions[peer.EventID] = true
+			}
+			if analysisEventDateField(body.Field.Name) {
+				hiddenDimensions[peer.EventID] = true
+			}
+		}
 	}
 	evidence := func(id string) []archive.SearchEvidence {
 		out := []archive.SearchEvidence{}
@@ -244,7 +279,7 @@ func (r *ArchiveTasks) analysisFactsIn(ctx context.Context, tx *sql.Tx, h, doc s
 		if b.ValueAssertion != nil {
 			value = b.AssertedValue
 		}
-		item := archive.AnalysisFact{DocumentID: doc, EventID: o.EventID, ObservationID: o.ID, Revision: o.Revision, Metric: f.Name, Value: value, Domain: p.Item.Domain, Evidence: evidence(o.ID)}
+		item := archive.AnalysisFact{Unavailable: hiddenDimensions[o.EventID], NonExact: nonExactValues[o.ID], DocumentID: doc, EventID: o.EventID, ObservationID: o.ID, Revision: o.Revision, Metric: f.Name, Value: value, Domain: p.Item.Domain, Evidence: evidence(o.ID)}
 		if item.Domain == "health" || item.Domain == "education" {
 			item.Sample = "owners:" + strings.Join(b.Entities, ",") + ";"
 		}
@@ -283,6 +318,26 @@ func (r *ArchiveTasks) analysisFactsIn(ctx context.Context, tx *sql.Tx, h, doc s
 						v = pb.AssertedValue
 					}
 					dates = appendUnique(dates, v)
+					item.Evidence = append(item.Evidence, evidence(peer.ID)...)
+				}
+			}
+			peerValue := pb.Field.Raw
+			if pb.ValueAssertion != nil {
+				peerValue = pb.AssertedValue
+			}
+			for _, dim := range f.Dimensions {
+				for _, de := range dim.Evidence {
+					for _, pe := range pb.Field.Evidence {
+						if de.ParentSegmentID == pe.ParentSegmentID && de.Start == pe.Start && de.End == pe.End {
+							if dim.Kind == "unit" {
+								item.Unit = peerValue
+							}
+							if dim.Kind == "currency" {
+								item.Currency = peerValue
+							}
+							item.Evidence = append(item.Evidence, evidence(peer.ID)...)
+						}
+					}
 				}
 			}
 			switch pb.Field.Name {
@@ -294,9 +349,11 @@ func (r *ArchiveTasks) analysisFactsIn(ctx context.Context, tx *sql.Tx, h, doc s
 						item.Denominator = pb.AssertedValue
 					}
 					item.DenominatorEvidence = evidence(peer.ID)
+					item.DenominatorNonExact = nonExactValues[peer.ID]
 				}
 			case "sample", "specimen", "subject", "project", "item":
-				item.Sample += pb.Field.Name + ":" + pb.Field.Raw + ";"
+				item.Sample += pb.Field.Name + ":" + peerValue + ";"
+				item.Evidence = append(item.Evidence, evidence(peer.ID)...)
 			}
 		}
 		if denominatorCount > 1 {
@@ -338,6 +395,7 @@ func (r *ArchiveTasks) analysisFactsIn(ctx context.Context, tx *sql.Tx, h, doc s
 		}
 		out = append(out, item)
 	}
+	analysisTableAggregates(out)
 	return out, nil
 }
 func analysisLiteralRole(s string) string {
@@ -553,4 +611,91 @@ func analysisEventDateField(name string) bool {
 		return true
 	}
 	return false
+}
+
+// Only an immediately adjacent qualifier belongs to this numeric evidence. Never
+// scan another field or line, and never turn source inequalities into exact values.
+var analysisQualifier = regexp.MustCompile(`(?i)([<>≤≥≈≃~]|约|大约|大于|小于|至少|至多|不超过|不少于|approximately|about|at least|at most)[=＝]?[ \t]*$`)
+
+func analysisQualifiedValue(parsed archive.ParseResult, f archive.PublicationField) bool {
+	for _, ev := range f.Evidence {
+		quote := []rune(ev.Quote)
+		firstDigit := 0
+		for firstDigit < len(quote) && (quote[firstDigit] < '0' || quote[firstDigit] > '9') {
+			firstDigit++
+		}
+		if analysisQualifier.MatchString(string(quote[:firstDigit])) {
+			return true
+		}
+		for _, seg := range parsed.Segments {
+			if seg.ID != ev.ParentSegmentID {
+				continue
+			}
+			text := []rune(seg.Text)
+			if ev.Start < 0 || ev.Start > len(text) {
+				continue
+			}
+			start := ev.Start - 24
+			if start < 0 {
+				start = 0
+			}
+			if analysisQualifier.MatchString(string(text[start:ev.Start])) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// A literal total closes a contiguous run of explicitly labelled charge rows in
+// the same physical table and value column. Document/event co-location and equal
+// amounts alone never establish aggregation. Missing or incompatible rows break
+// the proof, so independently scoped totals remain observations.
+func analysisTableAggregates(facts []archive.AnalysisFact) {
+	for i := range facts {
+		total := &facts[i]
+		if total.Role != "total" || len(total.RoleEvidence) == 0 || len(total.Evidence) == 0 {
+			continue
+		}
+		table, row, col := analysisTablePosition(total.Evidence[0].Locator)
+		if table == "" {
+			continue
+		}
+		members := []string{}
+		refs := append([]archive.SearchEvidence{}, total.RoleEvidence...)
+		for prior := row - 1; prior > 0; prior-- {
+			found := -1
+			for j := range facts {
+				f := facts[j]
+				if len(f.Evidence) == 0 || f.DocumentID != total.DocumentID {
+					continue
+				}
+				t, r, c := analysisTablePosition(f.Evidence[0].Locator)
+				if t == table && r == prior && c == col {
+					if found >= 0 {
+						found = -2
+						break
+					}
+					found = j
+				}
+			}
+			if found < 0 {
+				break
+			}
+			f := facts[found]
+			if f.Role == "total" {
+				break
+			}
+			if f.Role != "line_item" || len(f.RoleEvidence) == 0 || f.Metric != total.Metric || f.Unit != total.Unit || f.Currency != total.Currency || f.Sample != total.Sample {
+				members = nil
+				break
+			}
+			members = append(members, f.ObservationID)
+			refs = append(refs, f.RoleEvidence...)
+		}
+		if len(members) > 0 {
+			total.AggregateMembers = members
+			total.AggregateEvidence = refs
+		}
+	}
 }

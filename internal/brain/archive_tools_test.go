@@ -92,7 +92,7 @@ func TestArchiveAnalysisArgumentsAndReceipt(t *testing.T) {
 			t.Fatalf("accepted %v", bad)
 		}
 	}
-	d := archive.AnalysisResult{SchemaVersion: archive.AnalysisVersion, AlgorithmVersion: archive.AnalysisVersion, SnapshotID: "snapshot", Query: archive.AnalysisQuery{Operation: "sum", Metric: "volume", Timezone: "Asia/Singapore"}, Projection: "authorized", DataEpoch: 1, Generation: 1, InputDigest: "digest", Groups: []archive.AnalysisGroup{}, Coverage: archive.AnalysisCoverage{Scope: "archived_only", Complete: true, Reasons: []string{}}}
+	d := archive.AnalysisResult{SchemaVersion: archive.AnalysisVersion, AlgorithmVersion: archive.AnalysisAlgorithmVersion, SnapshotID: "snapshot", Query: archive.AnalysisQuery{Operation: "sum", Metric: "volume", Timezone: "Asia/Singapore"}, Projection: "authorized", DataEpoch: 1, Generation: 1, InputDigest: "digest", Groups: []archive.AnalysisGroup{}, Coverage: archive.AnalysisCoverage{Scope: "archived_only", Complete: true, Reasons: []string{}}}
 	env := integration.Response[archive.AnalysisResult]{SchemaVersion: "1", ObservedAt: time.Now(), Availability: "available", Data: d}
 	if _, e := receiptResult("home_analyze_archives", args, &mcp.CallToolResult{StructuredContent: env}); e != nil {
 		t.Fatal(e)

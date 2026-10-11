@@ -22,6 +22,8 @@ func TestAnalyzeCurrenciesRolesAndIncompleteCoverage(t *testing.T) {
 		f.RoleEvidence = f.Evidence
 	}
 	c.Role = "total"
+	c.AggregateMembers = []string{a.ObservationID, b.ObservationID}
+	c.AggregateEvidence = c.RoleEvidence
 	c.EventID = a.EventID
 	b.EventID = a.EventID
 	d.Currency = "USD"
@@ -95,6 +97,8 @@ func TestAnalyzeTotalDifferentEventFromLineItems(t *testing.T) {
 		f.RoleEvidence = f.Evidence
 	}
 	total.Role = "total"
+	total.AggregateMembers = []string{a.ObservationID, b.ObservationID}
+	total.AggregateEvidence = total.RoleEvidence
 	r, e := Analyze(AnalysisQuery{Operation: "sum", Metric: "volume", Timezone: "UTC"}, AnalysisInput{Facts: []AnalysisFact{a, b, total}, Complete: true})
 	if e != nil || len(r.Groups) != 1 || r.Groups[0].Value != "200.00" {
 		t.Fatalf("double counted total %+v %v", r, e)

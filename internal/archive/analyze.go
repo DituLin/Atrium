@@ -10,6 +10,7 @@ import (
 )
 
 const AnalysisVersion = "archive-analysis/1"
+const AnalysisAlgorithmVersion = "archive-analysis/2"
 
 // AnalysisQuery is a bounded business query. Projection and authority are host supplied.
 type AnalysisQuery struct {
@@ -53,6 +54,11 @@ func (q AnalysisQuery) Normalize() (AnalysisQuery, error) {
 }
 
 type AnalysisFact struct {
+	DenominatorNonExact                                                    bool
+	Unavailable                                                            bool
+	NonExact                                                               bool
+	AggregateMembers                                                       []string
+	AggregateEvidence                                                      []SearchEvidence
 	DocumentID, EventID, ObservationID                                     string
 	Revision                                                               int64
 	Metric, Value, Unit, Currency, Domain, Sample, Date, Role, Denominator string
@@ -143,7 +149,7 @@ func DateInterval(s, zone string) (time.Time, time.Time, string, bool) {
 }
 func Analyze(q AnalysisQuery, in AnalysisInput) (AnalysisResult, error) {
 	q, e := q.Normalize()
-	r := AnalysisResult{SchemaVersion: AnalysisVersion, AlgorithmVersion: AnalysisVersion, Query: q, Groups: []AnalysisGroup{}, Coverage: AnalysisCoverage{Scope: "archived_only", Complete: in.Complete, Reasons: append([]string{}, in.Reasons...)}}
+	r := AnalysisResult{SchemaVersion: AnalysisVersion, AlgorithmVersion: AnalysisAlgorithmVersion, Query: q, Groups: []AnalysisGroup{}, Coverage: AnalysisCoverage{Scope: "archived_only", Complete: in.Complete, Reasons: append([]string{}, in.Reasons...)}}
 	if e != nil {
 		return r, e
 	}
@@ -268,30 +274,60 @@ func Analyze(q AnalysisQuery, in AnalysisInput) (AnalysisResult, error) {
 		facts []AnalysisFact
 	}
 	groups := map[string]*accum{}
-	lineEvents := map[string]bool{}
-	lineDocuments := map[string]bool{}
+	byID := map[string]AnalysisFact{}
 	for _, f := range facts {
-		if f.Role == "line_item" && len(f.RoleEvidence) > 0 {
-			lineEvents[f.EventID] = true
-			lineDocuments[f.DocumentID] = true
+		byID[f.ObservationID] = f
+	}
+	aggregateCovered := func(f AnalysisFact) bool {
+		if f.NonExact || len(f.AggregateMembers) == 0 || len(f.AggregateEvidence) == 0 {
+			return false
 		}
+		sum := new(big.Rat)
+		members := map[string]bool{}
+		for _, id := range f.AggregateMembers {
+			m, ok := byID[id]
+			if !ok || m.Unavailable || members[id] || m.Role != "line_item" || len(m.RoleEvidence) == 0 || m.NonExact || m.Metric != f.Metric || m.Currency != f.Currency || m.Unit != f.Unit || m.Sample != f.Sample {
+				return false
+			}
+			n, _, ok := exactDecimal(m.Value)
+			if !ok {
+				return false
+			}
+			sum.Add(sum, n)
+			members[id] = true
+		}
+		total, _, ok := exactDecimal(f.Value)
+		return ok && total.Cmp(sum) == 0
 	}
 	financeEvents := map[string]bool{}
 	for _, f := range facts {
+		if f.Unavailable {
+			reason("unavailable_dimension_evidence")
+			r.Coverage.Excluded++
+			continue
+		}
 		if (f.Domain == "finance" || f.Currency != "") && q.Operation == "sum" {
 			if len(f.RoleEvidence) == 0 || (f.Role != "line_item" && f.Role != "total" && f.Role != "payment") {
 				reason("unknown_amount_role")
 				r.Coverage.Excluded++
 				continue
 			}
-			if f.Role == "payment" || f.Role == "total" && (lineEvents[f.EventID] || lineDocuments[f.DocumentID]) {
+			if f.Role == "payment" || f.Role == "total" && aggregateCovered(f) {
 				r.Coverage.Excluded++
 				continue
+			}
+			if f.Role == "total" && !aggregateCovered(f) {
+				for _, m := range facts {
+					if m.Role == "line_item" && m.Metric == f.Metric && m.Currency == f.Currency && m.Unit == f.Unit && m.Sample == f.Sample {
+						reason("unproven_summary_relation")
+						break
+					}
+				}
 			}
 			financeEvents[f.EventID] = true
 		}
 		n, scale, ok := exactDecimal(f.Value)
-		if !ok {
+		if !ok || f.NonExact {
 			reason("non_exact_value")
 			r.Coverage.Excluded++
 			continue
@@ -370,7 +406,7 @@ func Analyze(q AnalysisQuery, in AnalysisInput) (AnalysisResult, error) {
 			_, _, g.DatePrecision, _ = DateInterval(f.Date, q.Timezone)
 			if q.Operation == "ratio" {
 				den, _, ok := exactDecimal(f.Denominator)
-				if !ok || den.Sign() <= 0 || len(f.DenominatorEvidence) == 0 {
+				if !ok || f.DenominatorNonExact || den.Sign() <= 0 || len(f.DenominatorEvidence) == 0 {
 					reason("missing_or_invalid_denominator")
 					r.Coverage.Excluded++
 					r.Coverage.Included--

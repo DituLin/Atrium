@@ -161,7 +161,7 @@ func validArchiveReceipt(tool string, args map[string]any, data any) bool {
 		if e != nil || expected != d.Query {
 			return false
 		}
-		if d.SchemaVersion != archive.AnalysisVersion || d.AlgorithmVersion != archive.AnalysisVersion || d.SnapshotID == "" || d.Projection != "authorized" || d.Query.Operation != args["operation"] || len(d.Groups) > 256 || d.Coverage.Scope != "archived_only" || !d.Coverage.Complete && len(d.Coverage.Reasons) == 0 {
+		if d.SchemaVersion != archive.AnalysisVersion || d.AlgorithmVersion != archive.AnalysisAlgorithmVersion || d.SnapshotID == "" || d.Projection != "authorized" || d.Query.Operation != args["operation"] || len(d.Groups) > 256 || d.Coverage.Scope != "archived_only" || !d.Coverage.Complete && len(d.Coverage.Reasons) == 0 {
 			return false
 		}
 		if metric, ok := args["metric"]; ok && d.Query.Metric != metric {
