@@ -16,5 +16,13 @@
     "original_external_ui_counterexample": "passed unchanged, requested card count 1 at ready acknowledgment",
     "original_external_terminal_counterexample": "passed unchanged"
   },
-  "live_detail_to_query": "pending independent browser run"
+  "live_detail_to_query": {
+    "result": "passed",
+    "implementation_sha": "d5ad46643f3cf164d4151c9654d5d6cd4624277a",
+    "host_test": "TestT14LiveBrainArchiveShow",
+    "host_seconds": 0.22,
+    "browser": "Independent Chrome script entered actual PNG detail before host query; after accepted-to-applied, independently asserted one health card and no unavailable-detail placeholder.",
+    "screenshot": "browser-detail-to-show.png",
+    "scope": "synthetic Core, real MCP/Brain host, WebSocket and browser DOM; not model inference or production"
+  }
 }
