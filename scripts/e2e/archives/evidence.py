@@ -27,12 +27,12 @@ model=[]
 for p in sorted((d/'wire').glob('*-output.json')):
  try:x=json.loads(p.read_text())
  except (ValueError,UnicodeDecodeError):continue
- model.append({'capture':str(p.relative_to(d)),'sha256':sha(p),**{k:x[k] for k in ['usage','configuration_fingerprint','protocol_version','invocation_id','input_digest','provider','requested_model','model','response_model','stop_reason','execution','error'] if k in x}})
+ model.append({'capture':str(p.relative_to(d)),'sha256':sha(p),**{k:x[k] for k in ['usage','configuration_fingerprint','protocol_version','invocation_id','input_digest','provider','requested_model','model','response_model','stop_reason','execution','error','error_code'] if k in x}})
 status={q['id']:{'status':'not_run','requirement':q.get('question',q.get('operation'))} for q in json.loads(Path(__file__).with_name('questions.json').read_text())}
 for t in turns:status.setdefault(t['case'],{'requirement':'additional exploratory natural-language turn'}).update(status='needs_evidence_review',capture=t['capture'])
 for p in sorted(d.glob('operations-*.json')):
  for k,v in json.loads(p.read_text()).items():status[k].update(status=v['status'],capture=p.name,reason=v.get('reason',''))
 status['42'].update(status='deferred',reason='Requires T16 real isolated NAS restore; no PASS claimed')
-out={'synthetic_only':True,'collected_at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'code_sha':command(['git','rev-parse','HEAD']),'working_changes':command(['git','status','--porcelain']),'hardware':{'model':command(['sysctl','-n','hw.model']),'cpu_count':command(['sysctl','-n','hw.ncpu']),'memory_bytes':command(['sysctl','-n','hw.memsize']),'os':command(['sw_vers','-productVersion'])},'resources':files,'fixture_manifest_sha256':sha(fixtures/'manifest.json'),'fixtures':manifest,'model_attempts':model,'query_turns':turns,'cases':status}
+out={'synthetic_only':True,'collected_at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'code_sha':command(['git','rev-parse','HEAD']),'working_changes':command(['git','status','--porcelain']),'hardware':{'model':command(['sysctl','-n','hw.model']),'cpu_count':command(['sysctl','-n','hw.ncpu']),'memory_bytes':command(['sysctl','-n','hw.memsize']),'os':command(['sw_vers','-productVersion'])},'runtime_manifests':[{ 'file':p.name, 'sha256':sha(p), 'manifest':json.loads(p.read_text()) } for p in sorted(d.glob('runtime-manifest*.json'))], 'source_replacements':[json.loads(p.read_text()) for p in sorted(d.glob('source-replacement-*.json'))], 'resources':files,'fixture_manifest_sha256':sha(fixtures/'manifest.json'),'fixtures':manifest,'model_attempts':model,'query_turns':turns,'cases':status}
 p=d/'evidence-index.json';p.write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n');p.chmod(0o600)
 print(json.dumps({'model_attempts':len(model),'query_turns':len(turns),'cases':{k:v['status'] for k,v in status.items()}},ensure_ascii=False))
