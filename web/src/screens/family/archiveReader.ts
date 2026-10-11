@@ -1,5 +1,6 @@
 import { ApiError, type ApiClient } from '../../core/api';
 import type { ArchiveAnalysis, ArchiveDetail, ArchiveEntities, ArchiveFilter, ArchivePage } from '../../types/archives';
+import { readMilkTrend, type MilkPeriod, type MilkTrendData } from './feedingTrend';
 export interface ArchiveSnapshot {
     viewToken: string;
     filter: ArchiveFilter;
@@ -7,6 +8,7 @@ export interface ArchiveSnapshot {
     entities: ArchiveEntities;
     analysis: ArchiveAnalysis | null;
     detail: ArchiveDetail | null;
+    milk: MilkTrendData | null;
     at: number;
 }
 export interface ArchiveReadState {
@@ -20,12 +22,14 @@ const navigation = new WeakMap<ApiClient, {
     filter: ArchiveFilter;
     pages: number;
     metric: string;
+    period: MilkPeriod;
 }>();
 /** Owns only verified archive content. Other API successes cannot renew it.
  * Every poll rebuilds the complete loaded window, including expanded history. */
 export class ArchiveReader {
     value: ArchiveReadState = { viewToken:'',snapshot: null, busy: false, failed: false, epoch: 0 };
     metric = 'volume';
+    period: MilkPeriod = 'day';
     filter: ArchiveFilter = {};
     documentID = '';
     viewID = '';
@@ -37,10 +41,11 @@ export class ArchiveReader {
     private listeners = new Set<() => void>();
     private timer: number | null = null;
     private stopped = false;
-    constructor(private api: ApiClient) { const saved = navigation.get(api); if (saved) {
+    constructor(private api: ApiClient, private timezone = 'Asia/Singapore') { const saved = navigation.get(api); if (saved) {
         this.filter = { ...saved.filter };
         this.pages = saved.pages;
         this.metric = saved.metric;
+        this.period = saved.period;
     } }
     private start() {
         if (this.timer !== null)
@@ -61,11 +66,12 @@ export class ArchiveReader {
     select(filter: ArchiveFilter) { this.viewID = ''; this.viewToken = ''; this.filter = { ...filter }; this.documentID = ''; this.pages = 1; this.invalidate(); return this.load(); }
     open(id: string) { this.documentID = id; this.invalidate(); return this.load(); }
     selectMetric(metric: string) { this.metric = metric; this.invalidate(); return this.load(); }
+    selectPeriod(period: MilkPeriod) { this.period = period; this.invalidate(); return this.load(); }
     more() { if (this.value.snapshot?.page.next_cursor && this.pages < 20)
         this.pages++; return this.load(); }
     moreEntities(){if(this.entityPages<10)this.entityPages++;this.invalidate();return this.load();}
  stop() { if (!this.viewID)
-        navigation.set(this.api, { filter: { ...this.filter }, pages: this.pages, metric: this.metric }); this.stopped = true; if (this.timer !== null)
+        navigation.set(this.api, { filter: { ...this.filter }, pages: this.pages, metric: this.metric, period: this.period }); this.stopped = true; if (this.timer !== null)
         window.clearInterval(this.timer); this.timer = null; this.invalidate(); this.listeners.clear(); }
     async load(): Promise<void> {
         this.start();
@@ -101,14 +107,17 @@ export class ArchiveReader {
             page.next_cursor = cursor;
             if(this.pages===20&&cursor){page.next_cursor=undefined;page.coverage={complete:false,reason:'presentation_window_limit'};}
             const query = { ownership: filter.ownership, domain: filter.domain, entity_id: filter.entity_id, query: filter.query };
-            const analysisRequest = view ? Promise.resolve(view.analysis) : this.api.analyzeArchives(filter.ownership ? { ...query, operation: 'count', count: 'documents' } : filter.domain === 'finance' ? { ...query, operation: 'sum', metric: 'amount' } : filter.domain === 'education' ? { ...query, operation: 'ratio', metric: 'score' } : filter.domain === 'health' ? { ...query, operation: 'series', metric: this.metric } : { ...query, operation: 'count', count: 'documents' }, controller.signal).catch((error: unknown) => {
+            const allowMilk = !view && !documentID && !filter.ownership && (!filter.domain || filter.domain === 'health') && this.metric === 'volume';
+            const boundedAnalysis = (error: unknown) => {
                 if (error instanceof ApiError && error.status === 409 && error.code === 'conflict' && error.details?.reason === 'analysis_response_limit') return null;
                 throw error;
-            });
-            const [entities, analysis, detail] = await Promise.all([
+            };
+            const analysisRequest = view ? Promise.resolve(view.analysis) : allowMilk && filter.domain === 'health' ? Promise.resolve(null) : this.api.analyzeArchives(filter.ownership ? { ...query, operation: 'count', count: 'documents' } : filter.domain === 'finance' ? { ...query, operation: 'sum', metric: 'amount' } : filter.domain === 'education' ? { ...query, operation: 'ratio', metric: 'score' } : filter.domain === 'health' ? { ...query, operation: 'series', metric: this.metric } : { ...query, operation: 'count', count: 'documents' }, controller.signal).catch(boundedAnalysis);
+            const [entities, analysis, detail, milk] = await Promise.all([
                 this.api.getArchiveEntities(controller.signal),
                 analysisRequest,
                 documentID ? this.api.getArchiveDocument(documentID, controller.signal) : Promise.resolve(null),
+                allowMilk ? readMilkTrend(this.api, filter, this.period, this.timezone, controller.signal).catch(boundedAnalysis) : Promise.resolve(null),
             ]);
             let entityCursor=entities.next_cursor;const entityCursors=new Set<string>();
             for(let i=1;i<this.entityPages&&entityCursor;i++){
@@ -118,7 +127,8 @@ export class ArchiveReader {
             entities.next_cursor=this.entityPages<10?entityCursor:undefined;
             if (analysis && `${analysis.data_epoch}:${analysis.generation}` !== generation)
                 throw new Error('Analysis generation changed');
-            if (!analysis) {
+            if (milk && milk.generation !== generation) throw new Error('Milk analysis generation changed');
+            if (!analysis && !milk) {
                 const verified = await this.api.getArchives({ ...filter, limit: 1 }, controller.signal);
                 if (verified.generation !== generation) throw new Error('Generation changed');
             }
@@ -128,7 +138,7 @@ export class ArchiveReader {
                 await this.api.getArchiveView(this.viewID, controller.signal);
             if (seq !== this.sequence || controller.signal.aborted || this.stopped)
                 return;
-            this.value = { viewToken:this.viewToken,snapshot: { viewToken: this.viewToken, filter, page, entities, analysis, detail, at: started }, busy: false, failed: false, epoch: this.value.epoch };
+            this.value = { viewToken:this.viewToken,snapshot: { viewToken: this.viewToken, filter, page, entities, analysis, detail, milk, at: started }, busy: false, failed: false, epoch: this.value.epoch };
             this.emit();
         }
         catch {

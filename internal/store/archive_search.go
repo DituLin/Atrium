@@ -522,7 +522,8 @@ func searchUnique(in []string) []string {
 type searchCursor struct {
 	Binding                         string `json:"b"`
 	Epoch, Generation, IndexVersion int64
-	After                           string `json:"a"`
+	After                           string  `json:"a"`
+	AfterTime                       float64 `json:"t,omitempty"`
 }
 
 func signSearchCursor(c searchCursor, key []byte) string {
@@ -617,7 +618,7 @@ func (r *ArchiveTasks) searchArchives(ctx context.Context, a archiveSearchActor,
 		page.Generation = fmt.Sprintf("%d:%d", epoch, generation)
 		criteria := f
 		criteria.Cursor = ""
-		bind, _ := json.Marshal([]any{h, identity, public, criteria, document})
+		bind, _ := json.Marshal([]any{"recent-v1", h, identity, public, criteria, document})
 		hash := sha256.Sum256(bind)
 		c, e := readSearchCursor(f.Cursor, searchCursor{Binding: fmt.Sprintf("%x", hash), Epoch: epoch, Generation: generation, IndexVersion: indexVersion}, key)
 		if e != nil {
@@ -637,22 +638,24 @@ func (r *ArchiveTasks) searchArchives(ctx context.Context, a archiveSearchActor,
 			page.IndexStatus = "indexing"
 		}
 		rows, e := tx.QueryContext(ctx, `SELECT * FROM (
-SELECT d.id AS sort_id,d.document_revision,coalesce(s.body,''),coalesce(s.text,''),CASE WHEN ?='' THEN 1 WHEN length(?)>2 THEN (coalesce(s.id,0) IN (SELECT rowid FROM archive_search_fts WHERE archive_search_fts MATCH ?) OR instr(coalesce(s.text,''),?)>0) ELSE instr(coalesce(s.text,''),?)>0 END,'' AS legacy_entity,'' AS legacy_record
+SELECT d.id AS sort_id,d.document_revision,coalesce(s.body,''),coalesce(s.text,''),CASE WHEN ?='' THEN 1 WHEN length(?)>2 THEN (coalesce(s.id,0) IN (SELECT rowid FROM archive_search_fts WHERE archive_search_fts MATCH ?) OR instr(coalesce(s.text,''),?)>0) ELSE instr(coalesce(s.text,''),?)>0 END,'' AS legacy_entity,'' AS legacy_record,coalesce((SELECT max(julianday(j.value)) FROM json_each(coalesce(s.body,'{}'),'$.dates') j),julianday(d.created_at),0) AS sort_time
 FROM archive_documents d LEFT JOIN archive_search_rows s ON s.household_id=d.household_id AND s.document_id=d.id AND s.public=? AND s.epoch=? AND s.generation=? WHERE d.household_id=? AND d.withdrawn=0 AND (?=0 OR d.tv_visible=1)
 UNION ALL
-SELECT 'legacy:'||p.root_record_id,1,f.payload_json,'',1,p.entity_id,f.id FROM archive_legacy_projections p JOIN family_records f ON f.id=p.current_record_id JOIN local_household l ON l.singleton=1 AND l.household_id=p.household_id WHERE p.household_id=? AND p.active=1 AND json_extract(f.payload_json,'$.retracted') IS NOT 1 AND (?=0 OR json_extract(f.payload_json,'$.display_on_tv')=1) AND NOT EXISTS(SELECT 1 FROM family_records newer WHERE newer.supersedes_id=f.id)
-) WHERE sort_id>? ORDER BY sort_id LIMIT 1001`, f.Query, f.Query, archive.LiteralFTS(strings.ToLower(f.Query)), strings.ToLower(f.Query), strings.ToLower(f.Query), public, epoch, generation, h, public, h, public, c.After)
+SELECT 'legacy:'||p.root_record_id,1,f.payload_json,'',1,p.entity_id,f.id,coalesce(julianday(json_extract(f.payload_json,'$.occurred_at')),0) FROM archive_legacy_projections p JOIN family_records f ON f.id=p.current_record_id JOIN local_household l ON l.singleton=1 AND l.household_id=p.household_id WHERE p.household_id=? AND p.active=1 AND json_extract(f.payload_json,'$.retracted') IS NOT 1 AND (?=0 OR json_extract(f.payload_json,'$.display_on_tv')=1) AND NOT EXISTS(SELECT 1 FROM family_records newer WHERE newer.supersedes_id=f.id)
+) WHERE (?='' OR sort_time<? OR (sort_time=? AND sort_id<?)) ORDER BY sort_time DESC,sort_id DESC LIMIT 1001`, f.Query, f.Query, archive.LiteralFTS(strings.ToLower(f.Query)), strings.ToLower(f.Query), strings.ToLower(f.Query), public, epoch, generation, h, public, h, public, c.After, c.AfterTime, c.AfterTime, c.After)
 		if e != nil {
 			return e
 		}
 		defer rows.Close()
 		scanned, chars := 0, 0
 		last := c.After
+		lastTime := c.AfterTime
 		for rows.Next() {
 			var id, body, text, legacyEntity, legacyRecord string
 			var matched bool
 			var rev int64
-			if e = rows.Scan(&id, &rev, &body, &text, &matched, &legacyEntity, &legacyRecord); e != nil {
+			var sortTime float64
+			if e = rows.Scan(&id, &rev, &body, &text, &matched, &legacyEntity, &legacyRecord, &sortTime); e != nil {
 				return e
 			}
 			scanned++
@@ -660,6 +663,7 @@ SELECT 'legacy:'||p.root_record_id,1,f.payload_json,'',1,p.entity_id,f.id FROM a
 			if scanned > 1000 || chars > 1<<20 {
 				page.Coverage = archive.SearchCoverage{Complete: false, Reason: "scan_budget; narrow filters or continue"}
 				c.After = last
+				c.AfterTime = lastTime
 				page.NextCursor = signSearchCursor(c, key)
 				break
 			}
@@ -692,6 +696,7 @@ SELECT 'legacy:'||p.root_record_id,1,f.payload_json,'',1,p.entity_id,f.id FROM a
 			if chars > 1<<20 {
 				page.Coverage = archive.SearchCoverage{Complete: false, Reason: "scan_budget; continue or narrow filters"}
 				c.After = last
+				c.AfterTime = lastTime
 				page.NextCursor = signSearchCursor(c, key)
 				break
 			}
@@ -700,6 +705,7 @@ SELECT 'legacy:'||p.root_record_id,1,f.payload_json,'',1,p.entity_id,f.id FROM a
 			}
 			if !matched || !searchMatches(item, text, f) {
 				last = id
+				lastTime = sortTime
 				continue
 			}
 			if f.Query != "" {
@@ -718,6 +724,7 @@ SELECT 'legacy:'||p.root_record_id,1,f.payload_json,'',1,p.entity_id,f.id FROM a
 			candidate := page
 			candidate.Items = append(append([]archive.SearchItem{}, page.Items...), item)
 			c.After = id
+			c.AfterTime = sortTime
 			candidate.NextCursor = signSearchCursor(c, key)
 			wire, _ := json.Marshal(candidate)
 			if len(page.Items) == 0 && len(wire) > 8<<10 {
@@ -725,6 +732,7 @@ SELECT 'legacy:'||p.root_record_id,1,f.payload_json,'',1,p.entity_id,f.id FROM a
 			}
 			if len(page.Items) >= f.Limit || len(wire) > 8<<10 {
 				c.After = last
+				c.AfterTime = lastTime
 				page.NextCursor = signSearchCursor(c, key)
 				break
 			}
@@ -740,6 +748,7 @@ SELECT 'legacy:'||p.root_record_id,1,f.payload_json,'',1,p.entity_id,f.id FROM a
 			}
 			page.Items = append(page.Items, item)
 			last = id
+			lastTime = sortTime
 		}
 		return rows.Err()
 	})

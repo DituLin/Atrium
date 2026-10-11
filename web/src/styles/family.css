@@ -53,3 +53,9 @@
 .archive-summary { border-bottom:1px solid var(--hairline); padding-bottom:calc(20 * var(--u)); }
 
 .archive-analysis-value { padding:calc(10 * var(--u)) 0; font-size:calc(27 * var(--u)); }
+.milk-trend { margin-bottom:calc(30 * var(--u)); }
+.milk-period { display:flex; }
+.milk-period .btn { margin-left:calc(12 * var(--u)); }
+.milk-period .btn[aria-pressed=true] { background:var(--silk); color:var(--celadon); }
+.milk-trend > .muted { font-size:calc(23 * var(--u)); }
+.milk-trend .family-trend { margin-left:0; margin-right:0; }

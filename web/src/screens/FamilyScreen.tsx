@@ -6,6 +6,7 @@ import { TopNav, focusTopNav } from '../ui/TopNav';
 import { mapRemoteKey } from '../ui/keys';
 import { onReadingKey } from './info/readingRegion';
 import { ArchiveAnalysisPanel } from './family/ArchiveAnalysisPanel';
+import { MilkTrend } from './family/MilkTrend';
 import { ArchiveReader } from './family/archiveReader';
 import type { ArchiveReadState } from './family/archiveReader';
 import type {ApiClient} from '../core/api';
@@ -14,8 +15,10 @@ import { DOMAINS, processingLabel, parseLabel, archiveDate, evidenceLocation, fa
 const archiveFocus=new WeakMap<ApiClient,{id:string;index:number;scroll:number}>();
 export function FamilyScreen() {
     const { api, state, dispatch, archives } = useApp();
-    const reader = useMemo(() => new ArchiveReader(api), [api]);
+    const timezone = state.home?.home.timezone ?? 'Asia/Singapore';
+    const reader = useMemo(() => new ArchiveReader(api, timezone), [api, timezone]);
     const [metric, setMetric] = useState(reader.metric);
+    const [period, setPeriod] = useState(reader.period);
     const [value, setValue] = useState<ArchiveReadState>(reader.value);
     const [filter, setFilter] = useState<ArchiveFilter>(() => ({ ...reader.filter }));
     const [documentID, setDocumentID] = useState('');
@@ -34,7 +37,7 @@ export function FamilyScreen() {
         controls.current[0]?.focus(); }, []);
     const anchor = useRef(archiveFocus.get(api)??{ id: '', index: 0, scroll: 0 });
     const returning = useRef(archiveFocus.has(api));
-    useEffect(() => { const region=content.current;const off = reader.subscribe(() => {setDocumentID(reader.documentID);setFilter({...reader.filter});setMetric(reader.metric);setValue({ ...reader.value });}); void reader.load(); return () => { archiveFocus.set(api,{...anchor.current,scroll:region?.scrollTop??anchor.current.scroll});off(); reader.stop(); }; }, [reader,api]);
+    useEffect(() => { const region=content.current;const off = reader.subscribe(() => {setDocumentID(reader.documentID);setFilter({...reader.filter});setMetric(reader.metric);setPeriod(reader.period);setValue({ ...reader.value });}); void reader.load(); return () => { archiveFocus.set(api,{...anchor.current,scroll:region?.scrollTop??anchor.current.scroll});off(); reader.stop(); }; }, [reader,api]);
     useEffect(() => { if (generation.current !== state.archiveGeneration) {
         generation.current = state.archiveGeneration;
         reader.invalidate();
@@ -65,6 +68,7 @@ export function FamilyScreen() {
     useEffect(() => archives?.register(route, async (signal) => { reader.invalidate(); await reader.load(); if (signal.aborted || !reader.value.snapshot || reader.value.failed)
         throw new Error('Archive verification failed'); await new Promise<void>(resolve => requestAnimationFrame(() => resolve())); }), [archives, route, reader]);
     const dateLabel = (value: string) => archiveDate(value, clockOptions(state.home));
+    const showMilk = !viewID && !documentID && !filter.ownership && (!filter.domain || filter.domain === 'health') && metric === 'volume' && !state.needsPairing && !state.authExpired;
     const current = snapshot?.detail;
     const entities = snapshot?.entities.items ?? [];
     const choose = (next: ArchiveFilter) => { if (viewID)
@@ -95,7 +99,7 @@ export function FamilyScreen() {
             controls.current[i - 1]?.focus();
     } if (key === 'down')
         (controls.current[i + 1] ?? refreshButton.current)?.focus(); if (key === 'right')
-        (documentID ? back.current : cards.current[0] ?? content.current)?.focus(); };
+        (documentID ? back.current : content.current?.querySelector<HTMLButtonElement>('.milk-period button') ?? cards.current[0] ?? content.current)?.focus(); };
     return <div className="page family-page" onKeyDown={event => { if (documentID && mapRemoteKey(event) === 'back') {
         event.preventDefault();
         event.stopPropagation();
@@ -114,7 +118,8 @@ export function FamilyScreen() {
         controls.current[choices.length - 1]?.focus(); if (key === 'right')
         content.current?.focus(); }}>刷新档案</RemoteButton>
   </aside><div className="family-content" ref={content} role="region" aria-label="家庭档案与分析" tabIndex={0} onKeyDown={event => { if (event.target === event.currentTarget)
-        onReadingKey(event, { left: () => controls.current[0]?.focus(), top: () => focusTopNav('family'), right: () => content.current?.querySelector<HTMLButtonElement>('.archive-preview button:not([disabled])')?.focus(), bottom: () => documentID ? content.current?.querySelector<HTMLButtonElement>('.archive-preview button:not([disabled])')?.focus() : cards.current[0]?.focus() }); }}>
+        onReadingKey(event, { left: () => controls.current[0]?.focus(), top: () => focusTopNav('family'), right: () => content.current?.querySelector<HTMLButtonElement>('.milk-period button, .archive-preview button:not([disabled])')?.focus(), bottom: () => documentID ? content.current?.querySelector<HTMLButtonElement>('.archive-preview button:not([disabled])')?.focus() : cards.current[0]?.focus() }); }}>
+   {showMilk ? <MilkTrend data={snapshot?.milk ?? null} period={period} busy={value.busy} timezone={timezone} onPeriod={next => { void reader.selectPeriod(next); }} onLeft={() => controls.current[0]?.focus()} onUp={() => focusTopNav('family')} onDown={() => (cards.current[0] ?? content.current)?.focus()} onRead={() => content.current?.focus()}/> : null}
    {!snapshot ? <div className="family-empty"><h2 className="serif">{value.failed ? '等待重新核验' : '正在读取家庭档案'}</h2><p>未核验超过 30 秒的内容会自动隐藏。</p></div> : documentID ? current ? <>
     <RemoteButton ref={back} className="btn" onClick={close} onDirection={key => { if (key === 'down')
             content.current?.focus(); if (key === 'left')
@@ -127,7 +132,7 @@ export function FamilyScreen() {
     {current.item.evidence.map((e, i) => <article className="archive-evidence" key={i}><h3>{factLabel(e.field_name ?? '')}</h3><p>{e.asserted_value ?? e.excerpt}</p>{e.asserted_value && e.asserted_value !== e.excerpt ? <p className="muted">原文：{e.excerpt}</p> : null}<small>{evidenceLocation(e)}{e.confirmed ? ' · 已确认' : ' · 待核实'}</small></article>)}
     <ArchivePreview key={`${value.epoch}:${current.generation}:${current.item.document_revision}`} detail={current} onRead={() => content.current?.focus()}/>
    </> : <p>该档案暂不可读取。</p> : <>
-    {!filter.ownership ? snapshot.analysis ? <ArchiveAnalysisPanel analysis={snapshot.analysis} dateLabel={dateLabel}/> : <p className="family-message">统计范围较大，可通过微信或 Discord 指定日期范围查询。下方档案已核验，统计暂不可用。</p> : <p className="muted">待归属与待确认内容不纳入确定统计。</p>}
+    {!filter.ownership ? snapshot.analysis ? <ArchiveAnalysisPanel analysis={snapshot.analysis} dateLabel={dateLabel}/> : snapshot.milk ? null : <p className="family-message">统计范围较大，可通过微信或 Discord 指定日期范围查询。下方档案已核验，统计暂不可用。</p> : <p className="muted">待归属与待确认内容不纳入确定统计。</p>}
     {!snapshot.page.items.length ? <div className="family-empty"><h2 className="serif">还没有可展示的档案</h2><p>直接发送文本、图片或文件，系统会识别内容和归属，无需先建立家人档案。</p></div> : null}
     {!snapshot.page.coverage.complete?<p className="muted">{snapshot.page.coverage.reason==='presentation_window_limit'?'已达到当前阅读窗口上限，请按人物或领域缩小范围。':'部分档案尚待识别或确认。'}</p>:null}
                 <div ref={results} data-archive-view-token={snapshot.viewToken} className="family-history">{snapshot.page.items.map((item, i) => <RemoteButton key={item.document_id} ref={el => { cards.current[i] = el; }} className="family-record archive-card" onFocus={() => { anchor.current = { id: item.document_id, index: i, scroll: content.current?.scrollTop ?? 0 }; }} onClick={() => open(item.document_id, i)} onDirection={key => { if (key === 'left')

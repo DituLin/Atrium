@@ -84,6 +84,60 @@ func TestArchiveSearchScreenRevocationAndCursorBinding(t *testing.T) {
 	require.Error(t, e)
 }
 
+func TestArchiveSearchRecentFirstAcrossPagesAndLegacyRecords(t *testing.T) {
+	d := testutil.NewDB(t)
+	r := d.ArchiveTasksWithClock(&archiveClock{now: archiveNow})
+	a := archiveActor(t, d)
+	ctx := context.Background()
+	_, err := d.SQL().Exec(`UPDATE local_household SET household_id='home-1'`)
+	require.NoError(t, err)
+	require.NoError(t, d.FamilyRecords().PutMember(ctx, domain.FamilyMember{ID: "baby-recent", Name: "合成宝宝"}, archiveNow))
+	var expected []string
+	for i, date := range []string{"2026-10-11T08:00:00Z", "2026-10-11T10:00:00Z", "2026-10-11T10:00:00Z"} {
+		at, err := time.Parse(time.RFC3339, date)
+		require.NoError(t, err)
+		record, _, err := d.FamilyRecords().Record(ctx, "synthetic-recent", fmt.Sprintf("recent-%d", i), domain.FamilyRecordInput{MemberID: "baby-recent", Category: "health", Title: "合成喂奶", OccurredAt: at, DisplayOnTV: true}, archiveNow)
+		require.NoError(t, err)
+		require.NoError(t, d.ProjectLegacyArchive(ctx, record.ID))
+		expected = append([]string{"legacy:" + record.ID}, expected...)
+	}
+	// ULIDs created within one millisecond may have random suffix order.
+	if expected[0] < expected[1] {
+		expected[0], expected[1] = expected[1], expected[0]
+	}
+	var documents []string
+	for _, date := range []string{"2026-10-03", "2026-10-10"} {
+		rec, fence, extraction := publicationFixture(t, d, r, "recent-"+date, domain.ArchiveInputText)
+		bundle := literalBundle(t, "林明", []publicationLiteral{{Name: "report_date", Value: date}}, "")
+		result := bundle.Understanding.Chunks[0].Result
+		result.Fields[0].Normalizations = []archive.Normalization{{Kind: "date", Value: date}}
+		bundle = revalidatePublication(t, bundle, result)
+		fence = saveBundle(t, r, fence, bundle)
+		_, err := r.PublishExtraction(ctx, fence, extraction.ID)
+		require.NoError(t, err)
+		documents = append(documents, rec.DocumentID)
+	}
+	expected = append(expected, documents[1], documents[0])
+	_, err = indexAllArchiveSearch(ctx, r, "home-1")
+	require.NoError(t, err)
+	for _, public := range []bool{false, true} {
+		var got []string
+		cursor := ""
+		for i := 0; i < 6; i++ {
+			page, err := r.SearchArchives(ctx, a, "home-1", public, archive.SearchFilter{Limit: 1, Cursor: cursor}, []byte("recent-key"))
+			require.NoError(t, err)
+			for _, item := range page.Items {
+				got = append(got, item.DocumentID)
+			}
+			cursor = page.NextCursor
+			if cursor == "" {
+				break
+			}
+		}
+		require.Equal(t, expected, got, "public=%v", public)
+	}
+}
+
 func TestArchiveReadSnapshotDoesNotBlockWriter(t *testing.T) {
 	d := testutil.NewDB(t)
 	_ = archiveActor(t, d)

@@ -52,3 +52,29 @@ it('does not downgrade authorization or generation conflicts to unavailable stat
 it('rejects a generation change while revalidating a bounded analysis fallback',async()=>{
  vi.useFakeTimers();const a=api();vi.mocked(a.analyzeArchives).mockRejectedValue(new ApiError(409,'conflict','bounded',null,{reason:'analysis_response_limit'}));vi.mocked(a.getArchives).mockResolvedValueOnce(page).mockResolvedValueOnce({...page,generation:'2:1'});const reader=new ArchiveReader(a);await reader.load();expect(reader.value.snapshot).toBeNull();expect(reader.value.failed).toBe(true);reader.stop();
 });
+
+it('loads the milk chart from the whole authorized day rather than the current archive page',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-11T09:00:00Z'));
+ const a=api();const reader=new ArchiveReader(a);await reader.load();
+ expect(a.analyzeArchives).toHaveBeenCalledWith(expect.objectContaining({operation:'series',metric:'volume',domain:'health',date_from:'2026-10-11',date_to:'2026-10-11'}),expect.anything());
+ reader.stop();
+});
+
+it('loads all 30 local days with Core decimal totals and the selected person',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-10T17:00:00Z'));
+ const a=api();vi.mocked(a.analyzeArchives).mockImplementation(async q=>({data_epoch:1,generation:1,groups:q.date_from==='2026-10-11'?[{metric:'volume',unit:'ml',value:'120.125'}]:[],coverage:{complete:true}} as never));
+ const reader=new ArchiveReader(a);reader.filter={domain:'health',entity_id:'baby',query:'喂奶'};await reader.selectPeriod('month');
+ const calls=vi.mocked(a.analyzeArchives).mock.calls.map(([q])=>q);
+ expect(calls).toHaveLength(30);expect(new Set(calls.map(q=>q.date_from)).size).toBe(30);
+ expect(calls[0]).toEqual(expect.objectContaining({operation:'sum',metric:'volume',domain:'health',entity_id:'baby',query:'喂奶',date_from:'2026-09-12',date_to:'2026-09-12'}));
+ expect(calls).toContainEqual(expect.objectContaining({date_from:'2026-10-11',date_to:'2026-10-11'}));
+ expect(reader.value.snapshot?.milk?.groups).toEqual([{metric:'volume',unit:'ml',value:'120.125',date:'2026-10-11',date_precision:'day'}]);
+ reader.stop();
+});
+
+it('hides a monthly chart if one day belongs to a different authorization generation',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-11T09:00:00Z'));
+ const a=api();vi.mocked(a.analyzeArchives).mockImplementation(async q=>({data_epoch:1,generation:q.date_from==='2026-10-10'?2:1,groups:[],coverage:{complete:true}} as never));
+ const reader=new ArchiveReader(a);reader.filter={domain:'health'};await reader.selectPeriod('month');
+ expect(reader.value.snapshot).toBeNull();expect(reader.value.failed).toBe(true);reader.stop();
+});

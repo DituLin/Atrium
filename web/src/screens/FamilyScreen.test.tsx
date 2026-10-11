@@ -60,3 +60,21 @@ it('shows verified cards with an explicit analysis limit instead of hiding the a
  const h=setup();vi.mocked(h.api.analyzeArchives).mockRejectedValue(new ApiError(409,'conflict','bounded',null,{reason:'analysis_response_limit'}));
  await screen.findByRole('button',{name:/合成health/});expect(screen.getByText(/下方档案已核验，统计暂不可用/)).toBeTruthy();expect(screen.queryByText('等待重新核验')).toBeNull();expect(screen.queryByText('200')).toBeNull();
 });
+
+it('keeps the milk chart and day/week/month controls visible when only one feed is recorded',async()=>{
+ const h=setup();
+ vi.mocked(h.api.analyzeArchives).mockImplementation(async q=>({snapshot_id:'milk',data_epoch:1,generation:1,projection:'public',algorithm_version:'archive-analysis/6',coverage:{complete:true,included:1,excluded:0,reasons:[]},groups:q.metric==='volume'?[{metric:'volume',unit:'ml',date:'2026-10-11T09:00:00Z',value:'60'}]:[{metric:'documents',value:'4'}]}));
+ await screen.findByRole('heading',{name:'奶量趋势'});
+ expect(screen.getByRole('button',{name:'日'}).getAttribute('aria-pressed')).toBe('true');
+ expect(screen.getByRole('button',{name:'周'})).toBeTruthy();
+ expect(screen.getByRole('button',{name:'月'})).toBeTruthy();
+ expect(screen.getByRole('img',{name:/奶量趋势/})).toBeTruthy();
+ const day=screen.getByRole('button',{name:'日'});day.focus();fireEvent.keyDown(day,{key:'ArrowRight'});
+ expect(document.activeElement).toBe(screen.getByRole('button',{name:'周'}));
+ fireEvent.keyDown(document.activeElement!,{key:'Enter'});
+ await waitFor(()=>expect(h.api.analyzeArchives).toHaveBeenCalledWith(expect.objectContaining({operation:'sum',metric:'volume',domain:'health',date_from:expect.any(String),date_to:expect.any(String)}),expect.anything()));
+ expect(screen.getByRole('button',{name:'周'}).getAttribute('aria-pressed')).toBe('true');
+ expect(document.activeElement).toBe(screen.getByRole('button',{name:'周'}));
+ fireEvent.keyDown(document.activeElement!,{key:'ArrowRight'});
+ expect(document.activeElement).toBe(screen.getByRole('button',{name:'月'}));
+});
