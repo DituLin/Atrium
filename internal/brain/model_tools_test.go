@@ -31,3 +31,25 @@ func TestModelToolsRejectUnexpectedProperties(t *testing.T) {
 		t.Fatal("unexpected property accepted")
 	}
 }
+
+func TestCompleteModelToolInventory(t *testing.T) {
+	inventory := []*mcp.Tool{}
+	for name := range modelArgumentFields {
+		if name == "home_get_operation" {
+			continue
+		}
+		inventory = append(inventory, &mcp.Tool{Name: name, InputSchema: map[string]any{"type": "object", "properties": map[string]any{}}})
+	}
+	if _, err := CompleteModelTools(inventory); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := CompleteModelTools(inventory[1:]); err == nil {
+		t.Fatal("missing required tool accepted")
+	}
+	if _, err := CompleteModelTools(append(inventory, inventory[0])); err == nil {
+		t.Fatal("duplicate accepted")
+	}
+	if got, err := CompleteModelTools(append(inventory, &mcp.Tool{Name: "shell"})); err != nil || len(got) != len(inventory) {
+		t.Fatal("unknown tool should remain omitted", err)
+	}
+}

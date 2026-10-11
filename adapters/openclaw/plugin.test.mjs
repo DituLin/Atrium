@@ -165,8 +165,8 @@ test('independent module copies share production global controller with real hos
 test('manifest declares the complete registered tool inventory',async()=>{
  const {readFile}=await import('node:fs/promises');
  const manifest=JSON.parse(await readFile(new URL('./openclaw.plugin.json',import.meta.url),'utf8'));
- assert.deepEqual([...manifest.contracts.tools].sort(),Object.keys(TOOL_FIELDS).sort());
- assert.deepEqual(Object.keys(manifest.toolMetadata).sort(),Object.keys(TOOL_FIELDS).sort());
+ assert.deepEqual([...manifest.contracts.tools].sort(),[...Object.keys(TOOL_FIELDS),'home_accept_archive_input'].sort());
+ assert.deepEqual(Object.keys(manifest.toolMetadata).sort(),[...Object.keys(TOOL_FIELDS),'home_accept_archive_input'].sort());
 });
 test('canonical IM message claim blocks replay and fails closed on absent identity',async t=>{
  const claimed=new Set();const requests=[];
@@ -187,3 +187,13 @@ test('ingress identity disagreement and ledger failure prevent dispatch',async t
  assert.equal((await f.hooks.before_dispatch({channel:'discord',messageId:ctx.messageId},ctx)).handled,true);
  assert.equal((await f.hooks.before_dispatch({channel:'discord',messageId:'223456789012345678'},ctx)).handled,true);
 });
+test('archive input tool is bound to native current run and disallows model paths',async t=>{
+ const accepted=[];const archiveBridge={current:()=>({ref:'trusted-ref',digest:'trusted-digest'}),prompt:()=> 'complete native caption',accept:async(args,current)=>{accepted.push({args,current});return {schema_version:'archive-input/1',all_saved:false,slots:[]};},start(){},stop(){},reconcile:async()=>{}};
+ const f=fixture(t,{archiveBridge});const tool=f.factories[0].fn(f.ctx).find(x=>x.name==='home_accept_archive_input');assert.ok(tool);
+ await f.hooks.before_agent_run({runId:'archive-run'},f.ctx);
+ await f.hooks.before_tool_call({runId:'archive-run',toolCallId:'archive-call',toolName:tool.name},f.ctx);
+ assert.equal((await tool.execute('archive-call',{visibility_intent:'inherit',input_kind:'files',path:'/etc/passwd'})).isError,true);
+ await tool.execute('archive-call',{visibility_intent:'private',input_kind:'files'});
+ assert.deepEqual(accepted,[{args:{visibility_intent:'private',input_kind:'files'},current:{ref:'trusted-ref',digest:'trusted-digest'}}]);
+});
+test('archive tool call replay is receipt-only and changed parameters cannot mutate intent',async t=>{let n=0;const bridge={current:()=>({ref:'x',digest:'y'}),prompt:()=>'',accept:async()=>{n++;return{schema_version:'archive-input/1',intent:'private',all_saved:false,slots:[]};},stop(){},start(){}};const f=fixture(t,{archiveBridge:bridge});const tool=f.factories[0].fn(f.ctx).find(x=>x.name==='home_accept_archive_input');await f.hooks.before_agent_run({runId:'run'},f.ctx);await f.hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:tool.name},f.ctx);await tool.execute('call',{visibility_intent:'private',input_kind:'files'});await tool.execute('call',{visibility_intent:'private',input_kind:'files'});assert.equal(n,1);assert.equal((await tool.execute('call',{visibility_intent:'inherit',input_kind:'files'})).isError,true);assert.equal(n,1);});

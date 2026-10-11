@@ -68,8 +68,8 @@ func run() error {
 	if err != nil {
 		return errors.New("MCP discovery failed")
 	}
-	tools, err := brain.ModelTools(inventory.Tools)
-	if err != nil || len(tools) != 20 {
+	tools, err := brain.CompleteModelTools(inventory.Tools)
+	if err != nil {
 		return errors.New("unexpected model tool inventory")
 	}
 	if *toolsOnly {

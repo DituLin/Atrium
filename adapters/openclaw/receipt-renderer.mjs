@@ -1,4 +1,4 @@
-const fields={"home_analyze_archives":["operation", "count", "metric", "query", "entity_id", "domain", "document_type", "date_from", "date_to"],"home_search_archives": ["query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership", "limit", "cursor"], "home_get_archive_evidence": ["document_id", "limit", "cursor"], "home_search_archive_entities": ["query", "entity_id", "limit", "cursor"], "home_get_archive_task": ["task_id"], "home_get_archive_question": ["task_id"], "home_answer_archive_question": ["task_id", "question_id", "question_version", "waiting_task_version", "extraction_id", "document_revision", "action", "target", "name"], "home_revise_archive": ["document_id", "document_revision", "kind", "reason", "observation_id", "value", "entity_id"],home_list_family_members: [], home_list_family_records: ['member_id','limit','cursor'], home_record_family_entry: ['member_id','category','occurred_at','title','notes','measurements','display_on_tv','supersedes_id','revision_reason','retracted'],home_get_status:[],home_list_screens:[],home_get_screen:['screen_id'],home_get_nas_status:[],home_list_photos:['collection','limit','cursor'],home_get_photo:['photo_id'],home_get_command:['command_id'],home_navigate_screen:['screen_id','route','collection'],home_show_photo:['screen_id','photo_id'],home_refresh_screen:['screen_id']};
+const fields={home_accept_archive_input:["visibility_intent","input_kind"],"home_analyze_archives":["operation", "count", "metric", "query", "entity_id", "domain", "document_type", "date_from", "date_to"],"home_search_archives": ["query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership", "limit", "cursor"], "home_get_archive_evidence": ["document_id", "limit", "cursor"], "home_search_archive_entities": ["query", "entity_id", "limit", "cursor"], "home_get_archive_task": ["task_id"], "home_get_archive_question": ["task_id"], "home_answer_archive_question": ["task_id", "question_id", "question_version", "waiting_task_version", "extraction_id", "document_revision", "action", "target", "name"], "home_revise_archive": ["document_id", "document_revision", "kind", "reason", "observation_id", "value", "entity_id"],home_list_family_members: [], home_list_family_records: ['member_id','limit','cursor'], home_record_family_entry: ['member_id','category','occurred_at','title','notes','measurements','display_on_tv','supersedes_id','revision_reason','retracted'],home_get_status:[],home_list_screens:[],home_get_screen:['screen_id'],home_get_nas_status:[],home_list_photos:['collection','limit','cursor'],home_get_photo:['photo_id'],home_get_command:['command_id'],home_navigate_screen:['screen_id','route','collection'],home_show_photo:['screen_id','photo_id'],home_refresh_screen:['screen_id']};
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const ulid=v=>typeof v==='string'&&/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/.test(v);
 const id=v=>typeof v==='string'&&/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(v)?v:'未知';
@@ -16,6 +16,7 @@ export function validateReceipts(raw,invocation){
   if(r.tool_result!==null&&(!object(r.tool_result)||Object.keys(r.tool_result).some(k=>!['structuredContent','isError'].includes(k))||(r.tool_result.isError!==undefined&&typeof r.tool_result.isError!=='boolean')||!object(r.tool_result.structuredContent)))throw new Error('invalid_receipt_result');
   if(r.report!==undefined&&(!object(r.report)||Object.keys(r.report).some(k=>!['Status','TextZH','ScreenID','CommandID','OperationID','ObservedAt'].includes(k))))throw new Error('invalid_receipt_report');
   if(r.error!==undefined&&(!object(r.error)||Object.keys(r.error).some(k=>!['code','operation_id','command_id'].includes(k))||typeof r.error.code!=='string'))throw new Error('invalid_receipt_error');
+  if(r.tool==='home_accept_archive_input'&&!validArchiveInput(r.tool_result?.structuredContent?.data,r.arguments))throw new Error('invalid_archive_input_receipt');
   return r;
  });
 }
@@ -71,6 +72,7 @@ export function renderReceipts(receipts,{failed=false,timedOut=false}={}){
   if(r.error||r.tool_result?.isError||!object(env)||env.schema_version!=='1'||!stamp(env.observed_at)){lines.push(`${r.tool}：未取得可核实结果。`);continue;}
   const d=env.data,when=`观察时间 ${env.observed_at}；availability=${fixed(env.availability,['available','unavailable','unknown','partial'])}。`;
   switch(r.tool){
+   case 'home_accept_archive_input':lines.push(renderArchiveInput(d));break;
    case 'home_analyze_archives':lines.push(...analysisLines(r,d,index));break;
    case 'home_search_archives':case 'home_get_archive_evidence':case 'home_search_archive_entities':case 'home_get_archive_task':case 'home_get_archive_question':case 'home_answer_archive_question':case 'home_revise_archive':lines.push(...archiveLines(r,d,index));break;
    case 'home_list_family_members':lines.push(...(Array.isArray(d?.members)?d.members.map(m=>`家庭成员：${safeText(m.name)}（${id(m.id)}）。`):['成员查询未返回有效数据。']));break;
@@ -89,7 +91,7 @@ export function renderReceipts(receipts,{failed=false,timedOut=false}={}){
  }
  lines.push(...[...actions.values()].map(a=>a.text+(a.conflict?' 后续回执与该终态不一致，未能核实新证据；保留上述原观察结论。':'')));
  if(candidates>1&&actions.size===0)lines.push('有多个可选屏幕，请指定目标屏幕。');
- if(actions.size===0&&!receipts.some(r=>r.tool.startsWith('home_list_family_')||r.tool==='home_record_family_entry'||Object.hasOwn(archiveTools,r.tool)))lines.push(boundary+'本轮回执没有屏幕动作；如需控制，请指定目标与动作。');
+ if(actions.size===0&&!receipts.some(r=>r.tool.startsWith('home_list_family_')||r.tool==='home_record_family_entry'||r.tool==='home_accept_archive_input'||Object.hasOwn(archiveTools,r.tool)))lines.push(boundary+'本轮回执没有屏幕动作；如需控制，请指定目标与动作。');
  if(failed||timedOut)lines.push('本轮未完整取得可核实结果；以上仅为已取得的可信回执。可能还有未取得回执的动作，请使用宿主 --recover 查询账本，不要重发。');
  return lines.join('\n');
 }
@@ -157,4 +159,31 @@ function analysisLines(r,d,index){
  if(!d.coverage.complete)lines.push('覆盖不完整：'+(d.coverage.reasons??[]).map(safeText).join('、')+'。不能据此推断全家总量。');
  if(d.coverage.excluded)lines.push(`排除 ${d.coverage.excluded} 项不适合本次计算的字段。`);
  return lines;
+}
+
+// Host-only intake receipts; no document read permission is implied.
+export function renderArchiveInput(result) {
+ if(result?.schema_version!=='archive-input/1'||!Array.isArray(result.slots)||result.slots.length>33)return '未取得可核实的档案接收结果。';
+ const saved=result.slots.filter(s=>s.state==='core_saved'&&s.receipt?.original_status==='saved');
+ const lines=[`档案原件已保存 ${saved.length}/${result.slots.length}。${result.intent==='private'?'本次按私密意图接收。':''}`];
+ if(result.intent==='needs_clarification')lines.push('展示范围尚待澄清，未按默认展示接收。');
+ for(const s of result.slots){const name=safeText(s.name);lines.push(s.state==='core_saved'&&s.receipt?.original_status==='saved'?`${name}：已保存；任务 ${id(s.receipt.task_id)}。`:`${name}：${s.state==='terminal'?'接收未完成':'仅暂存或等待接收'}，尚未保存到 Atrium。`);}
+ lines.push('NAS 归档状态未核实；原件保存不代表分析完成。');return lines.join('\n');
+}
+
+function validArchiveInput(r,args){
+ if(!object(r)||Object.keys(r).some(k=>!['schema_version','intent','all_saved','slots'].includes(k))||r.schema_version!=='archive-input/1'||!['inherit','private','needs_clarification'].includes(r.intent)||!Array.isArray(r.slots)||r.slots.length>33||typeof r.all_saved!=='boolean')return false;
+ if(args&&(!['files','text'].includes(args.input_kind)||args.visibility_intent!==r.intent))return false;
+ const indices=new Set();
+ for(const s of r.slots){
+  if(!object(s)||Object.keys(s).some(k=>!['slot_index','name','mime','state','sha256','size','error','receipt'].includes(k))||!Number.isSafeInteger(s.slot_index)||s.slot_index<0||s.slot_index>1023||indices.has(s.slot_index)||typeof s.name!=='string'||Buffer.byteLength(s.name)>512||typeof s.mime!=='string'||s.mime.length>255||!['downloading','staged','submitting','core_saved','terminal'].includes(s.state))return false;
+  indices.add(s.slot_index);
+  if(s.sha256!==null&&!(typeof s.sha256==='string'&&/^[a-f0-9]{64}$/.test(s.sha256)))return false;
+  if(s.size!==null&&(!Number.isSafeInteger(s.size)||s.size<1||s.size>33554432))return false;
+  if(s.error!==null&&!(typeof s.error==='string'&&/^archive_[a-z_]+$/.test(s.error)))return false;
+  if(s.state==='core_saved'){
+   const p=s.receipt;if(!object(p)||Object.keys(p).some(k=>!['receipt_id','task_id','original_status','sha256','size_bytes','received_at'].includes(k))||!ulid(p.receipt_id)||!ulid(p.task_id)||p.original_status!=='saved'||!stamp(p.received_at)||p.sha256!==s.sha256||p.size_bytes!==s.size)return false;
+  }else if(s.receipt!==null)return false;
+ }
+ return r.all_saved===(r.slots.length>0&&r.slots.every(s=>s.state==='core_saved'));
 }

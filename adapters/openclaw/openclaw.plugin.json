@@ -24,7 +24,8 @@
       "home_get_archive_question",
       "home_answer_archive_question",
       "home_revise_archive",
-      "home_analyze_archives"
+      "home_analyze_archives",
+      "home_accept_archive_input"
     ]
   },
   "activation": {
@@ -93,6 +94,9 @@
     },
     "home_analyze_archives": {
       "optional": true
+    },
+    "home_accept_archive_input": {
+      "optional": true
     }
   },
   "configSchema": {
@@ -124,6 +128,38 @@
       "toolsFile": {
         "type": "string",
         "minLength": 1
+      },
+      "archives": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "root",
+          "origin",
+          "caFile",
+          "tokenFile",
+          "principal",
+          "sourceReader"
+        ],
+        "properties": {
+          "root": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "caFile": {
+            "type": "string"
+          },
+          "tokenFile": {
+            "type": "string"
+          },
+          "principal": {
+            "type": "string"
+          },
+          "sourceReader": {
+            "type": "string"
+          }
+        }
       }
     }
   }

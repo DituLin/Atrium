@@ -1,0 +1,80 @@
+{
+  "weixin": {
+    "version": "2.4.9"
+  },
+  "discord": {
+    "version": "2026.9.8"
+  },
+  "files": [
+    {
+      "kind": "weixin",
+      "path": "src/monitor/monitor.ts",
+      "transform": "weixin_monitor",
+      "sha256": "a8689853b464cea3bd12932fc97055dbcac2ec1386d1a7a39a81cb8e291f3704",
+      "patched_sha256": "97955804a37b65c583a8b5fad7a1d469f8ae91bdc7e62bf983d0fd2109ec1191"
+    },
+    {
+      "kind": "weixin",
+      "path": "dist/src/monitor/monitor.js",
+      "transform": "weixin_monitor",
+      "sha256": "a8aaf7bc6709b0b7187b6ea776c497349edaaf516cf7eed2d2159fb5061bfeac",
+      "patched_sha256": "d75979c91eafce6040bcbf985f4b0ae5d9f8e6dc9daff755bde43fddb71ad498"
+    },
+    {
+      "kind": "weixin",
+      "path": "src/messaging/process-message.ts",
+      "transform": "weixin_process",
+      "sha256": "05f4bb55cb74c014a22b879c75a0a1dc2084d4d1c6120fcaa18d84464a3a6efa",
+      "patched_sha256": "2775e0fc9d3698a71168cac7b5571511ec35fe39202b2e84cda19d5ec703068e"
+    },
+    {
+      "kind": "weixin",
+      "path": "dist/src/messaging/process-message.js",
+      "transform": "weixin_process",
+      "sha256": "f411870309327b202fb23687970510311869723984463bb7882cfaf234f7582a",
+      "patched_sha256": "ba89cec54a8a79c5650932ced773e20fb05ecb4e703784d5594d0d05631bd666"
+    },
+    {
+      "kind": "weixin",
+      "path": "src/cdn/pic-decrypt.ts",
+      "transform": "weixin_decrypt",
+      "sha256": "49a9b08ced1b3ddb7c4d80dd279ba7d7f977febc999a9507f8f41c05976dceaa",
+      "patched_sha256": "1ec78425ffdcb1b7f6f4ab6cea0aedb68016621578bc5580876efbd5ee823671"
+    },
+    {
+      "kind": "weixin",
+      "path": "dist/src/cdn/pic-decrypt.js",
+      "transform": "weixin_decrypt",
+      "sha256": "c880f6645f5918d72d12f0db245f8100642d70c266cfadc0465a53b85e2694ec",
+      "patched_sha256": "1ac44f802277a3a96abfcfdd89bfaba2f40fabbc57cd02f0d989192a53fe2057"
+    },
+    {
+      "kind": "discord",
+      "path": "dist/.setup/message-handler-B-Jk4oDk.mjs",
+      "transform": "discord_handler",
+      "sha256": "93ad067254e1c802e62231dc9aa1652d93e3605d4615e4dc9cfbd1d9a63f4c5d",
+      "patched_sha256": "38419b416386c1ad584517e5ff1cc16eb6b3589ca872b4d0f32fc5c876653b51"
+    },
+    {
+      "kind": "discord",
+      "path": "dist/.setup/message-handler.preflight-v-__NSDq.mjs",
+      "transform": "discord_preflight",
+      "sha256": "dbaca0ef6f79576fc70973434fad65fc248354ef21d5366fa46218f582c58932",
+      "patched_sha256": "35d1ebdc34d864ac5511a65bf44fef9c5eaedc2752041521f49f99853613293d"
+    },
+    {
+      "kind": "weixin",
+      "path": "src/media/media-download.ts",
+      "transform": "weixin_media",
+      "sha256": "18e3968fc0b7a7e328ef0f5ac84eb4c1433ae96a467a6f5c702cd93cf8260cb1",
+      "patched_sha256": "8f5defe41d319a4b1589eb7ddbf6f50072f5f8beb038cb30540f83e412cd38bf"
+    },
+    {
+      "kind": "weixin",
+      "path": "dist/src/media/media-download.js",
+      "transform": "weixin_media",
+      "sha256": "be0ae87168dfcb68af31fdb5f514a995fdac5b73c79a0be20ad234e148b6a1c5",
+      "patched_sha256": "5c7885809c9185625a3579b9273943fa46bbded8120a086b8c351fdc9c503061"
+    }
+  ]
+}
