@@ -8,6 +8,8 @@
 
 2026-10-11 代码检查：现有 `make release` 构建 Core/MCP/Brain 并执行 `web-sync`，但不先构建 Web，也没有打包渠道补丁和原生 helper。因此不能直接把这个目标的输出视为完整发布包。T17 需补齐构建和打包，验证脱离开发目录及 Codex runtime 后的实际运行。
 
+同日预检：复制此前构建的 helper 与完整 `lib/` 到新临时目录，在 `/tmp` 工作目录及仅有 PATH/LANG/LC_ALL 的环境中，通过 FD 3 输入仓库合成 `report.png`，返回 `parsed`，无 stderr。移走必需 JPEG codec 后返回结构化 `unsupported/parser_unavailable`，无 stderr。摘要保留于 [native-portability.json](evidence/2026-10-11-release-preflight/native-portability.json)。这是现有 helper 的搬移与缺依赖预检，尚非最终签名发布包验收。
+
 ## 升级顺序
 
 1. 重新核实正在运行的版本、数据库 migration、渠道版本、NAS 挂载和设备状态。早期 schema 8 和家庭记录数量仅为历史基线。
