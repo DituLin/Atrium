@@ -81,3 +81,24 @@ func TestArchiveReceiptRejectsWrongOrUnversionedChange(t *testing.T) {
 		}
 	}
 }
+
+func TestArchiveAnalysisArgumentsAndReceipt(t *testing.T) {
+	args := map[string]any{"operation": "sum", "metric": "volume"}
+	if _, _, e := validateArguments("home_analyze_archives", args); e != nil {
+		t.Fatal(e)
+	}
+	for _, bad := range []map[string]any{{"operation": "sum"}, {"operation": "count"}, {"operation": "sum", "metric": "volume", "timezone": "UTC"}} {
+		if _, _, e := validateArguments("home_analyze_archives", bad); e == nil {
+			t.Fatalf("accepted %v", bad)
+		}
+	}
+	d := archive.AnalysisResult{SchemaVersion: archive.AnalysisVersion, AlgorithmVersion: archive.AnalysisVersion, SnapshotID: "snapshot", Query: archive.AnalysisQuery{Operation: "sum", Metric: "volume", Timezone: "Asia/Singapore"}, Projection: "authorized", DataEpoch: 1, Generation: 1, InputDigest: "digest", Groups: []archive.AnalysisGroup{}, Coverage: archive.AnalysisCoverage{Scope: "archived_only", Complete: true, Reasons: []string{}}}
+	env := integration.Response[archive.AnalysisResult]{SchemaVersion: "1", ObservedAt: time.Now(), Availability: "available", Data: d}
+	if _, e := receiptResult("home_analyze_archives", args, &mcp.CallToolResult{StructuredContent: env}); e != nil {
+		t.Fatal(e)
+	}
+	env.Data.Query.EntityID = "other"
+	if _, e := receiptResult("home_analyze_archives", args, &mcp.CallToolResult{StructuredContent: env}); e == nil {
+		t.Fatal("accepted unrelated analysis query")
+	}
+}

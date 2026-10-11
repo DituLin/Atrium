@@ -57,6 +57,7 @@ func (f SearchFilter) Normalize() (SearchFilter, error) {
 func LiteralFTS(s string) string { return `"` + strings.ReplaceAll(s, `"`, `""`) + `"` }
 
 type SearchEvidence struct {
+	FieldName            string          `json:"field_name,omitempty"`
 	SourceNormalizations []Normalization `json:"source_normalizations,omitempty"`
 	ComponentID          string          `json:"component_id,omitempty"`
 	ComponentKind        string          `json:"component_kind,omitempty"`

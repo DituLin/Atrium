@@ -50,6 +50,9 @@ type args struct {
 	Value              string `json:"value"`
 	Reason             string `json:"reason"`
 
+	Operation      string                     `json:"operation"`
+	Count          string                     `json:"count"`
+	Metric         string                     `json:"metric"`
 	Query          string                     `json:"query"`
 	EntityID       string                     `json:"entity_id"`
 	Domain         string                     `json:"domain"`
@@ -87,6 +90,7 @@ type toolDef struct {
 }
 
 var definitions = []toolDef{
+	{"home_analyze_archives", []string{"operation"}, []string{"count", "metric", "query", "entity_id", "domain", "document_type", "date_from", "date_to"}, false},
 	{"home_get_archive_task", []string{"task_id"}, nil, false},
 	{"home_get_archive_question", []string{"task_id"}, nil, false},
 	{"home_answer_archive_question", []string{"task_id", "question_id", "question_version", "waiting_task_version", "extraction_id", "document_revision", "resolution_key", "action"}, []string{"target", "name"}, true},
@@ -208,6 +212,8 @@ func NewServerWithLogger(c Config, logger *slog.Logger) (*mcp.Server, error) {
 }
 func description(d toolDef) string {
 	switch d.name {
+	case "home_analyze_archives":
+		return "Analyze currently authorized archived facts with exact Core arithmetic: count documents/events/observations, sum, latest, series, ratio. metric uses an observed field name; never guess IDs, units or totals. Currency/unit/sample groups remain separate. Report every coverage exclusion and cite evidence. Unknown full score or coarse overlapping dates are unresolved. Results describe archived coverage only, never the entire family or medical diagnosis."
 	case "home_get_archive_task":
 		return "Read authorized durable archive task state. saved original and pending NAS do not mean extraction or synchronization completed."
 	case "home_get_archive_question":

@@ -23,7 +23,8 @@
       "home_get_archive_task",
       "home_get_archive_question",
       "home_answer_archive_question",
-      "home_revise_archive"
+      "home_revise_archive",
+      "home_analyze_archives"
     ]
   },
   "activation": {
@@ -88,6 +89,9 @@
       "optional": true
     },
     "home_revise_archive": {
+      "optional": true
+    },
+    "home_analyze_archives": {
       "optional": true
     }
   },

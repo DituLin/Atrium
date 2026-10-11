@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/DituLin/Atrium/internal/archive"
 	"github.com/DituLin/Atrium/internal/domain"
 	"github.com/DituLin/Atrium/internal/integration"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -229,6 +230,8 @@ func receiptResult(tool string, args map[string]any, result *mcp.CallToolResult)
 	}
 	var data any
 	switch tool {
+	case "home_analyze_archives":
+		data = &archive.AnalysisResult{}
 	case "home_search_archives", "home_get_archive_evidence":
 		data = &integration.ArchiveSearch{}
 	case "home_search_archive_entities":

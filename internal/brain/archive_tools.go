@@ -11,7 +11,7 @@ import (
 
 func isArchiveTool(name string) bool {
 	switch name {
-	case "home_search_archives", "home_search_archive_entities", "home_get_archive_evidence", "home_get_archive_task", "home_get_archive_question", "home_answer_archive_question", "home_revise_archive":
+	case "home_analyze_archives", "home_search_archives", "home_search_archive_entities", "home_get_archive_evidence", "home_get_archive_task", "home_get_archive_question", "home_answer_archive_question", "home_revise_archive":
 		return true
 	}
 	return false
@@ -56,6 +56,17 @@ func validateArchiveArguments(name string, out map[string]any) (map[string]any, 
 					return bad()
 				}
 			}
+		}
+	}
+	if name == "home_analyze_archives" {
+		raw, _ := json.Marshal(out)
+		var q archive.AnalysisQuery
+		if json.Unmarshal(raw, &q) != nil {
+			return bad()
+		}
+		q.Timezone = "UTC"
+		if _, e := q.Normalize(); e != nil {
+			return bad()
 		}
 	}
 	required := []string{}
@@ -136,6 +147,32 @@ func validateArchiveArguments(name string, out map[string]any) (map[string]any, 
 }
 func validArchiveReceipt(tool string, args map[string]any, data any) bool {
 	switch d := data.(type) {
+	case *archive.AnalysisResult:
+		raw, e := json.Marshal(args)
+		if e != nil {
+			return false
+		}
+		var expected archive.AnalysisQuery
+		if json.Unmarshal(raw, &expected) != nil {
+			return false
+		}
+		expected.Timezone = d.Query.Timezone
+		expected, e = expected.Normalize()
+		if e != nil || expected != d.Query {
+			return false
+		}
+		if d.SchemaVersion != archive.AnalysisVersion || d.AlgorithmVersion != archive.AnalysisVersion || d.SnapshotID == "" || d.Projection != "authorized" || d.Query.Operation != args["operation"] || len(d.Groups) > 256 || d.Coverage.Scope != "archived_only" || !d.Coverage.Complete && len(d.Coverage.Reasons) == 0 {
+			return false
+		}
+		if metric, ok := args["metric"]; ok && d.Query.Metric != metric {
+			return false
+		}
+		for _, g := range d.Groups {
+			if g.Value == "" || len(g.Evidence) == 0 && d.Query.Operation != "count" {
+				return false
+			}
+		}
+		return true
 	case *integration.ArchiveSearch:
 		if d.SchemaVersion != integration.ArchiveQueryVersion || len(d.Items) > 25 || d.IndexStatus == "" || (!d.Coverage.Complete && d.Coverage.Reason == "") {
 			return false

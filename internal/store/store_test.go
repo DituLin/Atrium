@@ -23,7 +23,7 @@ func TestMigrateFromEmptyIsIdempotent(t *testing.T) {
 
 	n, err := db.Migrate(ctx)
 	require.NoError(t, err)
-	require.Equal(t, 15, n)
+	require.Equal(t, 16, n)
 
 	again, err := db.Migrate(ctx)
 	require.NoError(t, err)
@@ -31,7 +31,7 @@ func TestMigrateFromEmptyIsIdempotent(t *testing.T) {
 
 	version, err := db.SchemaVersion(ctx)
 	require.NoError(t, err)
-	require.Equal(t, 15, version)
+	require.Equal(t, 16, version)
 }
 
 func TestOpenEnablesWALAndForeignKeys(t *testing.T) {
@@ -72,7 +72,7 @@ func TestSchemaMatchesDesignTables(t *testing.T) {
 	}
 	require.NoError(t, rows.Err())
 	require.ElementsMatch(t, []string{
-		"archive_search_state", "archive_search_rows", "archive_search_fts", "archive_search_fts_data", "archive_search_fts_idx", "archive_search_fts_docsize", "archive_search_fts_config",
+		"archive_search_state", "archive_analysis_snapshots", "archive_search_rows", "archive_search_fts", "archive_search_fts_data", "archive_search_fts_idx", "archive_search_fts_docsize", "archive_search_fts_config",
 		"archive_products", "archive_invocations", "archive_extraction_products", "archive_budgets", "archive_extractions", "archive_subject_events", "archive_observations", "archive_observation_revisions", "archive_publications", "archive_publication_observations", "archive_outbox", "archive_manual_revisions", "archive_private_regions", "archive_questions", "archive_legacy_outbox", "archive_legacy_projections", "archive_legacy_record_events", "archive_transaction_events", "archive_event_equivalences", "archive_observation_alternatives", "archive_publication_alternatives",
 		"archive_entities", "archive_entity_attributes", "archive_entity_bindings", "archive_entity_binding_merge_context", "archive_entity_history", "archive_entity_link_merge_context", "archive_entity_links", "archive_entity_merges", "archive_entity_redirects", "archive_legacy_entities", "archive_protected_identity_facts", "archive_resolution_revisions",
 		"archive_blobs", "archive_documents", "archive_sources", "archive_visibility_events", "households", "local_household", "archive_tasks", "archive_task_events", "archive_task_resolutions", "family_members", "family_records", "family_record_exports", "admin_tokens", "audit_log", "data_sources", "jobs", "pairings", "photo_exclusions",

@@ -14,13 +14,19 @@ import (
 
 func isArchiveTool(name string) bool {
 	switch name {
-	case "home_search_archives", "home_get_archive_evidence", "home_search_archive_entities", "home_get_archive_task", "home_get_archive_question", "home_answer_archive_question", "home_revise_archive":
+	case "home_analyze_archives", "home_search_archives", "home_get_archive_evidence", "home_search_archive_entities", "home_get_archive_task", "home_get_archive_question", "home_answer_archive_question", "home_revise_archive":
 		return true
 	}
 	return false
 }
 func archiveField(k string) map[string]any {
 	switch k {
+	case "operation":
+		return map[string]any{"type": "string", "enum": []string{"count", "sum", "latest", "series", "ratio"}}
+	case "count":
+		return map[string]any{"type": "string", "enum": []string{"documents", "events", "observations"}}
+	case "metric":
+		return map[string]any{"type": "string", "minLength": 1, "maxLength": 128}
 	case "question_version", "waiting_task_version", "document_revision":
 		return map[string]any{"type": "integer", "minimum": 1, "maximum": 9007199254740991}
 	case "action":
@@ -55,6 +61,9 @@ func archiveField(k string) map[string]any {
 	}
 }
 func (a *adapter) archiveCall(ctx context.Context, d toolDef, in args) *mcp.CallToolResult {
+	if d.name == "home_analyze_archives" {
+		return a.archiveAnalysis(ctx, in)
+	}
 	if d.name == "home_get_archive_task" || d.name == "home_get_archive_question" || d.mutation {
 		return a.archiveLifecycle(ctx, d, in)
 	}
@@ -159,4 +168,29 @@ func archiveLifecycleResult[T any](b []byte) *mcp.CallToolResult {
 func archiveBackendFields[T any](b []byte) bool {
 	var v T
 	return integration.RequiredFields(b, reflect.TypeOf(v))
+}
+
+func (a *adapter) archiveAnalysis(ctx context.Context, in args) *mcp.CallToolResult {
+	q := archive.AnalysisQuery{Operation: in.Operation, Count: in.Count, Metric: in.Metric, EntityID: in.EntityID, Domain: in.Domain, DocumentType: in.DocumentType, Query: in.Query, DateFrom: in.DateFrom, DateTo: in.DateTo, Timezone: "UTC"}
+	if _, e := q.Normalize(); e != nil {
+		return failure("invalid_arguments", "Invalid analysis criteria.", "")
+	}
+	values := url.Values{}
+	for k, v := range map[string]string{"operation": in.Operation, "count": in.Count, "metric": in.Metric, "entity_id": in.EntityID, "domain": in.Domain, "document_type": in.DocumentType, "query": in.Query, "date_from": in.DateFrom, "date_to": in.DateTo} {
+		if v != "" {
+			values.Set(k, v)
+		}
+	}
+	b, status, e := a.request(ctx, "GET", "archives/analysis?"+values.Encode(), nil)
+	if e != nil {
+		return transportFailure(e, "")
+	}
+	if status < 200 || status >= 300 {
+		return backendError(b, status)
+	}
+	var env integration.Response[archive.AnalysisResult]
+	if !archiveBackendFields[integration.Response[archive.AnalysisResult]](b) || json.Unmarshal(b, &env) != nil || env.SchemaVersion != "1" || env.ObservedAt.IsZero() || env.Availability != "available" || env.Data.SchemaVersion != archive.AnalysisVersion {
+		return failure("invalid_response", "Invalid analysis response.", "")
+	}
+	return result(env, false)
 }

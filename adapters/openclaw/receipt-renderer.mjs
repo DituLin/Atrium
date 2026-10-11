@@ -1,4 +1,4 @@
-const fields={"home_search_archives": ["query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership", "limit", "cursor"], "home_get_archive_evidence": ["document_id", "limit", "cursor"], "home_search_archive_entities": ["query", "entity_id", "limit", "cursor"], "home_get_archive_task": ["task_id"], "home_get_archive_question": ["task_id"], "home_answer_archive_question": ["task_id", "question_id", "question_version", "waiting_task_version", "extraction_id", "document_revision", "action", "target", "name"], "home_revise_archive": ["document_id", "document_revision", "kind", "reason", "observation_id", "value", "entity_id"],home_list_family_members: [], home_list_family_records: ['member_id','limit','cursor'], home_record_family_entry: ['member_id','category','occurred_at','title','notes','measurements','display_on_tv','supersedes_id','revision_reason','retracted'],home_get_status:[],home_list_screens:[],home_get_screen:['screen_id'],home_get_nas_status:[],home_list_photos:['collection','limit','cursor'],home_get_photo:['photo_id'],home_get_command:['command_id'],home_navigate_screen:['screen_id','route','collection'],home_show_photo:['screen_id','photo_id'],home_refresh_screen:['screen_id']};
+const fields={"home_analyze_archives":["operation", "count", "metric", "query", "entity_id", "domain", "document_type", "date_from", "date_to"],"home_search_archives": ["query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership", "limit", "cursor"], "home_get_archive_evidence": ["document_id", "limit", "cursor"], "home_search_archive_entities": ["query", "entity_id", "limit", "cursor"], "home_get_archive_task": ["task_id"], "home_get_archive_question": ["task_id"], "home_answer_archive_question": ["task_id", "question_id", "question_version", "waiting_task_version", "extraction_id", "document_revision", "action", "target", "name"], "home_revise_archive": ["document_id", "document_revision", "kind", "reason", "observation_id", "value", "entity_id"],home_list_family_members: [], home_list_family_records: ['member_id','limit','cursor'], home_record_family_entry: ['member_id','category','occurred_at','title','notes','measurements','display_on_tv','supersedes_id','revision_reason','retracted'],home_get_status:[],home_list_screens:[],home_get_screen:['screen_id'],home_get_nas_status:[],home_list_photos:['collection','limit','cursor'],home_get_photo:['photo_id'],home_get_command:['command_id'],home_navigate_screen:['screen_id','route','collection'],home_show_photo:['screen_id','photo_id'],home_refresh_screen:['screen_id']};
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const ulid=v=>typeof v==='string'&&/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/.test(v);
 const id=v=>typeof v==='string'&&/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(v)?v:'未知';
@@ -71,6 +71,7 @@ export function renderReceipts(receipts,{failed=false,timedOut=false}={}){
   if(r.error||r.tool_result?.isError||!object(env)||env.schema_version!=='1'||!stamp(env.observed_at)){lines.push(`${r.tool}：未取得可核实结果。`);continue;}
   const d=env.data,when=`观察时间 ${env.observed_at}；availability=${fixed(env.availability,['available','unavailable','unknown','partial'])}。`;
   switch(r.tool){
+   case 'home_analyze_archives':lines.push(...analysisLines(r,d,index));break;
    case 'home_search_archives':case 'home_get_archive_evidence':case 'home_search_archive_entities':case 'home_get_archive_task':case 'home_get_archive_question':case 'home_answer_archive_question':case 'home_revise_archive':lines.push(...archiveLines(r,d,index));break;
    case 'home_list_family_members':lines.push(...(Array.isArray(d?.members)?d.members.map(m=>`家庭成员：${safeText(m.name)}（${id(m.id)}）。`):['成员查询未返回有效数据。']));break;
    case 'home_list_family_records':lines.push(`家庭记录：本页 ${Array.isArray(d?.records)?d.records.length:0} 条，不代表全部历史。`,...(Array.isArray(d?.records)?d.records.map(familyRecord):[]));break;
@@ -93,7 +94,7 @@ export function renderReceipts(receipts,{failed=false,timedOut=false}={}){
  return lines.join('\n');
 }
 
-const archiveTools={home_search_archives:1,home_get_archive_evidence:1,home_search_archive_entities:1,home_get_archive_task:1,home_get_archive_question:1,home_answer_archive_question:1,home_revise_archive:1};
+const archiveTools={home_analyze_archives:1,home_search_archives:1,home_get_archive_evidence:1,home_search_archive_entities:1,home_get_archive_task:1,home_get_archive_question:1,home_answer_archive_question:1,home_revise_archive:1};
 function archiveLines(r,d,receiptIndex=0){
  if(!object(d)||d.schema_version!=='archive-query/1'||r.tool_result?.structuredContent?.availability!=='available')return ['档案：未取得可核实结果。'];
  const lines=[],x=d.result;
@@ -125,7 +126,7 @@ function archiveLines(r,d,receiptIndex=0){
     const ref=`${receiptIndex+1}.${itemIndex+1}.${evidenceIndex+1}`;
     const citation=`[来源 ${ref} · ${archiveLocation(ev)}]`;
     const label=ev.source_kind==='original'?'原文摘录':ev.confirmed?'已确认提取':'待确认候选';
-    lines.push(`${label}：${safeText(ev.excerpt)} ${citation}`);
+    lines.push(`${label}${ev.field_name?" · "+safeText(ev.field_name):""}：${safeText(ev.excerpt)} ${citation}`);
     if(ev.assertion_id)lines.push(`人工更正：${safeText(ev.asserted_value)}（来源 ${ref}）；原文保留上述数值。`);
    }
   }
@@ -143,4 +144,17 @@ function archiveLocation(ev){
  if(l.kind==='docx'&&object(l.docx))return l.docx.row>0?`Word 表格第 ${l.docx.row} 行、第 ${l.docx.grid_column} 列，段落 ${l.docx.paragraph}`:`Word 第 ${l.docx.paragraph} 段`;
  if(object(l.page))return `第 ${l.page.page??l.page.page_number??'?'} 页，摘录第 ${ev.start+1}–${ev.end} 字`;
  return `摘录第 ${ev.start+1}–${ev.end} 字`;
+}
+
+function analysisLines(r,d,index){
+ if(!object(d)||d.schema_version!=='archive-analysis/1'||d.algorithm_version!=='archive-analysis/1'||d.query?.operation!==r.arguments.operation||d.coverage?.scope!=='archived_only'||!Array.isArray(d.groups)||d.groups.length>256)return ['档案分析：未取得可核实结果。'];
+ const lines=['档案分析：仅代表已归档且当前可见的资料。'];
+ for(const [i,g] of d.groups.entries()){
+  if(typeof g.value!=='string'||!/^[-+]?[0-9]+(?:\.[0-9]+)?$/.test(g.value))return ['档案分析：数值回执无效。'];
+  lines.push(`${safeText(g.metric)}：${g.value} ${safeText(g.currency)||safeText(g.unit)}${g.date?' · '+safeText(g.date)+'（'+safeText(g.date_precision)+'）':''}${g.change_percent_points?'；较 '+safeText(g.baseline_date)+' 变化 '+safeText(g.change_percent_points)+' 个百分点':''}${g.denominator?'；分子 '+safeText(g.numerator)+' / 分母 '+safeText(g.denominator)+'；舍入 '+safeText(g.rounding):''}。`);
+  for(const [j,ev]of(g.evidence??[]).entries())lines.push(`${safeText(ev.excerpt)}${ev.assertion_id?'；人工更正 '+safeText(ev.asserted_value):''} [来源 ${index+1}.${i+1}.${j+1} · ${safeText(ev.document_id)} · ${archiveLocation(ev)}]`);
+ }
+ if(!d.coverage.complete)lines.push('覆盖不完整：'+(d.coverage.reasons??[]).map(safeText).join('、')+'。不能据此推断全家总量。');
+ if(d.coverage.excluded)lines.push(`排除 ${d.coverage.excluded} 项不适合本次计算的字段。`);
+ return lines;
 }

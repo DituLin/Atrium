@@ -18,7 +18,7 @@ func ModelTools(inventory []*mcp.Tool) ([]*mcp.Tool, error) {
 			continue
 		}
 		switch tool.Name {
-		case "home_search_archives", "home_search_archive_entities", "home_get_archive_evidence", "home_get_archive_task", "home_get_archive_question", "home_answer_archive_question", "home_revise_archive", "home_list_family_members", "home_list_family_records", "home_record_family_entry", "home_get_status", "home_list_screens", "home_get_screen", "home_get_nas_status", "home_list_photos", "home_get_photo", "home_get_command", "home_refresh_screen", "home_show_photo", "home_navigate_screen":
+		case "home_analyze_archives", "home_search_archives", "home_search_archive_entities", "home_get_archive_evidence", "home_get_archive_task", "home_get_archive_question", "home_answer_archive_question", "home_revise_archive", "home_list_family_members", "home_list_family_records", "home_record_family_entry", "home_get_status", "home_list_screens", "home_get_screen", "home_get_nas_status", "home_list_photos", "home_get_photo", "home_get_command", "home_refresh_screen", "home_show_photo", "home_navigate_screen":
 		default:
 			continue
 		}

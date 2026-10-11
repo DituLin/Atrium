@@ -92,7 +92,7 @@ func TestIntegrationMCPActualCoreContract(t *testing.T) {
 	require.NoError(t, err)
 	modelTools, err := brain.ModelTools(inventory.Tools)
 	require.NoError(t, err)
-	require.Len(t, modelTools, 20)
+	require.Len(t, modelTools, 21)
 	for _, tool := range modelTools {
 		require.NotEqual(t, "home_get_operation", tool.Name)
 		raw, err := json.Marshal(tool.InputSchema)

@@ -19,7 +19,7 @@ function fixture(t, overrides={}) {
 test('exact optional tools, trusted hooks and deterministic report',async t=>{
  const f=fixture(t);assert.equal(f.factories.length,1);assert.equal(f.factories[0].opts.optional,true);
  assert.equal(f.factories[0].fn({agentId:'other'}),null);
- const tools=f.factories[0].fn(f.ctx);assert.equal(tools.length,20);
+ const tools=f.factories[0].fn(f.ctx);assert.equal(tools.length,21);
  await f.hooks.before_agent_run({runId:'run'},f.ctx);
  await f.hooks.before_tool_call({runId:'run',toolCallId:'call',toolName:'home_get_status'},f.ctx);
  const result=await tools.find(x=>x.name==='home_get_status').execute('call',{});

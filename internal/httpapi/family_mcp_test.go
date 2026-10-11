@@ -41,7 +41,7 @@ func TestFamilyMCPThroughBrainAndActualCore(t *testing.T) {
 	require.NoError(t, err)
 	modelTools, err := brain.ModelTools(tools.Tools)
 	require.NoError(t, err)
-	require.Len(t, modelTools, 20)
+	require.Len(t, modelTools, 21)
 	require.NoError(t, os.Chmod(dir, 0700))
 	ledger, err := brain.OpenLedger(filepath.Join(dir, "ledger.db"), "test", nil)
 	require.NoError(t, err)

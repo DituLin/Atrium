@@ -317,7 +317,7 @@ func (r *ArchiveTasks) searchProjectionIn(ctx context.Context, tx *sql.Tx, h, id
 					return p, e
 				}
 			}
-			p.Item.Evidence = append(p.Item.Evidence, archive.SearchEvidence{DocumentID: o.SourceDocumentID, PublicationID: o.PublicationID, PublicationRevision: sourceRev, ObservationID: o.ID, ObservationRevision: o.Revision, SourceExtractionID: o.ExtractionID, SegmentID: ev.ParentSegmentID, ComponentID: ev.ComponentID, ComponentKind: ev.ComponentKind, AlternativeID: ev.AlternativeID, Locator: locator, Start: ev.Start, End: end, Excerpt: quote, Confirmed: true})
+			p.Item.Evidence = append(p.Item.Evidence, archive.SearchEvidence{FieldName: f.Name, DocumentID: o.SourceDocumentID, PublicationID: o.PublicationID, PublicationRevision: sourceRev, ObservationID: o.ID, ObservationRevision: o.Revision, SourceExtractionID: o.ExtractionID, SegmentID: ev.ParentSegmentID, ComponentID: ev.ComponentID, ComponentKind: ev.ComponentKind, AlternativeID: ev.AlternativeID, Locator: locator, Start: ev.Start, End: end, Excerpt: quote, Confirmed: true})
 			if body.ValueAssertion != nil {
 				last := &p.Item.Evidence[len(p.Item.Evidence)-1]
 				last.AssertedValue = searchBound(body.AssertedValue, 256)

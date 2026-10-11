@@ -99,3 +99,7 @@ ATRIUM_QUERY_EVIDENCE=/private/evidence go test ./internal/store \
 in command arguments or logs. The test does not read credential files itself.
 No T12 aggregates, T13 real IM ingress, T14 TV UI, T15 complete acceptance,
 T16 NAS restore or T17 production migration/deployment is claimed here.
+
+## T12 analysis tool
+
+`home_analyze_archives` is now part of the actual model inventory and typed receipt path. It accepts only operation/count/metric and ordinary archive filters; Core supplies authority and household timezone. Its `archive-analysis/1` payload retains decimal strings, input provenance, archived-only coverage, generation and the exact normalized query. Brain rejects receipts for a different normalized query. OpenClaw renders Core's exact amounts, denominators, ratio changes and citations rather than model arithmetic. See `internal/archive/README.analyze.md` and the T12 evidence for current synthetic Core→MCP→Brain verification; the T11 live model capture above remains historical T11 evidence, not a new T12 provider invocation.

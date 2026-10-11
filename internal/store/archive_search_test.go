@@ -44,6 +44,7 @@ func TestArchiveSearchCurrentEvidenceAndPending(t *testing.T) {
 	require.Equal(t, rec.DocumentID, p.Items[0].DocumentID)
 	require.Equal(t, x.ID, p.Items[0].Evidence[0].SourceExtractionID)
 	require.Equal(t, "70", p.Items[0].Evidence[0].Excerpt)
+	require.Equal(t, "volume", p.Items[0].Evidence[0].FieldName)
 	_, err = r.ReviseArchive(ctx, a, "home-1", rec.DocumentID, 2, store.ArchiveRevision{Kind: "withdraw", Reason: "test"})
 	require.NoError(t, err)
 	p, err = r.SearchArchives(ctx, a, "home-1", false, archive.SearchFilter{Query: "70"}, []byte("test-key"))

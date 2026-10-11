@@ -30,3 +30,9 @@ test('typed clarification presents family choices without implementation fields'
  const r=receipt('home_get_archive_question',{schema_version:'archive-query/1',result:{question_id:'q1',question_version:3,subject_name:'妈妈',actions:['keep_current','create_subject'],target_labels:{}}},{task_id:'task1'});
  const text=renderReceipts([r]);assert.match(text,/妈妈/);assert.match(text,/建立新档案主体/);assert.doesNotMatch(text,/create_subject|question_version/);
 });
+test('analysis renders exact Core totals, denominator and archived coverage',()=>{
+ const data={schema_version:'archive-analysis/1',algorithm_version:'archive-analysis/1',snapshot_id:'s1',query:{operation:'ratio',metric:'score'},projection:'authorized',groups:[{metric:'score',value:'88.00',unit:'percent',numerator:'132',denominator:'150',rounding:'half_away_from_zero/2',evidence:[{document_id:'d1',segment_id:'seg1',excerpt:'132',start:0,end:3,locator:{kind:'text',text:{start:0}}}]}],coverage:{scope:'archived_only',complete:false,reasons:['partial_or_pending_sources'],included:1,excluded:1}};
+ const r=receipt('home_analyze_archives',data,{operation:'ratio',metric:'score'});
+ const rows=validateReceipts(JSON.stringify(r)+'\n',invocation);const text=renderReceipts(rows);
+ assert.match(text,/88.00/);assert.match(text,/132.*150/);assert.match(text,/已归档/);assert.match(text,/不完整/);assert.match(text,/来源/);
+});
