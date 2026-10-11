@@ -1,4 +1,4 @@
-const fields={home_list_family_members: [], home_list_family_records: ['member_id','limit','cursor'], home_record_family_entry: ['member_id','category','occurred_at','title','notes','measurements','display_on_tv','supersedes_id','revision_reason','retracted'],home_get_status:[],home_list_screens:[],home_get_screen:['screen_id'],home_get_nas_status:[],home_list_photos:['collection','limit','cursor'],home_get_photo:['photo_id'],home_get_command:['command_id'],home_navigate_screen:['screen_id','route','collection'],home_show_photo:['screen_id','photo_id'],home_refresh_screen:['screen_id']};
+const fields={"home_search_archives": ["query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership", "limit", "cursor"], "home_get_archive_evidence": ["document_id", "limit", "cursor"], "home_search_archive_entities": ["query", "entity_id", "limit", "cursor"], "home_get_archive_task": ["task_id"], "home_get_archive_question": ["task_id"], "home_answer_archive_question": ["task_id", "question_id", "question_version", "waiting_task_version", "extraction_id", "document_revision", "action", "target", "name"], "home_revise_archive": ["document_id", "document_revision", "kind", "reason", "observation_id", "value", "entity_id"],home_list_family_members: [], home_list_family_records: ['member_id','limit','cursor'], home_record_family_entry: ['member_id','category','occurred_at','title','notes','measurements','display_on_tv','supersedes_id','revision_reason','retracted'],home_get_status:[],home_list_screens:[],home_get_screen:['screen_id'],home_get_nas_status:[],home_list_photos:['collection','limit','cursor'],home_get_photo:['photo_id'],home_get_command:['command_id'],home_navigate_screen:['screen_id','route','collection'],home_show_photo:['screen_id','photo_id'],home_refresh_screen:['screen_id']};
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const ulid=v=>typeof v==='string'&&/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/.test(v);
 const id=v=>typeof v==='string'&&/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(v)?v:'未知';
@@ -67,9 +67,11 @@ export function renderReceipts(receipts,{failed=false,timedOut=false}={}){
  for(const [index,r] of receipts.entries()){
   const a=action(r,index);if(a){const prior=actions.get(a.key);if(prior&&['applied','failed','expired','unknown'].includes(prior.status)&&a.status!==prior.status){prior.conflict=true;}else if(!prior||!prior.when||!a.when||Date.parse(a.when)>=Date.parse(prior.when)){actions.set(a.key,a);}continue;}
   const env=r.tool_result?.structuredContent;
+  if(r.error?.code==='tool_budget'){lines.push('已达到本轮 8 次工具调用上限，本轮未完成；以上只包含已取得的结果。');continue;}
   if(r.error||r.tool_result?.isError||!object(env)||env.schema_version!=='1'||!stamp(env.observed_at)){lines.push(`${r.tool}：未取得可核实结果。`);continue;}
   const d=env.data,when=`观察时间 ${env.observed_at}；availability=${fixed(env.availability,['available','unavailable','unknown','partial'])}。`;
   switch(r.tool){
+   case 'home_search_archives':case 'home_get_archive_evidence':case 'home_search_archive_entities':case 'home_get_archive_task':case 'home_get_archive_question':case 'home_answer_archive_question':case 'home_revise_archive':lines.push(...archiveLines(r,d,index));break;
    case 'home_list_family_members':lines.push(...(Array.isArray(d?.members)?d.members.map(m=>`家庭成员：${safeText(m.name)}（${id(m.id)}）。`):['成员查询未返回有效数据。']));break;
    case 'home_list_family_records':lines.push(`家庭记录：本页 ${Array.isArray(d?.records)?d.records.length:0} 条，不代表全部历史。`,...(Array.isArray(d?.records)?d.records.map(familyRecord):[]));break;
    case 'home_record_family_entry':
@@ -86,7 +88,59 @@ export function renderReceipts(receipts,{failed=false,timedOut=false}={}){
  }
  lines.push(...[...actions.values()].map(a=>a.text+(a.conflict?' 后续回执与该终态不一致，未能核实新证据；保留上述原观察结论。':'')));
  if(candidates>1&&actions.size===0)lines.push('有多个可选屏幕，请指定目标屏幕。');
- if(actions.size===0&&!receipts.some(r=>r.tool.startsWith('home_list_family_')||r.tool==='home_record_family_entry'))lines.push(boundary+'本轮回执没有屏幕动作；如需控制，请指定目标与动作。');
+ if(actions.size===0&&!receipts.some(r=>r.tool.startsWith('home_list_family_')||r.tool==='home_record_family_entry'||Object.hasOwn(archiveTools,r.tool)))lines.push(boundary+'本轮回执没有屏幕动作；如需控制，请指定目标与动作。');
  if(failed||timedOut)lines.push('本轮未完整取得可核实结果；以上仅为已取得的可信回执。可能还有未取得回执的动作，请使用宿主 --recover 查询账本，不要重发。');
  return lines.join('\n');
+}
+
+const archiveTools={home_search_archives:1,home_get_archive_evidence:1,home_search_archive_entities:1,home_get_archive_task:1,home_get_archive_question:1,home_answer_archive_question:1,home_revise_archive:1};
+function archiveLines(r,d,receiptIndex=0){
+ if(!object(d)||d.schema_version!=='archive-query/1'||r.tool_result?.structuredContent?.availability!=='available')return ['档案：未取得可核实结果。'];
+ const lines=[],x=d.result;
+ if(r.tool==='home_revise_archive'){
+  if(!Number.isSafeInteger(r.arguments.document_revision)||x?.document_revision!==r.arguments.document_revision+1)return ['档案：无法确认更正结果，请查询当前版本。'];
+  return [`已更正档案 ${safeText(r.arguments.document_id)}，Core 确认版本 ${x.document_revision}；更正类型 ${{value:"数值更正",reassign:"调整归属",private:"设为私密",withdraw:"撤回档案"}[r.arguments.kind]??"未知"}。原件和历史保留，NAS 同步状态未确认。`];
+ }
+ if(r.tool==='home_get_archive_task'||r.tool==='home_answer_archive_question'){
+  if(x?.id!==r.arguments.task_id||!['queued','running','retry_wait','waiting_input','succeeded','failed','cancelled'].includes(x?.status))return ['档案任务：无法确认结果。'];
+  return [`${r.tool==='home_answer_archive_question'?'Core 已记录本次澄清；':''}档案任务（${safeText(x.id).slice(-8)}）：${{queued:"排队中",running:"处理中",retry_wait:"等待重试",waiting_input:"等待确认",succeeded:"处理完成",failed:"处理失败",cancelled:"已取消"}[x.status]}；原件 ${x.original_status==="saved"?"已保存":"状态未确认"}，NAS ${x.nas_status==="synced"?"已同步":"待同步"}。${x.status==='queued'||x.status==='running'?'仍在处理，尚未确认发布完成。':''}${x.result?.parse_status?'解析状态 '+safeText(x.result.parse_status)+'。':''}`];
+ }
+ if(r.tool==='home_get_archive_question'){
+  if(!x?.question_id||!Number.isSafeInteger(x.question_version)||!Array.isArray(x.actions))return ['档案澄清：无法确认问题。'];
+  lines.push(`需要确认：${safeText(x.subject_name)||"这份档案的归属或内容"}。`);
+  for(const [target,label]of Object.entries(x.target_labels??{}))lines.push(`候选 ${safeText(label)}（${safeText(target).slice(-8)}）。`);
+  lines.push(`允许操作：${x.actions.map(a=>({keep_current:'保留当前状态',create_subject:'建立新档案主体',select_subject:'选择现有主体'}[a]??'未知操作')).join('、')}。${x.targets_truncated?'候选不完整，请继续查询。':''}`);return lines;
+ }
+ if(!Array.isArray(d.items)||!object(d.coverage)||typeof d.coverage.complete!=='boolean')return ['档案：未取得完整的查询回执。'];
+ lines.push(`档案查询：本页 ${d.items.length} 项，仅代表本次授权检索范围。`);
+ if(r.tool==='home_search_archive_entities'){
+  for(const item of d.items)lines.push(`档案主体 ${safeText(item.id)}：${Array.isArray(item.names)?item.names.map(safeText).join('、'):''}${Array.isArray(item.aliases)&&item.aliases.length?'；别名 '+item.aliases.map(safeText).join('、'):''}`);
+ }else{
+  for(const [itemIndex,item] of d.items.entries()){
+   const domain={health:'健康',education:'教育',finance:'财务',property:'房屋',other:'其他',unknown:'待分类'}[item.domain]??safeText(item.domain);
+   const kind={checkup:'体检报告',report_card:'成绩报告',receipt:'收据',bill:'账单',warranty:'保修资料',repair:'维修记录'}[item.document_type]??safeText(item.document_type);
+   const owner={confirmed:'归属已确认',household:'全家共有',waiting:'归属待确认',unassigned:'尚未归属'}[item.ownership]??'';
+   lines.push(`${domain}档案 · ${kind}（${safeText(item.document_id).slice(-8)}）${owner?' · '+owner:''}。${item.review_required?'需要澄清，暂不用于完整统计。':''}${item.metadata_only?'索引尚未就绪，仅返回档案信息。':''}`);
+   for(const [evidenceIndex,ev] of (item.evidence??[]).entries()){
+    const ref=`${receiptIndex+1}.${itemIndex+1}.${evidenceIndex+1}`;
+    const citation=`[来源 ${ref} · ${archiveLocation(ev)}]`;
+    const label=ev.source_kind==='original'?'原文摘录':ev.confirmed?'已确认提取':'待确认候选';
+    lines.push(`${label}：${safeText(ev.excerpt)} ${citation}`);
+    if(ev.assertion_id)lines.push(`人工更正：${safeText(ev.asserted_value)}（来源 ${ref}）；原文保留上述数值。`);
+   }
+  }
+ }
+ if(!d.coverage.complete)lines.push(`覆盖不完整：${safeText(d.coverage.reason)}；不能据此断言家中没有相关资料。`);
+ if(d.next_cursor)lines.push('还有后续页面，本页不是全部结果。');
+ return lines;
+}
+
+function archiveLocation(ev){
+ const l=ev.locator??{};
+ if(l.kind==='text'&&object(l.text))return `文本第 ${l.text.start+ev.start+1}–${l.text.start+ev.end} 字`;
+ if(l.kind==='csv'&&object(l.csv))return `表格第 ${l.csv.record} 行、第 ${l.csv.column} 列`;
+ if(l.kind==='xlsx'&&object(l.xlsx))return `${safeText(l.xlsx.sheet_name)} ${safeText(l.xlsx.cell)}`;
+ if(l.kind==='docx'&&object(l.docx))return l.docx.row>0?`Word 表格第 ${l.docx.row} 行、第 ${l.docx.grid_column} 列，段落 ${l.docx.paragraph}`:`Word 第 ${l.docx.paragraph} 段`;
+ if(object(l.page))return `第 ${l.page.page??l.page.page_number??'?'} 页，摘录第 ${ev.start+1}–${ev.end} 字`;
+ return `摘录第 ${ev.start+1}–${ev.end} 字`;
 }

@@ -3,7 +3,7 @@ import { isAbsolute } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { Host } from './host.js';
 
-export const TOOL_FIELDS = Object.freeze({
+export const TOOL_FIELDS = Object.freeze({"home_search_archives": ["query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership", "limit", "cursor"], "home_get_archive_evidence": ["document_id", "limit", "cursor"], "home_search_archive_entities": ["query", "entity_id", "limit", "cursor"], "home_get_archive_task": ["task_id"], "home_get_archive_question": ["task_id"], "home_answer_archive_question": ["task_id", "question_id", "question_version", "waiting_task_version", "extraction_id", "document_revision", "action", "target", "name"], "home_revise_archive": ["document_id", "document_revision", "kind", "reason", "observation_id", "value", "entity_id"],
  home_list_family_members: [], home_list_family_records: ['member_id','limit','cursor'], home_record_family_entry: ['member_id','category','occurred_at','title','notes','measurements','display_on_tv','supersedes_id','revision_reason','retracted'],
  home_get_status: [], home_list_screens: [], home_get_screen: ['screen_id'],
  home_get_nas_status: [], home_list_photos: ['collection', 'limit', 'cursor'],
@@ -40,7 +40,7 @@ function loadTools(path) {
  for (const tool of tools) {
   const schema = tool?.inputSchema, name = tool?.name;
   if (!Object.hasOwn(TOOL_FIELDS, name) || seen.has(name) || !object(schema) || schema.type !== 'object' || schema.additionalProperties !== false || !object(schema.properties)) throw new Error('invalid_tools_inventory');
-  if (Object.keys(schema.properties).some(key => !TOOL_FIELDS[name].includes(key)) || /"(?:operation_id|wait_ms|request_id)"/.test(JSON.stringify(schema))) throw new Error('invalid_tools_schema');
+  if (Object.keys(schema.properties).some(key => !TOOL_FIELDS[name].includes(key)) || /"(?:operation_id|wait_ms|request_id|resolution_key)"/.test(JSON.stringify(schema))) throw new Error('invalid_tools_schema');
   if (typeof tool.description !== 'string' || !Array.isArray(schema.required) || schema.required.some(key => !Object.hasOwn(schema.properties, key))) throw new Error('invalid_tools_schema');
   seen.add(name);
  }

@@ -35,6 +35,29 @@ type adapter struct {
 	busy          map[string]bool
 }
 type args struct {
+	TaskID             string `json:"task_id"`
+	QuestionID         string `json:"question_id"`
+	QuestionVersion    int64  `json:"question_version"`
+	WaitingTaskVersion int64  `json:"waiting_task_version"`
+	ExtractionID       string `json:"extraction_id"`
+	DocumentRevision   int64  `json:"document_revision"`
+	ResolutionKey      string `json:"resolution_key"`
+	Action             string `json:"action"`
+	Target             string `json:"target"`
+	Name               string `json:"name"`
+	Kind               string `json:"kind"`
+	ObservationID      string `json:"observation_id"`
+	Value              string `json:"value"`
+	Reason             string `json:"reason"`
+
+	Query          string                     `json:"query"`
+	EntityID       string                     `json:"entity_id"`
+	Domain         string                     `json:"domain"`
+	DocumentType   string                     `json:"document_type"`
+	DateFrom       string                     `json:"date_from"`
+	DateTo         string                     `json:"date_to"`
+	Ownership      string                     `json:"ownership"`
+	DocumentID     string                     `json:"document_id"`
 	MemberID       string                     `json:"member_id"`
 	RequestID      string                     `json:"request_id"`
 	Category       string                     `json:"category"`
@@ -64,6 +87,13 @@ type toolDef struct {
 }
 
 var definitions = []toolDef{
+	{"home_get_archive_task", []string{"task_id"}, nil, false},
+	{"home_get_archive_question", []string{"task_id"}, nil, false},
+	{"home_answer_archive_question", []string{"task_id", "question_id", "question_version", "waiting_task_version", "extraction_id", "document_revision", "resolution_key", "action"}, []string{"target", "name"}, true},
+	{"home_revise_archive", []string{"document_id", "document_revision", "kind", "reason"}, []string{"observation_id", "value", "entity_id"}, true},
+	{"home_search_archives", nil, []string{"query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership", "limit", "cursor"}, false},
+	{"home_get_archive_evidence", []string{"document_id"}, []string{"limit", "cursor"}, false},
+	{"home_search_archive_entities", nil, []string{"query", "entity_id", "limit", "cursor"}, false},
 	{"home_list_family_members", nil, nil, false},
 	{"home_list_family_records", []string{"member_id"}, []string{"limit", "cursor"}, false},
 	{"home_record_family_entry", []string{"member_id", "request_id", "category", "occurred_at", "title", "display_on_tv"}, []string{"notes", "measurements", "supersedes_id", "revision_reason", "retracted"}, true},
@@ -132,12 +162,21 @@ func NewServerWithLogger(c Config, logger *slog.Logger) (*mcp.Server, error) {
 		props := map[string]any{}
 		for _, k := range append(append([]string{}, d.required...), d.optional...) {
 			props[k] = field(k)
+			if isArchiveTool(d.name) {
+				props[k] = archiveField(k)
+			}
 		}
 		req := d.required
 		if req == nil {
 			req = []string{}
 		}
 		schema := map[string]any{"type": "object", "properties": props, "required": req, "additionalProperties": false}
+		if d.name == "home_revise_archive" {
+			schema["allOf"] = []any{
+				map[string]any{"if": map[string]any{"properties": map[string]any{"kind": map[string]any{"const": "value"}}, "required": []string{"kind"}}, "then": map[string]any{"required": []string{"observation_id", "value"}}},
+				map[string]any{"if": map[string]any{"properties": map[string]any{"kind": map[string]any{"const": "reassign"}}, "required": []string{"kind"}}, "then": map[string]any{"required": []string{"observation_id", "entity_id"}}},
+			}
+		}
 		if d.name == "home_navigate_screen" {
 			schema["allOf"] = []any{map[string]any{"if": map[string]any{"properties": map[string]any{"route": map[string]any{"const": "photos"}}, "required": []string{"route"}}, "then": map[string]any{"required": []string{"collection"}}}}
 		}
@@ -169,6 +208,16 @@ func NewServerWithLogger(c Config, logger *slog.Logger) (*mcp.Server, error) {
 }
 func description(d toolDef) string {
 	switch d.name {
+	case "home_get_archive_task":
+		return "Read authorized durable archive task state. saved original and pending NAS do not mean extraction or synchronization completed."
+	case "home_get_archive_question":
+		return "Read the current typed clarification and exact version fences and permitted targets. Ask the user for the unresolved choice; never invent a person or target."
+	case "home_answer_archive_question":
+		return "Apply an explicit user answer to the current typed clarification. Copy all version fences from home_get_archive_question; stale answers fail. Host supplies resolution_key. A queued result confirms only that the answer was recorded, not publication completion."
+	case "home_revise_archive":
+		return "Apply an explicit user correction to an exact current document revision from search/evidence. value and reassign require current observation_id; reassign also requires verified entity_id. private restricts visibility; withdraw retracts the whole document. reason is required. Never invent corrections. Only a Core receipt confirms change; after an uncertain outcome query again before retrying."
+	case "home_search_archives", "home_get_archive_evidence", "home_search_archive_entities":
+		return "Search authorized family archives across health, education, finance and property. Query uses literal terms, not FTS operators. Original excerpts are source evidence; confirmed fields and manual assertions are distinct. Always cite document/segment/locator and disclose coverage.complete=false or next_cursor. An incomplete empty page is not proof of absence. Never infer diagnosis or totals. Use evidence for source details and entity search for people, never guess IDs."
 	case "home_list_family_members":
 		return "List authorized household members and stable IDs. Use these IDs for family record tools; do not guess which person a measurement belongs to."
 	case "home_list_family_records":
@@ -216,6 +265,9 @@ func (a *adapter) call(ctx context.Context, d toolDef, in args) *mcp.CallToolRes
 		return failure("busy", "Too many concurrent tool calls; retry later.", in.OperationID)
 	}
 
+	if isArchiveTool(d.name) {
+		return a.archiveCall(ctx, d, in)
+	}
 	if d.name == "home_record_family_entry" {
 		body := struct {
 			domain.FamilyRecordInput

@@ -1,6 +1,6 @@
 # Atrium 的 OpenClaw 工具插件
 
-插件 ID 为 `atrium-home`。它把专用家庭 agent 的十三个模型工具接到本地 Go Brain JSONL 宿主。宿主负责持久操作 ID、授权、调用预算、MCP、恢复与确定性结果；插件不注册 Shell、文件、网络浏览或凭据工具。
+插件 ID 为 `atrium-home`。它把专用家庭 agent 的二十个模型工具（原十三项加七项档案工具）接到本地 Go Brain JSONL 宿主。宿主负责持久操作 ID、授权、调用预算、MCP、恢复与确定性结果；插件不注册 Shell、文件、网络浏览或凭据工具。
 
 已按本机 OpenClaw 2026.9.8 的 `docs/plugins/building-plugins.md`、`docs/plugins/hooks.md` 及已安装 SDK 类型编写。Node 要求 22.19 或更新。源码是可直接加载的 ESM JavaScript，无额外 npm 运行依赖。
 
@@ -29,7 +29,7 @@ ask 每轮生成新的 session / invocation UUID，启动本地 OpenClaw，绝�
 
 ## 安装前准备
 
-先构建 Go Brain 宿主，以其 `--tools-json` 输出生成专用的 `tools.json`。文件必须是 `brain.ModelTools` 的 JSON 数组，包含恰好十三个白名单工具；不得包含 `operation_id`、`wait_ms`、`request_id` 或 `home_get_operation`。文件使用 `0600` 权限，插件拒绝软链接、组/其他用户可访问文件和超过 256 KiB 的清单。
+先构建 Go Brain 宿主，以其 `--tools-json` 输出生成专用的 `tools.json`。文件必须是 `brain.ModelTools` 的 JSON 数组，包含恰好二十个白名单工具；不得包含 `operation_id`、`wait_ms`、`request_id`、`resolution_key` 或 `home_get_operation`。文件使用 `0600` 权限，插件拒绝软链接、组/其他用户可访问文件和超过 256 KiB 的清单。
 
 插件配置只接受本机维护者提供的以下字段：
 
@@ -46,7 +46,7 @@ ask 每轮生成新的 session / invocation UUID，启动本地 OpenClaw，绝�
 
 维护者可通过 `openclaw plugins install /absolute/path/to/adapters/openclaw` 安装；本目录的生成过程不会安装插件或修改 OpenClaw 配置。为 `plugins.entries.atrium-home` 设置上面的 `config`，并设置 `hooks.allowConversationAccess: true`，使 `before_agent_run`、`agent_end` 生命周期钩子可用。插件只读取身份字段，不读取或保留 prompt/messages。
 
-仅在专用 agent 的工具允许列表中加入本插件的十三个工具；同时排除该 agent 的内置通用工具及其他插件工具。仅启用插件无法移除 OpenClaw 已有的工具。使用已配置的 DeepSeek 模型作为该 agent 的模型，不把工具宿主当模型提供方。
+仅在专用 agent 的工具允许列表中加入本插件的二十个工具；同时排除该 agent 的内置通用工具及其他插件工具。仅启用插件无法移除 OpenClaw 已有的工具。使用已配置的 DeepSeek 模型作为该 agent 的模型，不把工具宿主当模型提供方。
 
 ## 生命周期与协议
 
@@ -95,13 +95,13 @@ node --test adapters/openclaw/*.test.mjs
 
 相同 call 引用重复执行保持同一请求 ID，相同内容返回原记录，不同内容冲突。新的 tool call 是新的记录意图，IM 侧必须避免把重放消息发起为新的记录；未知结果应先查询记录。NAS pending 仅证明本机记录保存，synced 才说明归档确认。
 
-更新部署时必须同时更新宿主、MCP、插件源码和 13 项 tools.json/agent allowlist，不能只复制单个文件。2026.9.8 的真实 DeepSeek 查询已验证；隔离环境中的合成记录也已完成模型写入、NAS 归档及配对浏览器显示。真实 IM 收发仍未验收，不能用 CLI 或合成上下文代替。旧十项清单会被新版插件拒绝。
+更新部署时必须同时更新宿主、MCP、插件源码和 20 项 tools.json/agent allowlist，不能只复制单个文件。2026.9.8 的真实 DeepSeek 查询已验证；隔离环境中的合成记录也已完成模型写入、NAS 归档及配对浏览器显示。真实 IM 收发仍未验收，不能用 CLI 或合成上下文代替。旧十项清单会被新版插件拒绝。
 
 ## OpenClaw 2026.9.8 运行配置
 
 此版本使用 `before_agent_run`，旧 `before_agent_start` 已移除。受信 run ID 从 hook 上下文取得，仍要求 agent/session/run/tool-call 绑定。维护者 `ask` 入口使用 `--local`，必须设置独立的 `OPENCLAW_STATE_DIR`，不能与正在运行的 IM Gateway 共用状态目录。独立目录需通过 doctor/agents add 完成迁移。
 
-专用配置的全局和 agent 工具允许清单都必须包含十三项工具。设置 `tools.codeMode: false` 和 `tools.toolSearch: false`，直接提交工具 schema，使 OpenClaw toolSummary 的每次调用对应宿主的一份回执。新版本默认包装器会额外计入 exec/tool_call；不要通过放松回执计数验证来掩盖差异。
+专用配置的全局和 agent 工具允许清单都必须包含二十项工具。设置 `tools.codeMode: false` 和 `tools.toolSearch: false`，直接提交工具 schema，使 OpenClaw toolSummary 的每次调用对应宿主的一份回执。新版本默认包装器会额外计入 exec/tool_call；不要通过放松回执计数验证来掩盖差异。
 
 ## IM 入站去重（2026.9.8）
 
@@ -120,3 +120,7 @@ node scripts/check-openclaw-ingress.mjs /opt/homebrew/lib/node_modules/openclaw
 ```
 
 检查导入实际安装版本的消息映射函数，将合成 provider 上下文传入 Atrium 插件，验证微信临时 MessageSid 改变时仍按 MessageSidFull 去重，以及 Discord 重投和缺失 sender 的处理。它不加载私人配置、不调用模型或 IM，也不修改家庭数据。框架内部模块布局变化时会明确失败，需要重新检查 dispatcher；通过仅证明字段映射兼容，真实私聊收发必须另行验收。
+
+## 综合档案工具（T11 开发版本）
+
+七项档案工具、版本化覆盖范围、宿主身份、来源回答和真实隔离模型验收见 `internal/brain/README.archives.md`。原十三项工具仍保留；现网安装是否升级由部署验收单独确认。新工具不能仅复制插件：MCP、宿主、20 项工具清单和允许列表需一起升级。

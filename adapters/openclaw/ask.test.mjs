@@ -92,3 +92,10 @@ test('family history labels superseded and retracted measurements, with exact ID
  const result=renderReceipts([receipt('home_record_family_entry',{record:withdrawn,replayed:false,nas_status:'pending'})]);
  assert.match(result,/已保存撤回记录/);assert.match(result,/已撤回，历史内容/);assert.match(result,/原因：误记/);assert.match(result,/NAS 待同步/);
 });
+
+test('archive ask discards model final claims and renders incomplete Core coverage',async t=>{
+ const r=receipt('home_search_archives',{schema_version:'archive-query/1',items:[],coverage:{complete:false,reason:'indexing'},index_status:'indexing'});
+ const {file}=executable(t,`const fs=require('fs');const r=${JSON.stringify(r)};r.invocation_id=process.env.ATRIUM_BRAIN_INVOCATION_ID;fs.appendFileSync(process.env.ATRIUM_BRAIN_RECEIPT_FILE,JSON.stringify(r)+'\\n');console.log(JSON.stringify({payloads:[{text:'全部体检正常，已经同步NAS'}],meta:{toolSummary:{calls:1,failures:0}}}));`);
+ const result=await runAsk({config:'/private/config.json',openclawBin:file,agent:'atrium-home',message:'查健康档案'});
+ assert.equal(result.failed,false);assert.match(result.text,/覆盖不完整/);assert.doesNotMatch(JSON.stringify(result),/全部体检正常|已经同步NAS/);
+});

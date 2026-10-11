@@ -16,7 +16,14 @@
       "home_refresh_screen",
       "home_list_family_members",
       "home_list_family_records",
-      "home_record_family_entry"
+      "home_record_family_entry",
+      "home_search_archives",
+      "home_get_archive_evidence",
+      "home_search_archive_entities",
+      "home_get_archive_task",
+      "home_get_archive_question",
+      "home_answer_archive_question",
+      "home_revise_archive"
     ]
   },
   "activation": {
@@ -60,6 +67,27 @@
       "optional": true
     },
     "home_record_family_entry": {
+      "optional": true
+    },
+    "home_search_archives": {
+      "optional": true
+    },
+    "home_get_archive_evidence": {
+      "optional": true
+    },
+    "home_search_archive_entities": {
+      "optional": true
+    },
+    "home_get_archive_task": {
+      "optional": true
+    },
+    "home_get_archive_question": {
+      "optional": true
+    },
+    "home_answer_archive_question": {
+      "optional": true
+    },
+    "home_revise_archive": {
       "optional": true
     }
   },

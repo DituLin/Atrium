@@ -3,6 +3,8 @@ package brain
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -170,6 +172,10 @@ func (t *Turn) Call(callRef, name string, input map[string]any) (*mcp.CallToolRe
 		return nil, err
 	}
 	if action == nil {
+		if name == "home_answer_archive_question" {
+			digest := sha256.Sum256([]byte(t.id + "\x00" + callRef))
+			args["resolution_key"] = hex.EncodeToString(digest[:])
+		}
 		if name == "home_record_family_entry" {
 			args["request_id"] = t.id + ":" + callRef
 		}
@@ -273,7 +279,14 @@ func (e *Executor) observe(ctx context.Context, record ActionRecord, result *mcp
 }
 
 var modelArgumentFields = map[string][]string{
-	"home_list_family_members": {}, "home_list_family_records": {"member_id", "limit", "cursor"}, "home_record_family_entry": {"member_id", "category", "occurred_at", "title", "notes", "measurements", "display_on_tv", "supersedes_id", "revision_reason", "retracted"}, "home_get_status": {}, "home_list_screens": {}, "home_get_screen": {"screen_id"}, "home_get_nas_status": {}, "home_list_photos": {"collection", "limit", "cursor"}, "home_get_photo": {"photo_id"}, "home_get_command": {"command_id"}, "home_get_operation": {}, "home_refresh_screen": {"screen_id"}, "home_show_photo": {"screen_id", "photo_id"}, "home_navigate_screen": {"screen_id", "route", "collection"}}
+	"home_search_archives":         {"query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership", "limit", "cursor"},
+	"home_search_archive_entities": {"query", "entity_id", "limit", "cursor"},
+	"home_get_archive_evidence":    {"document_id", "limit", "cursor"},
+	"home_get_archive_task":        {"task_id"},
+	"home_get_archive_question":    {"task_id"},
+	"home_answer_archive_question": {"task_id", "question_id", "question_version", "waiting_task_version", "extraction_id", "document_revision", "action", "target", "name"},
+	"home_revise_archive":          {"document_id", "document_revision", "kind", "reason", "observation_id", "value", "entity_id"},
+	"home_list_family_members":     {}, "home_list_family_records": {"member_id", "limit", "cursor"}, "home_record_family_entry": {"member_id", "category", "occurred_at", "title", "notes", "measurements", "display_on_tv", "supersedes_id", "revision_reason", "retracted"}, "home_get_status": {}, "home_list_screens": {}, "home_get_screen": {"screen_id"}, "home_get_nas_status": {}, "home_list_photos": {"collection", "limit", "cursor"}, "home_get_photo": {"photo_id"}, "home_get_command": {"command_id"}, "home_get_operation": {}, "home_refresh_screen": {"screen_id"}, "home_show_photo": {"screen_id", "photo_id"}, "home_navigate_screen": {"screen_id", "route", "collection"}}
 
 func validateArguments(name string, input map[string]any) (map[string]any, *Action, error) {
 
@@ -294,6 +307,9 @@ func validateArguments(name string, input map[string]any) (map[string]any, *Acti
 			return nil, nil, errors.New("unexpected tool argument")
 		}
 		out[key] = value
+	}
+	if isArchiveTool(name) {
+		return validateArchiveArguments(name, out)
 	}
 	stringArg := func(key string, required bool) (string, error) {
 		v, exists := out[key]
