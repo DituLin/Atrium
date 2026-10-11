@@ -776,7 +776,7 @@ func searchMatches(i archive.SearchItem, text string, f archive.SearchFilter) bo
 	if f.DateFrom != "" || f.DateTo != "" {
 		found := false
 		for _, v := range i.Dates {
-			if len(v) == 10 && (f.DateFrom == "" || v >= f.DateFrom) && (f.DateTo == "" || v <= f.DateTo) {
+			if archive.DateWithinBounds(v, f.DateFrom, f.DateTo, f.Timezone) {
 				found = true
 			}
 		}
@@ -1021,7 +1021,7 @@ func legacySearchItem(id, entity, record, raw string) (archive.SearchItem, strin
 	item.ParseStatus = "parsed"
 	item.MetadataOnly = false
 	item.EntityIDs = []string{entity}
-	item.Dates = []string{in.OccurredAt.Format("2006-01-02")}
+	item.Dates = []string{in.OccurredAt.Format(time.RFC3339Nano)}
 	text := in.Title + "\n" + in.Notes
 	for _, m := range in.Measurements {
 		text += fmt.Sprintf("\n%s %g %s", m.Metric, m.Value, m.Unit)

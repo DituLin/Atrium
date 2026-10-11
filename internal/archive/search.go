@@ -7,9 +7,11 @@ import (
 	"unicode/utf8"
 )
 
-// SearchFilter contains business criteria only. Identity and projection are
+// SearchFilter contains business criteria and a host-supplied timezone. Identity and projection are
 // supplied by the authenticated host, never by the model's query arguments.
 type SearchFilter struct {
+	// Timezone is set by Core, never accepted from HTTP/model query arguments.
+	Timezone     string `json:"timezone,omitempty"`
 	Query        string `json:"query,omitempty"`
 	EntityID     string `json:"entity_id,omitempty"`
 	Domain       string `json:"domain,omitempty"`
@@ -23,6 +25,11 @@ type SearchFilter struct {
 
 func (f SearchFilter) Normalize() (SearchFilter, error) {
 	f.Query = strings.TrimSpace(f.Query)
+	if f.Timezone != "" {
+		if _, e := time.LoadLocation(f.Timezone); e != nil {
+			return f, fmt.Errorf("invalid timezone")
+		}
+	}
 	if f.Limit == 0 {
 		f.Limit = 10
 	}

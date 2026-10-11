@@ -397,7 +397,11 @@ func TestArchiveSearchMultiSubjectAndDatePrecision(t *testing.T) {
 	}
 	p, e := r.SearchArchives(ctx, a, "home-1", false, archive.SearchFilter{DateFrom: "2026-10-01", DateTo: "2026-10-31"}, key)
 	require.NoError(t, e)
-	require.Empty(t, p.Items, "month precision must not fabricate a day")
+	require.Len(t, p.Items, 1, "the complete month is inside the requested interval")
+	require.Equal(t, []string{"2026-10"}, p.Items[0].Dates, "retain source precision")
+	p, e = r.SearchArchives(ctx, a, "home-1", false, archive.SearchFilter{DateFrom: "2026-10-04", DateTo: "2026-10-04"}, key)
+	require.NoError(t, e)
+	require.Empty(t, p.Items, "overlapping month must not fabricate an exact day")
 }
 
 func TestArchiveSearchSerializedPageBudgetAndCredentialRotation(t *testing.T) {

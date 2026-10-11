@@ -164,7 +164,7 @@ func (r *ArchiveTasks) analyzeArchives(ctx context.Context, a archiveSearchActor
 			if e = pruneArchiveQueriesIn(ctx, tx, now); e != nil {
 				return e
 			}
-			f := archive.SearchFilter{Ownership: q.Ownership, Query: q.Query, EntityID: q.EntityID, Domain: q.Domain, DocumentType: q.DocumentType, DateFrom: q.DateFrom, DateTo: q.DateTo, Limit: 10}
+			f := archive.SearchFilter{Timezone: q.Timezone, Ownership: q.Ownership, Query: q.Query, EntityID: q.EntityID, Domain: q.Domain, DocumentType: q.DocumentType, DateFrom: q.DateFrom, DateTo: q.DateTo, Limit: 10}
 			filter, _ := json.Marshal(f)
 			if _, e = tx.ExecContext(ctx, `INSERT INTO archive_query_receipts(id,household_id,principal_id,credential_id,filter_json,analysis_json,expires_at) VALUES(?,?,?,?,?,?,?)`, result.QueryRef, h, a.Integration.PrincipalID, a.Integration.CredentialID, string(filter), string(query), FormatTime(now.Add(10*time.Minute))); e != nil {
 				return e
@@ -796,7 +796,7 @@ func analysisBoundaryField(name string) string {
 // Document counts share search membership; numeric/event analysis retains the
 // precision-aware fact date bounds enforced by archive.Analyze.
 func analysisDocumentFilter(q archive.AnalysisQuery) archive.SearchFilter {
-	f := archive.SearchFilter{Ownership: q.Ownership, Query: q.Query, EntityID: q.EntityID, Domain: q.Domain, DocumentType: q.DocumentType}
+	f := archive.SearchFilter{Timezone: q.Timezone, Ownership: q.Ownership, Query: q.Query, EntityID: q.EntityID, Domain: q.Domain, DocumentType: q.DocumentType}
 	if q.Operation == "count" && q.Count == "documents" {
 		f.DateFrom = q.DateFrom
 		f.DateTo = q.DateTo

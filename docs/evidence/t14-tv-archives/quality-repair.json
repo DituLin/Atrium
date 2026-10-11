@@ -19,5 +19,12 @@
     "strict_analysis_arguments_and_receipt": "PASS incl invalid ownership rejection and mismatched ownership receipt rejection",
     "openclaw": "91 tests PASS"
   },
-  "limits": "No additional device or production deployment claim; prior synthetic browser/OnePlus evidence remains scoped to those runs."
+  "limits": "No additional device or production deployment claim; prior synthetic browser/OnePlus evidence remains scoped to those runs.",
+  "date_followup": {
+    "fix": "Legacy dates retain the full instant; list and document count use source interval containment in the Core household timezone, including partial precision. Search timezone is host supplied and retained in receipts.",
+    "original_external_home_day": "passed unchanged",
+    "regressions": "search/count local midnight, before/after and open bounds, full month/year versus overlapping day, unknown date and DST end-of-day; related Go five packages and affected race passed",
+    "previous_counterexamples": "all four passed unchanged",
+    "existing_test_update": "old month rejection expectation replaced by full-month inclusion with original month precision plus narrow-day exclusion"
+  }
 }

@@ -529,3 +529,28 @@ func Analyze(q AnalysisQuery, in AnalysisInput) (AnalysisResult, error) {
 	sort.Strings(r.Coverage.Reasons)
 	return r, nil
 }
+
+// DateWithinBounds accepts only a fully contained source interval. A month/year
+// overlapping a narrower query is not silently treated as an exact day.
+func DateWithinBounds(value, from, to, zone string) bool {
+	if zone == "" {
+		zone = "UTC"
+	}
+	lo, hi, _, ok := DateInterval(value, zone)
+	if !ok {
+		return false
+	}
+	if from != "" {
+		start, _, _, valid := DateInterval(from, zone)
+		if !valid || lo.Before(start) {
+			return false
+		}
+	}
+	if to != "" {
+		_, end, _, valid := DateInterval(to, zone)
+		if !valid || hi.After(end) {
+			return false
+		}
+	}
+	return true
+}

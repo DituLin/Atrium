@@ -68,6 +68,9 @@ func (a *API) archiveRead(w http.ResponseWriter, r *http.Request, kind string, s
 		WriteError(w, r, e)
 		return
 	}
+	if a.deps.Home != nil {
+		f.Timezone = a.deps.Home.Location().String()
+	}
 	h, e := a.deps.DB.LocalHousehold(r.Context())
 	if e != nil {
 		WriteError(w, r, e)

@@ -151,6 +151,9 @@ func (a *API) archiveReadView(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, r, e)
 		return
 	}
+	if a.deps.Home != nil {
+		filter.Timezone = a.deps.Home.Location().String()
+	}
 	filter.Cursor = cursor
 	page, e := repo.SearchArchivesForScreen(r.Context(), screen.ID, screen.TokenHash, h.ID, filter, a.integrationCursorKey)
 	if e != nil {
