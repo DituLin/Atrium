@@ -8,7 +8,7 @@ import (
 )
 
 const PublicationAnchorRule = "physical-parent/1"
-const PublicationVersion = "archive-publication/6"
+const PublicationVersion = "archive-publication/7"
 
 // PhysicalAnchor intentionally excludes generated segment IDs, model names,
 // dates and chunk boundaries. Offsets are in the original parent component.
@@ -147,11 +147,39 @@ func CompilePublication(home, document string, parsed ParseResult, p Understandi
 			if e != nil {
 				return out, e
 			}
-			anchors, e := physicalEvidence(parsed, refs)
+			// Identity of a local mention is its literal name location, not
+			// optional role labels cited alongside it. Distinct name locations
+			// and distinct roles remain separate; no name-string matching.
+			nameRefs := []CanonicalEvidence{}
+			for _, ref := range refs {
+				if strings.Count(ref.Quote, sub.Name) == 1 {
+					at := strings.Index(ref.Quote, sub.Name)
+					ref.Start += len([]rune(ref.Quote[:at]))
+					ref.End = ref.Start + len([]rune(sub.Name))
+					ref.Quote = sub.Name
+					nameRefs = append(nameRefs, ref)
+				}
+			}
+			anchors, e := physicalEvidence(parsed, nameRefs)
 			if e != nil {
 				return out, e
 			}
-			m := ResolutionMention{Ref: digestJSON(anchors), Kind: "person", Name: sub.Name, Role: sub.Role, Ambiguous: sub.Ambiguous, Evidence: []string{}}
+			unique := []PhysicalAnchor{}
+			seen := map[string]bool{}
+			for _, anchor := range anchors {
+				key := digestJSON(anchor)
+				if !seen[key] {
+					seen[key] = true
+					unique = append(unique, anchor)
+				}
+			}
+			if len(unique) == 0 {
+				return out, understandingError("publication_subject_name")
+			}
+			m := ResolutionMention{Ref: digestJSON(struct {
+				Policy, Role string
+				Anchors      []PhysicalAnchor
+			}{"literal-name-location/1", sub.Role, unique}), Kind: "person", Name: sub.Name, Role: sub.Role, Ambiguous: sub.Ambiguous, Evidence: []string{}}
 			for _, v := range refs {
 				m.Evidence = append(m.Evidence, digestJSON(v))
 			}
@@ -164,6 +192,28 @@ func CompilePublication(home, document string, parsed ParseResult, p Understandi
 			}
 			m.BindingScope = "document_mention"
 			m.BindingKey = document + "#" + m.Ref
+			// An explicit event patient/owner is still a subject when the source
+			// is only a notification. This requests resolution; it never supplies
+			// an identity, measurement, or a first-name match.
+			ownedName := false
+			for _, ref := range sub.Evidence {
+				if ref.Quote == sub.Name {
+					for _, v := range p.Chunks[c.Index].Owned {
+						if v.ViewID == ref.ViewID {
+							ownedName = true
+						}
+					}
+				}
+			}
+			if ownedName && archivePrimarySubjectRole(sub.Role) {
+				for _, event := range c.Result.Events {
+					for _, ref := range event.SubjectRefs {
+						if ref == sub.ID {
+							subjects[m.Ref] = true
+						}
+					}
+				}
+			}
 			mentions[scopedRef(c.Index, sub.ID)] = m
 		}
 	}
@@ -273,6 +323,41 @@ func CompilePublication(home, document string, parsed ParseResult, p Understandi
 		}
 		mentions[key] = m
 	}
+	// All chunks referring to the same proven name location contribute to
+	// its identity. Disagreements remain monotonic rather than first-chunk wins.
+	combined := map[string]ResolutionMention{}
+	for _, c := range u.Chunks {
+		for _, sub := range c.Result.Subjects {
+			m := mentions[scopedRef(c.Index, sub.ID)]
+			if old, ok := combined[m.Ref]; ok {
+				m.Birth = CombineIdentityDates(old.Birth, m.Birth)
+				m.Ambiguous = m.Ambiguous || old.Ambiguous
+				m.OCRConflict = m.OCRConflict || old.OCRConflict
+				m.HasStrongIdentity = m.HasStrongIdentity || old.HasStrongIdentity
+				m.FullAddress = m.FullAddress || old.FullAddress
+				if old.Kind != m.Kind {
+					if m.FullAddress {
+						m.Kind = "property"
+					} else {
+						m.OCRConflict = true
+					}
+				}
+				m.Evidence = append(m.Evidence, old.Evidence...)
+				sort.Strings(m.Evidence)
+				compact := m.Evidence[:0]
+				for _, ev := range m.Evidence {
+					if len(compact) == 0 || compact[len(compact)-1] != ev {
+						compact = append(compact, ev)
+					}
+				}
+				m.Evidence = compact
+			}
+			combined[m.Ref] = m
+		}
+	}
+	for key, m := range mentions {
+		mentions[key] = combined[m.Ref]
+	}
 	seenMentions := map[string]bool{}
 	for _, c := range u.Chunks {
 		for _, sub := range c.Result.Subjects {
@@ -284,7 +369,14 @@ func CompilePublication(home, document string, parsed ParseResult, p Understandi
 			}
 		}
 	}
-	for _, ev := range u.Events {
+	events := publicationReportSections(parsed, u.Events)
+	out.RequiresReview = false
+	for _, issue := range u.LinkIssues {
+		if issue != "overlapping_report_anchors" || overlappingReportAnchors(events) {
+			out.RequiresReview = true
+		}
+	}
+	for _, ev := range events {
 		anchors, e := physicalEvidence(parsed, ev.CanonicalEvidence)
 		if e != nil {
 			return out, e
@@ -340,6 +432,14 @@ func PhysicalAnchorsMatch(a, b []PhysicalAnchor) bool {
 
 // Role labels remain open. Known related-party roles do not create a subject
 // merely from their own name, license, signature, fee or contact field.
+func archivePrimarySubjectRole(role string) bool {
+	switch role {
+	case "patient", "患者", "student", "学生", "owner", "业主", "occupant", "居住人", "account_holder", "账户持有人":
+		return true
+	}
+	return false
+}
+
 func archiveSubjectField(role, field string) bool {
 	role = NameKey(role)
 	field = NameKey(field)
@@ -449,7 +549,7 @@ func CanonicalFieldName(name string) string {
 	switch name {
 	case "birth_date", "date_of_birth", "出生日期", "出生年月日", "生日":
 		return "birth_date"
-	case "amount", "金额", "费用", "付款金额", "支付金额", "账单金额", "transaction_amount", "payment_amount":
+	case "amount", "金额", "费用", "付款", "付款金额", "支付金额", "账单金额", "transaction_amount", "payment_amount":
 		return "amount"
 	case "volume", "奶量", "喂奶量", "feeding_volume":
 		return "volume"
@@ -464,4 +564,64 @@ func CanonicalFieldName(name string) string {
 	default:
 		return name
 	}
+}
+
+// publicationReportSections reconciles only complete identical headings in an
+// already-confirmed parser evidence group. Immutable model products and field
+// evidence remain untouched; uncertainty in individual fields is not promoted.
+func publicationReportSections(parsed ParseResult, events []MergedEvent) []MergedEvent {
+	segments := map[string]Segment{}
+	for _, s := range parsed.Segments {
+		segments[s.ID] = s
+	}
+	keyFor := func(e MergedEvent) string {
+		if e.Type != "report" || len(e.CanonicalEvidence) == 0 {
+			return ""
+		}
+		parent := e.CanonicalEvidence[0].ParentSegmentID
+		s, ok := segments[parent]
+		if !ok || s.Locator.Page == nil || s.Visual == nil || s.Visual.State != "confirmed" || s.Visual.RequiresReview || len(s.Visual.Alternatives) < 2 {
+			return ""
+		}
+		text := s.Visual.Alternatives[0].Text
+		if text == "" || len([]rune(text)) > 128 || !reportTitleMarker.MatchString(text) {
+			return ""
+		}
+		for _, a := range s.Visual.Alternatives {
+			if a.Clipped || a.Text != text {
+				return ""
+			}
+		}
+		for _, r := range e.CanonicalEvidence {
+			if r.ParentSegmentID != parent || r.Start != 0 || r.End != len([]rune(text)) || r.Quote != text || r.DerivedValueRef != "" {
+				return ""
+			}
+		}
+		return parent
+	}
+	out := []MergedEvent{}
+	grouped := map[string]int{}
+	for _, e := range events {
+		key := keyFor(e)
+		if i, ok := grouped[key]; key != "" && ok {
+			seen := map[string]bool{}
+			refs := append([]ScopedLocalReference(nil), out[i].FieldRefs...)
+			for _, r := range refs {
+				seen[digestJSON(r)] = true
+			}
+			for _, r := range e.FieldRefs {
+				if !seen[digestJSON(r)] {
+					refs = append(refs, r)
+					seen[digestJSON(r)] = true
+				}
+			}
+			out[i].FieldRefs = refs
+		} else {
+			if key != "" {
+				grouped[key] = len(out)
+			}
+			out = append(out, e)
+		}
+	}
+	return out
 }

@@ -3,7 +3,7 @@
 Synthetic-only wrapper retains bounded original worker wire input/output for
 failed attempts as well as successful products. No environment is persisted.
 """
-import json, os, subprocess, sys
+import json, os, subprocess, sys, hashlib
 from pathlib import Path
 
 def provider_key():
@@ -20,6 +20,11 @@ def provider_key():
 if __name__=='__main__':
     runner,directory=sys.argv[1:3];d=Path(directory)
     if (d/'SYNTHETIC-ONLY').read_text()!='Atrium synthetic archive acceptance v1\n':raise SystemExit('synthetic marker required')
+    runtime=json.loads((d/'runtime-manifest.json').read_text())
+    if hashlib.sha256(Path(runner).read_bytes()).hexdigest()!=runtime['binaries']['core']['sha256']:raise SystemExit('frozen Core binary changed')
+    root=Path(__file__).resolve().parents[3]
+    for resource,expected in runtime['resources'].items():
+        if hashlib.sha256((root/resource).read_bytes()).hexdigest()!=expected:raise SystemExit('frozen model/plugin resource changed')
     captures=d/'wire';captures.mkdir(mode=0o700,exist_ok=True)
     wrapper=d/'capture-node.py'
     wrapper.write_text('''#!/usr/bin/env python3

@@ -8,11 +8,19 @@ root=Path(__file__).resolve().parents[3]
 d=Path(sys.argv[1]);ids=set(sys.argv[2].split(',')) if len(sys.argv)>2 else None
 if (d/'SYNTHETIC-ONLY').read_text()!='Atrium synthetic archive acceptance v1\n':raise SystemExit('synthetic marker required')
 state=json.loads((d/'browser-state.json').read_text());identity=json.loads((d/'query-identity.json').read_text())
-scope=hashlib.sha256(json.dumps([state['origin'],identity['principal_id']],separators=(',',':')).encode()).hexdigest()[:20]
+scope=hashlib.sha256(json.dumps([state['origin'],identity['principal_id'],json.loads((d/'runtime-manifest.json').read_text())['code_sha']],separators=(',',':')).encode()).hexdigest()[:20]
 qdir=d/('query-'+scope);qdir.mkdir(mode=0o700,exist_ok=True)
 for name in ['home','state','workspace','cwd','captures']:(qdir/name).mkdir(mode=0o700,exist_ok=True)
 def write(p,text):p.write_text(text);p.chmod(0o600)
-for name,source in [('host','./cmd/atrium-brain-host'),('mcp','./cmd/home-mcp')]:subprocess.run(['go','build','-o',str(qdir/name),source],cwd=root,check=True)
+runtime=json.loads((d/'runtime-manifest.json').read_text())
+for resource,expected in runtime['resources'].items():
+    if hashlib.sha256((root/resource).read_bytes()).hexdigest()!=expected:raise SystemExit('frozen model/plugin resource changed')
+for name in ['host','mcp']:
+    artifact=runtime['binaries'][name];binary=Path(artifact['path'])
+    if hashlib.sha256(binary.read_bytes()).hexdigest()!=artifact['sha256']:raise SystemExit('frozen runtime binary changed')
+    target=qdir/name
+    if target.exists() and hashlib.sha256(target.read_bytes()).hexdigest()!=artifact['sha256']:raise SystemExit('query state contains a different binary; retain and use a new scope directory')
+    if not target.exists():target.write_bytes(binary.read_bytes());target.chmod(0o700)
 write(qdir/'token',identity['token']);write(qdir/'mcp.yaml',f"core_url: {state['origin']}\nca_file: {d/'ca.crt'}\ntoken_file: {qdir/'token'}\nrequest_timeout_ms: 5000\n")
 args=['--mcp-bin',str(qdir/'mcp'),'--mcp-config',str(qdir/'mcp.yaml'),'--ledger',str(qdir/'ledger.sqlite'),'--principal-id',identity['principal_id']]
 tools=subprocess.check_output([str(qdir/'host'),*args,'--tools-json']);write(qdir/'tools.json',tools.decode());names=[v['name'] for v in json.loads(tools)]

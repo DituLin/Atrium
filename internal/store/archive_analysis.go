@@ -226,14 +226,16 @@ func (r *ArchiveTasks) analysisFactsIn(ctx context.Context, tx *sql.Tx, h, doc s
 		events[o.EventID] = append(events[o.EventID], o)
 	}
 	nonExactValues := map[string]bool{}
+	parsedByExtraction := map[string]archive.ParseResult{}
 	for _, o := range observations {
 		b := bodies[o.ID]
-		if b.ValueAssertion != nil {
-			continue
-		}
 		bundle, err := searchBundleIn(ctx, tx, h, o.ExtractionID)
 		if err != nil {
 			return nil, err
+		}
+		parsedByExtraction[o.ExtractionID] = bundle.Parsed
+		if b.ValueAssertion != nil {
+			continue
 		}
 		nonExactValues[o.ID] = analysisQualifiedValue(bundle.Parsed, b.Field)
 	}
@@ -373,6 +375,9 @@ func (r *ArchiveTasks) analysisFactsIn(ctx context.Context, tx *sql.Tx, h, doc s
 			switch pb.Field.Name {
 			case "full_score", "maximum_score", "满分":
 				if peer.ID != o.ID {
+					if analysisDifferentValueRows(parsedByExtraction[o.ExtractionID], f, parsedByExtraction[peer.ExtractionID], pb.Field) {
+						continue
+					}
 					denominatorCount++
 					item.Denominator = pb.Field.Raw
 					if pb.ValueAssertion != nil {
@@ -641,9 +646,42 @@ func analysisTablePosition(l archive.Locator) (string, int, int) {
 	return "", 0, 0
 }
 
+// Separate score denominators only when both raw values have one unambiguous
+// source table row. Unknown, conflicting or non-table locations retain the
+// conservative event-level ambiguity; header labels cannot determine this row.
+func analysisDifferentValueRows(a archive.ParseResult, left archive.PublicationField, b archive.ParseResult, right archive.PublicationField) bool {
+	row := func(parsed archive.ParseResult, f archive.PublicationField) string {
+		rows := map[string]bool{}
+		for _, ref := range f.Evidence {
+			if ref.Quote != f.Raw {
+				continue
+			}
+			for _, seg := range parsed.Segments {
+				if seg.ID == ref.ParentSegmentID {
+					table, r, _ := analysisTablePosition(seg.Locator)
+					if table != "" && r > 0 {
+						rows[fmt.Sprintf("%s:%d", table, r)] = true
+					} else {
+						return ""
+					}
+				}
+			}
+		}
+		if len(rows) != 1 {
+			return ""
+		}
+		for v := range rows {
+			return v
+		}
+		return ""
+	}
+	x, y := row(a, left), row(b, right)
+	return x != "" && y != "" && x != y
+}
+
 func analysisEventDateField(name string) bool {
 	switch name {
-	case "date", "report_date", "event_date", "occurred_at", "transaction_date", "exam_date", "issue_date", "报告日期", "交易日期", "发生日期", "检查日期":
+	case "date", "report_date", "event_date", "occurred_at", "transaction_date", "exam_date", "issue_date", "record_date", "bill_date", "payment_date", "日期", "报告日期", "交易日期", "发生日期", "检查日期", "记录日期", "账单日期", "付款日期":
 		return true
 	}
 	return false

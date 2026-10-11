@@ -167,11 +167,13 @@ func main() {
 			panic("provider key required")
 		}
 		max := 128
+		var workerErr error
 		for i := 0; i < max; i++ {
 			start := time.Now()
 			worked, e := w.RunOne(ctx)
 			fmt.Printf("worker worked=%v duration=%s error=%v\n", worked, time.Since(start).Round(time.Millisecond), e)
 			if e != nil || !worked {
+				workerErr = e
 				break
 			}
 		}
@@ -183,6 +185,12 @@ func main() {
 			}
 		}
 		report(ctx, d, dir, s)
+		must(workerErr)
+	case "operations":
+		if len(os.Args) != 4 {
+			panic("operation phase required")
+		}
+		operations(ctx, d, blobs, dir, s, os.Args[3])
 	case "diagnose":
 		diagnose(ctx, d, dir)
 	case "paired-screen":

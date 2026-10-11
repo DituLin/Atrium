@@ -7,14 +7,14 @@ from zipfile import ZipFile, ZIP_DEFLATED, ZipInfo
 from PIL import Image, ImageDraw, ImageFont
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.utils import ImageReader
 from pypdf import PdfReader, PdfWriter
 from docx import Document
 from openpyxl import Workbook
 
 ROOT = Path(__file__).resolve().parents[3]
-pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
+pdfmetrics.registerFont(TTFont('ArchiveSyntheticEmbedded','/System/Library/Fonts/Supplemental/Arial Unicode.ttf'))
 FONT = '/System/Library/Fonts/Supplemental/Songti.ttc'
 
 def image(lines):
@@ -27,7 +27,7 @@ def pdf(path,pages,scan=False):
     for lines in pages:
         if scan: c.drawImage(ImageReader(image(lines)),0,0,width=800,height=550)
         else:
-            c.setFont('STSong-Light',20)
+            c.setFont('ArchiveSyntheticEmbedded',20)
             for i,line in enumerate(lines): c.drawString(45,500-i*40,line)
         c.showPage()
     c.save()
@@ -55,19 +55,29 @@ def generate(out):
     # Keep the old ambiguous parser fixture as a separately hashed negative
     # control. The positive source explicitly labels roles/currency/dates; no
     # classification or extracted answer is passed to the worker.
-    for id,name in [('F01','f01.xlsx'),('F01-missing','f01-missing-cache.xlsx')]:
-        with ZipFile(ROOT/'testdata/archive'/name) as source, ZipFile(out/(id+'.xlsx'),'w',ZIP_DEFLATED) as target:
+    # A normal business document, separate from the parser stress workbook.
+    # Store the publisher's formula cache explicitly; the parser must not execute it.
+    w=Workbook();sheet=w.active;sheet.title='费用'
+    sheet.append(['账单编号','费用','收款方','币种','日期'])
+    sheet.append(['TEST-BILL-001',128.10,'示例物业','CNY','2026-10-01'])
+    sheet.append(['TEST-BILL-002',71.90,'示例物业','CNY','2026-10-01'])
+    sheet.append(['合计','=SUM(B2:B3)',None,'CNY'])
+    for row in [2,3,4]:sheet[f'B{row}'].number_format='0.00'
+    data=BytesIO();w.save(data)
+    for id,cached in [('F01',True),('F01-missing',False)]:
+        with ZipFile(BytesIO(data.getvalue())) as source, ZipFile(out/(id+'.xlsx'),'w',ZIP_DEFLATED) as target:
             for member in source.infolist():
                 raw=source.read(member.filename)
-                if member.filename=='sheets/data.xml':
-                    text=raw.decode().replace('<t>账单</t>','<t>账单编号</t>').replace('<t>金额</t>','<t>费用</t>')
-                    text=text.replace('</row>', '<c r="C1" t="inlineStr"><is><t>收款方</t></is></c><c r="D1" t="inlineStr"><is><t>币种</t></is></c><c r="E1" t="inlineStr"><is><t>日期</t></is></c></row>',1)
+                if member.filename=='xl/worksheets/sheet1.xml':
+                    text=raw.decode();old='<f>SUM(B2:B3)</f><v></v>'
+                    assert old in text
+                    text=text.replace(old,'<f>SUM(B2:B3)</f>'+('<v>200</v>' if cached else ''))
                     raw=text.encode()
                 target.writestr(member,raw)
         add(id,id+'.xlsx')
     shutil.copyfile(ROOT/'testdata/archive/f01.xlsx',out/'F01-unlabelled-negative.xlsx');add('F01-unlabelled-negative','F01-unlabelled-negative.xlsx')
     (out/'F02.csv').write_text('凭证类型,付款所引用账单编号,付款,币种,日期,收款方\n付款凭证,TEST-BILL-001,128.10,CNY,2026-10-01,示例物业\n',encoding='utf-8');add('F02','F02.csv')
-    (out/'F03.txt').write_text('独立物业账单\n账单编号：TEST-BILL-003\n收款方：示例物业\n日期：2026-10-02\n费用：20 USD\n',encoding='utf-8');add('F03','F03.txt',kind='text')
+    (out/'F03.csv').write_text('账单编号,收款方,日期,费用,币种\nTEST-BILL-003,示例物业,2026-10-02,20,USD\n',encoding='utf-8');add('F03','F03.csv')
     (out/'F04.txt').write_text('独立物业账单\n账单编号：TEST-BILL-004\n收款方：示例物业\n日期：2026-10-03\n费用：50 CNY\n',encoding='utf-8');add('F04','F04.txt',True,'text')
     im=image(['家庭设备保修资料','房屋地址：测试苑1号测试室','设备：空调','设备型号：DEMO-AC','保修到期：2028-05-31'])
     im.save(out/'P01.jpeg',quality=95);add('P01','P01.jpeg'); im.rotate(90,expand=True).save(out/'P01-rotated.jpeg',quality=95);add('P01-rotated','P01-rotated.jpeg')
@@ -77,7 +87,7 @@ def generate(out):
     wr=PdfWriter();wr.append(PdfReader(out/'H01.pdf'));wr.encrypt('synthetic-password');wr.write(out/'A02-encrypted.pdf');add('A02-encrypted','A02-encrypted.pdf')
     (out/'A02-corrupt.docx').write_bytes(b'PK\x03\x04synthetic truncated zip');add('A02-corrupt','A02-corrupt.docx')
     (out/'A02-unknown.bin').write_bytes(b'ATRIUM SYNTHETIC UNKNOWN FORMAT\x00\xff');add('A02-unknown','A02-unknown.bin')
-    (out/'manifest.json').write_text(json.dumps({'synthetic_only':True,'fixtures':files},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    (out/'manifest.json').write_text(json.dumps({'synthetic_only':True,'fixture_version':'t15-v4','fixtures':files},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({'generated':len(files),'directory':str(out)}))
 
 if __name__=='__main__':
