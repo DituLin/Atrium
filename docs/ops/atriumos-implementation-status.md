@@ -26,8 +26,9 @@
 | T10 统一检索与证据 | 已完成任务级双审 | `b670982` 需求与完整质量批准；32结构化问题及授权/证据/分页/日期回归通过，未部署 |
 | T11 自然语言查询 | 已完成任务级双审 | `6e0d4cc` 需求与完整质量批准；七工具实际链路与两领域模型调用验证通过，未部署 |
 | T12 基础分析 | 已完成任务级双审 | `5fa2de8` 最终需求与完整质量批准；精确分析、真实 XLSX 汇总、当前人工断言/私密及快照失效验证通过，未部署 |
-| T13 可信渠道附件 | 实施中 | 已启动唯一实施者；原生来源、持久捕获/暂存、可见性意图及恢复接线待验收，真实用户新消息留上线联测 |
-| T14–T18 | 未开始 | TV、系统验收、NAS恢复与上线待实施；已做原生 helper 搬移预检，非发布完成 |
+| T13 可信渠道附件 | 已完成任务级双审 | `d19bb76` 最终需求与完整质量批准；原生捕获、意图工具、恢复队列与实际模型回执验证通过，真实用户新消息留上线联测 |
+| T14 TV 档案 | 实施中 | 已启动唯一实施者；全家列表/筛选/详情、预览、公开分析与 IM→TV 结果待验收 |
+| T15–T18 | 未开始 | 系统验收、NAS恢复与上线待实施；已做原生 helper 搬移预检，非发布完成 |
 
 ## 基线核对
 
@@ -352,3 +353,7 @@ T13实施中发现T12遗漏的真实CLI接线：cmd/atrium-brain-host/main.go:72
 T13固定提交474edb817c2fff1a83d8ef57fbbaaec0823abb2e，root确认工作树干净并启动独立需求审查，质量审查待其通过。持久native capture/inbox/spool/reconcile、正常消息意图工具与回执、固定渠道补丁及CLI库存完整性修复已交审。实施端全Go、Node87/87、四包race（store177.833秒）、Linux构建通过；实际TLS Core与构建CLI/MCP子进程启动通过。微信实际monitor隔离副本验证capture先于cursor、两槽崩溃恢复；Discord实际dispatcher/SDK隔离验证消费后仅补两槽上传，模型次数保持1。两次实际隔离OpenClaw/DeepSeek正常工具轮以合成可信上下文分别选择private/inherit，root读取原始回执确认。证据 adapters/openclaw/evidence/2026-10-11-t13/；native transport/admission doubles和模型wrapper边界明确，仍未真实用户新消息验收或生产启用。
 
 T14准备：root已按锁文件安装Web依赖，旧FamilyScreen四项测试及生产构建/Chrome66 CSS guard通过，未改Web源码。npm audit生产依赖无报告；开发工具依赖存在5项报告（含Vitest/Tinypool），未自动执行破坏性升级，发布前按实际开发工具使用范围处理。这些为基线，不代表新TV档案体验通过。
+
+T13最终d19bb760491d9e15da0b9f0f054f87e6cabe1617获完整质量复审及需求语义APPROVED。需求发现32待澄清消息阻塞下载、全局256条阻塞其他账号，3eb61f3改SQL先筛选due/可执行或目标channel/account再限量；root两原/tmp反例RED→GREEN。质量发现openStaged先于attempt和lookup，缺失spool占前8槽并阻止已保存回执恢复；d19bb76先持久attempt/backoff→lookup严格hash/size→仅notfound读取spool，文件异常保留terminal/archive_spool。root两质量原反例RED→GREEN，完好尾槽上传1，lostack缺spool由第二次lookup恢复core_saved。实施Node93/93、native双入口/TLSCoreCLI通过；质量独立24测试、最终需求22测试及原队列反例通过。已派新T14唯一实施者，继续全家TV档案及结果展示，未部署。
+
+OnePlus实际基线：root已打开io.atrium.tv并用方向键进入旧档案页，确认应用可连接家中服务并显示记录；不是仅ADB在线。顶部档案命名已生效，但首页菜单仍称家人、默认首位成员、部分指标英文。截图仅存本机/tmp，不提交家庭数据。T14须统一入口与中文标签并验证新页面，旧页面实屏不算新功能验收。
