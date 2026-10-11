@@ -1,0 +1,46 @@
+{
+  "results": [
+    {
+      "file": "H01.pdf",
+      "exit": 0,
+      "status": "parsed",
+      "error_code": "",
+      "pages": 2,
+      "sha256": "fc3e484576d0a08c1845cfb9e9dfa77dd0acc1b8a2bcfd3e450a8a44f28e367c"
+    },
+    {
+      "file": "H03.png",
+      "exit": 0,
+      "status": "parsed",
+      "error_code": "",
+      "pages": 1,
+      "sha256": "9a2a409a37a3406daf7d5b143b1b8c5a8a53e71264b9660d402dcdf559d50257"
+    },
+    {
+      "file": "P01.jpeg",
+      "exit": 0,
+      "status": "parsed",
+      "error_code": "",
+      "pages": 1,
+      "sha256": "7a3657c4ad7b3f3f3aa0b98138be5e377e8e3f82e0fcf7350691b14e879d17ee"
+    },
+    {
+      "file": "P02.webp",
+      "exit": 0,
+      "status": "parsed",
+      "error_code": "",
+      "pages": 1,
+      "sha256": "f5b3f69b5ec2b80b373f0e059806e3758a26be74a69c02b92c025b719321f2ed"
+    },
+    {
+      "file": "P01.jpeg",
+      "exit": 0,
+      "status": "unsupported",
+      "error_code": "parser_unavailable",
+      "pages": 0,
+      "sha256": "7a3657c4ad7b3f3f3aa0b98138be5e377e8e3f82e0fcf7350691b14e879d17ee"
+    }
+  ],
+  "signed_relocated": true,
+  "sanitized_environment": true
+}

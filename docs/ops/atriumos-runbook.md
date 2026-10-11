@@ -45,3 +45,11 @@
 ## 发布结果
 
 待填写实际发布提交、包摘要、备份位置、迁移核对、渠道/TV/NAS 结果、性能数据及回滚演练。当前没有上线完成结论。
+
+## 2026-10-11 开始部署（尚未切换）
+
+用户明确要求开始部署后，已创建受保护在线预部署快照 `~/Atrium/releases/predeploy-20261011-161230`：实际 schema 8、81 条家庭记录，共 33 文件约 114.7 MB；Core 与两个 Brain SQLite 各自使用在线一致备份，完整性和外键检查通过。包含现有程序、配置、TLS/凭据、插件与 launchd 文件；没有复制约 12 GB 的可重建预览缓存。此快照未跨库停机，正式切换前还需短暂停接入并保全最新操作状态；不将它称为最终灾备点。脱敏摘要见 `deployment-start.json`。
+
+从固定 `078c167` 独立源码导出构建完整暂存包，先 Web build 再 embed，包含 Core、Brain/MCP、spool reader、插件与 worker 资源、native helper/codecs/许可。五个可执行文件使用既有本机证书签名并严格验证，codec 原始字节未重签。签名 native 包搬移到独立目录、净化环境后实际解析 PDF/PNG/JPEG/WebP，通过；故意缺失 codec 返回 `parser_unavailable` 且 complete=false。根自写首个探针把协议 `code` 误写为 `error_code`，更正探针后实际重跑通过，并未修改产品协议。证据见 `signed-staged-native.json`。
+
+生产 Core 的单键模型凭据文件已准备于 `~/Atrium/service-env/atrium-core.env`（目录0700、文件0600），没有把密钥写入 plist/参数/日志。暂存配置 archives.enabled=false；生产配置和服务尚未切换。发布 guard/回填 CLI/保护环境文件入口在独立工作树实现；T15 两项关键审查修复仍须纳入最终组合包。NAS 完整档案恢复、一小时持续运行等未完成项不会因为开始部署而被标为通过。

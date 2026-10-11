@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-11T08:12:30.718691+00:00",
+  "stage": "online_predeployment_snapshot",
+  "backup_path": "/Users/ditu/Atrium/releases/predeploy-20261011-161230",
+  "schema_version": 8,
+  "family_records": 81,
+  "file_count": 33,
+  "bytes": 114743890,
+  "integrity": "ok",
+  "foreign_keys": "ok",
+  "consistent_per_database": true,
+  "cross_database_quiesced": false,
+  "final_cutover_backup": "pending",
+  "production_switched": false
+}
