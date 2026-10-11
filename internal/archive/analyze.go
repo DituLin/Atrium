@@ -10,7 +10,7 @@ import (
 )
 
 const AnalysisVersion = "archive-analysis/1"
-const AnalysisAlgorithmVersion = "archive-analysis/3"
+const AnalysisAlgorithmVersion = "archive-analysis/4"
 
 // AnalysisQuery is a bounded business query. Projection and authority are host supplied.
 type AnalysisQuery struct {
@@ -54,6 +54,8 @@ func (q AnalysisQuery) Normalize() (AnalysisQuery, error) {
 }
 
 type AnalysisFact struct {
+	HistoricalCache                                                        bool
+	FormulaAggregate                                                       bool
 	AggregateBoundary                                                      map[string]string
 	AggregateBoundaryUnknown                                               bool
 	BoundaryEvidence                                                       []SearchEvidence
@@ -304,7 +306,7 @@ func Analyze(q AnalysisQuery, in AnalysisInput) (AnalysisResult, error) {
 		members := map[string]bool{}
 		for _, id := range f.AggregateMembers {
 			m, ok := byID[id]
-			if !ok || !CompatibleAggregateBoundary(f, m) || m.Unavailable || members[id] || m.Role != "line_item" || len(m.RoleEvidence) == 0 || m.NonExact || m.Metric != f.Metric || m.Currency != f.Currency || m.Unit != f.Unit || m.Sample != f.Sample {
+			if !ok || (!f.FormulaAggregate && !CompatibleAggregateBoundary(f, m)) || m.Unavailable || members[id] || m.Role != "line_item" || len(m.RoleEvidence) == 0 || m.NonExact || m.Metric != f.Metric || m.Currency != f.Currency || m.Unit != f.Unit || m.Sample != f.Sample {
 				return false
 			}
 			n, _, ok := exactDecimal(m.Value)
@@ -314,6 +316,9 @@ func Analyze(q AnalysisQuery, in AnalysisInput) (AnalysisResult, error) {
 			sum.Add(sum, n)
 			members[id] = true
 		}
+		if f.FormulaAggregate {
+			return true
+		} // Stored caches need not equal current corrected members.
 		total, _, ok := exactDecimal(f.Value)
 		return ok && total.Cmp(sum) == 0
 	}
@@ -345,6 +350,11 @@ func Analyze(q AnalysisQuery, in AnalysisInput) (AnalysisResult, error) {
 						}
 					}
 				}
+				r.Coverage.Excluded++
+				continue
+			}
+			if f.HistoricalCache {
+				reason("unverified_formula_cache")
 				r.Coverage.Excluded++
 				continue
 			}

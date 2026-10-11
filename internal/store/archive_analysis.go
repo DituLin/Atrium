@@ -416,6 +416,9 @@ func (r *ArchiveTasks) analysisFactsIn(ctx context.Context, tx *sql.Tx, h, doc s
 		out = append(out, item)
 	}
 	analysisTableAggregates(out)
+	if err := r.analysisFormulaAggregatesIn(ctx, tx, h, doc, public, out); err != nil {
+		return nil, err
+	}
 	return out, nil
 }
 func analysisLiteralRole(s string) string {
