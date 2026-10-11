@@ -63,7 +63,7 @@ it('shows verified cards with an explicit analysis limit instead of hiding the a
 
 it('keeps the milk chart and day/week/month controls visible when only one feed is recorded',async()=>{
  const h=setup();
- vi.mocked(h.api.analyzeArchives).mockImplementation(async q=>({snapshot_id:'milk',data_epoch:1,generation:1,projection:'public',algorithm_version:'archive-analysis/6',coverage:{complete:true,included:1,excluded:0,reasons:[]},groups:q.domain==='health'?[{metric:'formula',unit:'ml',date:'2026-10-11T09:00:00Z',value:'60'}]:[{metric:'documents',value:'4'}]}));
+ vi.mocked(h.api.analyzeArchives).mockImplementation(async q=>({snapshot_id:'milk',data_epoch:1,generation:1,projection:'public',algorithm_version:'archive-analysis/6',coverage:{complete:true,included:1,excluded:0,reasons:[]},groups:q.metric==='formula'?[{metric:'formula',unit:'ml',date:'2026-10-11T09:00:00Z',value:'60'}]:[{metric:'documents',value:'4'}]}));
  await screen.findByRole('heading',{name:'奶量趋势'});
  expect(screen.getByRole('button',{name:'日'}).getAttribute('aria-pressed')).toBe('true');
  expect(screen.getByRole('button',{name:'周'})).toBeTruthy();
