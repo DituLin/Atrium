@@ -14,16 +14,26 @@ type ScreenDocument struct {
 }
 
 func ScreenProcessing(i SearchItem) string {
-	if i.ReviewRequired || i.Ownership == "waiting" {
-		return "needs_review"
+	// A failed reprocessing attempt does not invalidate an existing publication.
+	if !i.MetadataOnly {
+		if i.ReviewRequired || i.Ownership == "waiting" {
+			return "needs_review"
+		}
+		if i.ParseStatus == "parsed" {
+			return "ready"
+		}
+		return "saved_only"
 	}
-	if i.MetadataOnly {
+	switch i.TaskStatus {
+	case "queued", "running":
 		return "processing"
+	case "retry_wait":
+		return "waiting"
+	case "waiting_input":
+		return "needs_review"
+	default:
+		return "saved_only"
 	}
-	if i.ParseStatus == "parsed" {
-		return "ready"
-	}
-	return "saved_only"
 }
 
 // ScreenTaskSummary contains user-facing stages, never internal worker state,
@@ -37,11 +47,32 @@ type ScreenTaskSummary struct {
 func SummarizeScreenTask(i SearchItem) ScreenTaskSummary {
 	s := ScreenTaskSummary{Parse: i.ParseStatus, Understanding: "complete", Attribution: i.Ownership}
 	if i.MetadataOnly {
-		s.Understanding = "pending"
+		switch ScreenProcessing(i) {
+		case "processing":
+			s.Parse = "pending"
+			s.Understanding = "pending"
+		case "waiting":
+			s.Parse = "waiting"
+			s.Understanding = "pending"
+		case "needs_review":
+			s.Parse = "pending"
+			s.Understanding = "needs_review"
+		default:
+			s.Parse = "unavailable"
+			s.Understanding = "unavailable"
+		}
 	} else if i.ReviewRequired {
 		s.Understanding = "needs_review"
 	} else if i.ParseStatus != "parsed" {
 		s.Understanding = "unavailable"
 	}
 	return s
+}
+
+func PresentScreenItem(i *SearchItem) {
+	i.Processing = ScreenProcessing(*i)
+	summary := SummarizeScreenTask(*i)
+	i.TaskSummary = &summary
+	i.OriginalSaved = true
+	i.TaskStatus = ""
 }

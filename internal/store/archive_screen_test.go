@@ -145,3 +145,30 @@ func TestArchiveAnalysisReceiptTVRecomputesPublicCurrencyGroups(t *testing.T) {
 	_, e = r.CreateArchiveScreenView(ctx, actor, "home-1", receipt.QueryRef, "tv", domain.NewID())
 	require.Error(t, e)
 }
+
+func TestScreenTerminalSummaryBypassesStaleSearchIndex(t *testing.T) {
+	d := testutil.NewDB(t)
+	ctx := context.Background()
+	r := d.ArchiveTasksWithClock(&archiveClock{now: archiveNow})
+	rec, f, _ := publicationFixture(t, d, r, "terminal-summary", domain.ArchiveInputFile)
+	_, e := indexAllArchiveSearch(ctx, r, "home-1")
+	require.NoError(t, e)
+	_, e = r.Finish(ctx, "home-1", f.TaskID, f.Token, domain.ArchiveTaskFailed, domain.ArchiveTaskUpdate{ExpectedStateVersion: f.StateVersion, Stage: "processing", StateJSON: json.RawMessage(`{}`), ResultJSON: json.RawMessage(`{}`), LastErrorCode: "parse_status_encrypted"})
+	require.NoError(t, e)
+	_, e = d.SQL().Exec(`UPDATE local_household SET household_id='home-1'`)
+	require.NoError(t, e)
+	require.NoError(t, d.Screens().Create(ctx, &domain.Screen{ID: "tv", Name: "TV", TokenHash: "hash"}))
+	detail, e := r.ArchiveDocumentForScreen(ctx, "tv", "hash", "home-1", rec.DocumentID)
+	require.NoError(t, e)
+	page, e := r.SearchArchivesForScreen(ctx, "tv", "hash", "home-1", archive.SearchFilter{}, []byte("test"))
+	require.NoError(t, e)
+	require.Len(t, page.Items, 1)
+	require.Equal(t, "saved_only", detail.Processing)
+	require.Equal(t, detail.Processing, page.Items[0].Processing)
+	require.Equal(t, detail.TaskSummary, *page.Items[0].TaskSummary)
+	require.True(t, page.Items[0].OriginalSaved)
+	wire, _ := json.Marshal(page)
+	for _, secret := range []string{"task_status", "parse_status_encrypted", "failed", "provider_message"} {
+		require.NotContains(t, string(wire), secret)
+	}
+}

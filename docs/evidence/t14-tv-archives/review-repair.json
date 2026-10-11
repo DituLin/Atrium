@@ -1,0 +1,20 @@
+{
+  "scope": "T14 independent spec review repairs; synthetic tests, not deployment",
+  "fixes": [
+    "A new query atomically resets detail, filter, metric and focus; ready acknowledgment requires current command results DOM, while failures are fenced by command token.",
+    "Screen processing distinguishes active, retry waiting, review and terminal saved-only; published facts survive failed reprocessing. List reads current task status in its authorized snapshot and strips internal state."
+  ],
+  "validation": {
+    "web": {
+      "files": 65,
+      "tests": 460,
+      "lint": "passed, zero warnings",
+      "build_and_typecheck": "passed"
+    },
+    "go_all": "passed",
+    "affected_stage_race": "passed",
+    "original_external_ui_counterexample": "passed unchanged, requested card count 1 at ready acknowledgment",
+    "original_external_terminal_counterexample": "passed unchanged"
+  },
+  "live_detail_to_query": "pending independent browser run"
+}

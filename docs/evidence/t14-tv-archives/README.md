@@ -55,3 +55,9 @@ and percentage-point change are presented when supplied. Partial dates are never
 expanded into fabricated days, and full instants use the household timezone.
 
 See the verification summary next to this file for the final automated commands.
+
+## Independent review repairs
+
+New IM queries now clear the previous detail and local selection, and acknowledgment requires the current query result DOM. Command tokens also fence stale failures. Regressions cover detail-to-query, query replacement, manual-filter cancellation and a previous failed query.
+
+Saved originals now distinguish processing, retry waiting, needs review and incomplete terminal processing without exposing worker state or provider errors. List and detail read current task state; a failed reprocessing attempt does not replace an existing valid publication. The unchanged reviewer counterexamples and complete Go/Web regressions passed; see `review-repair.json`.

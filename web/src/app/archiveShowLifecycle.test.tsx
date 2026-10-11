@@ -35,3 +35,9 @@ it('fails an expired or revoked view rather than acknowledging navigation',async
  const h=harness();vi.mocked(h.api.getArchiveView).mockRejectedValue(new Error('expired'));h.command(1);await waitFor(()=>expect(socket.acks[0]?.status).toBe('failed'));expect(socket.acks[0]?.error_code).toBe('archive_unavailable');expect(h.state().router.appliedSequence).toBe(0);
 });
 it('loads after StrictMode setup cleanup replay',async()=>{const h=harness(true);h.command(1);await waitFor(()=>expect(socket.acks[0]?.status).toBe('applied'));});
+
+it('does not fail a new command using a previous query failure',async()=>{
+ const h=harness();vi.mocked(h.api.getArchiveView).mockRejectedValue(new Error('expired first query'));h.command(1);await waitFor(()=>expect(socket.acks[0]?.status).toBe('failed'));
+ let finish!:(v:unknown)=>void;vi.mocked(h.api.getArchiveView).mockImplementation(()=>new Promise(resolve=>{finish=resolve as typeof finish;}));h.command(2);expect(socket.acks).toHaveLength(1);
+ vi.mocked(h.api.getArchiveView).mockResolvedValue({archive_view_id:'view',page,analysis} as never);await act(async()=>finish({archive_view_id:'view',page,analysis}));await waitFor(()=>expect(socket.acks[1]?.status).toBe('applied'));
+});

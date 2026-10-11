@@ -46,6 +46,7 @@ export interface ArchiveEvidence {
     source_kind?: string;
 }
 export interface ArchiveItem {
+ processing?:string;task_summary?:ArchiveTaskSummary;original_saved?:boolean;
     document_id: string;
     document_revision: number;
     domain: string;

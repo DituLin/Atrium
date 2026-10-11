@@ -10,7 +10,7 @@ import { ArchiveReader } from './family/archiveReader';
 import type { ArchiveReadState } from './family/archiveReader';
 import type {ApiClient} from '../core/api';
 import type { ArchiveDetail, ArchiveFilter } from '../types/archives';
-import { DOMAINS, archiveDate, evidenceLocation, factLabel, itemTitle, ownershipLabel } from './family/archiveLabels';
+import { DOMAINS, processingLabel, parseLabel, archiveDate, evidenceLocation, factLabel, itemTitle, ownershipLabel } from './family/archiveLabels';
 const archiveFocus=new WeakMap<ApiClient,{id:string;index:number;scroll:number}>();
 export function FamilyScreen() {
     const { api, state, dispatch, archives } = useApp();
@@ -25,6 +25,8 @@ export function FamilyScreen() {
     const controls = useRef<(HTMLButtonElement | null)[]>([]);
     const cards = useRef<(HTMLButtonElement | null)[]>([]);
     const back = useRef<HTMLButtonElement>(null);
+    const results = useRef<HTMLDivElement>(null);
+    const lastView = useRef('/');
     const focusedDetail = useRef('');
     const moreButton = useRef<HTMLButtonElement>(null);
     const refreshButton = useRef<HTMLButtonElement>(null);
@@ -32,7 +34,7 @@ export function FamilyScreen() {
         controls.current[0]?.focus(); }, []);
     const anchor = useRef(archiveFocus.get(api)??{ id: '', index: 0, scroll: 0 });
     const returning = useRef(archiveFocus.has(api));
-    useEffect(() => { const region=content.current;const off = reader.subscribe(() => setValue({ ...reader.value })); void reader.load(); return () => { archiveFocus.set(api,{...anchor.current,scroll:region?.scrollTop??anchor.current.scroll});off(); reader.stop(); }; }, [reader,api]);
+    useEffect(() => { const region=content.current;const off = reader.subscribe(() => {setDocumentID(reader.documentID);setFilter({...reader.filter});setMetric(reader.metric);setValue({ ...reader.value });}); void reader.load(); return () => { archiveFocus.set(api,{...anchor.current,scroll:region?.scrollTop??anchor.current.scroll});off(); reader.stop(); }; }, [reader,api]);
     useEffect(() => { if (generation.current !== state.archiveGeneration) {
         generation.current = state.archiveGeneration;
         reader.invalidate();
@@ -45,13 +47,21 @@ export function FamilyScreen() {
     const viewID = route.name === 'family' ? route.archiveViewId : undefined;
     const commandID = route.name === 'family' ? route.commandId : undefined;
     const snapshot = verifiedGeneration === state.archiveGeneration && !state.needsPairing && !state.authExpired && (!commandID || value.snapshot?.viewToken === commandID) ? value.snapshot : null;
-    useEffect(() => { if (viewID)
-        void reader.showView(viewID, commandID ?? ''); }, [reader, viewID, commandID]);
+    useEffect(() => {
+        const key=`${viewID??''}/${commandID??''}`;
+        if(lastView.current===key)return;
+        lastView.current=key;
+        focusedDetail.current='';anchor.current={id:'',index:0,scroll:0};returning.current=false;
+        if(content.current)content.current.scrollTop=0;
+        if(viewID){void reader.showView(viewID,commandID??'');}
+        else {void reader.select(reader.filter);}
+        controls.current[0]?.focus();
+    }, [reader, viewID, commandID]);
     useEffect(() => { if (!commandID || !viewID)
-        return; if (snapshot && snapshot.viewToken === commandID)
+        return; if (snapshot && snapshot.viewToken === commandID && !documentID && results.current?.dataset.archiveViewToken===commandID && results.current.querySelectorAll('.archive-card').length===snapshot.page.items.length)
         dispatch({ type: 'archives.rendered', commandId: commandID, id: viewID, status: 'ready' });
-    else if (value.failed)
-        dispatch({ type: 'archives.rendered', commandId: commandID, id: null, status: 'error' }); }, [snapshot, value.failed, commandID, viewID, dispatch]);
+    else if (value.failed && value.viewToken===commandID)
+        dispatch({ type: 'archives.rendered', commandId: commandID, id: null, status: 'error' }); }, [snapshot, value.failed, value.viewToken, commandID, viewID, dispatch, documentID]);
     useEffect(() => archives?.register(route, async (signal) => { reader.invalidate(); await reader.load(); if (signal.aborted || !reader.value.snapshot || reader.value.failed)
         throw new Error('Archive verification failed'); await new Promise<void>(resolve => requestAnimationFrame(() => resolve())); }), [archives, route, reader]);
     const dateLabel = (value: string) => archiveDate(value, clockOptions(state.home));
@@ -110,9 +120,9 @@ export function FamilyScreen() {
             content.current?.focus(); if (key === 'left')
             controls.current[0]?.focus(); }}>返回档案</RemoteButton>
     <h2 className="archive-title serif">{itemTitle(current.item)}</h2><p className="muted">版本 {current.item.document_revision} · {ownershipLabel(current.item.ownership)} · {current.item.dates.map(dateLabel).join(' / ') || '日期未明确'}</p>
-    <p>{current.original_saved ? '原件已保存' : '原始记录已保存'} · {current.processing === 'ready' ? '已完成识别' : current.processing === 'needs_review' ? '部分内容待确认' : current.processing === 'processing' ? '正在识别' : '暂不支持完整识别'} · NAS {current.nas_status === 'saved' ? '已同步' : '待同步'}</p>
+    <p>{current.original_saved ? '原件已保存' : '原始记录已保存'} · {processingLabel(current.processing)} · NAS {current.nas_status === 'saved' ? '已同步' : '待同步'}</p>
     {!current.coverage.complete ? <p className="family-message">分析覆盖尚不完整，待确认内容不计入确定统计。</p> : null}
-    {current.task_summary?<p className="muted">解析：{current.task_summary.parse==='parsed'?'已完成':current.task_summary.parse==='pending'?'处理中':'部分完成或暂不支持'} · 理解：{{pending:'处理中',complete:'已完成',needs_review:'待确认',unavailable:'暂不可用'}[current.task_summary.understanding]} · 归属：{ownershipLabel(current.task_summary.attribution)}</p>:null}
+    {current.task_summary?<p className="muted">解析：{parseLabel(current.task_summary.parse)} · 理解：{{pending:'处理中',complete:'已完成',needs_review:'待确认',unavailable:'暂不可用'}[current.task_summary.understanding]} · 归属：{ownershipLabel(current.task_summary.attribution)}</p>:null}
     <h3 className="page__section-title">结构化内容与来源</h3><p className="muted">以下为内容摘录，非原件版式。</p>
     {current.item.evidence.map((e, i) => <article className="archive-evidence" key={i}><h3>{factLabel(e.field_name ?? '')}</h3><p>{e.asserted_value ?? e.excerpt}</p>{e.asserted_value && e.asserted_value !== e.excerpt ? <p className="muted">原文：{e.excerpt}</p> : null}<small>{evidenceLocation(e)}{e.confirmed ? ' · 已确认' : ' · 待核实'}</small></article>)}
     <ArchivePreview key={`${value.epoch}:${current.generation}:${current.item.document_revision}`} detail={current} onRead={() => content.current?.focus()}/>
@@ -120,10 +130,10 @@ export function FamilyScreen() {
     {!filter.ownership ? <ArchiveAnalysisPanel analysis={snapshot.analysis} dateLabel={dateLabel}/> : <p className="muted">待归属与待确认内容不纳入确定统计。</p>}
     {!snapshot.page.items.length ? <div className="family-empty"><h2 className="serif">还没有可展示的档案</h2><p>直接发送文本、图片或文件，系统会识别内容和归属，无需先建立家人档案。</p></div> : null}
     {!snapshot.page.coverage.complete?<p className="muted">{snapshot.page.coverage.reason==='presentation_window_limit'?'已达到当前阅读窗口上限，请按人物或领域缩小范围。':'部分档案尚待识别或确认。'}</p>:null}
-                <div className="family-history">{snapshot.page.items.map((item, i) => <RemoteButton key={item.document_id} ref={el => { cards.current[i] = el; }} className="family-record archive-card" onFocus={() => { anchor.current = { id: item.document_id, index: i, scroll: content.current?.scrollTop ?? 0 }; }} onClick={() => open(item.document_id, i)} onDirection={key => { if (key === 'left')
+                <div ref={results} data-archive-view-token={snapshot.viewToken} className="family-history">{snapshot.page.items.map((item, i) => <RemoteButton key={item.document_id} ref={el => { cards.current[i] = el; }} className="family-record archive-card" onFocus={() => { anchor.current = { id: item.document_id, index: i, scroll: content.current?.scrollTop ?? 0 }; }} onClick={() => open(item.document_id, i)} onDirection={key => { if (key === 'left')
             controls.current[0]?.focus(); if (key === 'up')
             (i ? cards.current[i - 1] : content.current)?.focus(); if (key === 'down')
-            (cards.current[i + 1] ?? moreButton.current)?.focus(); }}><span className="family-record__date">{item.dates.map(dateLabel).join(' / ') || '日期未明确'}<span>{DOMAINS[item.domain] ?? '待分类'}</span></span><span className="family-record__body"><span className="archive-card__title serif">{itemTitle(item)}</span><span className="archive-card__text">{item.evidence.slice(0, 2).map(e => `${factLabel(e.field_name ?? '')} ${e.asserted_value ?? e.excerpt}`).join(' · ') || '原件已保存，正在识别'}</span><span className="muted">{ownershipLabel(item.ownership)} · 版本 {item.document_revision}{item.review_required ? ' · 待核实' : ''}</span></span></RemoteButton>)}</div>
+            (cards.current[i + 1] ?? moreButton.current)?.focus(); }}><span className="family-record__date">{item.dates.map(dateLabel).join(' / ') || '日期未明确'}<span>{DOMAINS[item.domain] ?? '待分类'}</span></span><span className="family-record__body"><span className="archive-card__title serif">{itemTitle(item)}</span><span className="archive-card__text">{item.evidence.slice(0, 2).map(e => `${factLabel(e.field_name ?? '')} ${e.asserted_value ?? e.excerpt}`).join(' · ') || '原件已保存'}</span><span className="muted">{ownershipLabel(item.ownership)} · {processingLabel(item.processing??(item.metadata_only?'saved_only':'ready'))} · 版本 {item.document_revision}{item.review_required ? ' · 待核实' : ''}</span></span></RemoteButton>)}</div>
     {snapshot.page.next_cursor ? <RemoteButton ref={moreButton} className="btn family-more" disabled={value.busy} onClick={() => void reader.more()} onDirection={key => { if (key === 'up')
             cards.current[snapshot.page.items.length - 1]?.focus(); if (key === 'left')
             controls.current[0]?.focus(); }}>更早档案</RemoteButton> : null}

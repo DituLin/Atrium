@@ -722,7 +722,14 @@ SELECT 'legacy:'||p.root_record_id,1,f.payload_json,'',1,p.entity_id,f.id FROM a
 				break
 			}
 			if a.ScreenID != "" {
-				item.TaskStatus = ""
+				// Task transitions need not rebuild the semantic search index.
+				// Read only the current coarse status in this authorized snapshot.
+				if !strings.HasPrefix(item.DocumentID, "legacy:") {
+					if e = tx.QueryRowContext(ctx, `SELECT coalesce((SELECT t.status FROM archive_sources s JOIN archive_tasks t ON t.household_id=s.household_id AND t.id=s.task_id WHERE s.household_id=? AND s.document_id=? ORDER BY s.received_at DESC,s.task_id DESC LIMIT 1),'')`, h, item.DocumentID).Scan(&item.TaskStatus); e != nil {
+						return e
+					}
+				}
+				archive.PresentScreenItem(&item)
 			}
 			page.Items = append(page.Items, item)
 			last = id
@@ -862,7 +869,7 @@ func (r *ArchiveTasks) archiveEvidence(ctx context.Context, a archiveSearchActor
 			}
 		}
 		if a.ScreenID != "" {
-			p.Item.TaskStatus = ""
+			archive.PresentScreenItem(&p.Item)
 		}
 		out.Items = append(out.Items, p.Item)
 		if p.Item.MetadataOnly || p.Item.Truncated || p.Item.ReviewRequired || p.Item.ParseStatus != "parsed" {

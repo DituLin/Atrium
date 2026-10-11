@@ -80,20 +80,23 @@ type SearchEvidence struct {
 	Confirmed            bool            `json:"confirmed"`
 }
 type SearchItem struct {
-	TaskStatus       string           `json:"task_status,omitempty"`
-	ReviewRequired   bool             `json:"review_required"`
-	DocumentID       string           `json:"document_id"`
-	PublicationID    string           `json:"publication_id,omitempty"`
-	DocumentRevision int64            `json:"document_revision"`
-	Domain           string           `json:"domain"`
-	DocumentType     string           `json:"document_type"`
-	Ownership        string           `json:"ownership"`
-	ParseStatus      string           `json:"parse_status"`
-	EntityIDs        []string         `json:"entity_ids"`
-	Dates            []string         `json:"dates"`
-	Evidence         []SearchEvidence `json:"evidence"`
-	MetadataOnly     bool             `json:"metadata_only"`
-	Truncated        bool             `json:"truncated"`
+	Processing       string             `json:"processing,omitempty"`
+	TaskSummary      *ScreenTaskSummary `json:"task_summary,omitempty"`
+	OriginalSaved    bool               `json:"original_saved,omitempty"`
+	TaskStatus       string             `json:"task_status,omitempty"`
+	ReviewRequired   bool               `json:"review_required"`
+	DocumentID       string             `json:"document_id"`
+	PublicationID    string             `json:"publication_id,omitempty"`
+	DocumentRevision int64              `json:"document_revision"`
+	Domain           string             `json:"domain"`
+	DocumentType     string             `json:"document_type"`
+	Ownership        string             `json:"ownership"`
+	ParseStatus      string             `json:"parse_status"`
+	EntityIDs        []string           `json:"entity_ids"`
+	Dates            []string           `json:"dates"`
+	Evidence         []SearchEvidence   `json:"evidence"`
+	MetadataOnly     bool               `json:"metadata_only"`
+	Truncated        bool               `json:"truncated"`
 }
 type SearchCoverage struct {
 	Complete bool   `json:"complete"`

@@ -31,3 +31,6 @@ export function evidenceLocation(e: ArchiveEvidence) { const l = e.locator; if (
     return `表格第 ${l.csv.record} 行，第 ${l.csv.column} 列`; if (l.docx)
     return `文档${l.docx.paragraph ? `第 ${l.docx.paragraph} 段` : '表格段落'}`; return `文本第 ${e.start + 1}–${e.end} 字`; }
 export function ownershipLabel(value: string) { return ({ confirmed: '已归属', household: '家庭共有', waiting: '待确认归属', unassigned: '待归属' } as Record<string, string>)[value] ?? '待归属'; }
+
+export function processingLabel(value:string){return ({ready:'已完成识别',processing:'正在识别',waiting:'等待重试',needs_review:'部分内容待确认',saved_only:'识别尚未完成，原件保留'} as Record<string,string>)[value]??'原件已保存';}
+export function parseLabel(value:string){return ({parsed:'已完成',pending:'待处理',waiting:'等待恢复',unavailable:'尚未完成',partial:'部分完成',encrypted:'已加密，暂不可读取',invalid:'暂不可读取',limit_exceeded:'处理受限'} as Record<string,string>)[value]??'尚未明确';}

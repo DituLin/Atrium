@@ -48,7 +48,7 @@ func (r *ArchiveTasks) ArchiveDocumentForScreen(ctx context.Context, screen, has
 		}
 		out.Processing = archive.ScreenProcessing(p.Item)
 		out.TaskSummary = archive.SummarizeScreenTask(p.Item)
-		p.Item.TaskStatus = ""
+		archive.PresentScreenItem(&p.Item)
 		if len(p.Item.Evidence) > 25 {
 			p.Item.Evidence = p.Item.Evidence[:25]
 			p.Item.Truncated = true

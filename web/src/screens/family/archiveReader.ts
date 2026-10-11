@@ -10,6 +10,7 @@ export interface ArchiveSnapshot {
     at: number;
 }
 export interface ArchiveReadState {
+    viewToken:string;
     snapshot: ArchiveSnapshot | null;
     busy: boolean;
     failed: boolean;
@@ -23,7 +24,7 @@ const navigation = new WeakMap<ApiClient, {
 /** Owns only verified archive content. Other API successes cannot renew it.
  * Every poll rebuilds the complete loaded window, including expanded history. */
 export class ArchiveReader {
-    value: ArchiveReadState = { snapshot: null, busy: false, failed: false, epoch: 0 };
+    value: ArchiveReadState = { viewToken:'',snapshot: null, busy: false, failed: false, epoch: 0 };
     metric = 'volume';
     filter: ArchiveFilter = {};
     documentID = '';
@@ -55,8 +56,8 @@ export class ArchiveReader {
     subscribe(fn: () => void): () => void { this.listeners.add(fn); return () => { this.listeners.delete(fn); }; }
     private emit() { for (const fn of this.listeners)
         fn(); }
-    invalidate() { this.sequence++; this.controller?.abort(); this.value = { snapshot: null, busy: false, failed: false, epoch: this.value.epoch + 1 }; this.emit(); }
-    showView(id: string, token: string) { this.viewID = id; this.viewToken = token; this.documentID = ''; this.pages = 1; this.invalidate(); return this.load(); }
+    invalidate() { this.sequence++; this.controller?.abort(); this.value = { viewToken:this.viewToken,snapshot: null, busy: false, failed: false, epoch: this.value.epoch + 1 }; this.emit(); }
+    showView(id: string, token: string) { this.viewID = id; this.viewToken = token; this.filter={};this.metric='volume';this.documentID = ''; this.pages = 1; this.invalidate(); return this.load(); }
     select(filter: ArchiveFilter) { this.viewID = ''; this.viewToken = ''; this.filter = { ...filter }; this.documentID = ''; this.pages = 1; this.invalidate(); return this.load(); }
     open(id: string) { this.documentID = id; this.invalidate(); return this.load(); }
     selectMetric(metric: string) { this.metric = metric; this.invalidate(); return this.load(); }
@@ -119,7 +120,7 @@ export class ArchiveReader {
                 await this.api.getArchiveView(this.viewID, controller.signal);
             if (seq !== this.sequence || controller.signal.aborted || this.stopped)
                 return;
-            this.value = { snapshot: { viewToken: this.viewToken, filter, page, entities, analysis, detail, at: started }, busy: false, failed: false, epoch: this.value.epoch };
+            this.value = { viewToken:this.viewToken,snapshot: { viewToken: this.viewToken, filter, page, entities, analysis, detail, at: started }, busy: false, failed: false, epoch: this.value.epoch };
             this.emit();
         }
         catch {
