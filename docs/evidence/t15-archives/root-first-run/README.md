@@ -11,3 +11,5 @@
 临时脚本最初给search传limit100被正确拒绝400，改为接口支持的25后通过；初次配对后的隐藏菜单等待也修正为先按方向键。这两项是脚本问题，不算产品修复。
 
 首轮真实自然语言 #29 于2026-10-11 15:05运行：8.4秒、CLI exit0，但5个工具均core_unreachable，回答未取得可核实结果；后续直接TLS连接也不可达。保留原始capture，不把CLI成功退出算成检索通过，待测试服务恢复后重跑。
+
+后续定位与恢复：首个服务因合成harness将并发索引conflict直接panic而退出；这是验收服务问题，非生产TLS修改。服务重启换端口后，旧query账本正确拒绝origin变化，第二轮exit1/receipts0（atrium_run_unavailable）。保留整个旧query目录为query-origin-62709后，新origin使用全新隔离query账本。第三轮真实模型7.6秒成功：自主5次中英文检索均返回Core available、items0，完整保留partial_or_pending范围声明，没有编造护照档案或声称全家绝无资料。所有失败与成功原capture均保留；最终固定版仍须完整重跑。
