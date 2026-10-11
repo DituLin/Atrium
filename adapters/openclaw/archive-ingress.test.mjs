@@ -2,7 +2,7 @@ import test from 'node:test';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, symlinkSync, realpathSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, symlinkSync, realpathSync, chmodSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ArchiveInbox, normalizeWeixin, normalizeDiscord } from './archive-ingress.mjs';
@@ -64,4 +64,83 @@ test('delivery limit is scoped to native channel and account before ordering and
   assert.deepEqual(inbox.deliveries('openclaw-weixin', 'account-b').map(x => x.ref), wanted);
   assert.equal(inbox.deliveries('openclaw-weixin', 'account-a').length, 256);
   assert.equal(inbox.deliveries('discord', 'account-b').length, 256);
+});
+
+function savedReceipt(metadata, bytes) {
+  return { receipt_id: '01ARZ3NDEKTSV4RRFFQ69G5FAV', task_id: '01ARZ3NDEKTSV4RRFFQ69G5FAW', original_status: 'saved', sha256: metadata.expected_sha256, size_bytes: bytes.length, received_at: new Date().toISOString() };
+}
+async function stageOriginal(inbox, id) {
+  const m = normalizeWeixin({ ...native(), message_id: id, item_list: [native().item_list[1]] }, context);
+  const [ref] = inbox.captureBatch([m]);
+  await inbox.stageStream(ref, 0, [Buffer.from('original')]);
+  return ref;
+}
+
+test('unavailable or altered spools terminate safely after lookup and do not block a valid tail', async t => {
+  const { inbox, root, dir } = setup(t);
+  const refs = [];
+  const target = join(dir, 'outside');
+  writeFileSync(target, 'original');
+  for (let i = 0; i < 9; i++) {
+    const ref = await stageOriginal(inbox, `damaged-${i}`);
+    refs.push(ref);
+    const path = join(root, 'spool', `${ref}-0`);
+    if (i < 2) rmSync(path);
+    else if (i < 4) { rmSync(path); symlinkSync(target, path); }
+    else if (i < 6) chmodSync(path, 0);
+    else if (i < 8) writeFileSync(path, 'modified');
+  }
+  let lookups = 0, uploads = 0;
+  const core = { lookup: async () => { lookups++; return null; }, upload: async (m, b) => { uploads++; return savedReceipt(m, b); } };
+  await inbox.reconcile(core);
+  await inbox.reconcile(core);
+  assert.equal(lookups, 9);
+  assert.equal(uploads, 1);
+  assert.equal(inbox.describe(refs[8]).slots[0].state, 'core_saved');
+  for (const ref of refs.slice(0, 8)) {
+    const slot = inbox.db.prepare('SELECT state,error,attempts,next_attempt FROM slots WHERE ref=?').get(ref);
+    assert.equal(slot.state, 'terminal');
+    assert.equal(slot.error, 'archive_spool');
+    assert.equal(slot.attempts, 1);
+    assert.ok(slot.next_attempt > 0);
+  }
+});
+
+test('lost acknowledgement recovers through matching lookup even when local spool disappears', async t => {
+  const { inbox, root } = setup(t);
+  const ref = await stageOriginal(inbox, 'lost-then-missing');
+  let saved, lookups = 0, uploads = 0;
+  const core = { lookup: async () => { lookups++; return saved ?? null; }, upload: async (m, b) => { uploads++; saved = savedReceipt(m, b); throw Error('lost response'); } };
+  await inbox.reconcile(core, { force: true });
+  rmSync(join(root, 'spool', `${ref}-0`));
+  await inbox.reconcile(core, { force: true });
+  assert.equal(lookups, 2);
+  assert.equal(uploads, 1);
+  assert.equal(inbox.describe(ref).slots[0].state, 'core_saved');
+});
+
+test('lookup receipt cannot recover a missing spool with mismatched hash, size or malformed receipt', async t => {
+  const { inbox, root } = setup(t);
+  for (const [i, change] of [{ sha256: '0'.repeat(64) }, { size_bytes: 123 }, { receipt_id: 'bad' }].entries()) {
+    const ref = await stageOriginal(inbox, `bad-receipt-${i}`);
+    const slot = inbox.describe(ref).slots[0];
+    rmSync(join(root, 'spool', `${ref}-0`));
+    const receipt = { ...savedReceipt({ expected_sha256: slot.sha256 }, Buffer.from('original')), ...change };
+    await inbox.reconcile({ lookup: async () => receipt, upload: async () => assert.fail('must not upload') });
+    assert.equal(inbox.describe(ref).slots[0].state, 'terminal');
+    assert.equal(inbox.describe(ref).slots[0].error, 'archive_receipt');
+  }
+});
+
+test('lookup failures persist bounded attempts and backoff before accessing local bytes', async t => {
+  const { inbox, root } = setup(t);
+  const ref = await stageOriginal(inbox, 'bounded-lookup');
+  rmSync(join(root, 'spool', `${ref}-0`));
+  let calls = 0;
+  const core = { lookup: async () => { calls++; const s = inbox.db.prepare('SELECT attempts,next_attempt FROM slots WHERE ref=?').get(ref); assert.equal(s.attempts, calls); assert.ok(s.next_attempt > 0); throw Error('offline'); }, upload: async () => assert.fail('must not upload') };
+  for (let i = 0; i < 40; i++) await inbox.reconcile(core, { force: true });
+  assert.equal(calls, 32);
+  const slot = inbox.describe(ref).slots[0];
+  assert.equal(slot.state, 'submitting');
+  assert.equal(slot.error, 'archive_retry');
 });

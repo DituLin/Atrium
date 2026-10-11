@@ -86,8 +86,8 @@ export class ArchiveInbox {
   if(this.reconciling)return;this.reconciling=true;
   try {const rows=this.db.prepare("SELECT s.*,m.identity,m.intent FROM slots s JOIN messages m ON m.ref=s.ref WHERE s.state IN ('staged','submitting') AND m.intent IN ('inherit','private') AND s.attempts<32 AND (? OR s.next_attempt<=?) ORDER BY s.next_attempt LIMIT 8").all(force?1:0,this.now());
    for(const s of rows){if(signal?.aborted)break;const source={...JSON.parse(s.identity),kind:s.kind,slot_index:s.idx};
-    try {const bytes=await this.openStaged(s.ref,s.idx);this.db.prepare("UPDATE slots SET state='submitting',attempts=attempts+1,next_attempt=? WHERE ref=? AND idx=?").run(this.now()+Math.min(3600_000,1000*2**Math.min(s.attempts,12)),s.ref,s.idx);
-     let receipt=await core.lookup(source,signal);if(!receipt)receipt=await core.upload({...source,original_name:s.name,declared_mime:s.mime,expected_size:s.size,expected_sha256:s.sha256,visibility_intent:s.intent},bytes,signal);
+    try {this.db.prepare("UPDATE slots SET state='submitting',attempts=attempts+1,next_attempt=? WHERE ref=? AND idx=?").run(this.now()+Math.min(3600_000,1000*2**Math.min(s.attempts,12)),s.ref,s.idx);
+     let receipt=await core.lookup(source,signal);if(!receipt){const bytes=await this.openStaged(s.ref,s.idx);receipt=await core.upload({...source,original_name:s.name,declared_mime:s.mime,expected_size:s.size,expected_sha256:s.sha256,visibility_intent:s.intent},bytes,signal);}
      const projected=validateIntakeReceipt(receipt,s);
      this.db.prepare("UPDATE slots SET state='core_saved',receipt=?,error=NULL,provider='{}' WHERE ref=? AND idx=?").run(JSON.stringify(projected),s.ref,s.idx);
      this.releaseSpool(s.ref,s.idx)
@@ -95,7 +95,12 @@ export class ArchiveInbox {
    }
   }finally{this.reconciling=false;}
  }
- async openStaged(ref,index){const s=this.db.prepare('SELECT * FROM slots WHERE ref=? AND idx=?').get(ref,index);if(!s?.sha256)throw fail('slot');const fd=await open(join(this.root,'spool',`${ref}-${index}`),constants.O_RDONLY|constants.O_NOFOLLOW);try{const st=await fd.stat();if(!st.isFile()||st.size!==s.size||st.size>MAX_ARCHIVE_BYTES)throw fail('spool');const b=await fd.readFile();if(hash(b)!==s.sha256)throw fail('spool');return b;}finally{await fd.close();}}
+ async openStaged(ref,index){
+  const s=this.db.prepare('SELECT * FROM slots WHERE ref=? AND idx=?').get(ref,index);if(!s?.sha256)throw fail('slot');
+  try{const fd=await open(join(this.root,'spool',`${ref}-${index}`),constants.O_RDONLY|constants.O_NOFOLLOW);
+   try{const st=await fd.stat();if(!st.isFile()||(st.mode&0o777)!==0o600||st.size!==s.size||st.size>MAX_ARCHIVE_BYTES)throw fail('spool');const b=await fd.readFile();if(hash(b)!==s.sha256)throw fail('spool');return b;}finally{await fd.close();}
+  }catch{throw fail('spool');}
+ }
 }
 
 export function validateIntakeReceipt(r,s){
