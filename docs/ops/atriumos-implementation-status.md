@@ -346,3 +346,5 @@ root要求核对完整F01而非简化CSV后，新独立真实XLSX反例经Parse�
 T12最终公式修复50c4305cfd3662b8da8197eaa44aba58bf034cbd，真实XLSX仓库fixture与原/tmp一致，F01为200、人工明细更正后250、私密成员公开71.90且无旧128.10/200泄漏。只识别有界same-sheet literal SUM成员，不执行任意公式；历史cache不作为新charge，未知或缺失成员披露覆盖不足。最终全Go/analysis四包race/Node63/Linux通过。需求审查APPROVED：全部四个原overlay原样GREEN，追加公式/账单/真实Core→MCP→Brain/完整F01故障通过。已启动新的独立完整T12质量审查；T13及部署仍未开始。
 
 T12完整质量审查发现后置70左右仍被精确计算，root原样独立overlay RED0.254秒。5fa2de8修复有界同component后置限定符/原证据绑定单位、分母及句界隔离，算法/5 schema/1；全Go、analysis四包race、Node63/Linux及五个原overlay通过。原质量复审APPROVED（原overlay0.305秒，分析真实MCP/Node7通过）；最终需求语义复验APPROVED（原四overlay、后置/人工更正、F01/账单/私密闭包通过）。T12完成任务级双审，已派新的T13唯一实施者开展可信微信/Discord附件接入，明确先隔离nativeboundary验证，真实用户新消息及生产部署仍待后续，未冒称上线。
+
+T13实施中发现T12遗漏的真实CLI接线：cmd/atrium-brain-host/main.go:72仍要求len(tools)==20，而加入analysis后库存21，实际启动会返回unexpected model tool inventory。root读代码确认；既有TLSCore→MCP→Brain executor测试并未覆盖CLI startup，前述验收范围据此明确收窄。已交T13唯一实施者一并修复，要求共享工具名称集合完整性验证及实际CLI→MCP子进程启动回归，避免另一代码写手冲突。未部署此回归。
