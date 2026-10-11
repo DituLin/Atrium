@@ -24,8 +24,9 @@
 | T08 实体归属 | 已完成任务级双审 | `1a070c6` 获最终需求/质量批准；身份正反证、同批别名、归属事务与撤销、私密来源投影及迁移回归通过，未接生产消费者 |
 | T09 原子发布与恢复 | 已完成任务级双审 | `ed69c61` 获完整质量复审及最终需求语义批准；持久消费/发布/修订/澄清/当前证据回归通过，未部署 |
 | T10 统一检索与证据 | 已完成任务级双审 | `b670982` 需求与完整质量批准；32结构化问题及授权/证据/分页/日期回归通过，未部署 |
-| T11 自然语言查询 | 实现固定，独立需求审查中 | `6e0d4cc`；七工具全链、真实两领域模型2调用、Go/race/Linux/Node62通过；未双审或部署 |
-| T12–T18 | 未开始 | 分析、渠道、TV、NAS恢复与上线验收待实施 |
+| T11 自然语言查询 | 已完成任务级双审 | `6e0d4cc` 需求与完整质量批准；七工具实际链路与两领域模型调用验证通过，未部署 |
+| T12 基础分析 | 实施中 | 精确十进制与当前有效证据去重、count/sum/latest/series/ratio、授权/公开独立投影和版本快照待验收 |
+| T13–T18 | 未开始 | 渠道、TV、NAS恢复与上线验收待实施 |
 
 ## 基线核对
 
@@ -328,3 +329,5 @@ T10完整质量APPROVED：ed69c6..b670982全范围无Critical/Important；store/
 T11固定 `6e0d4cc3941beae4b02b4c7e26d81b11a2c7ca3f`：七新工具使模型库存13→20，host控制身份与resolutionkey，版本化coverage回执，真实Brain→MCP→TLSCore→SQLite联测含stale澄清/新主体/修订/撤权。真实隔离OpenClaw自主查询education数学及health血红蛋白两次工具调用，2份Core回执，9.434秒，failed/timed_out均false；root实际读取capture和最终来源文本确认。用户呈现中文领域/定位+紧凑R.D.E来源，完整ID保留structured receipts；original不当作待确认候选。最终全Go、六包race（store130.549秒）、Linux、Node62/62通过。证据 internal/brain/evidence/2026-10-11-t11/，首轮并行native超时诊断保留，串行全Go复跑通过。已启动独立需求审查，之后质量，未部署。
 
 续跑状态核验：get_goal返回usageLimited（非active），但账户工具ordinaryUsageAllowed=true；当前用户明确继续上线，本轮执行与子任务继续，不声称自动目标续跑已恢复，且不擅自消费额度重置。
+
+T11需求和质量均APPROVED于6e0d4cc：需求独立Brain/MCP/TLSCore/Node62通过，七工具伪造host字段/coverage/null/revise边界overlay0.351秒通过；质量独立授权/typed调用及Node档案ask24/24通过，新错误taskID/保存同步状态/null时间/非法版本/超32KiB回执均拒绝。已启动T12唯一实施者，完整基础分析+T11工具回执接线；保留精确数值、当前证据/人工断言/隐私闭包和快照失效要求，未部署。
