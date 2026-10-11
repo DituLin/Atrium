@@ -48,7 +48,7 @@ func clarify(ctx context.Context, d *store.DB, dir string, s state, verify bool)
 		}
 		for _, name := range c.Names {
 			if name.Value == "张明" {
-				if target != "" {
+				if target != "" && target != c.ID {
 					return q, fmt.Errorf("ambiguous explicit clarification target")
 				}
 				target = c.ID
