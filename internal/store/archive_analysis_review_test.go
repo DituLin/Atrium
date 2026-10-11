@@ -16,7 +16,10 @@ import (
 
 func analysisReviewBundle(t *testing.T, prefix string, currency ...bool) store.ArchivePublicationBundle {
 	t.Helper()
-	text := prefix + "70 ml serum CNY 100 2026-10-04"
+	return analysisReviewTextBundle(t, prefix+"70 ml serum CNY 100 2026-10-04", currency...)
+}
+func analysisReviewTextBundle(t *testing.T, text string, currency ...bool) store.ArchivePublicationBundle {
+	t.Helper()
 	parsed, e := archive.Parse(context.Background(), archive.ParseSource{Reader: strings.NewReader(text), Size: int64(len(text)), SHA256: strings.Repeat("a", 64), FormatHint: "text"}, archive.DefaultParseLimits())
 	require.NoError(t, e)
 	plan, e := archive.PlanChunks(parsed)
@@ -34,6 +37,9 @@ func analysisReviewBundle(t *testing.T, prefix string, currency ...bool) store.A
 		if pair[0] == "volume" {
 			f.Normalizations = []archive.Normalization{{Kind: "decimal", Value: "70"}}
 			f.Dimensions = []archive.LiteralDimension{{Kind: "unit", Raw: "ml", Evidence: []archive.EvidenceReference{ref("ml")}}}
+		}
+		if pair[0] == "full_score" && (strings.Contains(text, "100分") || strings.Contains(text, "100 分")) {
+			f.Dimensions = []archive.LiteralDimension{{Kind: "unit", Raw: "分", Evidence: []archive.EvidenceReference{ref("分")}}}
 		}
 		if pair[0] == "report_date" {
 			f.Normalizations = []archive.Normalization{{Kind: "date", Value: pair[1]}}

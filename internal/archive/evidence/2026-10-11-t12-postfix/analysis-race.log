@@ -1,0 +1,4 @@
+ok  	github.com/DituLin/Atrium/internal/archive	1.402s
+ok  	github.com/DituLin/Atrium/internal/store	51.684s
+ok  	github.com/DituLin/Atrium/internal/httpapi	2.144s
+ok  	github.com/DituLin/Atrium/internal/brain	1.699s

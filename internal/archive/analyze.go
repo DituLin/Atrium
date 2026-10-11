@@ -10,7 +10,7 @@ import (
 )
 
 const AnalysisVersion = "archive-analysis/1"
-const AnalysisAlgorithmVersion = "archive-analysis/4"
+const AnalysisAlgorithmVersion = "archive-analysis/5"
 
 // AnalysisQuery is a bounded business query. Projection and authority are host supplied.
 type AnalysisQuery struct {

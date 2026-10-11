@@ -1,0 +1,37 @@
+?   	github.com/DituLin/Atrium/cmd/atrium	[no test files]
+ok  	github.com/DituLin/Atrium/cmd/atrium-brain-host	(cached)
+?   	github.com/DituLin/Atrium/cmd/home-mcp	[no test files]
+ok  	github.com/DituLin/Atrium/internal/app	12.614s
+ok  	github.com/DituLin/Atrium/internal/app/events	(cached)
+ok  	github.com/DituLin/Atrium/internal/archive	16.284s
+ok  	github.com/DituLin/Atrium/internal/archiveworker	1.862s
+ok  	github.com/DituLin/Atrium/internal/auth	0.717s
+ok  	github.com/DituLin/Atrium/internal/auth/tlsgen	(cached)
+ok  	github.com/DituLin/Atrium/internal/backup	0.993s
+ok  	github.com/DituLin/Atrium/internal/brain	2.212s
+ok  	github.com/DituLin/Atrium/internal/brainhost	2.714s
+ok  	github.com/DituLin/Atrium/internal/briefing	3.248s
+ok  	github.com/DituLin/Atrium/internal/cli	4.403s
+ok  	github.com/DituLin/Atrium/internal/clock	(cached)
+ok  	github.com/DituLin/Atrium/internal/config	(cached)
+ok  	github.com/DituLin/Atrium/internal/diag	4.148s
+ok  	github.com/DituLin/Atrium/internal/domain	(cached)
+ok  	github.com/DituLin/Atrium/internal/family	(cached)
+ok  	github.com/DituLin/Atrium/internal/familyarchive	4.087s
+ok  	github.com/DituLin/Atrium/internal/homemcp	(cached)
+ok  	github.com/DituLin/Atrium/internal/httpapi	8.984s
+ok  	github.com/DituLin/Atrium/internal/indexer	3.945s
+ok  	github.com/DituLin/Atrium/internal/integration	(cached)
+ok  	github.com/DituLin/Atrium/internal/jobs	3.499s
+ok  	github.com/DituLin/Atrium/internal/logging	(cached)
+ok  	github.com/DituLin/Atrium/internal/media	3.759s
+?   	github.com/DituLin/Atrium/internal/media/testutil	[no test files]
+ok  	github.com/DituLin/Atrium/internal/screen	3.726s
+ok  	github.com/DituLin/Atrium/internal/source	4.080s
+ok  	github.com/DituLin/Atrium/internal/store	12.997s
+?   	github.com/DituLin/Atrium/internal/store/testutil	[no test files]
+?   	github.com/DituLin/Atrium/internal/version	[no test files]
+ok  	github.com/DituLin/Atrium/internal/video	3.093s
+ok  	github.com/DituLin/Atrium/internal/webui	(cached)
+ok  	github.com/DituLin/Atrium/internal/widget	2.269s
+ok  	github.com/DituLin/Atrium/internal/ws	2.633s

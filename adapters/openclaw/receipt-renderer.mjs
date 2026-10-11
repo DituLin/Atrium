@@ -147,7 +147,7 @@ function archiveLocation(ev){
 }
 
 function analysisLines(r,d,index){
- if(!object(d)||d.schema_version!=='archive-analysis/1'||d.algorithm_version!=='archive-analysis/4'||d.query?.operation!==r.arguments.operation||d.coverage?.scope!=='archived_only'||!Array.isArray(d.groups)||d.groups.length>256)return ['档案分析：未取得可核实结果。'];
+ if(!object(d)||d.schema_version!=='archive-analysis/1'||d.algorithm_version!=='archive-analysis/5'||d.query?.operation!==r.arguments.operation||d.coverage?.scope!=='archived_only'||!Array.isArray(d.groups)||d.groups.length>256)return ['档案分析：未取得可核实结果。'];
  const lines=['档案分析：仅代表已归档且当前可见的资料。'];
  for(const [i,g] of d.groups.entries()){
   if(typeof g.value!=='string'||!/^[-+]?[0-9]+(?:\.[0-9]+)?$/.test(g.value))return ['档案分析：数值回执无效。'];

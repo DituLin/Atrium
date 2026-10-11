@@ -640,6 +640,8 @@ func analysisEventDateField(name string) bool {
 // scan another field or line, and never turn source inequalities into exact values.
 var analysisQualifier = regexp.MustCompile(`(?i)([<>≤≥≈≃~]|约|大约|大于|小于|至少|至多|不超过|不少于|approximately|about|at least|at most)[=＝]?[ \t]*$`)
 
+var analysisPostfixQualifier = regexp.MustCompile(`^[ \t]*(左右|以上|以下|上下)`)
+
 func analysisQualifiedValue(parsed archive.ParseResult, f archive.PublicationField) bool {
 	for _, ev := range f.Evidence {
 		quote := []rune(ev.Quote)
@@ -664,6 +666,32 @@ func analysisQualifiedValue(parsed archive.ParseResult, f archive.PublicationFie
 			}
 			if analysisQualifier.MatchString(string(text[start:ev.Start])) {
 				return true
+			}
+			if ev.End < ev.Start || ev.End > len(text) {
+				continue
+			}
+			end := ev.End + 24
+			if end > len(text) {
+				end = len(text)
+			}
+			if analysisPostfixQualifier.MatchString(string(text[ev.End:end])) {
+				return true
+			}
+			// The only material allowed between a number and its suffix is its own
+			// source-bound unit/currency, separated solely by horizontal whitespace.
+			// Never cross a field label, punctuation, newline or another observation.
+			for _, dim := range f.Dimensions {
+				for _, de := range dim.Evidence {
+					if de.ParentSegmentID != ev.ParentSegmentID || de.ComponentID != ev.ComponentID || de.AlternativeID != ev.AlternativeID || de.Start < ev.End || de.End > end || de.End < de.Start {
+						continue
+					}
+					if strings.Trim(string(text[ev.End:de.Start]), " \t") != "" {
+						continue
+					}
+					if analysisPostfixQualifier.MatchString(string(text[de.End:end])) {
+						return true
+					}
+				}
 			}
 		}
 	}
