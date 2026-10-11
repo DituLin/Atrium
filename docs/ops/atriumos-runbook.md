@@ -12,6 +12,8 @@
 
 运行配置也须完整：`archives` 的 native helper、Node、OpenClaw、worker plugin 和 provider 路径应指向已发布资源。当前 worker 从 Core 进程环境读取 `DEEPSEEK_API_KEY`；仅 OpenClaw 网关可调用模型不能证明 Core 已具备该环境。2026-10-11 只读检查现有 Core launchd plist，仅声明 `ATRIUM_CONFIG` 环境项。启用前须通过受保护的服务启动方式提供密钥，并以实际服务环境解析合成档案验证；不得把值写入仓库、命令参数或日志。
 
+2026-10-11 14:50 只读预检：本机 Weixin 2.4.9 与 Discord 2026.9.8 的 10 个补丁目标文件均匹配固定摘要，`patch-archive-ingress --check` 返回 verified=10、changed=10、applied=false，生产尚未应用。当前 Core 签名严格校验通过，保留的 designated requirement 为既有 `io.atrium.core` 身份；摘要见 [runtime-pins.json](evidence/2026-10-11-release-preflight/runtime-pins.json)。运行时路径与签名仍需部署时重新核验。
+
 ## 升级顺序
 
 2026-10-11 13:24（新加坡）隔离迁移预检：以只读连接取得当时生产数据库的一致副本，再用固定 `d19bb76` 的实际 `store.Migrate` 在独立副本执行 schema 8→16。原有 22 张表的全部行内容未变，家庭记录及更正历史 80 行逐行集合一致，完整性检查通过、外键违规 0。仅无内容的汇总见 [migration-t13.json](evidence/2026-10-11-release-preflight/migration-t13.json)；含数据副本留在本机私有临时目录，不提交。此预检未启动服务、未修改生产库，也不替代最终版本的完整备份、回填与上线演练；生产已从早期 78 行增至 80 行，正式部署必须重取最新快照。
