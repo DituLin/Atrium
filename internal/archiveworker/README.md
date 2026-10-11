@@ -24,6 +24,10 @@ understanding/schema/prompt resources, resolver, publication/anchor versions,
 parse limits and configured executable/plugin/provider content. Same-fingerprint
 products may be copied from a published extraction of the same canonical file
 into a new source task. Delegations, receipts, budgets and task IDs are not copied.
+Configured native, Node and OpenClaw executable entry points may be package-manager
+symlinks: fingerprinting resolves those trusted entry points and hashes their
+actual content. Plugin/provider trees still reject symlinks and non-regular files;
+the 4,096-file/128 MiB artifact bounds and exact observed size checks apply.
 Each product is at most 32 MiB, each task/fingerprint at most 260 products and
 128 MiB total. The task's 64 KiB state contains references and progress only.
 
@@ -71,6 +75,11 @@ comparison with other current sources. Current conflict status is recomputed
 from the currently visible, non-withdrawn proof set; historical alternatives do
 not permanently suppress a surviving valid proof. Partial re-extraction carries
 old current references. Historic values and alternatives remain auditable.
+Transaction lookup rows require a currently published, non-withdrawn supporting
+proof. A changed identifier/type/issuer retires an exclusive source's old lookup
+atomically. Existing shared sources or human assertions require review before
+splitting the old identity; the old active publication remains intact. Uncertain
+amount coverage can carry an older proof without asserting a replacement.
 
 Manual value/ownership/privacy/withdraw actions require current read+organize,
 expected document revision, and a reason. They create independent audit revisions.
@@ -92,6 +101,9 @@ overrides over the current carrying source revision; the assertion provenance
 continues to identify the original authored revision. Both authored and current
 source visibility dependencies must permit a public assertion. Another proof's
 private override is never copied into extracted source evidence.
+A value assertion never confirms ownership. Unless there is a separate explicit
+ownership assertion, current subject links are checked against the actual source
+document, including after merge undo and when querying a different shared proof.
 
 Subregion privacy blocks unredacted originals/pages/context immediately while
 independent public facts remain eligible. Value, unit/currency dimension and

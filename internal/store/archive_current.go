@@ -58,27 +58,16 @@ func (r *ArchiveTasks) CurrentArchiveObservations(ctx context.Context, a domain.
 		if e != nil {
 			return e
 		}
-		confirmed := map[string]string{}
-		linkRows, e := tx.QueryContext(ctx, `SELECT mention_ref,matched_entity_id FROM archive_entity_links WHERE household_id=? AND document_id=? AND status='linked' LIMIT 2049`, h, doc)
-		if e != nil {
-			return e
-		}
-		for linkRows.Next() {
-			var mention, target string
-			if e = linkRows.Scan(&mention, &target); e != nil {
-				linkRows.Close()
-				return e
+		confirmedByDocument := map[string]map[string]string{}
+		for _, source := range append([]ArchiveCurrentObservation{{SourceDocumentID: doc}}, archiveAssertionSources(assertions)...) {
+			if _, ok := confirmedByDocument[source.SourceDocumentID]; ok {
+				continue
 			}
-			confirmed[mention] = target
-			if len(confirmed) > 2048 {
-				linkRows.Close()
-				return domain.ErrConflict
+			confirmed, err := archiveConfirmedLinksIn(ctx, tx, h, source.SourceDocumentID)
+			if err != nil {
+				return err
 			}
-		}
-		e = linkRows.Err()
-		linkRows.Close()
-		if e != nil {
-			return e
+			confirmedByDocument[source.SourceDocumentID] = confirmed
 		}
 		rows, e := tx.QueryContext(ctx, `SELECT o.id,o.event_id,r.revision,r.extraction_id,r.body_json,r.assertion_kind FROM archive_publication_observations p JOIN archive_observations o ON o.household_id=p.household_id AND o.id=p.observation_id JOIN archive_observation_revisions r ON r.household_id=p.household_id AND r.observation_id=p.observation_id AND r.revision=p.revision WHERE p.household_id=? AND p.publication_id=? ORDER BY o.id LIMIT 4097`, h, publication.String)
 		if e != nil {
@@ -139,7 +128,8 @@ func (r *ArchiveTasks) CurrentArchiveObservations(ctx context.Context, a domain.
 				return e
 			}
 			safe := !conflicts[item.ID] || assertion.Value != nil
-			if item.AssertionKind != "user" {
+			if assertion.Ownership == nil {
+				confirmed := confirmedByDocument[item.SourceDocumentID]
 				for _, mention := range body.Field.Subjects {
 					target := confirmed[mention]
 					matched := false
@@ -451,4 +441,39 @@ func (r *ArchiveTasks) ArchiveOriginalReference(ctx context.Context, a domain.In
 		return e
 	})
 	return ref, e
+}
+
+func archiveAssertionSources(sets map[string]archiveAssertionSet) []ArchiveCurrentObservation {
+	out := []ArchiveCurrentObservation{}
+	for _, set := range sets {
+		if set.Value != nil {
+			out = append(out, set.Value.Source)
+		}
+	}
+	return out
+}
+func archiveConfirmedLinksIn(ctx context.Context, tx *sql.Tx, h, doc string) (map[string]string, error) {
+	confirmed := map[string]string{}
+	linkRows, e := tx.QueryContext(ctx, `SELECT mention_ref,matched_entity_id FROM archive_entity_links WHERE household_id=? AND document_id=? AND status='linked' LIMIT 2049`, h, doc)
+	if e != nil {
+		return nil, e
+	}
+	for linkRows.Next() {
+		var mention, target string
+		if e = linkRows.Scan(&mention, &target); e != nil {
+			linkRows.Close()
+			return nil, e
+		}
+		confirmed[mention] = target
+		if len(confirmed) > 2048 {
+			linkRows.Close()
+			return nil, domain.ErrConflict
+		}
+	}
+	e = linkRows.Err()
+	linkRows.Close()
+	if e != nil {
+		return nil, e
+	}
+	return confirmed, nil
 }

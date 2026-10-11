@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestArchiveTransactionIdentityUnifiesOnlyCompleteProof(t *testing.T) {
+func TestArchiveTransactionIdentityRequiresPublishedProof(t *testing.T) {
 	d := entityDB(t)
 	entityDoc(t, d, "a", true)
 	entityDoc(t, d, "b", true)
@@ -20,12 +20,12 @@ func TestArchiveTransactionIdentityUnifiesOnlyCompleteProof(t *testing.T) {
 				return e
 			}
 		}
-		first, e := archiveTransactionEventIn(context.Background(), tx, "h", "a", fields)
+		first, e := archiveTransactionEventIn(context.Background(), tx, "h", "a", "", fields)
 		require.NoError(t, e)
-		second, e := archiveTransactionEventIn(context.Background(), tx, "h", "b", fields)
+		second, e := archiveTransactionEventIn(context.Background(), tx, "h", "b", "", fields)
 		require.NoError(t, e)
-		require.Equal(t, first, second)
-		third, e := archiveTransactionEventIn(context.Background(), tx, "h", "b", fields[:2])
+		require.NotEqual(t, first, second, "unpublished lookup rows are not current source proof")
+		third, e := archiveTransactionEventIn(context.Background(), tx, "h", "b", "", fields[:2])
 		require.NoError(t, e)
 		require.Equal(t, "b", third)
 		return nil

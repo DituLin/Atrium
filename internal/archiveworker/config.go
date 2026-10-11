@@ -19,6 +19,15 @@ func (w *Worker) ConfigurationFingerprint() (string, error) {
 			artifacts[name] = "unconfigured"
 			continue
 		}
+		// Only explicitly configured executable entry points may resolve symlinks.
+		// Nested plugin/provider resource symlinks remain rejected by artifactDigest.
+		if name == "native" || name == "node" || name == "openclaw" {
+			resolved, err := filepath.EvalSymlinks(path)
+			if err != nil {
+				return "", err
+			}
+			path = resolved
+		}
 		digest, e := artifactDigest(path)
 		if e != nil {
 			return "", e
@@ -73,8 +82,16 @@ func artifactDigest(path string) (string, error) {
 		if e != nil {
 			return e
 		}
-		_, e = io.Copy(h, io.LimitReader(f, info.Size()+1))
+		opened, e := f.Stat()
+		if e != nil || !opened.Mode().IsRegular() || !os.SameFile(info, opened) {
+			f.Close()
+			return domain.ErrConflict
+		}
+		n, e := io.Copy(h, io.LimitReader(f, info.Size()+1))
 		f.Close()
+		if e == nil && n != info.Size() {
+			return domain.ErrConflict
+		}
 		return e
 	})
 	if err != nil {

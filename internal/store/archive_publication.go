@@ -157,6 +157,22 @@ func (r *ArchiveTasks) PublishExtraction(ctx context.Context, f ArchiveWorkFence
 
 		}
 
+		for _, ev := range candidate.Events {
+			var event string
+			err := tx.QueryRowContext(ctx, `SELECT id FROM archive_subject_events WHERE household_id=? AND document_id=? AND anchor_key=?`, f.HouseholdID, x.DocumentID, ev.AnchorKey).Scan(&event)
+			if errors.Is(err, sql.ErrNoRows) {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+			needsReview, err := archiveTransactionChangeNeedsReviewIn(ctx, tx, f.HouseholdID, event, ev.Fields)
+			if err != nil {
+				return err
+			}
+			review = review || needsReview
+		}
+
 		if review {
 			q, e := archiveCreateQuestionIn(ctx, tx, f, x, plan, snapshot, candidate.Resolution)
 			if e != nil {
@@ -211,9 +227,19 @@ func (r *ArchiveTasks) PublishExtraction(ctx context.Context, f ArchiveWorkFence
 			if e = archiveReconcileObservationSlotsIn(ctx, tx, f.HouseholdID, eventID, ev.Fields); e != nil {
 				return e
 			}
-			canonicalEvent, e := archiveTransactionEventIn(ctx, tx, f.HouseholdID, eventID, ev.Fields)
+			canonicalEvent, e := archiveTransactionEventIn(ctx, tx, f.HouseholdID, eventID, publication, ev.Fields)
 			if e != nil {
 				return e
+			}
+			if canonicalEvent != eventID {
+				// A safely corrected exclusive identity can now match another
+				// transaction. Drop only its superseded current amount references;
+				// immutable history stays attached to the old physical event.
+				for _, table := range []string{"archive_publication_observations", "archive_publication_alternatives"} {
+					if _, e = tx.ExecContext(ctx, `DELETE FROM `+table+` WHERE household_id=? AND publication_id=? AND observation_id IN (SELECT id FROM archive_observations WHERE household_id=? AND event_id=? AND slot_key='supported-transaction-amount/1')`, f.HouseholdID, publication, f.HouseholdID, eventID); e != nil {
+						return e
+					}
+				}
 			}
 			for _, field := range ev.Fields {
 				if field.Name == "national_id" || field.Name == "passport" || field.Name == "birth_certificate" || field.Name == "identity_issuer" {

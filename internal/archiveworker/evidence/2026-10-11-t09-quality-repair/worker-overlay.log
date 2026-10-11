@@ -1,0 +1,6 @@
+=== RUN   TestQualityFingerprintTrustedExecutableSymlink
+--- PASS: TestQualityFingerprintTrustedExecutableSymlink (0.00s)
+=== RUN   TestQualityFingerprintActualHomebrewNode
+--- PASS: TestQualityFingerprintActualHomebrewNode (0.00s)
+PASS
+ok  	github.com/DituLin/Atrium/internal/archiveworker	2.236s
