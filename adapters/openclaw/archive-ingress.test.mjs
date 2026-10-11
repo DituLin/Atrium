@@ -20,3 +20,48 @@ test('captured operational inbox resumes after cursor crash and erases raw chat 
 test('concurrent writes to the same frozen source cannot replace original bytes',async t=>{const {inbox}=setup(t);const m=normalizeWeixin({...native(),item_list:[native().item_list[1]]},context);const [ref]=inbox.captureBatch([m]);const results=await Promise.allSettled([inbox.stageStream(ref,0,[Buffer.from('first')]),inbox.stageStream(ref,0,[Buffer.from('other')])]);assert.equal(results.filter(r=>r.status==='fulfilled').length,1);assert.equal(results.filter(r=>r.status==='rejected'&&/conflict/.test(r.reason.message)).length,1);const b=await inbox.openStaged(ref,0);assert.ok(['first','other'].includes(b.toString()));});
 test('expired operational credentials are removed while durable staged originals remain recoverable',async t=>{let now=0;const {inbox}=setup(t,{now:()=>now});const m=normalizeWeixin(native(),context);const [ref]=inbox.captureBatch([{...m,raw:native()}]);await inbox.stageStream(ref,1,[Buffer.from('saved plaintext')]);now=25*3600000;inbox.expire();assert.equal(inbox.db.prepare('SELECT raw FROM messages WHERE ref=?').get(ref).raw,'');const slots=inbox.db.prepare('SELECT idx,state,provider FROM slots WHERE ref=? ORDER BY idx').all(ref);assert.equal(slots[0].state,'staged');assert.equal(slots[1].state,'terminal');assert.equal(slots[1].provider,'{}');assert.equal((await inbox.openStaged(ref,1)).toString(),'saved plaintext');});
 test('completed chat tombstones do not exhaust active capture quota',t=>{const {inbox}=setup(t,{maxMessages:1});const first=normalizeWeixin({...native(),item_list:[native().item_list[0]]},context);const [ref]=inbox.captureBatch([first]);inbox.processed(ref);const next=normalizeWeixin({...native(),message_id:'next',item_list:[native().item_list[0]]},context);assert.equal(inbox.captureBatch([next]).length,1);});
+
+test('download window excludes staged, future and exhausted slots and advances through mixed backlog', async t => {
+  let now = 1000;
+  const { inbox } = setup(t, { now: () => now });
+  const due = [];
+  for (let i = 0; i < 136; i++) {
+    const message = normalizeWeixin({ ...native(), message_id: `queue-${i}`, item_list: native().item_list.slice(0, 2) }, context);
+    const [ref] = inbox.captureBatch([message]);
+    if (i < 32) {
+      await inbox.stageStream(ref, 1, [Buffer.from('waiting')]);
+      inbox.setIntent(ref, 'needs_clarification', message.digest);
+    } else if (i < 64) {
+      inbox.db.prepare('UPDATE slots SET next_attempt=? WHERE ref=?').run(1000000, ref);
+    } else if (i < 96) {
+      inbox.db.prepare('UPDATE slots SET attempts=32 WHERE ref=?').run(ref);
+    } else due.push(ref);
+    now++;
+  }
+  assert.deepEqual(inbox.pending(), due.slice(0, 32));
+  for (const ref of inbox.pending()) await inbox.stageStream(ref, 1, [Buffer.from('downloaded')]);
+  assert.deepEqual(inbox.pending(), due.slice(32));
+  for (const ref of inbox.pending()) await inbox.stageStream(ref, 1, [Buffer.from('downloaded')]);
+  assert.deepEqual(inbox.pending(), []);
+});
+
+test('delivery limit is scoped to native channel and account before ordering and limiting', t => {
+  let now = 1000;
+  const { inbox } = setup(t, { now: () => now });
+  const addWeixin = (account, id) => {
+    const raw = { ...native(), message_id: id, item_list: [native().item_list[0]] };
+    const [ref] = inbox.captureBatch([{ ...normalizeWeixin(raw, { ...context, account }), raw }]);
+    now++;
+    return ref;
+  };
+  for (let i = 0; i < 256; i++) addWeixin('account-a', `a-${i}`);
+  for (let i = 0; i < 256; i++) {
+    const raw = { id: String(123456789000000000n + BigInt(i)), channel_id: '223456789012345678', author: { id: '323456789012345678' }, content: 'record', attachments: [] };
+    inbox.captureBatch([{ ...normalizeDiscord(raw, { ...context, account: 'account-b' }), raw }]);
+    now++;
+  }
+  const wanted = [addWeixin('account-b', 'b-1'), addWeixin('account-b', 'b-2')];
+  assert.deepEqual(inbox.deliveries('openclaw-weixin', 'account-b').map(x => x.ref), wanted);
+  assert.equal(inbox.deliveries('openclaw-weixin', 'account-a').length, 256);
+  assert.equal(inbox.deliveries('discord', 'account-b').length, 256);
+});
