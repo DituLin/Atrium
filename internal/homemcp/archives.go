@@ -171,12 +171,12 @@ func archiveBackendFields[T any](b []byte) bool {
 }
 
 func (a *adapter) archiveAnalysis(ctx context.Context, in args) *mcp.CallToolResult {
-	q := archive.AnalysisQuery{Operation: in.Operation, Count: in.Count, Metric: in.Metric, EntityID: in.EntityID, Domain: in.Domain, DocumentType: in.DocumentType, Query: in.Query, DateFrom: in.DateFrom, DateTo: in.DateTo, Timezone: "UTC"}
+	q := archive.AnalysisQuery{Ownership: in.Ownership, Operation: in.Operation, Count: in.Count, Metric: in.Metric, EntityID: in.EntityID, Domain: in.Domain, DocumentType: in.DocumentType, Query: in.Query, DateFrom: in.DateFrom, DateTo: in.DateTo, Timezone: "UTC"}
 	if _, e := q.Normalize(); e != nil {
 		return failure("invalid_arguments", "Invalid analysis criteria.", "")
 	}
 	values := url.Values{}
-	for k, v := range map[string]string{"operation": in.Operation, "count": in.Count, "metric": in.Metric, "entity_id": in.EntityID, "domain": in.Domain, "document_type": in.DocumentType, "query": in.Query, "date_from": in.DateFrom, "date_to": in.DateTo} {
+	for k, v := range map[string]string{"ownership": in.Ownership, "operation": in.Operation, "count": in.Count, "metric": in.Metric, "entity_id": in.EntityID, "domain": in.Domain, "document_type": in.DocumentType, "query": in.Query, "date_from": in.DateFrom, "date_to": in.DateTo} {
 		if v != "" {
 			values.Set(k, v)
 		}

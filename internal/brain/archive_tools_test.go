@@ -84,21 +84,21 @@ func TestArchiveReceiptRejectsWrongOrUnversionedChange(t *testing.T) {
 }
 
 func TestArchiveAnalysisArgumentsAndReceipt(t *testing.T) {
-	args := map[string]any{"operation": "sum", "metric": "volume"}
+	args := map[string]any{"operation": "sum", "metric": "volume", "ownership": "waiting"}
 	if _, _, e := validateArguments("home_analyze_archives", args); e != nil {
 		t.Fatal(e)
 	}
-	for _, bad := range []map[string]any{{"operation": "sum"}, {"operation": "count"}, {"operation": "sum", "metric": "volume", "timezone": "UTC"}} {
+	for _, bad := range []map[string]any{{"operation": "sum"}, {"operation": "count"}, {"operation": "count", "count": "documents", "ownership": "private"}, {"operation": "sum", "metric": "volume", "timezone": "UTC"}} {
 		if _, _, e := validateArguments("home_analyze_archives", bad); e == nil {
 			t.Fatalf("accepted %v", bad)
 		}
 	}
-	d := archive.AnalysisResult{SchemaVersion: archive.AnalysisVersion, AlgorithmVersion: archive.AnalysisAlgorithmVersion, SnapshotID: "snapshot", Query: archive.AnalysisQuery{Operation: "sum", Metric: "volume", Timezone: "Asia/Singapore"}, Projection: "authorized", DataEpoch: 1, Generation: 1, InputDigest: "digest", Groups: []archive.AnalysisGroup{}, Coverage: archive.AnalysisCoverage{Scope: "archived_only", Complete: true, Reasons: []string{}}}
+	d := archive.AnalysisResult{SchemaVersion: archive.AnalysisVersion, AlgorithmVersion: archive.AnalysisAlgorithmVersion, SnapshotID: "snapshot", Query: archive.AnalysisQuery{Operation: "sum", Metric: "volume", Ownership: "waiting", Timezone: "Asia/Singapore"}, Projection: "authorized", DataEpoch: 1, Generation: 1, InputDigest: "digest", Groups: []archive.AnalysisGroup{}, Coverage: archive.AnalysisCoverage{Scope: "archived_only", Complete: true, Reasons: []string{}}}
 	env := integration.Response[archive.AnalysisResult]{SchemaVersion: "1", ObservedAt: time.Now(), Availability: "available", Data: d}
 	if _, e := receiptResult("home_analyze_archives", args, &mcp.CallToolResult{StructuredContent: env}); e != nil {
 		t.Fatal(e)
 	}
-	env.Data.Query.EntityID = "other"
+	env.Data.Query.Ownership = "household"
 	if _, e := receiptResult("home_analyze_archives", args, &mcp.CallToolResult{StructuredContent: env}); e == nil {
 		t.Fatal("accepted unrelated analysis query")
 	}

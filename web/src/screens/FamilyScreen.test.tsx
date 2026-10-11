@@ -44,7 +44,7 @@ it('shows the requested query cards before acknowledging after leaving a detail'
  const h=setup();fireEvent.click(await screen.findByRole('button',{name:/合成health/}));await screen.findByText('结构化内容与来源');
  h.api.getArchiveView=vi.fn(async(id:string)=>queryResult(id)) as never;showQuery(h,'new-query');
  await waitFor(()=>expect(h.state().archiveRender.status).toBe('ready'));
- expect(screen.queryByText('该档案暂不可读取。')).toBeNull();expect(screen.getByRole('button',{name:/合成new-query/})).toBeTruthy();expect(screen.getByRole('button',{name:'全家'}).getAttribute('aria-pressed')).toBe('true');
+ expect(screen.queryByText('该档案暂不可读取。')).toBeNull();expect(screen.getByRole('button',{name:/合成new-query/})).toBeTruthy();expect(screen.getByRole('heading',{name:'投屏查询结果'})).toBeTruthy();expect(screen.getByRole('button',{name:'全家'}).getAttribute('aria-pressed')).toBe('false');expect(screen.getByRole('button',{name:'全部领域'}).getAttribute('aria-pressed')).toBe('false');
 });
 it('replaces an earlier query only with the new query DOM and ignores reset responses',async()=>{
  const h=setup();h.api.getArchiveView=vi.fn(async(id:string)=>queryResult(id)) as never;showQuery(h,'first');await screen.findByRole('button',{name:/合成first/});

@@ -15,6 +15,7 @@ const AnalysisAlgorithmVersion = "archive-analysis/5"
 // AnalysisQuery is a bounded business query. Projection and authority are host supplied.
 type AnalysisQuery struct {
 	Operation    string `json:"operation"`
+	Ownership    string `json:"ownership,omitempty"`
 	Count        string `json:"count,omitempty"`
 	Metric       string `json:"metric,omitempty"`
 	EntityID     string `json:"entity_id,omitempty"`
@@ -29,7 +30,7 @@ type AnalysisQuery struct {
 func (q AnalysisQuery) Normalize() (AnalysisQuery, error) {
 	q.Metric = strings.TrimSpace(q.Metric)
 	q.Query = strings.TrimSpace(q.Query)
-	if _, e := (SearchFilter{EntityID: q.EntityID, Domain: q.Domain, DocumentType: q.DocumentType, Query: q.Query, DateFrom: q.DateFrom, DateTo: q.DateTo}).Normalize(); e != nil {
+	if _, e := (SearchFilter{Ownership: q.Ownership, EntityID: q.EntityID, Domain: q.Domain, DocumentType: q.DocumentType, Query: q.Query, DateFrom: q.DateFrom, DateTo: q.DateTo}).Normalize(); e != nil {
 		return q, e
 	}
 	if len(q.Metric) > 128 || strings.ContainsRune(q.Metric, 0) {
@@ -85,10 +86,12 @@ func CompatibleAggregateBoundary(a, b AnalysisFact) bool {
 }
 
 type AnalysisInput struct {
-	Facts     []AnalysisFact
-	Documents []string
-	Complete  bool
-	Reasons   []string
+	// DocumentsInRange marks Core document selection using the complete search filter.
+	DocumentsInRange bool
+	Facts            []AnalysisFact
+	Documents        []string
+	Complete         bool
+	Reasons          []string
 }
 type AnalysisCoverage struct {
 	Scope    string   `json:"scope"`
@@ -253,7 +256,7 @@ func Analyze(q AnalysisQuery, in AnalysisInput) (AnalysisResult, error) {
 		ids := map[string]bool{}
 		ev := []SearchEvidence{}
 		cited := map[string]bool{}
-		if q.Count == "documents" && q.Metric == "" && q.DateFrom == "" && q.DateTo == "" {
+		if q.Count == "documents" && q.Metric == "" && (in.DocumentsInRange || q.DateFrom == "" && q.DateTo == "") {
 			for _, id := range in.Documents {
 				ids[id] = true
 			}

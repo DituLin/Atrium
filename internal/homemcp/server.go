@@ -91,7 +91,7 @@ type toolDef struct {
 }
 
 var definitions = []toolDef{
-	{"home_analyze_archives", []string{"operation"}, []string{"count", "metric", "query", "entity_id", "domain", "document_type", "date_from", "date_to"}, false},
+	{"home_analyze_archives", []string{"operation"}, []string{"count", "metric", "query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership"}, false},
 	{"home_get_archive_task", []string{"task_id"}, nil, false},
 	{"home_get_archive_question", []string{"task_id"}, nil, false},
 	{"home_answer_archive_question", []string{"task_id", "question_id", "question_version", "waiting_task_version", "extraction_id", "document_revision", "resolution_key", "action"}, []string{"target", "name"}, true},

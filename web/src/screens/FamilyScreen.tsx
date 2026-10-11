@@ -102,9 +102,9 @@ export function FamilyScreen() {
         close();
     } }}>
   <TopNav onDown={() => controls.current[0]?.focus()}/>
-  <div className="page__heading"><h1 className="page__title">全家档案</h1><span role="status" className="muted family-page__status">{value.busy ? '正在核验…' : value.failed ? '暂时无法核验' : '每 15 秒核验'} · 健康 · 教育 · 财务 · 房屋</span></div>
+  <div className="page__heading"><h1 className="page__title">{viewID ? '投屏查询结果' : '全家档案'}</h1><span role="status" className="muted family-page__status">{value.busy ? '正在核验…' : value.failed ? '暂时无法核验' : '每 15 秒核验'} · 健康 · 教育 · 财务 · 房屋</span></div>
   <main className="page__body family-page__layout"><aside className="family-sidebar"><h2 className="page__section-title">家庭资料</h2>
-   {choices.map((choice, i) => <RemoteButton key={`${i}-${choice.label}`} ref={el => { controls.current[i] = el; }} className="family-category" aria-pressed={choice.active} onClick={() => { if('moreEntities' in choice){void reader.moreEntities();}else if ('metric' in choice) {
+   {choices.map((choice, i) => <RemoteButton key={`${i}-${choice.label}`} ref={el => { controls.current[i] = el; }} className="family-category" aria-pressed={!viewID && choice.active} onClick={() => { if('moreEntities' in choice){void reader.moreEntities();}else if ('metric' in choice) {
         setMetric(String(choice.metric));
         void reader.selectMetric(String(choice.metric));
     }

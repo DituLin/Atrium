@@ -161,7 +161,7 @@ func (a *API) archiveReadView(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, r, domain.ErrNotFound)
 		return
 	}
-	q := archive.AnalysisQuery{Operation: "count", Count: "documents", Domain: filter.Domain, EntityID: filter.EntityID, Query: filter.Query, DocumentType: filter.DocumentType, DateFrom: filter.DateFrom, DateTo: filter.DateTo, Timezone: a.deps.Home.Location().String()}
+	q := archive.AnalysisQuery{Operation: "count", Count: "documents", Ownership: filter.Ownership, Domain: filter.Domain, EntityID: filter.EntityID, Query: filter.Query, DocumentType: filter.DocumentType, DateFrom: filter.DateFrom, DateTo: filter.DateTo, Timezone: a.deps.Home.Location().String()}
 	storedQuery, e := repo.ArchiveScreenViewAnalysis(r.Context(), screen.ID, screen.TokenHash, h.ID, r.PathValue("id"))
 	if e != nil {
 		WriteError(w, r, e)

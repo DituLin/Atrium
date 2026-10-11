@@ -98,6 +98,7 @@ export interface ArchiveDetail {
     };
 }
 export interface ArchiveAnalysisQuery {
+    ownership?: string;
     operation: 'count' | 'sum' | 'series' | 'latest' | 'ratio';
     count?: 'documents' | 'events' | 'observations';
     metric?: string;

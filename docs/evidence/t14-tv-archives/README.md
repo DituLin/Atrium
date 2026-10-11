@@ -63,3 +63,5 @@ New IM queries now clear the previous detail and local selection, and acknowledg
 Saved originals now distinguish processing, retry waiting, needs review and incomplete terminal processing without exposing worker state or provider errors. List and detail read current task state; a failed reprocessing attempt does not replace an existing valid publication. The unchanged reviewer counterexamples and complete Go/Web regressions passed; see `review-repair.json`.
 
 The repaired build also passed the independent real-browser detail-to-query flow: browser entered the PNG detail first, Core/MCP/Brain host sent a health query, and the browser showed exactly one health card before the applied outcome. See `browser-detail-to-show.png`; this is synthetic host execution, not model inference.
+
+Quality follow-up preserves ownership throughout public analysis and receipt/snapshot contracts, counts complete document search membership, uses monotonic authorization elapsed time, and labels opaque views as query results. All four unchanged reviewer counterexamples pass. See `quality-repair.json` for the targeted regression and contract checks.

@@ -26,6 +26,8 @@ func (a *API) archiveAnalyze(w http.ResponseWriter, r *http.Request, screen bool
 		}
 		value := v[0]
 		switch k {
+		case "ownership":
+			q.Ownership = value
 		case "operation":
 			q.Operation = value
 		case "count":

@@ -280,7 +280,7 @@ func (e *Executor) observe(ctx context.Context, record ActionRecord, result *mcp
 
 var modelArgumentFields = map[string][]string{
 	"home_show_archive_query":      {"screen_id", "query_ref"},
-	"home_analyze_archives":        {"operation", "count", "metric", "query", "entity_id", "domain", "document_type", "date_from", "date_to"},
+	"home_analyze_archives":        {"operation", "count", "metric", "query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership"},
 	"home_search_archives":         {"query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership", "limit", "cursor"},
 	"home_search_archive_entities": {"query", "entity_id", "limit", "cursor"},
 	"home_get_archive_evidence":    {"document_id", "limit", "cursor"},

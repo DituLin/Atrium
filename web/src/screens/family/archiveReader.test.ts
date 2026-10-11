@@ -29,11 +29,15 @@ it('refuses a mixed list and analysis generation instead of showing stale totals
 it('expires the verified content from request start rather than slow response arrival',async()=>{
  vi.useFakeTimers();const a=api();const reader=new ArchiveReader(a);
  vi.mocked(a.getArchives).mockImplementation(async()=>{await new Promise(r=>setTimeout(r,11000));return page;});
- const pending=reader.load();await vi.advanceTimersByTimeAsync(11000);await pending;expect(reader.value.snapshot?.at).toBe(Date.now()-11000);
+ const pending=reader.load();await vi.advanceTimersByTimeAsync(11000);await pending;expect(reader.value.snapshot?.at).toBe(performance.now()-11000);
  vi.mocked(a.getArchives).mockRejectedValue(new Error('offline'));await vi.advanceTimersByTimeAsync(19000);expect(reader.value.snapshot).toBeNull();reader.stop();
 });
 it('revalidates expanded entity filters instead of keeping names from old pages',async()=>{
  vi.useFakeTimers();const a=api();vi.mocked(a.getArchiveEntities).mockResolvedValueOnce({items:[],next_cursor:'people-next',coverage:{complete:true}}).mockResolvedValueOnce({items:[],next_cursor:'people-next',coverage:{complete:true}}).mockResolvedValueOnce({items:[{id:'house',kind:'property',names:['合成房屋'],aliases:[]}],coverage:{complete:true}});
  const reader=new ArchiveReader(a);await reader.load();await reader.moreEntities();expect(reader.value.snapshot?.entities.items[0]?.names).toEqual(['合成房屋']);
  vi.mocked(a.getArchiveEntities).mockResolvedValue({items:[],coverage:{complete:true}});reader.invalidate();expect(reader.value.snapshot).toBeNull();await reader.load();expect(reader.value.snapshot?.entities.items).toEqual([]);reader.stop();
+});
+
+it('uses elapsed time for revalidation and expiry despite wall clock rollback',async()=>{
+ vi.useFakeTimers();const a=api();const reader=new ArchiveReader(a);await reader.load();vi.mocked(a.getArchives).mockRejectedValue(new Error('offline'));vi.setSystemTime(new Date(Date.now()-3600000));await vi.advanceTimersByTimeAsync(16000);expect(vi.mocked(a.getArchives).mock.calls.length).toBeGreaterThan(1);await vi.advanceTimersByTimeAsync(15000);expect(reader.value.snapshot).toBeNull();reader.stop();
 });

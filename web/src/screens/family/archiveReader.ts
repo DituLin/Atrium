@@ -47,9 +47,9 @@ export class ArchiveReader {
             return;
         this.stopped = false;
         this.timer = window.setInterval(() => {
-            if (this.value.snapshot && Date.now() - this.value.snapshot.at >= 30000)
+            if (this.value.snapshot && performance.now() - this.value.snapshot.at >= 30000)
                 this.invalidate();
-            if (!this.value.busy && (!this.value.snapshot || Date.now() - this.value.snapshot.at >= 15000))
+            if (!this.value.busy && (!this.value.snapshot || performance.now() - this.value.snapshot.at >= 15000))
                 void this.load();
         }, 1000);
     }
@@ -69,7 +69,7 @@ export class ArchiveReader {
         window.clearInterval(this.timer); this.timer = null; this.invalidate(); this.listeners.clear(); }
     async load(): Promise<void> {
         this.start();
-        const started = Date.now();
+        const started = performance.now();
         const seq = ++this.sequence;
         this.controller?.abort();
         const controller = new AbortController();
@@ -100,7 +100,7 @@ export class ArchiveReader {
             }
             page.next_cursor = cursor;
             if(this.pages===20&&cursor){page.next_cursor=undefined;page.coverage={complete:false,reason:'presentation_window_limit'};}
-            const query = { domain: filter.domain, entity_id: filter.entity_id, query: filter.query };
+            const query = { ownership: filter.ownership, domain: filter.domain, entity_id: filter.entity_id, query: filter.query };
             const [entities, analysis, detail] = await Promise.all([
                 this.api.getArchiveEntities(controller.signal),
                 view ? Promise.resolve(view.analysis) : this.api.analyzeArchives(filter.ownership ? { ...query, operation: 'count', count: 'documents' } : filter.domain === 'finance' ? { ...query, operation: 'sum', metric: 'amount' } : filter.domain === 'education' ? { ...query, operation: 'ratio', metric: 'score' } : filter.domain === 'health' ? { ...query, operation: 'series', metric: this.metric } : { ...query, operation: 'count', count: 'documents' }, controller.signal),
