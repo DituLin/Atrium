@@ -30,6 +30,7 @@ export interface ScreenHarness {
   session: Session;
   client: WsClient;
   changed: DataChangedTopic[][];
+  closeCodes: number[];
   stop: () => void;
 }
 
@@ -45,6 +46,7 @@ export function createScreenHarness(options: HarnessOptions): ScreenHarness {
   let client: WsClient | null = null;
   let session: Session | null = null;
   const changed: DataChangedTopic[][] = [];
+  const closeCodes: number[] = [];
 
   const api = new ApiClient({
     fetchImpl: (input, init) =>
@@ -101,6 +103,7 @@ export function createScreenHarness(options: HarnessOptions): ScreenHarness {
       else dispatch({ type: 'connection.attemptFailed' });
     },
     onClosed: (code, action) => {
+      closeCodes.push(code);
       dispatch({ type: 'connection.closed', code, action });
       if (action === 'pair' || action === 'clear-and-pair') dispatch({ type: 'app.needsPairing' });
     },
@@ -123,6 +126,7 @@ export function createScreenHarness(options: HarnessOptions): ScreenHarness {
     session,
     client,
     changed,
+    closeCodes,
     stop: () => {
       client?.stop();
       refetch.cancel();

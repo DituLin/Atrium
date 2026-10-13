@@ -298,16 +298,28 @@ describe('close codes end to end (§9)', () => {
 
   it('4004 and 4005 reconnect; 1000/1001 are not terminal either', async () => {
     const live = createScreenHarness({ baseUrl: BASE, wsUrl: WS, token, heartbeatIntervalMs: 300 });
-    await until(() => live.state().connection.status === 'online', 'online');
+    try {
+      await until(() => live.state().connection.status === 'online', 'online');
 
-    for (const code of [4004, 4005, 1001]) {
-      await post('/__control/close', { code });
-      await until(() => live.state().connection.lastCloseCode === code, `close ${code}`);
-      expect(closeCodeAction(code)).toBe('reconnect');
-      // Backoff is 1 s at attempt 0 with full jitter, so the client comes back.
-      await until(() => live.state().connection.status === 'online', `reconnect after ${code}`, 8000);
+      for (const code of [4004, 4005, 1000, 1001]) {
+        const before = live.closeCodes.length;
+        const response = await post('/__control/close', { code });
+        expect(response.status).toBe(200);
+        const result = (await response.json()) as { closed: number; code: number };
+        expect(result.code).toBe(code);
+        expect(result.closed).toBeGreaterThanOrEqual(1);
+        // Ready clears lastCloseCode. A fast reconnect can erase it between
+        // polling ticks, so observe the actual transport close event instead.
+        await until(() => live.closeCodes.length > before, `close ${code}`);
+        expect(closeCodeAction(code)).toBe(code === 1000 ? 'idle' : 'reconnect');
+        // Backoff is 1 s at attempt 0 with full jitter, so the client comes back.
+        await until(() => live.state().connection.status === 'online', `reconnect after ${code}`, 8000);
+        expect(live.closeCodes.slice(before)).toEqual([code]);
+        expect(live.state().connection.lastCloseCode).toBeNull();
+      }
+    } finally {
+      live.stop();
     }
-    live.stop();
   }, 30_000);
 
   it('4005 protocol error: a malformed frame is refused by both sides', async () => {
