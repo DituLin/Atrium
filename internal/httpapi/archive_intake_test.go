@@ -46,6 +46,13 @@ func newArchiveHTTP(t *testing.T, enabled bool, permissions ...string) *archiveH
 
 func newArchiveHTTPWithMax(t *testing.T, enabled bool, maxBytes int64, permissions ...string) *archiveHTTPHarness {
 	t.Helper()
+	// Envelope and receipt tests include real SQLite and blob persistence work.
+	// Keep their deadline separate from tests that deliberately stall the body.
+	return newArchiveHTTPWithUploadTimeout(t, enabled, maxBytes, 10*time.Second, permissions...)
+}
+
+func newArchiveHTTPWithUploadTimeout(t *testing.T, enabled bool, maxBytes int64, uploadTimeout time.Duration, permissions ...string) *archiveHTTPHarness {
+	t.Helper()
 	ctx := context.Background()
 	db, err := store.Open(ctx, filepath.Join(t.TempDir(), "core.db"))
 	require.NoError(t, err)
@@ -57,7 +64,7 @@ func newArchiveHTTPWithMax(t *testing.T, enabled bool, maxBytes int64, permissio
 	cfg := config.Defaults()
 	cfg.Archives.Enabled = enabled
 	cfg.Archives.MaxBytes = maxBytes
-	cfg.Archives.UploadTimeout = config.Duration(150 * time.Millisecond)
+	cfg.Archives.UploadTimeout = config.Duration(uploadTimeout)
 	blobs, err := archive.NewBlobStore(filepath.Join(t.TempDir(), "originals"), maxBytes)
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, blobs.Close()) })
@@ -201,7 +208,7 @@ func TestArchiveHTTPStrictEnvelopeNeverCommitsInvalidRequest(t *testing.T) {
 	}
 }
 func TestArchiveHTTPBlockedSocketReadActuallyTimesOut(t *testing.T) {
-	h := newArchiveHTTP(t, true, "archive.ingest")
+	h := newArchiveHTTPWithUploadTimeout(t, true, 1024, 150*time.Millisecond, "archive.ingest")
 	conn, err := net.Dial("tcp", strings.TrimPrefix(h.server.URL, "http://"))
 	require.NoError(t, err)
 	defer conn.Close()

@@ -1,5 +1,9 @@
 # Local archive release
 
+[构建、发布与部署（中文）](../../docs/ops/deployment-release.md) · [Build, release and deployment (English)](../../docs/ops/deployment-release.en.md)
+
+The paired guide distinguishes the existing local tools below from hosted candidate builds and independent automated promotion that are not yet connected.
+
 Build from a committed SHA on Darwin arm64 using `make release-package
 RELEASE_DIR=/absolute/new/package RELEASE_SHA=<sha>`. Explicitly set
 `ATRIUM_RELEASE_NODE`, `ATRIUM_RELEASE_OPENCLAW`, and

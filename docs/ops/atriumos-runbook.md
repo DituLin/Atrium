@@ -1,6 +1,6 @@
 # AtriumOS 发布与恢复
 
-状态：2026-10-11 本机已部署 `3fb9d38fdeb245515e514f28f134ea91669e15d9`，Core 和 OpenClaw 网关运行，档案开关已启用。完整 T17 验收仍未完成。下文带时间的预检及“尚未切换”描述保留当时状态，当前结果见“发布结果”。
+状态更新：2026-10-13。当前本机部署基线为 `c06c6a591e9a33c6a93bc0def15d3e29061f9d07`，见 [TV 排序与奶量趋势热修验证](evidence/2026-10-11-archive-tv-hotfix/README.md)。线上源码已合入 `main`；本次整合未更换运行程序。完整 T17 验收仍未完成。下文保留 2026-10-11 首次上线及各次预检的历史状态，包括早期 `3fb9d38` 的发布结果。当前构建、部署和恢复顺序请阅读[中文发布指南](deployment-release.md) / [English release guide](deployment-release.en.md)。
 
 ## 发布包
 

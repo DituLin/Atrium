@@ -1,5 +1,9 @@
 # Deploying Atrium on macOS
 
+[构建、发布与部署（中文）](../docs/ops/deployment-release.md) · [Build, release and deployment (English)](../docs/ops/deployment-release.en.md)
+
+The paired guide is the current entry point for CI, complete candidates, independent controlled deployment and local signing. The service setup below remains a reference for the base Core installation.
+
 Atrium runs as a single binary supervised by `launchd`. This directory holds the
 LaunchAgent template and its install and uninstall scripts.
 
@@ -94,10 +98,7 @@ from looking like "every photo was deleted".
 
 ## Upgrade and rollback
 
-For the AtriumOS archive upgrade, follow the release procedure in
-[`docs/ops/atriumos-runbook.md`](../docs/ops/atriumos-runbook.md). That procedure
-is being implemented; the existing `make release` target alone is not a complete
-archive release package.
+For AtriumOS upgrades, follow the paired [deployment guide](../docs/ops/deployment-release.en.md) and the [historical local deployment evidence](../docs/ops/atriumos-runbook.md). The complete local package builder is implemented; GitHub-hosted complete candidates and independent automated promotion remain to be connected. The existing `make release` target alone is not a complete archive package.
 
 Migrations run forward only. Before replacing a binary, take a consistent backup
 and rehearse the upgrade in an isolated directory. Before rollback, preserve the
