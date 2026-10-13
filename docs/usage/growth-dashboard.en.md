@@ -2,7 +2,7 @@
 
 [中文](growth-dashboard.md) · [Documentation index](../README.md)
 
-Select a person on the TV **Archives** page, under All domains or Health. Separate height and weight cards show the latest measurement, unit, date, trend and three most recent measurements. The dashboard works for Abu and other attributed people without a predefined roster.
+Select a person on the TV **Archives** page, under All domains or Health. Separate height and weight cards show the latest measurement, unit, date, trend and three most recent measurements. The dashboard works for attributed people without a predefined roster.
 
 - Ranges: the last 3 calendar months, last year and all stages; all stages is the default.
 - The X axis follows actual measurement dates; the Y axis shows numeric ticks and units. Height and weight have separate scales.
