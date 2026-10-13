@@ -39,14 +39,14 @@ it('reads long content with remote scrolling and restores house/action/navigatio
  key('ArrowDown'); const refresh = screen.getByRole('button', { name: '刷新简报' }); expect(document.activeElement).toBe(refresh);
  key('Enter'); await screen.findByText('已更新简报'); expect(document.activeElement).toBe(refresh);
  key('ArrowUp'); expect(document.activeElement).toBe(nav('今日'));
- key('ArrowRight'); key('ArrowRight'); key('Enter'); await screen.findByRole('tab', { name: '连接状态' }); key('Escape');
+ key('ArrowRight'); key('ArrowRight'); key('ArrowRight'); key('Enter'); await screen.findByRole('tab', { name: '连接状态' }); key('Escape');
  await waitFor(() => expect(document.activeElement).toBe(nav('设置')));
  expect(app.state.router.route.name).toBe('briefing');
 });
 it('reaches today through authenticated House when photo home is unavailable', async () => {
  await setup(true); await screen.findByRole('button', { name: '立即重试' }); key('ArrowDown'); key('Enter');
  await screen.findByRole('region', { name: '中枢与来源' }); key('ArrowUp'); expect(document.activeElement).toBe(nav('房屋'));
- key('ArrowLeft'); key('Enter');
+ key('ArrowLeft'); key('ArrowLeft'); key('Enter');
  await screen.findByText('测试提示正文'); expect(app.state.router.route.name).toBe('briefing');
  expect(app.state.overview.status).toBe('available'); expect(screen.queryByText('旧数据')).toBeNull();
  expect(screen.queryByText('今天没有安排')).toBeNull(); expect(screen.queryByText('家里一切正常')).toBeNull();

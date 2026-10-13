@@ -28,9 +28,11 @@ import { initialRouterState, routerReducer } from './router';
 import type { SlideshowAction, SlideshowState } from './slideshow';
 import { initialSlideshowState, slideshowReducer } from './slideshow';
 
-export type ScreenName = 'videos' | 'video' | 'pair' | 'connect' | 'dashboard' | 'photos' | 'photo' | 'house' | 'briefing' | 'settings';
+export type ScreenName = 'videos' | 'video' | 'pair' | 'connect' | 'dashboard' | 'photos' | 'photo' | 'house' | 'family' | 'briefing' | 'settings';
 
 export interface AppState {
+ archiveGeneration:number;
+ archiveRender:{id:string|null;commandId:string|null;status:'loading'|'ready'|'error'};
   router: RouterState;
   connection: ConnectionState;
   pairing: PairingState;
@@ -55,7 +57,8 @@ export interface AppState {
 
 export function createInitialState(nowMs: number): AppState {
   return {
-    router: initialRouterState,
+    archiveGeneration:0,archiveRender:{id:null,commandId:null,status:'loading'},
+ router: initialRouterState,
     connection: initialConnectionState,
     pairing: initialPairingState,
     clock: initialClockState,
@@ -72,6 +75,9 @@ export function createInitialState(nowMs: number): AppState {
 }
 
 export type AppAction =
+ | {type:'archives.invalidate'}
+ | {type:'archives.open';commandId:string}
+ | {type:'archives.rendered';commandId:string;id:string|null;status:'ready'|'error'}
   | OverviewAction
   | HouseAction
   | RouterAction
@@ -109,6 +115,9 @@ function purgedPhotoState(state: AppState): AppState {
 }
 
 export function appReducer(state: AppState, action: AppAction): AppState {
+ if(action.type==='archives.open')return {...state,archiveRender:{id:null,commandId:action.commandId,status:'loading'}};
+ if(action.type==='archives.rendered')return state.archiveRender.commandId===action.commandId?{...state,archiveRender:{id:action.id,commandId:action.commandId,status:action.status}}:state;
+ if(action.type==='archives.invalidate') return {...state,archiveGeneration:state.archiveGeneration+1};
   if (action.type.startsWith('overview.')) {
     if (state.needsPairing && action.type !== 'overview.reset') return state;
     if (state.authExpired && action.type === 'overview.loaded') return state;
@@ -242,6 +251,7 @@ export function selectScreen(state: AppState): ScreenName {
   if (state.router.route.name === 'pair') return 'pair';
   if (state.authExpired) return 'connect';
   if (state.connection.stopReason === 'superseded') return 'connect';
+  if (state.router.route.name === 'family') return 'family';
   if (state.router.route.name === 'house') return 'house';
   if (state.router.route.name === 'briefing') return 'briefing';
   if (needsConnectScreen(state.connection)) return 'connect';

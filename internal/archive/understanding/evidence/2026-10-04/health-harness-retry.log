@@ -1,0 +1,7 @@
+=== RUN   TestUnderstandingLivePublicWorker
+=== RUN   TestUnderstandingLivePublicWorker/health
+    understand_live_test.go:116: domain=health subjects=2 fields=2 events=1 complete=true exact_value_date_dimension_binding=true route=direct-provider/deepseek
+--- PASS: TestUnderstandingLivePublicWorker (6.92s)
+    --- PASS: TestUnderstandingLivePublicWorker/health (6.92s)
+PASS
+ok  	github.com/DituLin/Atrium/internal/archive	7.428s

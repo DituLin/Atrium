@@ -1022,7 +1022,7 @@
             "adminBearer": []
           }
         ],
-        "description": "Admin only. Stable principal retains operation ownership. Expiry cannot exceed principal expiry.",
+        "description": "Admin only. Stable principal retains operation ownership. Expiry cannot exceed principal expiry. Rotation rejects the old credential on subsequent archive client transaction checks but preserves already accepted tasks bound to the principal and unchanged policy version.",
         "responses": {
           "200": {
             "description": "Permission-filtered observation.",
@@ -1128,7 +1128,7 @@
             "adminBearer": []
           }
         ],
-        "description": "Admin only; increments policy version and invalidates prior cursors.",
+        "description": "Admin only; completely replaces all permissions and allowlists, including household_ids. Increments policy version, invalidates prior cursors and permanently fences tasks accepted under earlier archive delegation generations. Omitted lists grant no access.",
         "responses": {
           "200": {
             "description": "Permission-filtered observation.",
@@ -1295,6 +1295,190 @@
           }
         }
       ]
+    },
+    "/api/v1/admin/integrations/{id}/grant-archives": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        }
+      ],
+      "post": {
+        "summary": "Add explicit archive grants with policy version CAS",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminBearer": []
+          }
+        ],
+        "description": "Admin only. Atomically compare expected_policy_version, merge the explicit archive permissions and household IDs, validate the requested archive permissions and household references plus the merged policy structure, increment the generation, and return that transaction's principal. Preserves all existing permissions and screen/source/member/household allowlists, including references to subsequently revoked resources; grants no extra permissions and does not restore revoked resources. Unknown households are invalid_request. Version mismatch is conflict (409) with no mutation; clients must not automatically overwrite a newer policy.",
+        "responses": {
+          "200": {
+            "description": "Permission-filtered observation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Principal"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or operation_expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired or revoked credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Current policy denies access.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unavailable or not owned by this principal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Policy version changed; no policy was overwritten.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveGrant"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/household": {
+      "get": {
+        "summary": "Discover the local archive household",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "adminBearer": []
+          }
+        ],
+        "description": "Admin-only read of the stable persisted random household ID. Reopening the database or changing the home display name does not change it. Discovery grants no archive permission.",
+        "responses": {
+          "200": {
+            "description": "Permission-filtered observation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Household"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or operation_expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, expired or revoked credential.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Current policy denies access.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unavailable or not owned by this principal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1328,7 +1512,13 @@
                 "photos.read",
                 "screens.read",
                 "screens.control",
-                "commands.read"
+                "commands.read",
+                "family.read",
+                "family.write",
+                "archive.read",
+                "archive.ingest",
+                "archive.organize",
+                "archive.analyze"
               ]
             },
             "description": "Omitted, null and empty arrays all grant no access."
@@ -1356,6 +1546,28 @@
               "type": "string"
             },
             "description": "Omitted, null and empty arrays all grant no access."
+          },
+          "member_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 128,
+            "description": "Explicit family member allowlist. Empty grants no family record access."
+          },
+          "household_ids": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "maxItems": 128,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "description": "Explicit existing household IDs. Omitted, null or empty denies all archive access. Ingest delegates automatic parsing/classification/entity/fact work; organize grants manual corrections; analysis requires read plus analyze. These scopes do not alter member/screen/source grants."
           }
         },
         "required": []
@@ -1714,7 +1926,8 @@
           "route": {
             "enum": [
               "dashboard",
-              "photos"
+              "photos",
+              "family"
             ]
           },
           "collection": {
@@ -1824,7 +2037,7 @@
           "kind",
           "payload"
         ],
-        "description": "Kind-specific validation: navigate dashboard accepts no collection; navigate photos requires collection; show requires only photo_id; refresh requires empty payload. The same principal and operation_id reuse the command without restarting TTL. New IDs must be within -24 hours / +5 minutes; persisted IDs remain queryable for seven days."
+        "description": "Kind-specific validation: navigate dashboard/family accepts no collection; navigate photos requires collection; show requires only photo_id; refresh requires empty payload. The same principal and operation_id reuse the command without restarting TTL. New IDs must be within -24 hours / +5 minutes; persisted IDs remain queryable for seven days."
       },
       "Error": {
         "type": "object",
@@ -2040,6 +2253,60 @@
           "observed_at",
           "availability",
           "data"
+        ]
+      },
+      "ArchiveGrant": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "permissions": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 128,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "archive.read",
+                "archive.ingest",
+                "archive.organize",
+                "archive.analyze"
+              ]
+            }
+          },
+          "household_ids": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 128,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          "expected_policy_version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "permissions",
+          "household_ids",
+          "expected_policy_version"
+        ]
+      },
+      "Household": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "id"
         ]
       }
     }

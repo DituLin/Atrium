@@ -1,0 +1,231 @@
+{
+  "schema_version": "1",
+  "observed_at": "2026-10-11T15:58:32.175093+08:00",
+  "availability": "available",
+  "data": {
+    "schema_version": "archive-analysis/1",
+    "query_ref": "01M4MZGY7EZ25W28R91E188G50",
+    "snapshot_id": "01M4MZGY7EZ25W28R91E188G50",
+    "algorithm_version": "archive-analysis/6",
+    "query": {
+      "operation": "ratio",
+      "metric": "语文",
+      "domain": "education",
+      "query": "春季",
+      "timezone": "Asia/Singapore"
+    },
+    "projection": "authorized",
+    "data_epoch": 97,
+    "generation": 1,
+    "input_digest": "cbabb4d0854285cac938309e4639f7f7baf773bd8073c7c8f6b4731a24cac8e8",
+    "groups": [
+      {
+        "metric": "语文",
+        "unit": "percent",
+        "sample": "owners:01M4MZD2TB4KMBVJ7KM1QER766;",
+        "value": "91.00",
+        "date_precision": "unknown",
+        "numerator": "91",
+        "denominator": "100",
+        "rounding": "half_away_from_zero/2",
+        "evidence": [
+          {
+            "field_name": "语文",
+            "component_id": "23501d473e6bb950ae2269c0ac2346b870d3bfaab8b7f5495b8192a4d5d37f28/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RESPSFA4GVC2HMV505T",
+            "publication_id": "01M4MZD2TBH42ZWA2P4MTBHQ83",
+            "publication_revision": 2,
+            "observation_id": "01M4MZD2TCGX21FPX0NHNTEAJ5",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZBPRJ5EM5REX9F4EE9VN0",
+            "segment_id": "23501d473e6bb950ae2269c0ac2346b870d3bfaab8b7f5495b8192a4d5d37f28",
+            "locator": {
+              "kind": "docx",
+              "text": null,
+              "csv": null,
+              "docx": {
+                "part_uri": "/word/document.xml",
+                "paragraph": 1,
+                "table_path": [
+                  1
+                ],
+                "row": 3,
+                "grid_column": 1
+              },
+              "xlsx": null
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "语文",
+            "confirmed": true
+          },
+          {
+            "field_name": "语文",
+            "component_id": "63f3eb4cd7751a6997a53a330b948d5b4d9747757ba1887c769c9442fd6b6965/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RESPSFA4GVC2HMV505T",
+            "publication_id": "01M4MZD2TBH42ZWA2P4MTBHQ83",
+            "publication_revision": 2,
+            "observation_id": "01M4MZD2TCGX21FPX0NHNTEAJ5",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZBPRJ5EM5REX9F4EE9VN0",
+            "segment_id": "63f3eb4cd7751a6997a53a330b948d5b4d9747757ba1887c769c9442fd6b6965",
+            "locator": {
+              "kind": "docx",
+              "text": null,
+              "csv": null,
+              "docx": {
+                "part_uri": "/word/document.xml",
+                "paragraph": 1,
+                "table_path": [
+                  1
+                ],
+                "row": 3,
+                "grid_column": 2
+              },
+              "xlsx": null
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "91",
+            "confirmed": true
+          },
+          {
+            "field_name": "语文",
+            "component_id": "effe4597d6d27f3dc8911dcfcc922ed51d03c2586938cc0c0bf562ba49a3932e/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RESPSFA4GVC2HMV505T",
+            "publication_id": "01M4MZD2TBH42ZWA2P4MTBHQ83",
+            "publication_revision": 2,
+            "observation_id": "01M4MZD2TCGX21FPX0NHNTEAJ5",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZBPRJ5EM5REX9F4EE9VN0",
+            "segment_id": "effe4597d6d27f3dc8911dcfcc922ed51d03c2586938cc0c0bf562ba49a3932e",
+            "locator": {
+              "kind": "docx",
+              "text": null,
+              "csv": null,
+              "docx": {
+                "part_uri": "/word/document.xml",
+                "paragraph": 1,
+                "table_path": [
+                  1
+                ],
+                "row": 1,
+                "grid_column": 2
+              },
+              "xlsx": null
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "分数",
+            "confirmed": true
+          },
+          {
+            "field_name": "满分",
+            "component_id": "23501d473e6bb950ae2269c0ac2346b870d3bfaab8b7f5495b8192a4d5d37f28/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RESPSFA4GVC2HMV505T",
+            "publication_id": "01M4MZD2TBH42ZWA2P4MTBHQ83",
+            "publication_revision": 2,
+            "observation_id": "01M4MZD2TCGA9NN47H0NXPXP9H",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZBPRJ5EM5REX9F4EE9VN0",
+            "segment_id": "23501d473e6bb950ae2269c0ac2346b870d3bfaab8b7f5495b8192a4d5d37f28",
+            "locator": {
+              "kind": "docx",
+              "text": null,
+              "csv": null,
+              "docx": {
+                "part_uri": "/word/document.xml",
+                "paragraph": 1,
+                "table_path": [
+                  1
+                ],
+                "row": 3,
+                "grid_column": 1
+              },
+              "xlsx": null
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "语文",
+            "confirmed": true
+          },
+          {
+            "field_name": "满分",
+            "component_id": "04f1f8ec2176854cd5d7cc68431bd6ac3238a7924ff256464c5361fcf6ab2805/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RESPSFA4GVC2HMV505T",
+            "publication_id": "01M4MZD2TBH42ZWA2P4MTBHQ83",
+            "publication_revision": 2,
+            "observation_id": "01M4MZD2TCGA9NN47H0NXPXP9H",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZBPRJ5EM5REX9F4EE9VN0",
+            "segment_id": "04f1f8ec2176854cd5d7cc68431bd6ac3238a7924ff256464c5361fcf6ab2805",
+            "locator": {
+              "kind": "docx",
+              "text": null,
+              "csv": null,
+              "docx": {
+                "part_uri": "/word/document.xml",
+                "paragraph": 1,
+                "table_path": [
+                  1
+                ],
+                "row": 3,
+                "grid_column": 3
+              },
+              "xlsx": null
+            },
+            "start": 0,
+            "end": 3,
+            "excerpt": "100",
+            "confirmed": true
+          },
+          {
+            "field_name": "满分",
+            "component_id": "d40b23113f2201eed8012a7be68fea5400557fab0cf8b5ff76753e420a94c38f/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RESPSFA4GVC2HMV505T",
+            "publication_id": "01M4MZD2TBH42ZWA2P4MTBHQ83",
+            "publication_revision": 2,
+            "observation_id": "01M4MZD2TCGA9NN47H0NXPXP9H",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZBPRJ5EM5REX9F4EE9VN0",
+            "segment_id": "d40b23113f2201eed8012a7be68fea5400557fab0cf8b5ff76753e420a94c38f",
+            "locator": {
+              "kind": "docx",
+              "text": null,
+              "csv": null,
+              "docx": {
+                "part_uri": "/word/document.xml",
+                "paragraph": 1,
+                "table_path": [
+                  1
+                ],
+                "row": 1,
+                "grid_column": 3
+              },
+              "xlsx": null
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "满分",
+            "confirmed": true
+          }
+        ]
+      }
+    ],
+    "coverage": {
+      "scope": "archived_only",
+      "complete": false,
+      "included": 1,
+      "excluded": 0,
+      "reasons": [
+        "partial_or_pending_sources"
+      ]
+    }
+  }
+}

@@ -1,0 +1,421 @@
+{
+  "synthetic_text": "银行交易记录\n账户持有人：周宁\n日期：2026-10-01\n交易金额：130.50元\n收款人：吴平\n",
+  "plan": {
+    "structural_context_limited": false,
+    "version": "archive-understand/2",
+    "parse_digest": "1e7de7c45eec60cdd4e396bd04d199d361e5a684ff778c2399d873db9dbfd23a",
+    "parser_version": "archive-parse/1",
+    "status": "parsed",
+    "coverage": {
+      "complete": true,
+      "encoding": "",
+      "offset_unit": "",
+      "notes": null,
+      "read_parts": null,
+      "skipped_parts": null,
+      "skipped_features": null
+    },
+    "warnings": null,
+    "sheets": null,
+    "native": null,
+    "chunks": [
+      {
+        "protocol_version": 1,
+        "invocation_id": "1e7de7c45eec60cdd4e396bd04d199d361e5a684ff778c2399d873db9dbfd23a:0",
+        "input_digest": "ef050149ff50f66ee8e7afd1c02581f72e2c5a417787fac1495d73bbcded1391",
+        "schema_version": "archive-extraction/2",
+        "extraction_version": "archive-understand/2",
+        "chunk_version": "archive-chunk/1",
+        "parse_digest": "1e7de7c45eec60cdd4e396bd04d199d361e5a684ff778c2399d873db9dbfd23a",
+        "index": 0,
+        "owned": [
+          {
+            "quote_hints": [
+              {
+                "start": 0,
+                "end": 6,
+                "text": "银行交易记录"
+              },
+              {
+                "start": 7,
+                "end": 12,
+                "text": "账户持有人"
+              },
+              {
+                "start": 13,
+                "end": 15,
+                "text": "周宁"
+              },
+              {
+                "start": 16,
+                "end": 18,
+                "text": "日期"
+              },
+              {
+                "start": 19,
+                "end": 29,
+                "text": "2026-10-01"
+              },
+              {
+                "start": 30,
+                "end": 34,
+                "text": "交易金额"
+              },
+              {
+                "start": 35,
+                "end": 41,
+                "text": "130.50"
+              },
+              {
+                "start": 41,
+                "end": 42,
+                "text": "元"
+              },
+              {
+                "start": 43,
+                "end": 46,
+                "text": "收款人"
+              },
+              {
+                "start": 47,
+                "end": 49,
+                "text": "吴平"
+              }
+            ],
+            "view_id": "s1/body/0:50",
+            "parent_segment_id": "s1",
+            "alternative_id": "",
+            "component_id": "s1/body",
+            "component_kind": "body",
+            "origin": "parsed",
+            "start": 0,
+            "end": 50,
+            "text": "银行交易记录\n账户持有人：周宁\n日期：2026-10-01\n交易金额：130.50元\n收款人：吴平\n",
+            "parse_digest": "1e7de7c45eec60cdd4e396bd04d199d361e5a684ff778c2399d873db9dbfd23a",
+            "parser_version": "archive-parse/1",
+            "requires_review": false,
+            "visual_state": "",
+            "structure": {
+              "locator": {
+                "kind": "",
+                "text": null,
+                "csv": null,
+                "docx": null,
+                "xlsx": null
+              },
+              "cell_state": "",
+              "cell_type": "",
+              "value_present": false,
+              "cache_present": false,
+              "row_hidden": false,
+              "column_hidden": false,
+              "column_hidden_unresolved": false,
+              "merge_range": "",
+              "merge_anchor": "",
+              "docx_merge": null
+            },
+            "derived": null
+          }
+        ],
+        "context": []
+      }
+    ],
+    "manifest_digest": "eb09f670f54ff882be1e6ae15bc4503998f479d5825ba9cea432cd8e4f1e1647"
+  },
+  "product": {
+    "labels": [
+      {
+        "label": "account-holder",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "banking",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "payee",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "transaction",
+        "chunk_indexes": [
+          0
+        ]
+      }
+    ],
+    "link_issues": [],
+    "events": [
+      {
+        "canonical_evidence": [
+          {
+            "parse_digest": "1e7de7c45eec60cdd4e396bd04d199d361e5a684ff778c2399d873db9dbfd23a",
+            "parser_version": "archive-parse/1",
+            "parent_segment_id": "s1",
+            "component_id": "s1/body",
+            "component_kind": "body",
+            "alternative_id": "",
+            "origin": "parsed",
+            "start": 0,
+            "end": 6,
+            "quote": "银行交易记录",
+            "derived_value_ref": ""
+          }
+        ],
+        "anchor_policy": "exact-parent-evidence/2",
+        "id": "archive-understand/2/event/3ab17ee77e0464840b795191e5c448f60206974d20a3e6533fd8158260025c47",
+        "type": "transaction",
+        "section_evidence": [
+          {
+            "view_id": "s1/body/0:50",
+            "start": 0,
+            "end": 6,
+            "quote": "银行交易记录",
+            "derived_value_ref": ""
+          }
+        ],
+        "field_refs": [
+          {
+            "chunk_index": 0,
+            "local_id": "f1"
+          },
+          {
+            "chunk_index": 0,
+            "local_id": "f2"
+          },
+          {
+            "chunk_index": 0,
+            "local_id": "f3"
+          }
+        ],
+        "subject_refs": [
+          {
+            "chunk_index": 0,
+            "local_id": "subj1"
+          },
+          {
+            "chunk_index": 0,
+            "local_id": "subj2"
+          }
+        ],
+        "proposals": [
+          {
+            "chunk_index": 0,
+            "local_id": "ev1"
+          }
+        ]
+      }
+    ],
+    "version": "archive-understand/2",
+    "manifest_digest": "eb09f670f54ff882be1e6ae15bc4503998f479d5825ba9cea432cd8e4f1e1647",
+    "parse_digest": "1e7de7c45eec60cdd4e396bd04d199d361e5a684ff778c2399d873db9dbfd23a",
+    "complete": true,
+    "requires_review": false,
+    "parse_status": "parsed",
+    "parse_coverage": {
+      "complete": true,
+      "encoding": "",
+      "offset_unit": "",
+      "notes": null,
+      "read_parts": null,
+      "skipped_parts": null,
+      "skipped_features": null
+    },
+    "parse_warnings": null,
+    "sheets": null,
+    "native": null,
+    "chunks": [
+      {
+        "receipt": {
+          "invocation_id": "8d21554919c6fde1389ca40d312b5a00",
+          "input_digest": "6bd4e4582b4404ca4d97894cf6d882185d3f5d2612989bfabbaf0458044ae521",
+          "provider": "deepseek",
+          "requested_model": "deepseek/deepseek-v4-flash",
+          "model": "deepseek-v4-flash",
+          "response_model": "deepseek-flash",
+          "stop_reason": "stop",
+          "execution": {
+            "mode": "direct-provider",
+            "owner": {
+              "kind": "provider",
+              "id": "deepseek"
+            }
+          },
+          "usage": {
+            "input_tokens": 632,
+            "output_tokens": 543,
+            "total_tokens": 4119,
+            "cache_read_tokens": 2944,
+            "cache_write_tokens": 0,
+            "cost_usd": 0.00024876320000000006
+          },
+          "configuration_fingerprint": "9765c9ce40bf37f505cced22c1af598882aaac1d5934b3bf90a498b428e2d58f"
+        },
+        "input_digest": "ef050149ff50f66ee8e7afd1c02581f72e2c5a417787fac1495d73bbcded1391",
+        "invocation_id": "1e7de7c45eec60cdd4e396bd04d199d361e5a684ff778c2399d873db9dbfd23a:0",
+        "index": 0,
+        "result": {
+          "labels": [
+            "banking",
+            "transaction",
+            "account-holder",
+            "payee"
+          ],
+          "domain": "finance",
+          "document_type": "bank_transaction_record",
+          "subjects": [
+            {
+              "id": "subj1",
+              "name": "周宁",
+              "role": "account_holder",
+              "ambiguous": false,
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:50",
+                  "start": 13,
+                  "end": 15,
+                  "quote": "周宁",
+                  "derived_value_ref": ""
+                }
+              ]
+            },
+            {
+              "id": "subj2",
+              "name": "吴平",
+              "role": "payee",
+              "ambiguous": false,
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:50",
+                  "start": 47,
+                  "end": 49,
+                  "quote": "吴平",
+                  "derived_value_ref": ""
+                }
+              ]
+            }
+          ],
+          "fields": [
+            {
+              "dimensions": [],
+              "subject_refs": [],
+              "id": "f1",
+              "name": "日期",
+              "raw": "2026-10-01",
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:50",
+                  "start": 19,
+                  "end": 29,
+                  "quote": "2026-10-01",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": [
+                {
+                  "kind": "date",
+                  "value": "2026-10-01"
+                }
+              ]
+            },
+            {
+              "dimensions": [
+                {
+                  "kind": "currency",
+                  "raw": "元",
+                  "evidence": [
+                    {
+                      "view_id": "s1/body/0:50",
+                      "start": 41,
+                      "end": 42,
+                      "quote": "元",
+                      "derived_value_ref": ""
+                    }
+                  ]
+                }
+              ],
+              "subject_refs": [
+                "subj1"
+              ],
+              "id": "f2",
+              "name": "交易金额",
+              "raw": "130.50",
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:50",
+                  "start": 35,
+                  "end": 41,
+                  "quote": "130.50",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": [
+                {
+                  "kind": "decimal",
+                  "value": "130.50"
+                }
+              ]
+            },
+            {
+              "dimensions": [],
+              "subject_refs": [
+                "subj2"
+              ],
+              "id": "f3",
+              "name": "收款人",
+              "raw": "吴平",
+              "evidence": [
+                {
+                  "view_id": "s1/body/0:50",
+                  "start": 47,
+                  "end": 49,
+                  "quote": "吴平",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": []
+            }
+          ],
+          "events": [
+            {
+              "id": "ev1",
+              "type": "transaction",
+              "field_refs": [
+                "f1",
+                "f2",
+                "f3"
+              ],
+              "subject_refs": [
+                "subj1",
+                "subj2"
+              ],
+              "section_evidence": [
+                {
+                  "view_id": "s1/body/0:50",
+                  "start": 0,
+                  "end": 6,
+                  "quote": "银行交易记录",
+                  "derived_value_ref": ""
+                }
+              ]
+            }
+          ],
+          "coverage": [
+            {
+              "view_id": "s1/body/0:50",
+              "disposition": "extracted"
+            }
+          ],
+          "issues": []
+        },
+        "digest": "26d6f1c6d04c986f48c8941f5f1b7807b20f670a2c0fee089bf86cf732a6781b"
+      }
+    ],
+    "digest": "f63cc5ff35edb62ae085f47be17900c3158b73449aedbe75035471b7f4db92a2"
+  }
+}

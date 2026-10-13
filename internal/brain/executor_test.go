@@ -517,3 +517,12 @@ func TestExecutorScreenLockWaitersShareLifetime(t *testing.T) {
 		t.Fatalf("retained %d screen locks", n)
 	}
 }
+
+func TestFamilyNavigationAction(t *testing.T) {
+	if err := (Action{Tool: "home_navigate_screen", ScreenID: "tv", Route: "family"}).validate(); err != nil {
+		t.Fatal(err)
+	}
+	if err := (Action{Tool: "home_navigate_screen", ScreenID: "tv", Route: "family", Collection: "all"}).validate(); err == nil {
+		t.Fatal("family route accepted photo collection")
+	}
+}

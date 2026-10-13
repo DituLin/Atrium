@@ -3,12 +3,15 @@ package brain
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"log/slog"
 	"sync"
 	"time"
 
+	"github.com/DituLin/Atrium/internal/domain"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/oklog/ulid/v2"
 )
@@ -169,6 +172,13 @@ func (t *Turn) Call(callRef, name string, input map[string]any) (*mcp.CallToolRe
 		return nil, err
 	}
 	if action == nil {
+		if name == "home_answer_archive_question" {
+			digest := sha256.Sum256([]byte(t.id + "\x00" + callRef))
+			args["resolution_key"] = hex.EncodeToString(digest[:])
+		}
+		if name == "home_record_family_entry" {
+			args["request_id"] = t.id + ":" + callRef
+		}
 		finish, err := t.reserve()
 		if err != nil {
 			return nil, err
@@ -268,7 +278,17 @@ func (e *Executor) observe(ctx context.Context, record ActionRecord, result *mcp
 	return e.ledger.Observe(ctx, record.OperationID, evidence.Command.ID, evidence.Command.Status)
 }
 
-var modelArgumentFields = map[string][]string{"home_get_status": {}, "home_list_screens": {}, "home_get_screen": {"screen_id"}, "home_get_nas_status": {}, "home_list_photos": {"collection", "limit", "cursor"}, "home_get_photo": {"photo_id"}, "home_get_command": {"command_id"}, "home_get_operation": {}, "home_refresh_screen": {"screen_id"}, "home_show_photo": {"screen_id", "photo_id"}, "home_navigate_screen": {"screen_id", "route", "collection"}}
+var modelArgumentFields = map[string][]string{
+	"home_show_archive_query":      {"screen_id", "query_ref"},
+	"home_analyze_archives":        {"operation", "count", "metric", "query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership"},
+	"home_search_archives":         {"query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership", "limit", "cursor"},
+	"home_search_archive_entities": {"query", "entity_id", "limit", "cursor"},
+	"home_get_archive_evidence":    {"document_id", "limit", "cursor"},
+	"home_get_archive_task":        {"task_id"},
+	"home_get_archive_question":    {"task_id"},
+	"home_answer_archive_question": {"task_id", "question_id", "question_version", "waiting_task_version", "extraction_id", "document_revision", "action", "target", "name"},
+	"home_revise_archive":          {"document_id", "document_revision", "kind", "reason", "observation_id", "value", "entity_id"},
+	"home_list_family_members":     {}, "home_list_family_records": {"member_id", "limit", "cursor"}, "home_record_family_entry": {"member_id", "category", "occurred_at", "title", "notes", "measurements", "display_on_tv", "supersedes_id", "revision_reason", "retracted"}, "home_get_status": {}, "home_list_screens": {}, "home_get_screen": {"screen_id"}, "home_get_nas_status": {}, "home_list_photos": {"collection", "limit", "cursor"}, "home_get_photo": {"photo_id"}, "home_get_command": {"command_id"}, "home_get_operation": {}, "home_refresh_screen": {"screen_id"}, "home_show_photo": {"screen_id", "photo_id"}, "home_navigate_screen": {"screen_id", "route", "collection"}}
 
 func validateArguments(name string, input map[string]any) (map[string]any, *Action, error) {
 
@@ -290,6 +310,9 @@ func validateArguments(name string, input map[string]any) (map[string]any, *Acti
 		}
 		out[key] = value
 	}
+	if isArchiveTool(name) {
+		return validateArchiveArguments(name, out)
+	}
 	stringArg := func(key string, required bool) (string, error) {
 		v, exists := out[key]
 		if !exists && !required {
@@ -301,7 +324,7 @@ func validateArguments(name string, input map[string]any) (map[string]any, *Acti
 		}
 		return s, nil
 	}
-	for _, key := range []string{"screen_id", "photo_id", "command_id"} {
+	for _, key := range []string{"screen_id", "photo_id", "command_id", "member_id"} {
 		if v, exists := out[key]; exists {
 			value, ok := v.(string)
 			if !ok || !identifier.MatchString(value) {
@@ -315,7 +338,25 @@ func validateArguments(name string, input map[string]any) (map[string]any, *Acti
 			return nil, nil, errors.New("missing resource ID")
 		}
 	}
-	if name == "home_list_photos" {
+	if name == "home_list_family_records" {
+		if _, err := stringArg("member_id", true); err != nil {
+			return nil, nil, err
+		}
+	}
+	if name == "home_record_family_entry" {
+		raw, err := json.Marshal(out)
+		if err != nil {
+			return nil, nil, err
+		}
+		var record domain.FamilyRecordInput
+		if json.Unmarshal(raw, &record) != nil || record.Validate() != nil {
+			return nil, nil, errors.New("invalid family record")
+		}
+		if _, ok := out["display_on_tv"].(bool); !ok {
+			return nil, nil, errors.New("explicit TV visibility required")
+		}
+	}
+	if name == "home_list_photos" || name == "home_list_family_records" {
 		if v, exists := out["limit"]; exists {
 			b, _ := json.Marshal(v)
 			var n int
@@ -343,7 +384,7 @@ func validateArguments(name string, input map[string]any) (map[string]any, *Acti
 		}
 	}
 	switch name {
-	case "home_refresh_screen", "home_show_photo", "home_navigate_screen":
+	case "home_show_archive_query", "home_refresh_screen", "home_show_photo", "home_navigate_screen":
 		a := &Action{Tool: name}
 		var err error
 		a.ScreenID, err = stringArg("screen_id", true)
@@ -359,6 +400,10 @@ func validateArguments(name string, input map[string]any) (map[string]any, *Acti
 			return nil, nil, err
 		}
 		a.PhotoID, err = stringArg("photo_id", false)
+		if err != nil {
+			return nil, nil, err
+		}
+		a.QueryRef, err = stringArg("query_ref", false)
 		if err != nil {
 			return nil, nil, err
 		}

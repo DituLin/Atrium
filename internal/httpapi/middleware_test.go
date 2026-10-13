@@ -16,6 +16,7 @@ func TestSecurityHeadersAllowLegacySameOriginReferrer(t *testing.T) {
 	// Older WebViews omit Origin and Sec-Fetch-Site on GET. Cookie auth needs
 	// the same-origin Referer fallback, while cross-origin referrals stay hidden.
 	require.Equal(t, "same-origin", recorder.Header().Get("Referrer-Policy"))
+	require.Contains(t, recorder.Header().Get("Content-Security-Policy"), "img-src 'self' data: blob:;")
 	require.Equal(t, "DENY", recorder.Header().Get("X-Frame-Options"))
 	require.Contains(t, recorder.Header().Get("Content-Security-Policy"), "frame-ancestors 'none'")
 }

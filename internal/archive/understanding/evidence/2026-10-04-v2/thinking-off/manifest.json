@@ -1,0 +1,27 @@
+{
+  "synthetic_only": true,
+  "configuration_fingerprint": "9765c9ce40bf37f505cced22c1af598882aaac1d5934b3bf90a498b428e2d58f",
+  "reasoning": "off",
+  "temperature_advisory": 0,
+  "response_format": "json_object",
+  "prompt_file": "../pre-grouping-prompt-v2.txt",
+  "prompt_sha256": "7cbed655cceb26902711f92c8a3130eb1a2739205b5d92631cb2a0e81f3256c1",
+  "schema_file": "../inline-schema-v2.json",
+  "schema_sha256": "5162ae274185d9654f3225e629b0138f9d9fb237b74c0ff919aec0ab454fe14c",
+  "evaluation": "five text cases passed; native failed; see live.log",
+  "files": {
+    "education.json": "1f3eb20ab3a1bc7727abd8e83feb89b5e4cec5ed770e7d8bc0f999bb0b4458d6",
+    "education.validated.json": "d3dedda9be3367ba53e7d03bd61ba3509ec89944e7774c6b0f21a1351ada09a3",
+    "finance.json": "38eb0b5ce6f4e9aa7a707231d2bcc69c90f687daba52ff1d691040adf57e6b96",
+    "finance.validated.json": "c165bfa27267d68179c2843a53855230945b8217c7146522d0e4802435850934",
+    "finance_explicit_control.json": "1f15024afe4599a5d9d5e93170ba92d1703e86371b5bbcfaee5e950f641f3e92",
+    "finance_explicit_control.validated.json": "f90162cb7950e9aefe3c621b14c69c8e3fbc7588bc4078f5bc13bfdd753f998b",
+    "health.json": "959f82952bb8bc2b72a022148be60810ccfcaf6b6806db59e592a3eba424e4b1",
+    "health.validated.json": "bc4ea42eb0271a26363034550abab15c095ec799e15606ce0195caf2c2fc4dd1",
+    "live.log": "503727cf7125996f74f2b618c8af24cedac71266ef1a04c3bafcd07a9514c677",
+    "native-report-chunk-0.json": "05b55905f9205b4bce325782239c91f78540836b879410f17672aa84e9abbd0b",
+    "native-report-chunk-1.json": "1bf72e00da5b2a23fb6cd5ff628a1e5cc55cad36782ad7d35645b09aaabc162d",
+    "property.json": "751b22049e5db1a5a6c8ecd8556f28e922c45ff40249bb723639b09f15587f5f",
+    "property.validated.json": "2175588d9c1d4a049c610d7666e01dc464590867f746b3252699c13b8840e7cd"
+  }
+}

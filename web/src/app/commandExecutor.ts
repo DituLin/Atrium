@@ -104,6 +104,7 @@ export function createCommandExecutor(ports: ExecutorPorts): CommandExecutor {
           const pending = pendingAckFor(decision);
           if (pending) {
             held = pending;
+ if(decision.route.name==='family')dispatch({type:'archives.open',commandId:command.command_id});
             // Every show needs this image generation's load, even when a
             // previous visit decoded the same photo. Old callbacks are ignored.
             if (decision.route.name === 'photo') {
@@ -136,7 +137,7 @@ export function createCommandExecutor(ports: ExecutorPorts): CommandExecutor {
       }
       if (viewerStatus === 'missing' || viewerStatus === 'error') {
         held = null;
-        sendAck(failedAck(pending));
+        sendAck(failedAck(pending,pending.command.kind==='archive'?'archive_unavailable':'photo_unavailable'));
       }
     },
 

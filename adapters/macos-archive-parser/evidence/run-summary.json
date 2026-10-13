@@ -1,0 +1,1662 @@
+{
+  "generator_versions": {
+    "pillow": "12.3.0",
+    "pypdf": "6.10.0",
+    "reportlab": "4.4.9"
+  },
+  "files": [
+    {
+      "file": "101-pages.pdf",
+      "sha256": "6cd4108535ef979f33597e3a71346a0aa5b7d04bcdb9498c9b012f2bf88667ab",
+      "status": "limit_exceeded",
+      "seconds": 0.056,
+      "pages": 0,
+      "observations": 0
+    },
+    {
+      "file": "annotations.pdf",
+      "sha256": "886239d6ada1e459015a18443efcf81abe0296ba24b5cc5365f975df185220be",
+      "status": "partial",
+      "seconds": 0.273,
+      "pages": 1,
+      "observations": 10
+    },
+    {
+      "file": "bad.pdf",
+      "sha256": "5aaecbe6da9578a66f710cad1fca792f4402d75a640498e5e031d31973a6634d",
+      "status": "invalid",
+      "seconds": 0.014,
+      "pages": 0,
+      "observations": 0
+    },
+    {
+      "file": "bad.png",
+      "sha256": "50ed0368b883402241db50860e19ca9b5d7ab9e933c9c089c03303d09228a82c",
+      "status": "invalid",
+      "seconds": 0.013,
+      "pages": 0,
+      "observations": 0
+    },
+    {
+      "file": "blank.pdf",
+      "sha256": "0356e4fda7ccff256d84d9486360d26fa8cb6fa1cb5045fac9b8b61aa3991d67",
+      "status": "empty",
+      "seconds": 0.163,
+      "pages": 1,
+      "observations": 0
+    },
+    {
+      "file": "blank.png",
+      "sha256": "7d8e9660204cdcf86ed161f3280f1120cb353309ebb3fa31d78dbf3bfddfddb1",
+      "status": "empty",
+      "seconds": 0.16,
+      "pages": 1,
+      "observations": 0
+    },
+    {
+      "file": "conflict.pdf",
+      "sha256": "49b4bd346972429418bb8038ba0d868668c93161e8ef75623a5914415f3b7c56",
+      "status": "parsed",
+      "seconds": 0.201,
+      "pages": 1,
+      "observations": 2
+    },
+    {
+      "file": "crop-intersection.pdf",
+      "sha256": "f08575269af51be1147f00adb91086cebb93c56f13e83a46288ac5a14c4d1520",
+      "status": "parsed",
+      "seconds": 0.201,
+      "pages": 1,
+      "observations": 6
+    },
+    {
+      "file": "exif-1.jpg",
+      "sha256": "0540602c759c9612335f3b3a212961116cc7db9ce02a5a9cef9f253084251458",
+      "status": "parsed",
+      "seconds": 0.308,
+      "pages": 1,
+      "observations": 19,
+      "field_locations": [
+        {
+          "text": "合成健康报告 SYNTHETIC REPORT",
+          "iou": 0.671,
+          "matched": true
+        },
+        {
+          "text": "姓名：林明 Alice Lin",
+          "iou": 0.89,
+          "matched": true
+        },
+        {
+          "text": "出生日期：1988-03-12",
+          "iou": 0.841,
+          "matched": true
+        },
+        {
+          "text": "报告日期：2026-10-04",
+          "iou": 0.836,
+          "matched": true
+        },
+        {
+          "text": "项目",
+          "iou": 0.741,
+          "matched": true
+        },
+        {
+          "text": "数值",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "单位",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "参考区间",
+          "iou": 0.853,
+          "matched": true
+        },
+        {
+          "text": "血红蛋白",
+          "iou": 0.749,
+          "matched": true
+        },
+        {
+          "text": "145.6",
+          "iou": 0.471,
+          "matched": true
+        },
+        {
+          "text": "g/L",
+          "iou": 0.766,
+          "matched": true
+        },
+        {
+          "text": "130-175",
+          "iou": 0.928,
+          "matched": true
+        },
+        {
+          "text": "费用 Amount",
+          "iou": 0.782,
+          "matched": true
+        },
+        {
+          "text": "1234.50",
+          "iou": 0.499,
+          "matched": true
+        },
+        {
+          "text": "CNY",
+          "iou": 0.658,
+          "matched": true
+        },
+        {
+          "text": "变化 Delta",
+          "iou": 0.786,
+          "matched": true
+        },
+        {
+          "text": "-2.75",
+          "iou": 0.459,
+          "matched": true
+        },
+        {
+          "text": "mmol/L",
+          "iou": 0.622,
+          "matched": true
+        },
+        {
+          "text": "医生：王华 Dr Wang",
+          "iou": 0.848,
+          "matched": true
+        }
+      ],
+      "matched_fields": 19
+    },
+    {
+      "file": "exif-2.jpg",
+      "sha256": "e107f3c29def03f2fee08e8b06551039745771f6eed0e79f5b9ff22b48316d12",
+      "status": "parsed",
+      "seconds": 0.335,
+      "pages": 1,
+      "observations": 19,
+      "field_locations": [
+        {
+          "text": "合成健康报告 SYNTHETIC REPORT",
+          "iou": 0.671,
+          "matched": true
+        },
+        {
+          "text": "姓名：林明 Alice Lin",
+          "iou": 0.89,
+          "matched": true
+        },
+        {
+          "text": "出生日期：1988-03-12",
+          "iou": 0.841,
+          "matched": true
+        },
+        {
+          "text": "报告日期：2026-10-04",
+          "iou": 0.836,
+          "matched": true
+        },
+        {
+          "text": "项目",
+          "iou": 0.741,
+          "matched": true
+        },
+        {
+          "text": "数值",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "单位",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "参考区间",
+          "iou": 0.855,
+          "matched": true
+        },
+        {
+          "text": "血红蛋白",
+          "iou": 0.749,
+          "matched": true
+        },
+        {
+          "text": "145.6",
+          "iou": 0.482,
+          "matched": true
+        },
+        {
+          "text": "g/L",
+          "iou": 0.766,
+          "matched": true
+        },
+        {
+          "text": "130-175",
+          "iou": 0.928,
+          "matched": true
+        },
+        {
+          "text": "费用 Amount",
+          "iou": 0.782,
+          "matched": true
+        },
+        {
+          "text": "1234.50",
+          "iou": 0.499,
+          "matched": true
+        },
+        {
+          "text": "CNY",
+          "iou": 0.658,
+          "matched": true
+        },
+        {
+          "text": "变化 Delta",
+          "iou": 0.786,
+          "matched": true
+        },
+        {
+          "text": "-2.75",
+          "iou": 0.459,
+          "matched": true
+        },
+        {
+          "text": "mmol/L",
+          "iou": 0.622,
+          "matched": true
+        },
+        {
+          "text": "医生：王华 Dr Wang",
+          "iou": 0.837,
+          "matched": true
+        }
+      ],
+      "matched_fields": 19
+    },
+    {
+      "file": "exif-3.jpg",
+      "sha256": "1b6bb13ae4507b4dd307903d3c88a5dcad7aa07b942c88a9a50dc707cf6dd284",
+      "status": "parsed",
+      "seconds": 0.325,
+      "pages": 1,
+      "observations": 19,
+      "field_locations": [
+        {
+          "text": "合成健康报告 SYNTHETIC REPORT",
+          "iou": 0.671,
+          "matched": true
+        },
+        {
+          "text": "姓名：林明 Alice Lin",
+          "iou": 0.89,
+          "matched": true
+        },
+        {
+          "text": "出生日期：1988-03-12",
+          "iou": 0.841,
+          "matched": true
+        },
+        {
+          "text": "报告日期：2026-10-04",
+          "iou": 0.836,
+          "matched": true
+        },
+        {
+          "text": "项目",
+          "iou": 0.741,
+          "matched": true
+        },
+        {
+          "text": "数值",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "单位",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "参考区间",
+          "iou": 0.855,
+          "matched": true
+        },
+        {
+          "text": "血红蛋白",
+          "iou": 0.749,
+          "matched": true
+        },
+        {
+          "text": "145.6",
+          "iou": 0.474,
+          "matched": true
+        },
+        {
+          "text": "g/L",
+          "iou": 0.766,
+          "matched": true
+        },
+        {
+          "text": "130-175",
+          "iou": 0.928,
+          "matched": true
+        },
+        {
+          "text": "费用 Amount",
+          "iou": 0.782,
+          "matched": true
+        },
+        {
+          "text": "1234.50",
+          "iou": 0.499,
+          "matched": true
+        },
+        {
+          "text": "CNY",
+          "iou": 0.658,
+          "matched": true
+        },
+        {
+          "text": "变化 Delta",
+          "iou": 0.786,
+          "matched": true
+        },
+        {
+          "text": "-2.75",
+          "iou": 0.459,
+          "matched": true
+        },
+        {
+          "text": "mmol/L",
+          "iou": 0.622,
+          "matched": true
+        },
+        {
+          "text": "医生：王华 Dr Wang",
+          "iou": 0.837,
+          "matched": true
+        }
+      ],
+      "matched_fields": 19
+    },
+    {
+      "file": "exif-4.jpg",
+      "sha256": "b52ec9782e489d95887d5ff55cc49ebbf7f28397662e711c857b89422900dbf1",
+      "status": "parsed",
+      "seconds": 0.333,
+      "pages": 1,
+      "observations": 19,
+      "field_locations": [
+        {
+          "text": "合成健康报告 SYNTHETIC REPORT",
+          "iou": 0.671,
+          "matched": true
+        },
+        {
+          "text": "姓名：林明 Alice Lin",
+          "iou": 0.89,
+          "matched": true
+        },
+        {
+          "text": "出生日期：1988-03-12",
+          "iou": 0.841,
+          "matched": true
+        },
+        {
+          "text": "报告日期：2026-10-04",
+          "iou": 0.836,
+          "matched": true
+        },
+        {
+          "text": "项目",
+          "iou": 0.741,
+          "matched": true
+        },
+        {
+          "text": "数值",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "单位",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "参考区间",
+          "iou": 0.855,
+          "matched": true
+        },
+        {
+          "text": "血红蛋白",
+          "iou": 0.749,
+          "matched": true
+        },
+        {
+          "text": "145.6",
+          "iou": 0.471,
+          "matched": true
+        },
+        {
+          "text": "g/L",
+          "iou": 0.766,
+          "matched": true
+        },
+        {
+          "text": "130-175",
+          "iou": 0.928,
+          "matched": true
+        },
+        {
+          "text": "费用 Amount",
+          "iou": 0.782,
+          "matched": true
+        },
+        {
+          "text": "1234.50",
+          "iou": 0.499,
+          "matched": true
+        },
+        {
+          "text": "CNY",
+          "iou": 0.658,
+          "matched": true
+        },
+        {
+          "text": "变化 Delta",
+          "iou": 0.786,
+          "matched": true
+        },
+        {
+          "text": "-2.75",
+          "iou": 0.459,
+          "matched": true
+        },
+        {
+          "text": "mmol/L",
+          "iou": 0.622,
+          "matched": true
+        },
+        {
+          "text": "医生：王华 Dr Wang",
+          "iou": 0.848,
+          "matched": true
+        }
+      ],
+      "matched_fields": 19
+    },
+    {
+      "file": "exif-5.jpg",
+      "sha256": "dd087dc1856279228e82a978400d689b759014f253b4febc3d547e7f84a07c4f",
+      "status": "parsed",
+      "seconds": 0.322,
+      "pages": 1,
+      "observations": 19,
+      "field_locations": [
+        {
+          "text": "合成健康报告 SYNTHETIC REPORT",
+          "iou": 0.671,
+          "matched": true
+        },
+        {
+          "text": "姓名：林明 Alice Lin",
+          "iou": 0.89,
+          "matched": true
+        },
+        {
+          "text": "出生日期：1988-03-12",
+          "iou": 0.841,
+          "matched": true
+        },
+        {
+          "text": "报告日期：2026-10-04",
+          "iou": 0.836,
+          "matched": true
+        },
+        {
+          "text": "项目",
+          "iou": 0.741,
+          "matched": true
+        },
+        {
+          "text": "数值",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "单位",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "参考区间",
+          "iou": 0.855,
+          "matched": true
+        },
+        {
+          "text": "血红蛋白",
+          "iou": 0.749,
+          "matched": true
+        },
+        {
+          "text": "145.6",
+          "iou": 0.465,
+          "matched": true
+        },
+        {
+          "text": "g/L",
+          "iou": 0.766,
+          "matched": true
+        },
+        {
+          "text": "130-175",
+          "iou": 0.928,
+          "matched": true
+        },
+        {
+          "text": "费用 Amount",
+          "iou": 0.782,
+          "matched": true
+        },
+        {
+          "text": "1234.50",
+          "iou": 0.499,
+          "matched": true
+        },
+        {
+          "text": "CNY",
+          "iou": 0.658,
+          "matched": true
+        },
+        {
+          "text": "变化 Delta",
+          "iou": 0.786,
+          "matched": true
+        },
+        {
+          "text": "-2.75",
+          "iou": 0.459,
+          "matched": true
+        },
+        {
+          "text": "mmol/L",
+          "iou": 0.652,
+          "matched": true
+        },
+        {
+          "text": "医生：王华 Dr Wang",
+          "iou": 0.837,
+          "matched": true
+        }
+      ],
+      "matched_fields": 19
+    },
+    {
+      "file": "exif-6.jpg",
+      "sha256": "69ec0850a08287242efa571538d4f3089aa97c23d90faf2b36c586e6e1d8c79d",
+      "status": "parsed",
+      "seconds": 0.313,
+      "pages": 1,
+      "observations": 19,
+      "field_locations": [
+        {
+          "text": "合成健康报告 SYNTHETIC REPORT",
+          "iou": 0.671,
+          "matched": true
+        },
+        {
+          "text": "姓名：林明 Alice Lin",
+          "iou": 0.89,
+          "matched": true
+        },
+        {
+          "text": "出生日期：1988-03-12",
+          "iou": 0.841,
+          "matched": true
+        },
+        {
+          "text": "报告日期：2026-10-04",
+          "iou": 0.836,
+          "matched": true
+        },
+        {
+          "text": "项目",
+          "iou": 0.741,
+          "matched": true
+        },
+        {
+          "text": "数值",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "单位",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "参考区间",
+          "iou": 0.855,
+          "matched": true
+        },
+        {
+          "text": "血红蛋白",
+          "iou": 0.749,
+          "matched": true
+        },
+        {
+          "text": "145.6",
+          "iou": 0.464,
+          "matched": true
+        },
+        {
+          "text": "g/L",
+          "iou": 0.766,
+          "matched": true
+        },
+        {
+          "text": "130-175",
+          "iou": 0.928,
+          "matched": true
+        },
+        {
+          "text": "费用 Amount",
+          "iou": 0.782,
+          "matched": true
+        },
+        {
+          "text": "1234.50",
+          "iou": 0.499,
+          "matched": true
+        },
+        {
+          "text": "CNY",
+          "iou": 0.658,
+          "matched": true
+        },
+        {
+          "text": "变化 Delta",
+          "iou": 0.786,
+          "matched": true
+        },
+        {
+          "text": "-2.75",
+          "iou": 0.459,
+          "matched": true
+        },
+        {
+          "text": "mmol/L",
+          "iou": 0.652,
+          "matched": true
+        },
+        {
+          "text": "医生：王华 Dr Wang",
+          "iou": 0.837,
+          "matched": true
+        }
+      ],
+      "matched_fields": 19
+    },
+    {
+      "file": "exif-7.jpg",
+      "sha256": "d1d84cf04a4ef4c8a1f436dee7d88f2588860fc9047dfe970dc369d5bf3906a3",
+      "status": "parsed",
+      "seconds": 0.319,
+      "pages": 1,
+      "observations": 19,
+      "field_locations": [
+        {
+          "text": "合成健康报告 SYNTHETIC REPORT",
+          "iou": 0.671,
+          "matched": true
+        },
+        {
+          "text": "姓名：林明 Alice Lin",
+          "iou": 0.89,
+          "matched": true
+        },
+        {
+          "text": "出生日期：1988-03-12",
+          "iou": 0.841,
+          "matched": true
+        },
+        {
+          "text": "报告日期：2026-10-04",
+          "iou": 0.836,
+          "matched": true
+        },
+        {
+          "text": "项目",
+          "iou": 0.741,
+          "matched": true
+        },
+        {
+          "text": "数值",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "单位",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "参考区间",
+          "iou": 0.855,
+          "matched": true
+        },
+        {
+          "text": "血红蛋白",
+          "iou": 0.749,
+          "matched": true
+        },
+        {
+          "text": "145.6",
+          "iou": 0.465,
+          "matched": true
+        },
+        {
+          "text": "g/L",
+          "iou": 0.766,
+          "matched": true
+        },
+        {
+          "text": "130-175",
+          "iou": 0.933,
+          "matched": true
+        },
+        {
+          "text": "费用 Amount",
+          "iou": 0.782,
+          "matched": true
+        },
+        {
+          "text": "1234.50",
+          "iou": 0.499,
+          "matched": true
+        },
+        {
+          "text": "CNY",
+          "iou": 0.658,
+          "matched": true
+        },
+        {
+          "text": "变化 Delta",
+          "iou": 0.786,
+          "matched": true
+        },
+        {
+          "text": "-2.75",
+          "iou": 0.459,
+          "matched": true
+        },
+        {
+          "text": "mmol/L",
+          "iou": 0.652,
+          "matched": true
+        },
+        {
+          "text": "医生：王华 Dr Wang",
+          "iou": 0.837,
+          "matched": true
+        }
+      ],
+      "matched_fields": 19
+    },
+    {
+      "file": "exif-8.jpg",
+      "sha256": "97cf89b9aa499288b030733fd272d7ff95e35b76a1831ae6ca7138952318196e",
+      "status": "parsed",
+      "seconds": 0.316,
+      "pages": 1,
+      "observations": 19,
+      "field_locations": [
+        {
+          "text": "合成健康报告 SYNTHETIC REPORT",
+          "iou": 0.671,
+          "matched": true
+        },
+        {
+          "text": "姓名：林明 Alice Lin",
+          "iou": 0.89,
+          "matched": true
+        },
+        {
+          "text": "出生日期：1988-03-12",
+          "iou": 0.841,
+          "matched": true
+        },
+        {
+          "text": "报告日期：2026-10-04",
+          "iou": 0.836,
+          "matched": true
+        },
+        {
+          "text": "项目",
+          "iou": 0.741,
+          "matched": true
+        },
+        {
+          "text": "数值",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "单位",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "参考区间",
+          "iou": 0.855,
+          "matched": true
+        },
+        {
+          "text": "血红蛋白",
+          "iou": 0.749,
+          "matched": true
+        },
+        {
+          "text": "145.6",
+          "iou": 0.465,
+          "matched": true
+        },
+        {
+          "text": "g/L",
+          "iou": 0.766,
+          "matched": true
+        },
+        {
+          "text": "130-175",
+          "iou": 0.933,
+          "matched": true
+        },
+        {
+          "text": "费用 Amount",
+          "iou": 0.782,
+          "matched": true
+        },
+        {
+          "text": "1234.50",
+          "iou": 0.499,
+          "matched": true
+        },
+        {
+          "text": "CNY",
+          "iou": 0.658,
+          "matched": true
+        },
+        {
+          "text": "变化 Delta",
+          "iou": 0.786,
+          "matched": true
+        },
+        {
+          "text": "-2.75",
+          "iou": 0.459,
+          "matched": true
+        },
+        {
+          "text": "mmol/L",
+          "iou": 0.652,
+          "matched": true
+        },
+        {
+          "text": "医生：王华 Dr Wang",
+          "iou": 0.837,
+          "matched": true
+        }
+      ],
+      "matched_fields": 19
+    },
+    {
+      "file": "footer.pdf",
+      "sha256": "556bec3773da7b40b7fbc5ab7acd24691170ebd919b99b6f907002d50dd63769",
+      "status": "parsed",
+      "seconds": 0.316,
+      "pages": 1,
+      "observations": 21
+    },
+    {
+      "file": "geometry.pdf",
+      "sha256": "e1490a32db3a296f681bd966519fd1258912aff316a008b8e081234f94f821ae",
+      "status": "parsed",
+      "seconds": 0.312,
+      "pages": 4,
+      "observations": 24
+    },
+    {
+      "file": "locked.pdf",
+      "sha256": "97d9948fd64468b5adf6f3ab42f643475299651ab73fbfa3ab94d567dac0f3fb",
+      "status": "encrypted",
+      "seconds": 0.054,
+      "pages": 0,
+      "observations": 0
+    },
+    {
+      "file": "mixed.pdf",
+      "sha256": "b422750e5fdf87ea1537a5dc77990a73675d1573825e9415463c2a9d13850bf3",
+      "status": "parsed",
+      "seconds": 0.454,
+      "pages": 3,
+      "observations": 29
+    },
+    {
+      "file": "multi.tiff",
+      "sha256": "b5fbb889ee7c290eb3d449a74c0b700e1ab593620bb0bcb3055cb39e2185ccd4",
+      "status": "unsupported",
+      "seconds": 0.022,
+      "pages": 0,
+      "observations": 0
+    },
+    {
+      "file": "native.pdf",
+      "sha256": "59eaf9a1c2ea485838acf1e39b300188afc83129d747fa8c024818638470ea76",
+      "status": "parsed",
+      "seconds": 0.28,
+      "pages": 1,
+      "observations": 10
+    },
+    {
+      "file": "nonbmp.pdf",
+      "sha256": "1e1588acf50c7217a555edb4a02d07a65edc966e8e384cd3a4a3cd8d86f2f740",
+      "status": "parsed",
+      "seconds": 0.192,
+      "pages": 1,
+      "observations": 2
+    },
+    {
+      "file": "oversize.png",
+      "sha256": "b661ce3392a59fa9353b3d4aaf83fc3568a0f3813378432f1a5f9612a5bfe94b",
+      "status": "limit_exceeded",
+      "seconds": 0.013,
+      "pages": 0,
+      "observations": 0
+    },
+    {
+      "file": "partial.pdf",
+      "sha256": "099d74f186ebf3a12360a7e9c9e808884dc9cdd308d804d1ca6c61c31a9c967c",
+      "status": "partial",
+      "seconds": 0.282,
+      "pages": 1,
+      "observations": 10
+    },
+    {
+      "file": "physical-180.png",
+      "sha256": "cb5e84d98a4221d8a65488a5b2f4fa8070ce6036d459fd826c14c802ffe05ae6",
+      "status": "parsed",
+      "seconds": 0.31,
+      "pages": 1,
+      "observations": 19,
+      "field_locations": [
+        {
+          "text": "合成健康报告 SYNTHETIC REPORT",
+          "iou": 0.671,
+          "matched": true
+        },
+        {
+          "text": "姓名：林明 Alice Lin",
+          "iou": 0.89,
+          "matched": true
+        },
+        {
+          "text": "出生日期：1988-03-12",
+          "iou": 0.746,
+          "matched": true
+        },
+        {
+          "text": "报告日期：2026-10-04",
+          "iou": 0.701,
+          "matched": true
+        },
+        {
+          "text": "项目",
+          "iou": 0.756,
+          "matched": true
+        },
+        {
+          "text": "数值",
+          "iou": 0.792,
+          "matched": true
+        },
+        {
+          "text": "单位",
+          "iou": 0.776,
+          "matched": true
+        },
+        {
+          "text": "参考区间",
+          "iou": 0.906,
+          "matched": true
+        },
+        {
+          "text": "血红蛋白",
+          "iou": 0.781,
+          "matched": true
+        },
+        {
+          "text": "145.6",
+          "iou": 0.515,
+          "matched": true
+        },
+        {
+          "text": "g/L",
+          "iou": 0.666,
+          "matched": true
+        },
+        {
+          "text": "130-175",
+          "iou": 0.859,
+          "matched": true
+        },
+        {
+          "text": "费用 Amount",
+          "iou": 0.767,
+          "matched": true
+        },
+        {
+          "text": "1234.50",
+          "iou": 0.543,
+          "matched": true
+        },
+        {
+          "text": "CNY",
+          "iou": 0.631,
+          "matched": true
+        },
+        {
+          "text": "变化 Delta",
+          "iou": 0.783,
+          "matched": true
+        },
+        {
+          "text": "-2.75",
+          "iou": 0.647,
+          "matched": true
+        },
+        {
+          "text": "mmol/L",
+          "iou": 0.742,
+          "matched": true
+        },
+        {
+          "text": "医生：王华 Dr Wang",
+          "iou": 0.919,
+          "matched": true
+        }
+      ],
+      "matched_fields": 19
+    },
+    {
+      "file": "physical-270.png",
+      "sha256": "c4a693c52e600e149dafd9b33e6d7a3a8a1abe71c03dc9824934098bd75d508c",
+      "status": "parsed",
+      "seconds": 0.31,
+      "pages": 1,
+      "observations": 19,
+      "field_locations": [
+        {
+          "text": "合成健康报告 SYNTHETIC REPORT",
+          "iou": 0.678,
+          "matched": true
+        },
+        {
+          "text": "姓名：林明 Alice Lin",
+          "iou": 0.945,
+          "matched": true
+        },
+        {
+          "text": "出生日期：1988-03-12",
+          "iou": 0.838,
+          "matched": true
+        },
+        {
+          "text": "报告日期：2026-10-04",
+          "iou": 0.887,
+          "matched": true
+        },
+        {
+          "text": "项目",
+          "iou": 0.789,
+          "matched": true
+        },
+        {
+          "text": "数值",
+          "iou": 0.837,
+          "matched": true
+        },
+        {
+          "text": "单位",
+          "iou": 0.837,
+          "matched": true
+        },
+        {
+          "text": "参考区间",
+          "iou": 0.912,
+          "matched": true
+        },
+        {
+          "text": "血红蛋白",
+          "iou": 0.842,
+          "matched": true
+        },
+        {
+          "text": "145.6",
+          "iou": 0.623,
+          "matched": true
+        },
+        {
+          "text": "g/L",
+          "iou": 0.642,
+          "matched": true
+        },
+        {
+          "text": "130-175",
+          "iou": 0.728,
+          "matched": true
+        },
+        {
+          "text": "费用 Amount",
+          "iou": 0.746,
+          "matched": true
+        },
+        {
+          "text": "1234.50",
+          "iou": 0.617,
+          "matched": true
+        },
+        {
+          "text": "CNY",
+          "iou": 0.681,
+          "matched": true
+        },
+        {
+          "text": "变化 Delta",
+          "iou": 0.831,
+          "matched": true
+        },
+        {
+          "text": "-2.75",
+          "iou": 0.517,
+          "matched": true
+        },
+        {
+          "text": "mmol/L",
+          "iou": 0.66,
+          "matched": true
+        },
+        {
+          "text": "医生：王华 Dr Wang",
+          "iou": 0.816,
+          "matched": true
+        }
+      ],
+      "matched_fields": 19
+    },
+    {
+      "file": "physical-90.png",
+      "sha256": "9b1142f28a53640b32b96131555bae92342237120434026f0db920fb28e443c4",
+      "status": "parsed",
+      "seconds": 0.31,
+      "pages": 1,
+      "observations": 19,
+      "field_locations": [
+        {
+          "text": "合成健康报告 SYNTHETIC REPORT",
+          "iou": 0.608,
+          "matched": true
+        },
+        {
+          "text": "姓名：林明 Alice Lin",
+          "iou": 0.89,
+          "matched": true
+        },
+        {
+          "text": "出生日期：1988-03-12",
+          "iou": 0.882,
+          "matched": true
+        },
+        {
+          "text": "报告日期：2026-10-04",
+          "iou": 0.794,
+          "matched": true
+        },
+        {
+          "text": "项目",
+          "iou": 0.717,
+          "matched": true
+        },
+        {
+          "text": "数值",
+          "iou": 0.836,
+          "matched": true
+        },
+        {
+          "text": "单位",
+          "iou": 0.719,
+          "matched": true
+        },
+        {
+          "text": "参考区间",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "血红蛋白",
+          "iou": 0.861,
+          "matched": true
+        },
+        {
+          "text": "145.6",
+          "iou": 0.526,
+          "matched": true
+        },
+        {
+          "text": "g/L",
+          "iou": 0.768,
+          "matched": true
+        },
+        {
+          "text": "130-175",
+          "iou": 0.877,
+          "matched": true
+        },
+        {
+          "text": "费用 Amount",
+          "iou": 0.873,
+          "matched": true
+        },
+        {
+          "text": "1234.50",
+          "iou": 0.56,
+          "matched": true
+        },
+        {
+          "text": "CNY",
+          "iou": 0.709,
+          "matched": true
+        },
+        {
+          "text": "变化 Delta",
+          "iou": 0.851,
+          "matched": true
+        },
+        {
+          "text": "-2.75",
+          "iou": 0.569,
+          "matched": true
+        },
+        {
+          "text": "mmol/L",
+          "iou": 0.812,
+          "matched": true
+        },
+        {
+          "text": "医生：王华 Dr Wang",
+          "iou": 0.927,
+          "matched": true
+        }
+      ],
+      "matched_fields": 19
+    },
+    {
+      "file": "report.jpg",
+      "sha256": "29e5570c033ab9dee1f70829a134591bd48cb58feba837b6361a3d0441b396c4",
+      "status": "parsed",
+      "seconds": 0.307,
+      "pages": 1,
+      "observations": 19,
+      "field_locations": [
+        {
+          "text": "合成健康报告 SYNTHETIC REPORT",
+          "iou": 0.671,
+          "matched": true
+        },
+        {
+          "text": "姓名：林明 Alice Lin",
+          "iou": 0.89,
+          "matched": true
+        },
+        {
+          "text": "出生日期：1988-03-12",
+          "iou": 0.841,
+          "matched": true
+        },
+        {
+          "text": "报告日期：2026-10-04",
+          "iou": 0.836,
+          "matched": true
+        },
+        {
+          "text": "项目",
+          "iou": 0.741,
+          "matched": true
+        },
+        {
+          "text": "数值",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "单位",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "参考区间",
+          "iou": 0.853,
+          "matched": true
+        },
+        {
+          "text": "血红蛋白",
+          "iou": 0.749,
+          "matched": true
+        },
+        {
+          "text": "145.6",
+          "iou": 0.471,
+          "matched": true
+        },
+        {
+          "text": "g/L",
+          "iou": 0.766,
+          "matched": true
+        },
+        {
+          "text": "130-175",
+          "iou": 0.928,
+          "matched": true
+        },
+        {
+          "text": "费用 Amount",
+          "iou": 0.782,
+          "matched": true
+        },
+        {
+          "text": "1234.50",
+          "iou": 0.499,
+          "matched": true
+        },
+        {
+          "text": "CNY",
+          "iou": 0.658,
+          "matched": true
+        },
+        {
+          "text": "变化 Delta",
+          "iou": 0.786,
+          "matched": true
+        },
+        {
+          "text": "-2.75",
+          "iou": 0.459,
+          "matched": true
+        },
+        {
+          "text": "mmol/L",
+          "iou": 0.622,
+          "matched": true
+        },
+        {
+          "text": "医生：王华 Dr Wang",
+          "iou": 0.848,
+          "matched": true
+        }
+      ],
+      "matched_fields": 19
+    },
+    {
+      "file": "report.png",
+      "sha256": "49d7b1b278b6b7d670344da7ad310b98a19a1c0b87ac270ca986dc0dc9441980",
+      "status": "parsed",
+      "seconds": 0.311,
+      "pages": 1,
+      "observations": 19,
+      "field_locations": [
+        {
+          "text": "合成健康报告 SYNTHETIC REPORT",
+          "iou": 0.671,
+          "matched": true
+        },
+        {
+          "text": "姓名：林明 Alice Lin",
+          "iou": 0.89,
+          "matched": true
+        },
+        {
+          "text": "出生日期：1988-03-12",
+          "iou": 0.841,
+          "matched": true
+        },
+        {
+          "text": "报告日期：2026-10-04",
+          "iou": 0.836,
+          "matched": true
+        },
+        {
+          "text": "项目",
+          "iou": 0.741,
+          "matched": true
+        },
+        {
+          "text": "数值",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "单位",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "参考区间",
+          "iou": 0.855,
+          "matched": true
+        },
+        {
+          "text": "血红蛋白",
+          "iou": 0.792,
+          "matched": true
+        },
+        {
+          "text": "145.6",
+          "iou": 0.491,
+          "matched": true
+        },
+        {
+          "text": "g/L",
+          "iou": 0.766,
+          "matched": true
+        },
+        {
+          "text": "130-175",
+          "iou": 0.927,
+          "matched": true
+        },
+        {
+          "text": "费用 Amount",
+          "iou": 0.772,
+          "matched": true
+        },
+        {
+          "text": "1234.50",
+          "iou": 0.486,
+          "matched": true
+        },
+        {
+          "text": "CNY",
+          "iou": 0.658,
+          "matched": true
+        },
+        {
+          "text": "变化 Delta",
+          "iou": 0.786,
+          "matched": true
+        },
+        {
+          "text": "-2.75",
+          "iou": 0.459,
+          "matched": true
+        },
+        {
+          "text": "mmol/L",
+          "iou": 0.652,
+          "matched": true
+        },
+        {
+          "text": "医生：王华 Dr Wang",
+          "iou": 0.837,
+          "matched": true
+        }
+      ],
+      "matched_fields": 19
+    },
+    {
+      "file": "report.webp",
+      "sha256": "b8bea2edb0e04b1ccd1d1dea8dc6213114d163df1215c7a48e0c748d8c2cf867",
+      "status": "parsed",
+      "seconds": 0.309,
+      "pages": 1,
+      "observations": 19,
+      "field_locations": [
+        {
+          "text": "合成健康报告 SYNTHETIC REPORT",
+          "iou": 0.671,
+          "matched": true
+        },
+        {
+          "text": "姓名：林明 Alice Lin",
+          "iou": 0.89,
+          "matched": true
+        },
+        {
+          "text": "出生日期：1988-03-12",
+          "iou": 0.841,
+          "matched": true
+        },
+        {
+          "text": "报告日期：2026-10-04",
+          "iou": 0.836,
+          "matched": true
+        },
+        {
+          "text": "项目",
+          "iou": 0.741,
+          "matched": true
+        },
+        {
+          "text": "数值",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "单位",
+          "iou": 0.835,
+          "matched": true
+        },
+        {
+          "text": "参考区间",
+          "iou": 0.855,
+          "matched": true
+        },
+        {
+          "text": "血红蛋白",
+          "iou": 0.792,
+          "matched": true
+        },
+        {
+          "text": "145.6",
+          "iou": 0.491,
+          "matched": true
+        },
+        {
+          "text": "g/L",
+          "iou": 0.766,
+          "matched": true
+        },
+        {
+          "text": "130-175",
+          "iou": 0.927,
+          "matched": true
+        },
+        {
+          "text": "费用 Amount",
+          "iou": 0.772,
+          "matched": true
+        },
+        {
+          "text": "1234.50",
+          "iou": 0.486,
+          "matched": true
+        },
+        {
+          "text": "CNY",
+          "iou": 0.658,
+          "matched": true
+        },
+        {
+          "text": "变化 Delta",
+          "iou": 0.786,
+          "matched": true
+        },
+        {
+          "text": "-2.75",
+          "iou": 0.459,
+          "matched": true
+        },
+        {
+          "text": "mmol/L",
+          "iou": 0.652,
+          "matched": true
+        },
+        {
+          "text": "医生：王华 Dr Wang",
+          "iou": 0.837,
+          "matched": true
+        }
+      ],
+      "matched_fields": 19
+    },
+    {
+      "file": "restricted.pdf",
+      "sha256": "2781e246600749e26ff8ae0bbdf75cfe4562e4a422420658c295c48cde5ad237",
+      "status": "parsed",
+      "seconds": 0.278,
+      "pages": 1,
+      "observations": 10
+    },
+    {
+      "file": "scanned.pdf",
+      "sha256": "db0dbbcd3115e1571b2b73793e3118e3dc5e4b56c33648fe1298cc3e91fb5d1d",
+      "status": "parsed",
+      "seconds": 0.311,
+      "pages": 1,
+      "observations": 19
+    }
+  ],
+  "engine": {
+    "build": "9c9c4ac321b6debbf9909e42469671f4ee6f726f557a7712afb6e657828cdf1c",
+    "helper": "atrium-native/1",
+    "language_correction": false,
+    "languages": [
+      "zh-Hans",
+      "en-US"
+    ],
+    "os_build": "24C101",
+    "recognition": "accurate",
+    "vision_revision": 3
+  },
+  "timing": {
+    "median": 0.308,
+    "maximum": 0.454,
+    "total": 8.023
+  }
+}

@@ -37,6 +37,13 @@ storage:
   cache_budget_bytes: 10737418240     # 10 GiB
   min_free_bytes: 5368709120          # pause preview generation below 5 GiB free
 
+# Durable local intake; independent of the legacy family_archive NAS exporter.
+# No intake routes or archive consumers run unless explicitly enabled.
+archives:
+  enabled: false
+  max_bytes: 33554432                 # 32 MiB per text/file slot; 1 byte to 1 GiB
+  upload_timeout: 2m                 # real body-read deadline; 100ms to 10m
+
 # Add a read-only NAS mount here when you reach V0.2. Nothing outside the root
 # is ever read, and Atrium never stores NAS credentials.
 sources: []

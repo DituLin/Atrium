@@ -64,7 +64,7 @@ func TestDiscoveryAndValidation(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	if len(ls.Tools) != 11 {
+	if len(ls.Tools) != 23 {
 		t.Fatalf("tools=%d", len(ls.Tools))
 	}
 	for _, tool := range ls.Tools {
@@ -302,7 +302,7 @@ func TestStdioNegotiationAndEOF(t *testing.T) {
 		t.Fatal(e)
 	}
 	ls, e := cs.ListTools(ctx, nil)
-	if e != nil || len(ls.Tools) != 11 {
+	if e != nil || len(ls.Tools) != 23 {
 		t.Fatalf("stdio discovery %v", e)
 	}
 	if e = cs.Close(); e != nil {

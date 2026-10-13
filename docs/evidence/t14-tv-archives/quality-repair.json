@@ -1,0 +1,30 @@
+{
+  "scope": "T14 quality review repairs; no production change",
+  "fixes": {
+    "query_scope": "Ownership is validated and preserved across public/authorized analysis, legacy projections, snapshots, query receipts and strict host/tool contracts. Document counts use full search membership including date bounds, never page size.",
+    "authorization_lifetime": "performance.now monotonic elapsed time for revalidation and expiry, anchored to request start; wall-clock rollback cannot extend displayed content.",
+    "opaque_view_label": "Fixed safe heading 投屏查询结果; no misleading active 全家/全部领域 filters until manual selection resumes normal browsing."
+  },
+  "validation": {
+    "unchanged_external_counterexamples": [
+      "quality ownership PASS",
+      "quality clock rollback PASS",
+      "spec detail-to-query PASS (actual card count 1 at ready)",
+      "spec terminal saved-only PASS"
+    ],
+    "web": "65 files / 461 tests PASS",
+    "web_lint_build_typecheck": "PASS, zero lint warnings",
+    "go_affected_packages": "archive/store/httpapi/brain/homemcp PASS",
+    "race": "store ownership search+analysis queryrefs/snapshots, domain/date combinations and screen/terminal tests PASS",
+    "strict_analysis_arguments_and_receipt": "PASS incl invalid ownership rejection and mismatched ownership receipt rejection",
+    "openclaw": "91 tests PASS"
+  },
+  "limits": "No additional device or production deployment claim; prior synthetic browser/OnePlus evidence remains scoped to those runs.",
+  "date_followup": {
+    "fix": "Legacy dates retain the full instant; list and document count use source interval containment in the Core household timezone, including partial precision. Search timezone is host supplied and retained in receipts.",
+    "original_external_home_day": "passed unchanged",
+    "regressions": "search/count local midnight, before/after and open bounds, full month/year versus overlapping day, unknown date and DST end-of-day; related Go five packages and affected race passed",
+    "previous_counterexamples": "all four passed unchanged",
+    "existing_test_update": "old month rejection expectation replaced by full-month inclusion with original month precision plus narrow-day exclusion"
+  }
+}

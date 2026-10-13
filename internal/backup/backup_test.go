@@ -170,3 +170,21 @@ func TestRestoreRejectsAFileThatIsNotASnapshot(t *testing.T) {
 	})
 	require.Error(t, err)
 }
+
+func TestRestoreRejectsFutureSchemaBeforeMovingLive(t *testing.T) {
+	ctx := context.Background()
+	d := testutil.NewDB(t)
+	_, err := d.SQL().Exec(`INSERT INTO schema_migrations VALUES(9999,'future','')`)
+	require.NoError(t, err)
+	dir := t.TempDir()
+	snap := filepath.Join(dir, "future.db")
+	_, err = d.SQL().Exec(`VACUUM INTO ?`, snap)
+	require.NoError(t, err)
+	live := filepath.Join(dir, "live.db")
+	require.NoError(t, os.WriteFile(live, []byte("untouched"), 0600))
+	_, err = backup.Restore(ctx, backup.RestoreOptions{From: snap, DataDir: dir, DBPath: live})
+	require.Error(t, err)
+	b, err := os.ReadFile(live)
+	require.NoError(t, err)
+	require.Equal(t, "untouched", string(b))
+}

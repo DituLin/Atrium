@@ -1,0 +1,161 @@
+{
+  "configuration_fingerprint": "88ed68580fe3ceaf4ee700fc3118e26955fbf465136fb469adc341ab7b3ad961",
+  "usage": {
+    "input_tokens": 582,
+    "output_tokens": 2537,
+    "total_tokens": 5295,
+    "cache_read_tokens": 2176,
+    "cache_write_tokens": 0,
+    "cost_usd": 0.0007979328000000001
+  },
+  "protocol_version": 1,
+  "invocation_id": "319078504b719dc7110895424a321f6d",
+  "input_digest": "febe74e9817de5827026fbc5f9e4aae22544726589b70000442770e5268eeab2",
+  "schema_version": "archive-extraction/2",
+  "extraction_version": "archive-understand/2",
+  "chunk_version": "archive-chunk/1",
+  "provider": "deepseek",
+  "requested_model": "deepseek/deepseek-v4-flash",
+  "model": "deepseek-v4-flash",
+  "response_model": "deepseek-flash",
+  "stop_reason": "stop",
+  "execution": {
+    "mode": "direct-provider",
+    "owner": {
+      "kind": "provider",
+      "id": "deepseek"
+    }
+  },
+  "result": {
+    "labels": [
+      "property",
+      "inspection",
+      "area",
+      "report"
+    ],
+    "domain": "property",
+    "document_type": "property_inspection_report",
+    "subjects": [
+      {
+        "id": "subj_owner",
+        "name": "赵青",
+        "role": "owner",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "s1/body/0:48",
+            "start": 10,
+            "end": 12,
+            "quote": "赵青",
+            "derived_value_ref": ""
+          }
+        ]
+      },
+      {
+        "id": "subj_engineer",
+        "name": "孙涛",
+        "role": "engineer",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "s1/body/0:48",
+            "start": 17,
+            "end": 19,
+            "quote": "孙涛",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "dimensions": [],
+        "subject_refs": [],
+        "id": "f_date",
+        "name": "日期",
+        "raw": "2026-09-30",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:48",
+            "start": 23,
+            "end": 33,
+            "quote": "2026-09-30",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "date",
+            "value": "2026-09-30"
+          }
+        ]
+      },
+      {
+        "dimensions": [
+          {
+            "kind": "unit",
+            "raw": "平方米",
+            "evidence": [
+              {
+                "view_id": "s1/body/0:48",
+                "start": 44,
+                "end": 47,
+                "quote": "平方米",
+                "derived_value_ref": ""
+              }
+            ]
+          }
+        ],
+        "subject_refs": [],
+        "id": "f_area",
+        "name": "建筑面积",
+        "raw": "88.75",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:48",
+            "start": 39,
+            "end": 44,
+            "quote": "88.75",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "decimal",
+            "value": "88.75"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "id": "e1",
+        "type": "report",
+        "field_refs": [
+          "f_date",
+          "f_area"
+        ],
+        "subject_refs": [
+          "subj_owner",
+          "subj_engineer"
+        ],
+        "section_evidence": [
+          {
+            "view_id": "s1/body/0:48",
+            "start": 0,
+            "end": 6,
+            "quote": "房屋检查报告",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "coverage": [
+      {
+        "view_id": "s1/body/0:48",
+        "disposition": "extracted"
+      }
+    ],
+    "issues": []
+  }
+}

@@ -15,9 +15,9 @@ const integrationAdminPath = "/api/v1/admin/integrations"
 
 func newAdminIntegrationsCmd(f *adminFlags) *cobra.Command {
 	root := &cobra.Command{Use: "integrations", Short: "Manage scoped service identities (credentials are written only to files)"}
-	var label, permissions, screens, sources, expiry, outPath string
+	var label, permissions, screens, sources, members, households, expiry, outPath string
 	policy := func() domain.IntegrationPolicy {
-		return domain.IntegrationPolicy{Permissions: splitPolicy(permissions), ScreenIDs: splitPolicy(screens), SourceIDs: splitPolicy(sources)}
+		return domain.IntegrationPolicy{Permissions: splitPolicy(permissions), ScreenIDs: splitPolicy(screens), SourceIDs: splitPolicy(sources), MemberIDs: splitPolicy(members), HouseholdIDs: splitPolicy(households)}
 	}
 	issue := &cobra.Command{Use: "issue", Args: cobra.NoArgs, Short: "Issue a scoped identity and write its credential to a new file", RunE: func(cmd *cobra.Command, _ []string) error {
 		expires, err := time.Parse(time.RFC3339, expiry)
@@ -37,6 +37,8 @@ func newAdminIntegrationsCmd(f *adminFlags) *cobra.Command {
 	issue.Flags().StringVar(&permissions, "permissions", "", "comma-separated permissions; empty denies all")
 	issue.Flags().StringVar(&screens, "screens", "", "comma-separated allowed screen IDs")
 	issue.Flags().StringVar(&sources, "sources", "", "comma-separated allowed source IDs")
+	issue.Flags().StringVar(&members, "members", "", "comma-separated allowed family member IDs")
+	issue.Flags().StringVar(&households, "households", "", "comma-separated allowed household IDs")
 	issue.Flags().StringVar(&expiry, "expires-at", "", "required RFC3339 principal expiry")
 	issue.Flags().StringVar(&outPath, "out", "", "required NEW token file (mode 0600; never overwritten)")
 	var rotateOut, rotateExpiry string
@@ -75,12 +77,12 @@ func newAdminIntegrationsCmd(f *adminFlags) *cobra.Command {
 		_, err = fmt.Fprintln(cmd.OutOrStdout(), "revoked", args[0])
 		return err
 	}}
-	var updatePermissions, updateScreens, updateSources string
+	var updatePermissions, updateScreens, updateSources, updateMembers, updateHouseholds string
 	update := &cobra.Command{Use: "policy <principal-id>", Args: cobra.ExactArgs(1), Short: "Replace the complete permission policy; omitted allowlists grant no access", RunE: func(cmd *cobra.Command, args []string) error {
 		if !cmd.Flags().Changed("permissions") {
 			return fmt.Errorf("--permissions is required (use an empty value to revoke all permissions)")
 		}
-		p := domain.IntegrationPolicy{Permissions: splitPolicy(updatePermissions), ScreenIDs: splitPolicy(updateScreens), SourceIDs: splitPolicy(updateSources)}
+		p := domain.IntegrationPolicy{Permissions: splitPolicy(updatePermissions), ScreenIDs: splitPolicy(updateScreens), SourceIDs: splitPolicy(updateSources), MemberIDs: splitPolicy(updateMembers), HouseholdIDs: splitPolicy(updateHouseholds)}
 		if err := p.Validate(); err != nil {
 			return err
 		}
@@ -97,7 +99,9 @@ func newAdminIntegrationsCmd(f *adminFlags) *cobra.Command {
 	update.Flags().StringVar(&updatePermissions, "permissions", "", "complete permission list")
 	update.Flags().StringVar(&updateScreens, "screens", "", "complete screen allowlist")
 	update.Flags().StringVar(&updateSources, "sources", "", "complete source allowlist")
-	root.AddCommand(issue, rotate, list, revoke, update)
+	update.Flags().StringVar(&updateMembers, "members", "", "complete family member allowlist")
+	update.Flags().StringVar(&updateHouseholds, "households", "", "complete household allowlist")
+	root.AddCommand(issue, rotate, list, revoke, update, newArchiveGrantCmd(f))
 	return root
 }
 
@@ -153,4 +157,43 @@ func writeIntegrationCredential(cmd *cobra.Command, f *adminFlags, path string, 
 	}
 	_, err = fmt.Fprintf(cmd.OutOrStdout(), "principal %s; credential written to %s (0600)\n", response.Principal.ID, outPath)
 	return err
+}
+
+func newArchiveGrantCmd(f *adminFlags) *cobra.Command {
+	var permissions, households string
+	var expected int64
+	cmd := &cobra.Command{Use: "grant-archives <principal-id>", Args: cobra.ExactArgs(1), Short: "Add explicit archive grants, preserving every existing allowlist", RunE: func(cmd *cobra.Command, args []string) error {
+		grant := domain.ArchiveGrant{Permissions: splitPolicy(permissions), HouseholdIDs: splitPolicy(households), ExpectedPolicyVersion: expected}
+		if err := grant.Validate(); err != nil {
+			return err
+		}
+		c, err := f.client()
+		if err != nil {
+			return err
+		}
+		var result domain.IntegrationPrincipal
+		if err := c.Do(cmd.Context(), "POST", integrationAdminPath+"/"+args[0]+"/grant-archives", grant, &result); err != nil {
+			return err
+		}
+		return printJSON(cmd.OutOrStdout(), result)
+	}}
+	cmd.Flags().StringVar(&permissions, "permissions", "", "required comma-separated archive permissions to add")
+	cmd.Flags().StringVar(&households, "households", "", "required comma-separated household IDs to add")
+	cmd.Flags().Int64Var(&expected, "expected-policy-version", 0, "required current policy version; conflicts require an explicit retry")
+	return cmd
+}
+func newAdminHouseholdCmd(f *adminFlags) *cobra.Command {
+	root := &cobra.Command{Use: "household", Short: "Discover the local archive household"}
+	root.AddCommand(&cobra.Command{Use: "show", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		c, err := f.client()
+		if err != nil {
+			return err
+		}
+		var result domain.Household
+		if err := c.Do(cmd.Context(), "GET", "/api/v1/admin/household", nil, &result); err != nil {
+			return err
+		}
+		return printJSON(cmd.OutOrStdout(), result)
+	}})
+	return root
 }

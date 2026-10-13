@@ -165,13 +165,14 @@ type CommandKind string
 const (
 	CommandNavigate CommandKind = "navigate"
 	CommandShow     CommandKind = "show"
+	CommandArchive  CommandKind = "archive"
 	CommandRefresh  CommandKind = "refresh"
 )
 
 // Valid reports whether the value is a known command kind.
 func (c CommandKind) Valid() bool {
 	switch c {
-	case CommandNavigate, CommandShow, CommandRefresh:
+	case CommandNavigate, CommandShow, CommandRefresh, CommandArchive:
 		return true
 	}
 	return false
@@ -215,6 +216,7 @@ const (
 	RouteConnect   RouteName = "connect"
 	RouteSettings  RouteName = "settings"
 	RouteHouse     RouteName = "house"
+	RouteFamily    RouteName = "family"
 	RouteBriefing  RouteName = "briefing"
 	RouteCalendar  RouteName = "calendar"
 )
@@ -222,14 +224,16 @@ const (
 // Valid reports whether the value is a known route.
 func (r RouteName) Valid() bool {
 	switch r {
-	case RouteVideos, RouteVideo, RouteDashboard, RoutePhotos, RoutePhoto, RoutePair, RouteConnect, RouteSettings, RouteHouse, RouteBriefing, RouteCalendar:
+	case RouteVideos, RouteVideo, RouteDashboard, RoutePhotos, RoutePhoto, RoutePair, RouteConnect, RouteSettings, RouteHouse, RouteFamily, RouteBriefing, RouteCalendar:
 		return true
 	}
 	return false
 }
 
 // NavigableRoute reports whether a navigate command may target the route.
-func (r RouteName) NavigableRoute() bool { return r == RouteDashboard || r == RoutePhotos }
+func (r RouteName) NavigableRoute() bool {
+	return r == RouteDashboard || r == RoutePhotos || r == RouteFamily
+}
 
 // Collection is a photo query set.
 type Collection string
@@ -378,16 +382,17 @@ type Topic string
 
 // Change topics (technical design §9).
 const (
-	TopicHome   Topic = "home"
-	TopicPhotos Topic = "photos"
-	TopicNAS    Topic = "nas"
-	TopicScreen Topic = "screen"
+	TopicArchives Topic = "archives"
+	TopicHome     Topic = "home"
+	TopicPhotos   Topic = "photos"
+	TopicNAS      Topic = "nas"
+	TopicScreen   Topic = "screen"
 )
 
 // Valid reports whether the value is a known topic.
 func (t Topic) Valid() bool {
 	switch t {
-	case TopicHome, TopicPhotos, TopicNAS, TopicScreen:
+	case TopicHome, TopicPhotos, TopicNAS, TopicScreen, TopicArchives:
 		return true
 	}
 	return false

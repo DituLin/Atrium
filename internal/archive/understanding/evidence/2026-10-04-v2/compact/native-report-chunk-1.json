@@ -1,0 +1,304 @@
+{
+  "configuration_fingerprint": "88ed68580fe3ceaf4ee700fc3118e26955fbf465136fb469adc341ab7b3ad961",
+  "usage": {
+    "input_tokens": 7511,
+    "output_tokens": 7915,
+    "total_tokens": 17602,
+    "cache_read_tokens": 2176,
+    "cache_write_tokens": 0,
+    "cost_usd": 0.0032738328000000002
+  },
+  "protocol_version": 1,
+  "invocation_id": "ca6179195ff2aef23f2174c42dd0770f",
+  "input_digest": "189e1632bc9f5ce47f021b3c0fb3bd1327d319aa07a9d88ab0ec8eb30beb6ba8",
+  "schema_version": "archive-extraction/2",
+  "extraction_version": "archive-understand/2",
+  "chunk_version": "archive-chunk/1",
+  "provider": "deepseek",
+  "requested_model": "deepseek/deepseek-v4-flash",
+  "model": "deepseek-v4-flash",
+  "response_model": "deepseek-flash",
+  "stop_reason": "stop",
+  "execution": {
+    "mode": "direct-provider",
+    "owner": {
+      "kind": "provider",
+      "id": "deepseek"
+    }
+  },
+  "result": {
+    "labels": [
+      "血红蛋白",
+      "实验室检验",
+      "参考范围",
+      "费用",
+      "变化"
+    ],
+    "domain": "health",
+    "document_type": "health_report",
+    "subjects": [
+      {
+        "id": "patient_1",
+        "name": "林明",
+        "role": "patient",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "6dba6765c7c8eb838414ed49ee3d221df04a5459dda503ce3a9e8d68504e0495/body/alternative-0/0:15",
+            "start": 3,
+            "end": 5,
+            "quote": "林明",
+            "derived_value_ref": ""
+          }
+        ]
+      },
+      {
+        "id": "doctor_1",
+        "name": "王华",
+        "role": "doctor",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "4a270671841a9f2f38506a206123608d05206cf3c549d22f674fee519e436170/body/alternative-0/0:13",
+            "start": 3,
+            "end": 5,
+            "quote": "王华",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "dimensions": [
+          {
+            "kind": "unit",
+            "raw": "g/L",
+            "evidence": [
+              {
+                "view_id": "a2df4269e548f34634d70e422f761b6fdb5937dfa8a7fad1aa7ffecc82f4c2ea/body/alternative-0/0:3",
+                "start": 0,
+                "end": 3,
+                "quote": "g/L",
+                "derived_value_ref": ""
+              }
+            ]
+          }
+        ],
+        "subject_refs": [
+          "patient_1"
+        ],
+        "id": "f_hemoglobin_value",
+        "name": "血红蛋白",
+        "raw": "145.6",
+        "evidence": [
+          {
+            "view_id": "97f74fe31b3e90ee4309673132c52f9fc50855bbfc92a9276857b452584173ed/body/alternative-0/0:5",
+            "start": 0,
+            "end": 5,
+            "quote": "145.6",
+            "derived_value_ref": ""
+          },
+          {
+            "view_id": "0f430d9716dad5eac44152d554c10c49804b7189a480c007fe5ab48f9e4c0442/body/alternative-0/0:4",
+            "start": 0,
+            "end": 4,
+            "quote": "血红蛋白",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "decimal",
+            "value": "145.6"
+          }
+        ]
+      },
+      {
+        "dimensions": [],
+        "subject_refs": [
+          "patient_1"
+        ],
+        "id": "f_hemoglobin_reference_range",
+        "name": "血红蛋白参考范围",
+        "raw": "130-175",
+        "evidence": [
+          {
+            "view_id": "746c998b664ffbf0d77439f1281c85f9462e6ec736a6f5cb674115588683d677/body/alternative-0/0:7",
+            "start": 0,
+            "end": 7,
+            "quote": "130-175",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": []
+      },
+      {
+        "dimensions": [
+          {
+            "kind": "currency",
+            "raw": "CNY",
+            "evidence": [
+              {
+                "view_id": "c8834961f5f9e56b7a6c761c96532ac6d0a81946adeab4421e9f9a10c4c1182f/body/alternative-0/0:3",
+                "start": 0,
+                "end": 3,
+                "quote": "CNY",
+                "derived_value_ref": ""
+              }
+            ]
+          }
+        ],
+        "subject_refs": [],
+        "id": "f_fee",
+        "name": "费用 Amount",
+        "raw": "1234.50",
+        "evidence": [
+          {
+            "view_id": "3077436f351f03b4b2a15e6364c5d0fc0d250182853c6968881cf3d647dac132/body/alternative-0/0:7",
+            "start": 0,
+            "end": 7,
+            "quote": "1234.50",
+            "derived_value_ref": ""
+          },
+          {
+            "view_id": "4437b0a1eb8bd48e5f1502a3def8050f63a39205afe90884423f5c0f7f6de520/body/alternative-0/0:9",
+            "start": 0,
+            "end": 9,
+            "quote": "费用 Amount",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "decimal",
+            "value": "1234.50"
+          }
+        ]
+      },
+      {
+        "dimensions": [
+          {
+            "kind": "unit",
+            "raw": "mmol/L",
+            "evidence": [
+              {
+                "view_id": "34e9eb4006fa3ebf1b0131b4b0f96e7b2554216e54262a7f99d16017fb78a5e0/body/alternative-0/0:6",
+                "start": 0,
+                "end": 6,
+                "quote": "mmol/L",
+                "derived_value_ref": ""
+              }
+            ]
+          }
+        ],
+        "subject_refs": [
+          "patient_1"
+        ],
+        "id": "f_delta",
+        "name": "变化 Delta",
+        "raw": "-2.75",
+        "evidence": [
+          {
+            "view_id": "905e6629869e16af566faeb579469138ab948bb684942ce1f459d66c64e2d354/body/alternative-0/0:5",
+            "start": 0,
+            "end": 5,
+            "quote": "-2.75",
+            "derived_value_ref": ""
+          },
+          {
+            "view_id": "811584c849d02524c861afb6abe5437d07c5cc27ab6c9332b8fd2814126cd61d/body/alternative-0/0:8",
+            "start": 0,
+            "end": 8,
+            "quote": "变化 Delta",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "decimal",
+            "value": "-2.75"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "id": "e_report_1",
+        "type": "report",
+        "field_refs": [
+          "f_hemoglobin_value",
+          "f_hemoglobin_reference_range",
+          "f_fee",
+          "f_delta"
+        ],
+        "subject_refs": [
+          "patient_1"
+        ],
+        "section_evidence": [
+          {
+            "view_id": "af811561eb09bc746ed85fcca8c3161bf3612b4b80dcbaaa7343fa34e0f70a89/body/alternative-0/0:23",
+            "start": 0,
+            "end": 23,
+            "quote": "合成健康报告 SYNTHETIC REPORT",
+            "derived_value_ref": ""
+          },
+          {
+            "view_id": "99cc724eaa2dfd98f4b03c26f748b721a8e694b25bbff8d27abf0b26c1c60d25/body/alternative-0/0:15",
+            "start": 5,
+            "end": 15,
+            "quote": "2026-10-04",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "coverage": [
+      {
+        "view_id": "97f74fe31b3e90ee4309673132c52f9fc50855bbfc92a9276857b452584173ed/body/alternative-0/0:5",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "0f430d9716dad5eac44152d554c10c49804b7189a480c007fe5ab48f9e4c0442/body/alternative-0/0:4",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "746c998b664ffbf0d77439f1281c85f9462e6ec736a6f5cb674115588683d677/body/alternative-0/0:7",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "a2df4269e548f34634d70e422f761b6fdb5937dfa8a7fad1aa7ffecc82f4c2ea/body/alternative-0/0:3",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "3077436f351f03b4b2a15e6364c5d0fc0d250182853c6968881cf3d647dac132/body/alternative-0/0:7",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "4437b0a1eb8bd48e5f1502a3def8050f63a39205afe90884423f5c0f7f6de520/body/alternative-0/0:9",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "c8834961f5f9e56b7a6c761c96532ac6d0a81946adeab4421e9f9a10c4c1182f/body/alternative-0/0:3",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "905e6629869e16af566faeb579469138ab948bb684942ce1f459d66c64e2d354/body/alternative-0/0:5",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "811584c849d02524c861afb6abe5437d07c5cc27ab6c9332b8fd2814126cd61d/body/alternative-0/0:8",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "34e9eb4006fa3ebf1b0131b4b0f96e7b2554216e54262a7f99d16017fb78a5e0/body/alternative-0/0:6",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "4a270671841a9f2f38506a206123608d05206cf3c549d22f674fee519e436170/body/alternative-0/0:13",
+        "disposition": "extracted"
+      }
+    ],
+    "issues": []
+  }
+}

@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/DituLin/Atrium/internal/domain"
 	"github.com/DituLin/Atrium/internal/integration"
 	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -34,15 +35,53 @@ type adapter struct {
 	busy          map[string]bool
 }
 type args struct {
-	ScreenID    string `json:"screen_id"`
-	PhotoID     string `json:"photo_id"`
-	CommandID   string `json:"command_id"`
-	OperationID string `json:"operation_id"`
-	Route       string `json:"route"`
-	Collection  string `json:"collection"`
-	Cursor      string `json:"cursor"`
-	Limit       int    `json:"limit"`
-	WaitMS      *int   `json:"wait_ms"`
+	QueryRef           string `json:"query_ref"`
+	TaskID             string `json:"task_id"`
+	QuestionID         string `json:"question_id"`
+	QuestionVersion    int64  `json:"question_version"`
+	WaitingTaskVersion int64  `json:"waiting_task_version"`
+	ExtractionID       string `json:"extraction_id"`
+	DocumentRevision   int64  `json:"document_revision"`
+	ResolutionKey      string `json:"resolution_key"`
+	Action             string `json:"action"`
+	Target             string `json:"target"`
+	Name               string `json:"name"`
+	Kind               string `json:"kind"`
+	ObservationID      string `json:"observation_id"`
+	Value              string `json:"value"`
+	Reason             string `json:"reason"`
+
+	Operation      string                     `json:"operation"`
+	Count          string                     `json:"count"`
+	Metric         string                     `json:"metric"`
+	Query          string                     `json:"query"`
+	EntityID       string                     `json:"entity_id"`
+	Domain         string                     `json:"domain"`
+	DocumentType   string                     `json:"document_type"`
+	DateFrom       string                     `json:"date_from"`
+	DateTo         string                     `json:"date_to"`
+	Ownership      string                     `json:"ownership"`
+	DocumentID     string                     `json:"document_id"`
+	MemberID       string                     `json:"member_id"`
+	RequestID      string                     `json:"request_id"`
+	Category       string                     `json:"category"`
+	OccurredAt     time.Time                  `json:"occurred_at"`
+	Title          string                     `json:"title"`
+	Notes          string                     `json:"notes"`
+	Measurements   []domain.FamilyMeasurement `json:"measurements"`
+	DisplayOnTV    bool                       `json:"display_on_tv"`
+	SupersedesID   string                     `json:"supersedes_id"`
+	RevisionReason string                     `json:"revision_reason"`
+	Retracted      bool                       `json:"retracted"`
+	ScreenID       string                     `json:"screen_id"`
+	PhotoID        string                     `json:"photo_id"`
+	CommandID      string                     `json:"command_id"`
+	OperationID    string                     `json:"operation_id"`
+	Route          string                     `json:"route"`
+	Collection     string                     `json:"collection"`
+	Cursor         string                     `json:"cursor"`
+	Limit          int                        `json:"limit"`
+	WaitMS         *int                       `json:"wait_ms"`
 }
 type toolDef struct {
 	name     string
@@ -52,14 +91,46 @@ type toolDef struct {
 }
 
 var definitions = []toolDef{
+	{"home_analyze_archives", []string{"operation"}, []string{"count", "metric", "query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership"}, false},
+	{"home_get_archive_task", []string{"task_id"}, nil, false},
+	{"home_get_archive_question", []string{"task_id"}, nil, false},
+	{"home_answer_archive_question", []string{"task_id", "question_id", "question_version", "waiting_task_version", "extraction_id", "document_revision", "resolution_key", "action"}, []string{"target", "name"}, true},
+	{"home_revise_archive", []string{"document_id", "document_revision", "kind", "reason"}, []string{"observation_id", "value", "entity_id"}, true},
+	{"home_search_archives", nil, []string{"query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership", "limit", "cursor"}, false},
+	{"home_get_archive_evidence", []string{"document_id"}, []string{"limit", "cursor"}, false},
+	{"home_search_archive_entities", nil, []string{"query", "entity_id", "limit", "cursor"}, false},
+	{"home_list_family_members", nil, nil, false},
+	{"home_list_family_records", []string{"member_id"}, []string{"limit", "cursor"}, false},
+	{"home_record_family_entry", []string{"member_id", "request_id", "category", "occurred_at", "title", "display_on_tv"}, []string{"notes", "measurements", "supersedes_id", "revision_reason", "retracted"}, true},
 	{"home_get_status", nil, nil, false}, {"home_list_screens", nil, nil, false}, {"home_get_screen", []string{"screen_id"}, nil, false}, {"home_get_nas_status", nil, nil, false}, {"home_list_photos", nil, []string{"collection", "limit", "cursor"}, false}, {"home_get_photo", []string{"photo_id"}, nil, false},
+	{"home_show_archive_query", []string{"screen_id", "query_ref", "operation_id"}, []string{"wait_ms"}, true},
 	{"home_navigate_screen", []string{"screen_id", "route", "operation_id"}, []string{"collection", "wait_ms"}, true}, {"home_show_photo", []string{"screen_id", "photo_id", "operation_id"}, []string{"wait_ms"}, true}, {"home_refresh_screen", []string{"screen_id", "operation_id"}, []string{"wait_ms"}, true}, {"home_get_command", []string{"command_id"}, nil, false}, {"home_get_operation", []string{"operation_id"}, nil, false},
 }
 
 func field(name string) map[string]any {
 	switch name {
+	case "request_id":
+		return map[string]any{"type": "string", "minLength": 1, "maxLength": 256}
+	case "category":
+		return map[string]any{"type": "string", "enum": []string{"growth", "health", "checkup", "meal", "note"}}
+	case "occurred_at":
+		return map[string]any{"type": "string", "format": "date-time", "description": "Actual observation or planned meal time with timezone; ask if ambiguous."}
+	case "title":
+		return map[string]any{"type": "string", "minLength": 1, "maxLength": 300}
+	case "notes":
+		return map[string]any{"type": "string", "maxLength": 16000}
+	case "supersedes_id":
+		return map[string]any{"type": "string", "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$", "description": "Exact current record ID from a prior query, only when the user requests a correction or retraction. Never guess."}
+	case "revision_reason":
+		return map[string]any{"type": "string", "minLength": 1, "maxLength": 2000, "description": "User-supplied correction or retraction reason; required with supersedes_id."}
+	case "retracted":
+		return map[string]any{"type": "boolean", "description": "True only for an explicitly requested retraction; requires supersedes_id, revision_reason, display_on_tv=false. History remains archived."}
+	case "display_on_tv":
+		return map[string]any{"type": "boolean", "description": "True only when this record is intended for household TV display."}
+	case "measurements":
+		return map[string]any{"type": "array", "maxItems": 32, "items": map[string]any{"type": "object", "additionalProperties": false, "required": []string{"metric", "value", "unit"}, "properties": map[string]any{"metric": map[string]any{"type": "string", "pattern": safeID.String()}, "value": map[string]any{"type": "number"}, "unit": map[string]any{"type": "string", "minLength": 1, "maxLength": 32}}}}
 	case "route":
-		return map[string]any{"type": "string", "enum": []string{"dashboard", "photos"}}
+		return map[string]any{"type": "string", "enum": []string{"dashboard", "photos", "family"}}
 	case "collection":
 		return map[string]any{"type": "string", "enum": []string{"recent", "captured_today", "random", "all"}}
 	case "operation_id":
@@ -75,7 +146,7 @@ func field(name string) map[string]any {
 	}
 }
 
-// NewServer builds the eleven-tool MCP server without opening a listener.
+// NewServer builds the household MCP server without opening a listener.
 func NewServer(c Config) (*mcp.Server, error) {
 	return NewServerWithLogger(c, slog.New(slog.NewJSONHandler(os.Stderr, nil)))
 }
@@ -97,12 +168,21 @@ func NewServerWithLogger(c Config, logger *slog.Logger) (*mcp.Server, error) {
 		props := map[string]any{}
 		for _, k := range append(append([]string{}, d.required...), d.optional...) {
 			props[k] = field(k)
+			if isArchiveTool(d.name) {
+				props[k] = archiveField(k)
+			}
 		}
 		req := d.required
 		if req == nil {
 			req = []string{}
 		}
 		schema := map[string]any{"type": "object", "properties": props, "required": req, "additionalProperties": false}
+		if d.name == "home_revise_archive" {
+			schema["allOf"] = []any{
+				map[string]any{"if": map[string]any{"properties": map[string]any{"kind": map[string]any{"const": "value"}}, "required": []string{"kind"}}, "then": map[string]any{"required": []string{"observation_id", "value"}}},
+				map[string]any{"if": map[string]any{"properties": map[string]any{"kind": map[string]any{"const": "reassign"}}, "required": []string{"kind"}}, "then": map[string]any{"required": []string{"observation_id", "entity_id"}}},
+			}
+		}
 		if d.name == "home_navigate_screen" {
 			schema["allOf"] = []any{map[string]any{"if": map[string]any{"properties": map[string]any{"route": map[string]any{"const": "photos"}}, "required": []string{"route"}}, "then": map[string]any{"required": []string{"collection"}}}}
 		}
@@ -133,6 +213,31 @@ func NewServerWithLogger(c Config, logger *slog.Logger) (*mcp.Server, error) {
 	return s, nil
 }
 func description(d toolDef) string {
+	switch d.name {
+	case "home_analyze_archives":
+		return "Analyze currently authorized archived facts with exact Core arithmetic: count documents/events/observations, sum, latest, series, ratio. metric uses an observed field name; never guess IDs, units or totals. Currency/unit/sample groups remain separate. Report every coverage exclusion and cite evidence. Unknown full score or coarse overlapping dates are unresolved. Results describe archived coverage only, never the entire family or medical diagnosis."
+	case "home_get_archive_task":
+		return "Read authorized durable archive task state. saved original and pending NAS do not mean extraction or synchronization completed."
+	case "home_get_archive_question":
+		return "Read the current typed clarification and exact version fences and permitted targets. Ask the user for the unresolved choice; never invent a person or target."
+	case "home_answer_archive_question":
+		return "Apply an explicit user answer to the current typed clarification. Copy all version fences from home_get_archive_question; stale answers fail. Host supplies resolution_key. A queued result confirms only that the answer was recorded, not publication completion."
+	case "home_revise_archive":
+		return "Apply an explicit user correction to an exact current document revision from search/evidence. value and reassign require current observation_id; reassign also requires verified entity_id. private restricts visibility; withdraw retracts the whole document. reason is required. Never invent corrections. Only a Core receipt confirms change; after an uncertain outcome query again before retrying."
+	case "home_search_archive_entities":
+		return "Search authorized archive entities by one literal name/topic (query) and optional known entity_id. Accepted filters are query, entity_id, limit and cursor; domain, date and document filters are not accepted here. Use home_search_archives for domain-specific records with a returned entity_id. Same names can represent different people: verify source identity evidence before selecting. Names and aliases may be truncated; disclose coverage.complete=false. Never guess IDs or infer birth dates from arbitrary dates lists."
+	case "home_get_archive_evidence":
+		return "Read source evidence for a document_id obtained from home_search_archives, with optional limit and cursor only. Preserve document/segment/locator and the distinction between original excerpt, confirmed field and manual assertion. Follow next_cursor for relevant remaining source details; a page is not the whole document. To narrow by domain, topic or person use home_search_archives first. Do not send those filters to this tool. Never infer medical conclusions or calculate totals in prose; use home_analyze_archives."
+	case "home_search_archives":
+		return "Search authorized family archives across health, education, finance and property. Query matches one whole literal phrase, not a bag of words or FTS operators. Start with one name/topic and a separate domain filter; do not concatenate name, birth year and document keywords. Distinguish same names through source-backed identity evidence, never infer a birth date from an arbitrary dates list. For archive people use home_search_archive_entities, not the separate legacy family-member tools. For requested display, reserve calls for home_list_screens and home_show_archive_query using a returned query_ref; avoid unrelated reads or analysis when only display was requested. Original excerpts are source evidence; confirmed fields and manual assertions are distinct. Always cite document/segment/locator and disclose coverage.complete=false or next_cursor. An incomplete empty page is not proof of absence. Never infer diagnosis or totals. Use evidence for source details and entity search for people, never guess IDs."
+	case "home_list_family_members":
+		return "List authorized household members and stable IDs. Use these IDs for family record tools; do not guess which person a measurement belongs to."
+	case "home_list_family_records":
+		return "Read authorized family record history, including corrections and retractions. Only records without superseded_by and with retracted=false are current observations; never count historical revisions as additional measurements. Use next_cursor for older history; this is a bounded page, not all history. Ask for limit=1 if the response is too large."
+	case "home_record_family_entry":
+		return "Persist one user-supplied growth, health, checkup, meal plan or note record. To correct/retract, query first and supply the current same-member supersedes_id and revision_reason plus the complete corrected record. Retraction requires retracted=true and display_on_tv=false; preserve prior content and explain the withdrawal. Originals stay in history; stale targets fail. Never invent values, units, dates, diagnoses or member identity. Host supplies request identity. NAS pending means saved locally, not archived. Never reissue after uncertain transport; query first."
+	}
+
 	if d.mutation {
 		return "Control an authorized screen. Reuse the same operation_id for the same action. accepted means pending; only applied confirms completion. Cancellation does not cancel an accepted action."
 	}
@@ -171,6 +276,24 @@ func (a *adapter) call(ctx context.Context, d toolDef, in args) *mcp.CallToolRes
 	default:
 		return failure("busy", "Too many concurrent tool calls; retry later.", in.OperationID)
 	}
+
+	if isArchiveTool(d.name) {
+		return a.archiveCall(ctx, d, in)
+	}
+	if d.name == "home_record_family_entry" {
+		body := struct {
+			domain.FamilyRecordInput
+			RequestID string `json:"request_id"`
+		}{domain.FamilyRecordInput{MemberID: in.MemberID, Category: in.Category, OccurredAt: in.OccurredAt, Title: in.Title, Notes: in.Notes, Measurements: in.Measurements, DisplayOnTV: in.DisplayOnTV, SupersedesID: in.SupersedesID, RevisionReason: in.RevisionReason, Retracted: in.Retracted}, in.RequestID}
+		if err := body.Validate(); err != nil {
+			return failure("invalid_arguments", "Invalid family record.", "")
+		}
+		b, status, err := a.request(ctx, "POST", "family/records", body)
+		if err != nil {
+			return failure("outcome_unknown", "Family record outcome unconfirmed. Query this member's records before recording again.", "")
+		}
+		return decode(d.name, b, status)
+	}
 	if d.mutation {
 		a.mu.Lock()
 		busy := a.busy[in.ScreenID]
@@ -186,6 +309,13 @@ func (a *adapter) call(ctx context.Context, d toolDef, in args) *mcp.CallToolRes
 	}
 	path := ""
 	switch d.name {
+	case "home_list_family_members":
+		path = "family/members"
+	case "home_list_family_records":
+		if in.Limit == 0 {
+			in.Limit = 10
+		}
+		path = "family/records?" + url.Values{"member_id": {in.MemberID}, "limit": {jsonNumber(in.Limit)}, "cursor": {in.Cursor}}.Encode()
 	case "home_get_status":
 		path = "home"
 	case "home_list_screens":
@@ -280,6 +410,12 @@ func transportFailure(e error, op string) *mcp.CallToolResult {
 }
 func decode(name string, b []byte, status int) *mcp.CallToolResult {
 	switch name {
+	case "home_list_family_members":
+		return typed[integration.FamilyMembers](b, status)
+	case "home_list_family_records":
+		return typed[integration.FamilyRecords](b, status)
+	case "home_record_family_entry":
+		return typed[integration.FamilyRecordResult](b, status)
 	case "home_get_status":
 		return typed[integration.Home](b, status)
 	case "home_list_screens":
@@ -340,11 +476,29 @@ func (a *adapter) control(ctx context.Context, d toolDef, in args) *mcp.CallTool
 		kind = "show"
 	}
 	payload := integration.CommandPayload{Route: in.Route, Collection: in.Collection, PhotoID: in.PhotoID}
+	if d.name == "home_show_archive_query" {
+		b, status, e := a.request(ctx, "POST", "archives/views", map[string]any{"query_ref": in.QueryRef, "screen_id": in.ScreenID, "operation_id": in.OperationID})
+		if e != nil {
+			return transportFailure(e, in.OperationID)
+		}
+		if status != 200 {
+			return decode("archive_view", b, status)
+		}
+		var envelope integration.Response[struct {
+			ID        string    `json:"archive_view_id"`
+			ExpiresAt time.Time `json:"expires_at"`
+		}]
+		if json.Unmarshal(b, &envelope) != nil || envelope.Data.ID != in.OperationID || envelope.Data.ExpiresAt.IsZero() {
+			return failure("outcome_unknown", "Archive view unavailable.", in.OperationID)
+		}
+		kind = "archive"
+		payload = integration.CommandPayload{ArchiveViewID: envelope.Data.ID}
+	}
 	if in.Route == "photos" && in.Collection == "" {
 		return failure("invalid_arguments", "A photos action requires an explicit collection.", in.OperationID)
 	}
-	if in.Route == "dashboard" && in.Collection != "" {
-		return failure("invalid_arguments", "A dashboard action does not accept a collection.", in.OperationID)
+	if (in.Route == "dashboard" || in.Route == "family") && in.Collection != "" {
+		return failure("invalid_arguments", "This route does not accept a collection.", in.OperationID)
 	}
 	b, status, e := a.request(ctx, "POST", "screens/"+in.ScreenID+"/commands", map[string]any{"operation_id": in.OperationID, "kind": kind, "payload": payload})
 	if e != nil {

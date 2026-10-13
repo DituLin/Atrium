@@ -14,6 +14,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/DituLin/Atrium/internal/archive"
+	"github.com/DituLin/Atrium/internal/domain"
 	"github.com/DituLin/Atrium/internal/integration"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -228,6 +230,24 @@ func receiptResult(tool string, args map[string]any, result *mcp.CallToolResult)
 	}
 	var data any
 	switch tool {
+	case "home_analyze_archives":
+		data = &archive.AnalysisResult{}
+	case "home_search_archives", "home_get_archive_evidence":
+		data = &integration.ArchiveSearch{}
+	case "home_search_archive_entities":
+		data = &integration.ArchiveEntities{}
+	case "home_get_archive_task", "home_answer_archive_question":
+		data = &integration.ArchiveData[domain.ArchiveTaskProjection]{}
+	case "home_get_archive_question":
+		data = &integration.ArchiveData[integration.ArchiveQuestion]{}
+	case "home_revise_archive":
+		data = &integration.ArchiveData[integration.ArchiveRevisionResult]{}
+	case "home_list_family_members":
+		data = &integration.FamilyMembers{}
+	case "home_list_family_records":
+		data = &integration.FamilyRecords{}
+	case "home_record_family_entry":
+		data = &integration.FamilyRecordResult{}
 	case "home_get_status":
 		data = &integration.Home{}
 	case "home_list_screens":
@@ -246,7 +266,52 @@ func receiptResult(tool string, args map[string]any, result *mcp.CallToolResult)
 	if strictReceiptJSON(envelope.Data, data) != nil || !receiptRequiredFields(envelope.Data, reflect.TypeOf(data)) {
 		return nil, ErrInvalidOutcome
 	}
+	if isArchiveTool(tool) && !validArchiveReceipt(tool, args, data) {
+		return nil, ErrInvalidOutcome
+	}
 	switch value := data.(type) {
+	case *integration.FamilyMembers:
+		if len(value.Members) > 128 {
+			return nil, ErrInvalidOutcome
+		}
+		for _, m := range value.Members {
+			if m.Validate() != nil {
+				return nil, ErrInvalidOutcome
+			}
+		}
+	case *integration.FamilyRecords:
+		if len(value.Records) > 50 {
+			return nil, ErrInvalidOutcome
+		}
+		for _, r := range value.Records {
+			if r.MemberID != args["member_id"] || r.Validate() != nil || !identifier.MatchString(r.ID) || r.CreatedAt.IsZero() {
+				return nil, ErrInvalidOutcome
+			}
+		}
+	case *integration.FamilyRecordResult:
+		record := value.Record
+		if record.Validate() != nil || !identifier.MatchString(record.ID) || record.CreatedAt.IsZero() {
+			return nil, ErrInvalidOutcome
+		}
+		if value.NASStatus != "pending" && value.NASStatus != "synced" {
+			return nil, ErrInvalidOutcome
+		}
+		if (value.NASStatus == "synced") != (record.ExportedAt != nil) {
+			return nil, ErrInvalidOutcome
+		}
+		raw, _ := json.Marshal(args)
+		var requested domain.FamilyRecordInput
+		if json.Unmarshal(raw, &requested) != nil {
+			return nil, ErrInvalidOutcome
+		}
+		requested.OccurredAt = requested.OccurredAt.UTC()
+		record.OccurredAt = record.OccurredAt.UTC()
+		if requested.Measurements == nil {
+			requested.Measurements = []domain.FamilyMeasurement{}
+		}
+		if !reflect.DeepEqual(requested, record.FamilyRecordInput) {
+			return nil, ErrInvalidOutcome
+		}
 	case *integration.Home:
 		if value.Core != "reachable" || value.Day == "" || value.Timezone == "" {
 			return nil, ErrInvalidOutcome
@@ -420,65 +485,5 @@ func (r *Runtime) Call(id, callID, tool string, args map[string]any) (*mcp.CallT
 // Go's decoder accepts absent scalar fields as zero values. Evidence must not
 // turn an omitted online/count/status property into an asserted false or zero.
 func receiptRequiredFields(raw []byte, shape reflect.Type) bool {
-	if shape.Kind() == reflect.Pointer {
-		if string(raw) == "null" {
-			return true
-		}
-		return receiptRequiredFields(raw, shape.Elem())
-	}
-	if shape == reflect.TypeOf(time.Time{}) {
-		return string(raw) != "null"
-	}
-	switch shape.Kind() {
-	case reflect.Struct:
-		var fields map[string]json.RawMessage
-		if json.Unmarshal(raw, &fields) != nil || fields == nil {
-			return false
-		}
-		for i := 0; i < shape.NumField(); i++ {
-			field := shape.Field(i)
-			tag := strings.Split(field.Tag.Get("json"), ",")
-			name := tag[0]
-			if name == "-" {
-				continue
-			}
-			if name == "" {
-				name = field.Name
-			}
-			value, exists := fields[name]
-			optional := false
-			for _, part := range tag[1:] {
-				if part == "omitempty" {
-					optional = true
-				}
-			}
-			if !exists {
-				if !optional {
-					return false
-				}
-				continue
-			}
-			if !receiptRequiredFields(value, field.Type) {
-				return false
-			}
-		}
-	case reflect.Slice:
-		if string(raw) == "null" {
-			return true
-		}
-		var items []json.RawMessage
-		if json.Unmarshal(raw, &items) != nil {
-			return false
-		}
-		for _, item := range items {
-			if !receiptRequiredFields(item, shape.Elem()) {
-				return false
-			}
-		}
-	default:
-		if string(raw) == "null" {
-			return false
-		}
-	}
-	return true
+	return integration.RequiredFields(raw, shape)
 }

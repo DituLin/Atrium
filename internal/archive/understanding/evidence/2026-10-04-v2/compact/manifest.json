@@ -1,0 +1,30 @@
+{
+  "synthetic_only": true,
+  "configuration_fingerprint": "88ed68580fe3ceaf4ee700fc3118e26955fbf465136fb469adc341ab7b3ad961",
+  "reasoning": "low",
+  "temperature_advisory": 0,
+  "response_format": "json_object",
+  "prompt_sha256": "00d222a8009e2d9b05d05977cf941ec184d5a7a1b289d40e125f3e0a21585d74",
+  "schema_sha256": "38974193758028b7eb75f991559ecc6d966746ee57e736a0907e3b1b696c95f1",
+  "host_anchor_policy": "native-report-header-section/1",
+  "evaluation": "five text cases passed live; both native chunks passed strict validation live; one-report linkage and full native evaluator passed on unchanged saved responses after host section-policy correction",
+  "files": {
+    "education.json": "8f0ca0bdad9d6da3249d2fbc97acd8e4da8aca326509ed5d4d51899e670c3647",
+    "education.validated.json": "7b25d488df6ff60193d8b2b720b8f0a1d31afc32176c17f560b9e591c3a6a140",
+    "extraction-v2.schema.json": "38974193758028b7eb75f991559ecc6d966746ee57e736a0907e3b1b696c95f1",
+    "finance.json": "55c180c9ebaeb96ea801a24cbc31af56068c644c0551dbefddc0e5eff9e3eb86",
+    "finance.validated.json": "a96c9a6131be6372f10b81c9cfa38d86656380e3c14a74369eb33b166466a0ce",
+    "finance_explicit_control.json": "c35d874526a9b1078e4fbedb2fe45f898fd8fa80b90451a3affb29a0749191c2",
+    "finance_explicit_control.validated.json": "98cda01db0ef5950ca35ce927d5262c81d8989bda09dd4c6cf166a3b4f03b540",
+    "health.json": "03211100daf66b398abeb8e623b63c41d6e91035604b9a83e81613a62d8580b2",
+    "health.validated.json": "63a831962a1770c5d0001fe74a19635c984aa2d2c3cc0e91033b9991ff3c2b96",
+    "live-before-section-policy.log": "749b7ba93e40c0ee824e0831c0e23729df987914849661c0b92dfc6727a50d1e",
+    "native-report-chunk-0.json": "2d12df9461fde014f18a0df5db1140249aaae430ddaa9a5aafb21733dc39dc8a",
+    "native-report-chunk-1.json": "e04804568e40d24c281f5f55f13af12f41868285e20fe23b570088ce4d732636",
+    "native-report.validated.json": "f57be7d3976914264263317fb2a962193302eee3e687d14903b96b737ca18d2d",
+    "prompt-v2.txt": "00d222a8009e2d9b05d05977cf941ec184d5a7a1b289d40e125f3e0a21585d74",
+    "property.json": "a55f9e11d149e93b37971d44efd0c9b51907af6821b4cfcdb347a9472c60fc41",
+    "property.validated.json": "30d8a9c1bc736e2686d44c332d3275d84d75930b98cb45e6c9960527e2da9aa4",
+    "synthetic-native-report.parse.json": "5ee18ac277639e1c8f24d94d7924178a52f6a3de12c96037c2ed68122482555d"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "helper_sha256": "9136336d8cd0775af55271bab206496ba7a3c4e37bd561d210fcb69e1c25e234",
+  "results": [
+    {
+      "case": "relocated",
+      "exit": 0,
+      "stdout_bytes": 4292,
+      "stderr_bytes": 0,
+      "summary": {
+        "protocol": 1,
+        "status": "parsed",
+        "code": "",
+        "keys": [
+          "allows_copying",
+          "code",
+          "counts",
+          "coverage",
+          "encrypted",
+          "engine",
+          "format",
+          "pages",
+          "protocol",
+          "segments",
+          "status"
+        ]
+      }
+    },
+    {
+      "case": "missing_codec",
+      "exit": 0,
+      "stdout_bytes": 559,
+      "stderr_bytes": 0,
+      "summary": {
+        "protocol": 1,
+        "status": "unsupported",
+        "code": "parser_unavailable",
+        "keys": [
+          "allows_copying",
+          "code",
+          "counts",
+          "coverage",
+          "encrypted",
+          "engine",
+          "format",
+          "pages",
+          "protocol",
+          "segments",
+          "status"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,396 @@
+{
+  "engine": {
+    "build": "9c9c4ac321b6debbf9909e42469671f4ee6f726f557a7712afb6e657828cdf1c",
+    "helper": "atrium-native/1",
+    "language_correction": false,
+    "languages": [
+      "zh-Hans",
+      "en-US"
+    ],
+    "os_build": "24C101",
+    "recognition": "accurate",
+    "vision_revision": 3
+  },
+  "files": [
+    {
+      "file": "bad-crc.png",
+      "sha256": "cffc122b1ea9f46498a886458d5bf4fdc1a58edc4a7d047d5a7ab6f930223e15",
+      "source_bytes": 88532,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.015
+    },
+    {
+      "file": "bad-zlib-checksum.png",
+      "sha256": "2d1b9b1e503333a656f886b10e7d2d25d4487a5287a06f354efdd8f106ad9d37",
+      "source_bytes": 88520,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.016
+    },
+    {
+      "file": "embedded-eoi-missing-end.jpg",
+      "sha256": "e8552ba019a194d98dc4f4318c05753435b9072a65b0b5e5d7282896e16cc6f4",
+      "source_bytes": 161991,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.016
+    },
+    {
+      "file": "excess-inflate.png",
+      "sha256": "71ea26a9391298582a02890d83ffad2a5f1a6f401ceada6c699d2ed8d93d5e22",
+      "source_bytes": 75,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.014
+    },
+    {
+      "file": "invalid-filter.png",
+      "sha256": "32c1d317c8bee5daf5aa07727cc7ac4ee535d196fc717a860e29ccd8a7f099d4",
+      "source_bytes": 75,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.014
+    },
+    {
+      "file": "missing-iend.png",
+      "sha256": "f1128c0889b308b5d39e27d43695cdc398ff52caacc5912d7ec91611ec32dab5",
+      "source_bytes": 88520,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.016
+    },
+    {
+      "file": "missing-riff-padding.webp",
+      "sha256": "bba4310928e51404e53ee4abb922d5518ebdb874c0e4d15ba6a48c3374cac18a",
+      "source_bytes": 26989,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.014
+    },
+    {
+      "file": "short-inflate.png",
+      "sha256": "bf0e0c97c488c600ff9978c284f3115a1a9a5a5026906830d0a6fbccfd8f6f2d",
+      "source_bytes": 74,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.013
+    },
+    {
+      "file": "trailing-data.png",
+      "sha256": "a5214a0197594f1837b1962f567c27c173fd7a9c954dfe37d24032e47a5a2a08",
+      "source_bytes": 88536,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.016
+    },
+    {
+      "file": "truncated-1-4.jpg",
+      "sha256": "a1097f1fde885caacf43deae9b6a5728a66faed482e33e855d4472091b879d0f",
+      "source_bytes": 40496,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.013
+    },
+    {
+      "file": "truncated-1-4.png",
+      "sha256": "534850f4f725f79c7d6e87b59bc5f624ef4078d1af3a312379d955765a95bed9",
+      "source_bytes": 22133,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.012
+    },
+    {
+      "file": "truncated-1-4.webp",
+      "sha256": "d857e560d50496521132f76f776c136fc2947a0b5e23a103687cb9b3b284b083",
+      "source_bytes": 6745,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.011
+    },
+    {
+      "file": "truncated-2-4.jpg",
+      "sha256": "93ae33f8a75cdf8ed7b94909b7d05e3d535c3f60753085e71b3d7bf7531dc6b5",
+      "source_bytes": 80993,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.015
+    },
+    {
+      "file": "truncated-2-4.png",
+      "sha256": "aad7ad6c5c1a2ca76debf6077b63291bff52c9317477dbf39d39f52929cb7bb8",
+      "source_bytes": 44266,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.015
+    },
+    {
+      "file": "truncated-2-4.webp",
+      "sha256": "f5543348b044bfaaf4ad6dd85b1f04ca52b93b24edac2a407acc783db5fa0d7c",
+      "source_bytes": 13490,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.015
+    },
+    {
+      "file": "truncated-3-4.jpg",
+      "sha256": "f4351846eb59df404697d5dde9a9ddd54229e4d9103d6434402405f58a27e896",
+      "source_bytes": 121490,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.016
+    },
+    {
+      "file": "truncated-3-4.png",
+      "sha256": "1ebf9f4bbce877f7f242941a7faf4fe988c1e31620031ebbb25bc075bbbc8203",
+      "source_bytes": 66399,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.016
+    },
+    {
+      "file": "truncated-3-4.webp",
+      "sha256": "535ad69754bbf94116c16de6c6d8d5038cd978765d62a4ea6c8e5323558b4c24",
+      "source_bytes": 20235,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.015
+    },
+    {
+      "file": "truncated-95-100.jpg",
+      "sha256": "c41524ba535d98f386c7913748ceb09a164587d8ea69984134fa11153ec49b14",
+      "source_bytes": 153887,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.016
+    },
+    {
+      "file": "truncated-95-100.png",
+      "sha256": "5f9e1921f1d06a607f20aa630837e28b12e0e41eead6cbedd52af7203fa5ed2c",
+      "source_bytes": 84105,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.016
+    },
+    {
+      "file": "truncated-95-100.webp",
+      "sha256": "b856858a4b1b63ff52a6d495ad7097b62e5075daf572b3631663214d76f7b5d6",
+      "source_bytes": 25631,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.015
+    },
+    {
+      "file": "truncated-appended-eoi.jpg",
+      "sha256": "1e345c62ecf2cd5c8c7e2989d61c7947ce506a30f23068d23b5f429633b5c8f9",
+      "source_bytes": 80995,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.016
+    },
+    {
+      "file": "truncated-reframed-idat.png",
+      "sha256": "4e0d37388f461c6e75c66508992eca3ad3d7990767b9bf6db0975faf28df1402",
+      "source_bytes": 44288,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.015
+    },
+    {
+      "file": "truncated-reframed-lossless.webp",
+      "sha256": "2452ac95e9c46178bd19cef64ac8857ca196092df9ec29029b924a97e166a355",
+      "source_bytes": 13500,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.016
+    },
+    {
+      "file": "truncated-reframed-lossy.webp",
+      "sha256": "4db4af5c12a570700fd1eac6028e3f2bbbba29e0a4a5352929cd257957d16ffa",
+      "source_bytes": 23094,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.015
+    },
+    {
+      "file": "truncated-reframed-riff.webp",
+      "sha256": "51377210f6bf929f075c81990e59ce40b97205a0ca3802502042fe2937432530",
+      "source_bytes": 13490,
+      "status": "invalid",
+      "complete": false,
+      "expected_complete": false,
+      "observations": 0,
+      "seconds": 0.013
+    },
+    {
+      "file": "valid-adam7.png",
+      "sha256": "ce9ca4375b376dd2695451a5458e68b2511d2d3785d604be3fd360b24514e8e1",
+      "source_bytes": 90,
+      "status": "empty",
+      "complete": true,
+      "expected_complete": true,
+      "observations": 0,
+      "seconds": 0.156
+    },
+    {
+      "file": "valid-alpha.webp",
+      "sha256": "3ab1314e391bf9b3cdf11cce71b26df20e5a40b10557a9382d05c0e289d8ae40",
+      "source_bytes": 26980,
+      "status": "parsed",
+      "complete": true,
+      "expected_complete": true,
+      "observations": 19,
+      "seconds": 0.309
+    },
+    {
+      "file": "valid-cmyk.jpg",
+      "sha256": "3545d2760fb001a86164458dafc7864aeb0b178a6f0e95d308e9e0ca117ba8f3",
+      "source_bytes": 482600,
+      "status": "parsed",
+      "complete": true,
+      "expected_complete": true,
+      "observations": 19,
+      "seconds": 0.329
+    },
+    {
+      "file": "valid-comment-eoi.jpg",
+      "sha256": "b0bffe5ce84f8226d3d58c8cbb065eed79f2b181fe40fca4e8556ea7e46dd688",
+      "source_bytes": 161993,
+      "status": "parsed",
+      "complete": true,
+      "expected_complete": true,
+      "observations": 19,
+      "seconds": 0.311
+    },
+    {
+      "file": "valid-gray1.png",
+      "sha256": "da0abdfeb8e7a9caf7ca31aeb113c1bc723d5c6505d110b07ad0afa33004211c",
+      "source_bytes": 72,
+      "status": "empty",
+      "complete": true,
+      "expected_complete": true,
+      "observations": 0,
+      "seconds": 0.158
+    },
+    {
+      "file": "valid-gray16.png",
+      "sha256": "fbc8374287eae105ecf93fd94c26e5d1e6ed07667372cf638ae2900d5772ecaa",
+      "source_bytes": 73,
+      "status": "empty",
+      "complete": true,
+      "expected_complete": true,
+      "observations": 0,
+      "seconds": 0.159
+    },
+    {
+      "file": "valid-grayscale.jpg",
+      "sha256": "580db86f183ce3b8d6c10f4504433bfea7d18f7e946f26efe5af509bfa0932ff",
+      "source_bytes": 149808,
+      "status": "parsed",
+      "complete": true,
+      "expected_complete": true,
+      "observations": 19,
+      "seconds": 0.312
+    },
+    {
+      "file": "valid-large-progressive.jpg",
+      "sha256": "01fdf141ec2c118adc23f0b3dbca551bd39de210e27fc8dfcf5c115640f5a079",
+      "source_bytes": 211703,
+      "status": "empty",
+      "complete": true,
+      "expected_complete": true,
+      "observations": 0,
+      "seconds": 0.701
+    },
+    {
+      "file": "valid-lossy.webp",
+      "sha256": "4a7d3d08ea327d2d79ae988edd835500aa5b68b519bde811b5682c5846a35f9b",
+      "source_bytes": 46166,
+      "status": "parsed",
+      "complete": true,
+      "expected_complete": true,
+      "observations": 19,
+      "seconds": 0.667
+    },
+    {
+      "file": "valid-odd-chunk.webp",
+      "sha256": "db4be0a1bbe2d440287585c72805c8d58345ad9c30eaf585ce6c77ba1d89348d",
+      "source_bytes": 26990,
+      "status": "parsed",
+      "complete": true,
+      "expected_complete": true,
+      "observations": 19,
+      "seconds": 0.518
+    },
+    {
+      "file": "valid-progressive.jpg",
+      "sha256": "2663623cae26f8ba27b1a0642f2f09f35cfbd2594c356f5c828916e293c8c2d1",
+      "source_bytes": 111753,
+      "status": "parsed",
+      "complete": true,
+      "expected_complete": true,
+      "observations": 19,
+      "seconds": 0.326
+    },
+    {
+      "file": "valid-split-idat.png",
+      "sha256": "a5e22435b821f31b8d2b1b508db362fef201502326146d106f2c2cadff8640b7",
+      "source_bytes": 88568,
+      "status": "parsed",
+      "complete": true,
+      "expected_complete": true,
+      "observations": 19,
+      "seconds": 0.339
+    }
+  ]
+}

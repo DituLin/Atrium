@@ -1,8 +1,8 @@
 # Atrium 的 OpenClaw 工具插件
 
-插件 ID 为 `atrium-home`。它把专用家庭 agent 的十个模型工具接到本地 Go Brain JSONL 宿主。宿主负责持久操作 ID、授权、调用预算、MCP、恢复与确定性结果；插件不注册 Shell、文件、网络浏览或凭据工具。
+插件 ID 为 `atrium-home`。它把专用家庭 agent 的二十个模型工具（原十三项加七项档案工具）接到本地 Go Brain JSONL 宿主。宿主负责持久操作 ID、授权、调用预算、MCP、恢复与确定性结果；插件不注册 Shell、文件、网络浏览或凭据工具。
 
-已按本机 OpenClaw 2026.5.20 的 `docs/plugins/building-plugins.md`、`docs/plugins/hooks.md` 及已安装 SDK 类型编写。Node 要求 22.19 或更新。源码是可直接加载的 ESM JavaScript，无额外 npm 运行依赖。
+已按本机 OpenClaw 2026.9.8 的 `docs/plugins/building-plugins.md`、`docs/plugins/hooks.md` 及已安装 SDK 类型编写。Node 要求 22.19 或更新。源码是可直接加载的 ESM JavaScript，无额外 npm 运行依赖。
 
 ## 正式维护者入口
 
@@ -29,7 +29,7 @@ ask 每轮生成新的 session / invocation UUID，启动本地 OpenClaw，绝�
 
 ## 安装前准备
 
-先构建 Go Brain 宿主，以其 `--tools-json` 输出生成专用的 `tools.json`。文件必须是 `brain.ModelTools` 的 JSON 数组，包含恰好十个白名单工具；不得包含 `operation_id`、`wait_ms` 或 `home_get_operation`。文件使用 `0600` 权限，插件拒绝软链接、组/其他用户可访问文件和超过 256 KiB 的清单。
+先构建 Go Brain 宿主，以其 `--tools-json` 输出生成专用的 `tools.json`。文件必须是 `brain.ModelTools` 的 JSON 数组，包含恰好二十个白名单工具；不得包含 `operation_id`、`wait_ms`、`request_id`、`resolution_key` 或 `home_get_operation`。文件使用 `0600` 权限，插件拒绝软链接、组/其他用户可访问文件和超过 256 KiB 的清单。
 
 插件配置只接受本机维护者提供的以下字段：
 
@@ -44,13 +44,13 @@ ask 每轮生成新的 session / invocation UUID，启动本地 OpenClaw，绝�
 
 所有路径都由本机配置提供，工具参数无法修改它们。`hostArgs` 通过 `spawn` 数组传递，`shell: false`。不要把密钥作为命令行参数。
 
-维护者可通过 `openclaw plugins install /absolute/path/to/adapters/openclaw` 安装；本目录的生成过程不会安装插件或修改 OpenClaw 配置。为 `plugins.entries.atrium-home` 设置上面的 `config`，并设置 `hooks.allowConversationAccess: true`，使 `before_agent_start`、`agent_end` 生命周期钩子可用。插件只读取身份字段，不读取或保留 prompt/messages。
+维护者可通过 `openclaw plugins install /absolute/path/to/adapters/openclaw` 安装；本目录的生成过程不会安装插件或修改 OpenClaw 配置。为 `plugins.entries.atrium-home` 设置上面的 `config`，并设置 `hooks.allowConversationAccess: true`，使 `before_agent_run`、`agent_end` 生命周期钩子可用。插件只读取身份字段，不读取或保留 prompt/messages。
 
-仅在专用 agent 的工具允许列表中加入本插件的十个工具；同时排除该 agent 的内置通用工具及其他插件工具。仅启用插件无法移除 OpenClaw 已有的工具。使用已配置的 DeepSeek 模型作为该 agent 的模型，不把工具宿主当模型提供方。
+仅在专用 agent 的工具允许列表中加入本插件的二十个工具；同时排除该 agent 的内置通用工具及其他插件工具。仅启用插件无法移除 OpenClaw 已有的工具。使用已配置的 DeepSeek 模型作为该 agent 的模型，不把工具宿主当模型提供方。
 
 ## 生命周期与协议
 
-`before_agent_start` 必须提供明确且一致的 `event.runId` / `ctx.runId`，并有受信 agentId 和 sessionId（缺少 sessionId 时使用 sessionKey）。插件立即发送 `start`，从此开始本地 30 秒期限。`before_tool_call` 绑定受信 toolCallId 与当前 run、工具名；`execute` 再次检查绑定。因此 hook 抛错或被 OpenClaw 跳过时，工具仍然拒绝执行。
+`before_agent_run` 必须提供明确且一致的 `event.runId` / `ctx.runId`，并有受信 agentId 和 sessionId（缺少 sessionId 时使用 sessionKey）。插件立即发送 `start`，从此开始本地 30 秒期限。`before_tool_call` 绑定受信 toolCallId 与当前 run、工具名；`execute` 再次检查绑定。因此 hook 抛错或被 OpenClaw 跳过时，工具仍然拒绝执行。
 
 JSONL 请求每行一个对象，带独立 RPC `id`：
 
@@ -65,7 +65,7 @@ wire `run_id` 是 `[agentId, sessionId或sessionKey, runId]` 的 JSON 数组 SHA
 
 活跃 runs 共享一个宿主进程；stdout 只用于 JSONL，stderr 继承宿主的安全结构化日志。所有 run（包括仍在启动的 run）均已终结、结束 RPC 已确认且在途 RPC 清空后，插件释放空闲宿主，使本地 CLI 能自然退出。后续新 run 可启动新宿主；Go 持久账本保留旧 run 墓碑。崩溃会关闭所有在途 run，只有新的 run 能重启进程。旧 run 的拒绝状态与 toolCallId 归属保留，跨 run 复用的 toolCallId 会变为歧义且拒绝执行；Go 的持久认领跨重启继续阻止重放。
 
-即使 `agent_end` 比 `before_agent_start` 先到，插件也立即标记该 run 已关闭并发送 Go `end` 持久化 tombstone。此清理允许启动宿主以保存关闭记录，但不会执行屏幕动作。若持久关闭失败或未明确返回 `closed: true`，整个插件生命周期停止接受工具和新 run。
+即使 `agent_end` 比 `before_agent_run` 先到，插件也立即标记该 run 已关闭并发送 Go `end` 持久化 tombstone。此清理允许启动宿主以保存关闭记录，但不会执行屏幕动作。若持久关闭失败或未明确返回 `closed: true`，整个插件生命周期停止接受工具和新 run。
 
 工具 abort 或 RPC 超时发送 `cancel`，关闭整轮，不自动重发动作。`agent_end` 仅作辅助清理；JS 30 秒与 Go 30 秒限制独立生效。取消已接受动作不表示 TV 动作被撤销；须按 Go 持久账本核实结果。
 
@@ -79,7 +79,7 @@ node --test adapters/openclaw/*.test.mjs
 
 ## 固定容量与恢复
 
-每个插件生命周期最多保留 **4096 个 run**、**32768 个 toolCallId 归属记录**。记录不按 TTL 删除，也不通过淘汰旧 run 来重复使用身份。JSONL 宿主最多接受 **64 个在途 RPC**，包括 start、call、end 等事件请求；这与 Go 内部的工具并发限制分别生效。
+每个插件生命周期最多保留 **4096 个 run**、**32768 个 toolCallId 归属记录**。记录不按 TTL 删除，也不通过淘汰旧 run 来重复使用身份。JSONL 宿主最多接受 **64 个在途 RPC**，包括 start、call、end 等事件请求；这与 Go 内部的工具并发限制分别生效。 Go 宿主将工具请求放入有界等待队列，最多同时执行四个；六条等批量调用会等待空槽，而不是因瞬间超过四条而报 busy。等待不阻塞 cancel/end 控制消息；排队请求继续遵守原轮次期限与取消状态，不重试已执行写入。
 
 达到任一容量后，插件拒绝新的家庭工作、关闭宿主，并输出固定的 `atrium_capacity_exceeded` 日志；需要重启插件生命周期后才能继续。未知 run 的 end 触及容量时，会先尝试保存 Go tombstone 再关闭宿主。重启不替代动作结果核实：已接受动作仍须检查 Go 持久账本，不能重发一个新操作来猜测恢复结果。
 
@@ -88,3 +88,39 @@ node --test adapters/openclaw/*.test.mjs
 本机 OpenClaw 会分别构建 hook 注册表与工具 factory 注册表。因此同一进程内，插件按完整受信配置（agentId、hostBinary、hostArgs、toolsFile）和已验证工具清单的指纹共享控制状态。共享通过带版本的 `globalThis` Symbol 实现；不同 agent、账本启动参数、配置或工具清单不会共享。
 
 每次注册保留独立引用，重复 stop 幂等；旧注册表停止不会关闭仍被新注册表使用的宿主，已停止注册表的旧工具闭包也不能继续执行。最后一个引用停止才关闭控制状态。每个进程最多 32 个不同控制状态、每个状态最多 128 个注册引用；触顶拒绝继续注册并要求重启。测试依赖注入默认独立，仅显式传共享 Map 的测试会共用状态。
+
+## 家庭记录工具
+
+新增 `home_list_family_members`、`home_list_family_records`、`home_record_family_entry`。工具只能访问 Core principal 的 member_ids 白名单。字段说明来自 MCP schema；出生日期、测量时间、单位和成员关系不能由模型猜测。`display_on_tv` 必须明确填写。写入的 request_id 由宿主从 turn/call 身份生成，不暴露给模型。
+
+相同 call 引用重复执行保持同一请求 ID，相同内容返回原记录，不同内容冲突。新的 tool call 是新的记录意图，IM 侧必须避免把重放消息发起为新的记录；未知结果应先查询记录。NAS pending 仅证明本机记录保存，synced 才说明归档确认。
+
+更新部署时必须同时更新宿主、MCP、插件源码和 20 项 tools.json/agent allowlist，不能只复制单个文件。2026.9.8 的真实 DeepSeek 查询已验证；隔离环境中的合成记录也已完成模型写入、NAS 归档及配对浏览器显示。真实 IM 收发仍未验收，不能用 CLI 或合成上下文代替。旧十项清单会被新版插件拒绝。
+
+## OpenClaw 2026.9.8 运行配置
+
+此版本使用 `before_agent_run`，旧 `before_agent_start` 已移除。受信 run ID 从 hook 上下文取得，仍要求 agent/session/run/tool-call 绑定。维护者 `ask` 入口使用 `--local`，必须设置独立的 `OPENCLAW_STATE_DIR`，不能与正在运行的 IM Gateway 共用状态目录。独立目录需通过 doctor/agents add 完成迁移。
+
+专用配置的全局和 agent 工具允许清单都必须包含二十项工具。设置 `tools.codeMode: false` 和 `tools.toolSearch: false`，直接提交工具 schema，使 OpenClaw toolSummary 的每次调用对应宿主的一份回执。新版本默认包装器会额外计入 exec/tool_call；不要通过放松回执计数验证来掩盖差异。
+
+## IM 入站去重（2026.9.8）
+
+插件在 `before_dispatch` 钩子接收已授权 Discord/微信的可信上下文。仅处理配置 agent 的 canonical session key，并要求原始 messageId、accountId、conversationId、senderId 一致。Discord 使用原生数字消息 ID；微信拒绝缺少 provider ID 而退回 `openclaw-weixin…` 临时 ID 的消息。不会从正文或模型参数提取身份。
+
+发起模型运行前，通过私有 JSONL `ingress` 请求，将上述身份组合的 SHA-256 哈希写入宿主 `brain_inbound_messages`。提交成功的首条消息继续正常处理；同一身份再次投递不会再启动模型。哈希和接收时间保存在绑定 Core/principal 的私有账本，跨宿主/网关重启保留，不存消息正文，也不按短期 TTL 淘汰。并发接收只有一次获准。
+
+此机制选择保守语义：若首次接收后崩溃，重复消息不会自动重做。提示只说明此前已接收，不声称已经保存或展示；用户应发送**新的查询消息**核实。账本不可用或身份不完整时拒绝新的入站处理。原 API 的 request_id 幂等仍独立有效；新消息 ID 的相同内容仍可能是用户有意再次记录，不按文字相似度去重。
+
+去重范围是现有 agent 的微信/Discord 入站消息（包括查询），并非只筛选家庭关键词。CLI 维护者入口没有 IM 入站钩子，沿用每轮独立身份。不要删除或重建该账本以“重试”；原消息哈希不会被当前 NAS JSON 档案恢复。配置切换到全新 principal/账本也不自动继承旧接收历史。
+
+升级后可执行以下安装兼容性检查（参数为本机 OpenClaw 包目录）：
+
+```sh
+node scripts/check-openclaw-ingress.mjs /opt/homebrew/lib/node_modules/openclaw
+```
+
+检查导入实际安装版本的消息映射函数，将合成 provider 上下文传入 Atrium 插件，验证微信临时 MessageSid 改变时仍按 MessageSidFull 去重，以及 Discord 重投和缺失 sender 的处理。它不加载私人配置、不调用模型或 IM，也不修改家庭数据。框架内部模块布局变化时会明确失败，需要重新检查 dispatcher；通过仅证明字段映射兼容，真实私聊收发必须另行验收。
+
+## 综合档案工具（T11 开发版本）
+
+七项档案工具、版本化覆盖范围、宿主身份、来源回答和真实隔离模型验收见 `internal/brain/README.archives.md`。原十三项工具仍保留；现网安装是否升级由部署验收单独确认。新工具不能仅复制插件：MCP、宿主、20 项工具清单和允许列表需一起升级。

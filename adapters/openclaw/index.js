@@ -2,8 +2,14 @@ import { readFileSync, openSync, closeSync, fstatSync, constants } from 'node:fs
 import { isAbsolute } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { Host } from './host.js';
+import { renderArchiveInput } from './receipt-renderer.mjs';
+import { writeArchiveReceipt } from './archive-receipt.mjs';
+import { ArchiveInbox } from './archive-ingress.mjs';
+import { ArchiveCore } from './archive-core.mjs';
+import { ArchiveBridge, ARCHIVE_INPUT_TOOL, BRIDGE_SYMBOL } from './archive-bridge.mjs';
 
-export const TOOL_FIELDS = Object.freeze({
+export const TOOL_FIELDS = Object.freeze({home_show_archive_query:["screen_id","query_ref"],"home_analyze_archives":["operation", "count", "metric", "query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership"],"home_search_archives": ["query", "entity_id", "domain", "document_type", "date_from", "date_to", "ownership", "limit", "cursor"], "home_get_archive_evidence": ["document_id", "limit", "cursor"], "home_search_archive_entities": ["query", "entity_id", "limit", "cursor"], "home_get_archive_task": ["task_id"], "home_get_archive_question": ["task_id"], "home_answer_archive_question": ["task_id", "question_id", "question_version", "waiting_task_version", "extraction_id", "document_revision", "action", "target", "name"], "home_revise_archive": ["document_id", "document_revision", "kind", "reason", "observation_id", "value", "entity_id"],
+ home_list_family_members: [], home_list_family_records: ['member_id','limit','cursor'], home_record_family_entry: ['member_id','category','occurred_at','title','notes','measurements','display_on_tv','supersedes_id','revision_reason','retracted'],
  home_get_status: [], home_list_screens: [], home_get_screen: ['screen_id'],
  home_get_nas_status: [], home_list_photos: ['collection', 'limit', 'cursor'],
  home_get_photo: ['photo_id'], home_get_command: ['command_id'],
@@ -39,17 +45,22 @@ function loadTools(path) {
  for (const tool of tools) {
   const schema = tool?.inputSchema, name = tool?.name;
   if (!Object.hasOwn(TOOL_FIELDS, name) || seen.has(name) || !object(schema) || schema.type !== 'object' || schema.additionalProperties !== false || !object(schema.properties)) throw new Error('invalid_tools_inventory');
-  if (Object.keys(schema.properties).some(key => !TOOL_FIELDS[name].includes(key)) || /"(?:operation_id|wait_ms)"/.test(JSON.stringify(schema))) throw new Error('invalid_tools_schema');
+  if (Object.keys(schema.properties).some(key => !TOOL_FIELDS[name].includes(key)) || /"(?:operation_id|wait_ms|request_id|resolution_key)"/.test(JSON.stringify(schema))) throw new Error('invalid_tools_schema');
   if (typeof tool.description !== 'string' || !Array.isArray(schema.required) || schema.required.some(key => !Object.hasOwn(schema.properties, key))) throw new Error('invalid_tools_schema');
   seen.add(name);
  }
  return tools;
 }
 function validateConfig(config) {
- if (!object(config) || Object.keys(config).some(key => !['agentId','hostBinary','hostArgs','toolsFile'].includes(key)) || !opaque(config.agentId) || config.agentId.length > 128 || !isAbsolute(config.hostBinary ?? '') || !isAbsolute(config.toolsFile ?? '') || !Array.isArray(config.hostArgs) || config.hostArgs.length > 32 || config.hostArgs.some(v => typeof v !== 'string' || v.includes('\0'))) throw new Error('invalid_atrium_config');
- return Object.freeze({agentId:config.agentId,hostBinary:config.hostBinary,hostArgs:Object.freeze([...config.hostArgs]),toolsFile:config.toolsFile});
+ if (!object(config) || Object.keys(config).some(key => !['agentId','hostBinary','hostArgs','toolsFile','archives'].includes(key)) || !opaque(config.agentId) || config.agentId.length > 128 || !isAbsolute(config.hostBinary ?? '') || !isAbsolute(config.toolsFile ?? '') || !Array.isArray(config.hostArgs) || config.hostArgs.length > 32 || config.hostArgs.some(v => typeof v !== 'string' || v.includes('\0'))) throw new Error('invalid_atrium_config');
+ if (config.archives !== undefined && (!object(config.archives) || Object.keys(config.archives).some(k => !['root','origin','caFile','tokenFile','principal','sourceReader'].includes(k)) || !['root','caFile','tokenFile','sourceReader'].every(k => isAbsolute(config.archives[k] ?? '')) || !opaque(config.archives.principal) || typeof config.archives.origin !== 'string')) throw new Error('invalid_archive_config');
+ return Object.freeze({archives:config.archives ? Object.freeze({...config.archives}) : undefined,agentId:config.agentId,hostBinary:config.hostBinary,hostArgs:Object.freeze([...config.hostArgs]),toolsFile:config.toolsFile});
 }
 function createController(api, options, config, tools) {
+ let archiveBridge = options.archiveBridge;
+ if (!archiveBridge && config.archives) { const core = new ArchiveCore(config.archives); const inbox = new ArchiveInbox({...config.archives, scope:core.scope}); archiveBridge = new ArchiveBridge({inbox,core,agentId:config.agentId}); }
+ const runtimeNames = archiveBridge ? [...names, ARCHIVE_INPUT_TOOL.name] : names;
+ const runtimeTools = archiveBridge ? [...tools, {...ARCHIVE_INPUT_TOOL,inputSchema:ARCHIVE_INPUT_TOOL.parameters}] : tools;
  const host = options.host ?? new Host(config, options);
  const diagnosticInstance = hash([randomUUID()]);
  function diagnostic(stage, ctx, event = {}, extra = {}) {
@@ -78,15 +89,37 @@ function createController(api, options, config, tools) {
  host.onCrash = () => { for (const run of runs.values()) terminal(run); };
  function scope(ctx) { const id = identity(ctx); return !disabled && id && id[0] === config.agentId ? id : null; }
  function lookup(event, ctx) { const id = scope(ctx), runId = eventId(event, ctx, 'runId'); return id && runId ? { id, key: hash([...id, runId]), runId } : null; }
- api.on('before_agent_start', async (event, ctx) => {
+ // The same registry event may reach multiple attachments of this shared
+ // controller. Reuse only the identical event object, never a new delivery.
+ const ingressEvents = new WeakMap();
+ api.on('before_dispatch', (event, ctx) => {
+  const channel = ctx?.channelId;
+  if (!['discord','openclaw-weixin'].includes(channel) || !opaque(ctx?.sessionKey) || !ctx.sessionKey.startsWith(`agent:${config.agentId}:`)) return undefined;
+  const fingerprint = hash([ctx.sessionKey,ctx.channelId,ctx.accountId,ctx.conversationId,ctx.senderId,ctx.messageId,event?.messageId,event?.channel,event?.sessionKey]);
+  if (object(event) && ingressEvents.has(event)) { const cached=ingressEvents.get(event); return cached.fingerprint===fingerprint ? cached.result : {handled:true,text:'消息身份不一致，未启动新的操作。'}; }
+  const admit = async () => {
+   const deniedIngress = {handled:true,text:'本条消息暂时无法核实接收身份，未启动新的家庭操作。请检查连接后再查询记录。'};
+   const id = eventId(event,ctx,'messageId');
+   if (disabled || !id || !opaque(ctx.accountId) || !opaque(ctx.conversationId) || !opaque(ctx.senderId) || (event?.channel !== undefined && event.channel !== channel) || (event?.sessionKey !== undefined && event.sessionKey !== ctx.sessionKey) || (channel === 'openclaw-weixin' && id.startsWith('openclaw-weixin')) || (channel === 'discord' && !/^[0-9]{10,24}$/.test(id))) return deniedIngress;
+   try {
+    if (archiveBridge) await archiveBridge.reconcile();
+    const result = await host.rpc({method:'ingress',run_id:hash(['ingress-v1',config.agentId,channel,ctx.accountId,ctx.conversationId,ctx.senderId,id])});
+    if (result?.claimed === true) return undefined;
+    if (result?.claimed === false) return {handled:true,text:'这条消息此前已接收，本次不会重复执行。此前是否完成仍需核实；请发送一条新的查询消息查看记录或命令结果。'};
+    return deniedIngress;
+   } catch { return deniedIngress; }
+  };
+  const result = admit(); if (object(event)) ingressEvents.set(event,{fingerprint,result}); return result;
+ });
+ api.on('before_agent_run', async (event, ctx) => {
   const info = lookup(event, ctx); diagnostic('start', ctx, event, {scope_valid: !!info}); if (!info || runs.has(info.key)) return;
   if (runs.size >= maxRuns) { disableForCapacity(); return; }
-  const run = { active: false, key: info.key }; runs.set(info.key, run);
+  const run = { active: false, key: info.key, archiveContext:archiveBridge?.current() }; runs.set(info.key, run);
   run.timer = setTimeout(() => { terminal(run); run.ending = true; host.rpc({ method: 'cancel', run_id: run.key }).catch(() => {}).finally(() => { run.ending = false; releaseIdle(); }); }, options.runTimeoutMs ?? 30000);
   try { await host.rpc({ method: 'start', run_id: run.key }); if (!run.closed) run.active = true; } catch { terminal(run); releaseIdle(); }
  });
  api.on('before_tool_call', async (event, ctx) => {
-  if (!names.includes(event?.toolName)) return;
+  if (!runtimeNames.includes(event?.toolName)) return;
   const info = lookup(event, ctx), callId = eventId(event, ctx, 'toolCallId');
   const run = info && runs.get(info.key);
   diagnostic('before_tool', ctx, event, {scope_valid: !!info, run_found: !!run, run_active: !!run?.active});
@@ -98,7 +131,7 @@ function createController(api, options, config, tools) {
    return { block: true, blockReason: 'atrium_call_conflict' };
   }
   if (!prior && calls.size >= maxCalls) { disableForCapacity(); return { block: true, blockReason: 'atrium_capacity_exceeded' }; }
-  calls.set(key, { run, tool: event.toolName, wire: hash([...info.id, info.runId, callId]) });
+  if (!prior) calls.set(key, { run, tool: event.toolName, wire: hash([...info.id, info.runId, callId]) });
  });
  api.on('agent_end', async (event, ctx) => {
   const info = lookup(event, ctx); if (!info) return;
@@ -126,13 +159,22 @@ function createController(api, options, config, tools) {
  });
  api.registerTool(ctx => {
   const id = scope(ctx); diagnostic('factory', ctx, {}, {scope_valid: !!id}); if (!id) return null;
-  return tools.map(tool => ({ name: tool.name, label: tool.name, description: tool.description, parameters: structuredClone(tool.inputSchema),
+  return runtimeTools.map(tool => ({ name: tool.name, label: tool.name, description: tool.description, parameters: structuredClone(tool.inputSchema),
    async execute(callId, params, signal) {
     const mapping = opaque(callId) && calls.get(hash([...id, callId]));
-    const invalidParams = !object(params) || Object.keys(params).some(key => !TOOL_FIELDS[tool.name].includes(key));
+    const invalidParams = !object(params) || Object.keys(params).some(key => !(tool.name===ARCHIVE_INPUT_TOOL.name ? ['visibility_intent','input_kind'] : TOOL_FIELDS[tool.name]).includes(key));
     diagnostic('execute', ctx, {toolCallId: callId}, {disabled, mapping_found: !!mapping, mapping_ambiguous: !!mapping?.ambiguous, run_active: !!mapping?.run?.active, tool_matches: mapping?.tool === tool.name, params_valid: !invalidParams});
     if (disabled || !mapping || mapping.ambiguous || !mapping.run.active || mapping.tool !== tool.name || invalidParams) return denied();
     try {
+     if (tool.name === ARCHIVE_INPUT_TOOL.name) {
+      const argsHash=hash(params);
+      if(mapping.archivePromise)return mapping.argsHash===argsHash?await mapping.archivePromise:denied();
+      if(signal?.aborted || (mapping.run.toolCalls??0)>=8)return denied();
+      mapping.run.toolCalls=(mapping.run.toolCalls??0)+1;mapping.argsHash=argsHash;
+      mapping.archivePromise=(async()=>{const result=await archiveBridge.accept(params,mapping.run.archiveContext,{signal});writeArchiveReceipt({path:process.env.ATRIUM_BRAIN_RECEIPT_FILE,invocation:process.env.ATRIUM_BRAIN_INVOCATION_ID,run:mapping.run.key,args:params,result});return {content:[{type:'text',text:JSON.stringify(result)},{type:'text',text:renderArchiveInput(result)}]};})();
+      return await mapping.archivePromise;
+     }
+     if(!mapping.counted){if((mapping.run.toolCalls??0)>=8)return denied();mapping.run.toolCalls=(mapping.run.toolCalls??0)+1;mapping.counted=true;}
      const response = await host.rpc({ method: 'call', run_id: mapping.run.key, call_id: mapping.wire, tool: tool.name, arguments: params }, signal);
      const result = response?.tool_result;
      if (!object(result) || !Array.isArray(result.content) || result.content.some(item => item?.type !== 'text' || typeof item.text !== 'string')) { diagnostic('response_invalid', ctx, {toolCallId: callId}); return denied(); }
@@ -142,20 +184,21 @@ function createController(api, options, config, tools) {
     } catch (error) { diagnostic('host_failure', ctx, {toolCallId: callId}); terminal(mapping.run); releaseIdle(); return denied(error); }
    }
   }));
- }, { names, optional: true });
- const plugin = { close() { disabled = true; for (const run of runs.values()) terminal(run); host.close(); } };
+ }, { names:runtimeNames, optional: true });
+ if (archiveBridge) api.on('before_prompt_build', () => { const prompt=archiveBridge.prompt(); return prompt ? {appendSystemContext:prompt} : undefined; });
+ const plugin = { start() { if(archiveBridge) { if(globalThis[BRIDGE_SYMBOL] && globalThis[BRIDGE_SYMBOL]!==archiveBridge) throw new Error('archive_bridge_conflict'); globalThis[BRIDGE_SYMBOL]=archiveBridge; archiveBridge.start(); } }, close() { disabled = true; for (const run of runs.values()) terminal(run); host.close(); if(archiveBridge){if(globalThis[BRIDGE_SYMBOL]===archiveBridge)delete globalThis[BRIDGE_SYMBOL];return Promise.resolve(archiveBridge.stop()).then(()=>archiveBridge.inbox?.close());} } };
  api.registerService?.({ id: 'atrium-home-host', start() {}, stop() { plugin.close(); } });
  return plugin;
 }
 // OpenClaw may build independent hook and tool registries in one process.
 // Share only identical maintainer configuration + validated inventory, never
 // session/model parameters. Tests opt into sharing with an explicit Map.
-const registrySymbol = Symbol.for('io.atrium.openclaw.controllers.v1');
+const registrySymbol = Symbol.for('io.atrium.openclaw.controllers.v2');
 export function registerPlugin(api, options = {}) {
  const config = validateConfig(api.pluginConfig);
  let inventory;
  try { inventory = loadTools(config?.toolsFile); } catch { throw new Error('invalid_tools_file_or_inventory'); }
- const key = hash([config?.agentId, config?.hostBinary, config?.hostArgs, config?.toolsFile, inventory]);
+ const key = hash([config?.agentId, config?.hostBinary, config?.hostArgs, config?.toolsFile, config?.archives, inventory]);
  const injected = Object.keys(options).length > 0;
  const registry = options.sharedRegistry ?? (injected ? new Map() : (globalThis[registrySymbol] ??= new Map()));
  if (!(registry instanceof Map)) throw new Error('invalid_controller_registry');
@@ -173,7 +216,7 @@ export function registerPlugin(api, options = {}) {
  state.refs++; let closed = false;
  const attachment = { close() {
   if (closed) return; closed = true; state.refs--;
-  if (state.refs === 0) { state.controller.close(); if (registry.get(key) === state) registry.delete(key); }
+  if (state.refs === 0) { if (registry.get(key) === state) registry.delete(key); return state.controller.close(); }
  } };
  try {
   for (const [name, handler] of state.hooks) api.on(name, (event, ctx) => {
@@ -185,7 +228,7 @@ export function registerPlugin(api, options = {}) {
    const tools = factory(ctx); if (!tools) return tools;
    return tools.map(tool => ({...tool, execute(...args) { return closed ? Promise.resolve(denied()) : tool.execute(...args); }}));
   }, toolOptions);
-  api.registerService?.({id:'atrium-home-host', start() {}, stop() { attachment.close(); }});
+  api.registerService?.({id:'atrium-home-host', start() { state.controller.start(); }, stop() { return attachment.close(); }});
  } catch { attachment.close(); throw new Error('atrium_registration_failed'); }
  return attachment;
 }

@@ -7,15 +7,17 @@ import (
 
 // Config is the whole configuration file (technical design §10).
 type Config struct {
-	Home    Home     `yaml:"home"`
-	Server  Server   `yaml:"server"`
-	Storage Storage  `yaml:"storage"`
-	Sources []Source `yaml:"sources"`
-	Media   Media    `yaml:"media"`
-	Screens Screens  `yaml:"screens"`
-	Widgets Widgets  `yaml:"widgets"`
-	Logging Logging  `yaml:"logging"`
-	Backup  Backup   `yaml:"backup"`
+	Home          Home          `yaml:"home"`
+	Server        Server        `yaml:"server"`
+	Storage       Storage       `yaml:"storage"`
+	Sources       []Source      `yaml:"sources"`
+	Media         Media         `yaml:"media"`
+	Screens       Screens       `yaml:"screens"`
+	Widgets       Widgets       `yaml:"widgets"`
+	Logging       Logging       `yaml:"logging"`
+	Backup        Backup        `yaml:"backup"`
+	FamilyArchive FamilyArchive `yaml:"family_archive"`
+	Archives      Archives      `yaml:"archives"`
 
 	// path is the file the config was loaded from; empty for defaults.
 	path     string    `yaml:"-"`
@@ -201,4 +203,24 @@ func (d Duration) D() time.Duration { return time.Duration(d) }
 type Video struct {
 	FFprobe string `yaml:"ffprobe"`
 	FFmpeg  string `yaml:"ffmpeg"`
+}
+
+// FamilyArchive is a writable archive separate from read-only media sources.
+type FamilyArchive struct {
+	Enabled    bool   `yaml:"enabled"`
+	Dir        string `yaml:"dir"`
+	Identity   string `yaml:"identity"`
+	AllowLocal bool   `yaml:"allow_local"`
+}
+
+// Archives enables local durable intake independently of the legacy NAS exporter.
+type Archives struct {
+	NativeHelperPath string   `yaml:"native_helper_path"`
+	NodePath         string   `yaml:"node_path"`
+	OpenClawPath     string   `yaml:"openclaw_path"`
+	WorkerPluginPath string   `yaml:"worker_plugin_path"`
+	ProviderPath     string   `yaml:"provider_path"`
+	Enabled          bool     `yaml:"enabled"`
+	MaxBytes         int64    `yaml:"max_bytes"`
+	UploadTimeout    Duration `yaml:"upload_timeout"`
 }

@@ -51,7 +51,7 @@ it('keeps details scrolling, recheck focus and full nav/back roundtrips under th
   key('ArrowDown'); expect(document.activeElement).toBe(details); key('ArrowUp'); key('ArrowRight'); key('Enter');
   await screen.findByRole('tab', { name: '连接状态' }); key('Escape');
   await waitFor(() => expect(document.activeElement).toBe(nav('设置')));
-  key('ArrowLeft'); key('ArrowLeft'); key('Enter'); await screen.findByRole('region', { name: '今日事项' }); key('Escape');
+  key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft'); key('Enter'); await screen.findByRole('region', { name: '今日事项' }); key('Escape');
   await waitFor(() => expect(document.activeElement).toBe(nav('今日'))); expect(app.state.router.route.name).toBe('house');
 });
 it('purges House synchronously on revocation and will not display a late pre-pair response', async () => {

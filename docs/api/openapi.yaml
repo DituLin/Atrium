@@ -218,6 +218,17 @@ paths:
         "410": { $ref: "#/components/responses/ScreenRevoked" }
         "429": { $ref: "#/components/responses/RateLimited" }
 
+  /api/v1/family/members:
+    $ref: "family-records.openapi.json#/paths/~1api~1v1~1family~1members"
+  /api/v1/family/records:
+    $ref: "family-records.openapi.json#/paths/~1api~1v1~1family~1records"
+  /api/v1/integrations/family/members:
+    $ref: "family-records.openapi.json#/paths/~1api~1v1~1integrations~1family~1members"
+  /api/v1/integrations/family/records:
+    $ref: "family-records.openapi.json#/paths/~1api~1v1~1integrations~1family~1records"
+  /api/v1/admin/family/members/{id}:
+    $ref: "family-records.openapi.json#/paths/~1api~1v1~1admin~1family~1members~1{id}"
+
   /api/v1/family/house:
     get:
       tags: [screen]
@@ -1627,7 +1638,7 @@ components:
       properties:
         name:
           type: string
-          enum: [dashboard, photos, photo, videos, video, pair, connect, briefing, house, settings, calendar]
+          enum: [dashboard, photos, photo, videos, video, pair, connect, briefing, family, house, settings, calendar]
         collection: { type: string }
         photo_id: { type: string }
         video_id: { type: string }
@@ -2342,7 +2353,7 @@ components:
       properties:
         route:
           type: string
-          enum: [dashboard, photos]
+          enum: [dashboard, photos, family]
         collection: { $ref: "#/components/schemas/Collection" }
         photo_id: { type: string }
 

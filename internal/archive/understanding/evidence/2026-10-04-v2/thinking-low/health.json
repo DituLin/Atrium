@@ -1,0 +1,163 @@
+{
+  "configuration_fingerprint": "80e1d4a59c4dd4e6a1e6601f402fb56d0ad3104dd536056ff9e9164c8da188ae",
+  "usage": {
+    "input_tokens": 3590,
+    "output_tokens": 1113,
+    "total_tokens": 4703,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0,
+    "cost_usd": 0.0008142400000000001
+  },
+  "protocol_version": 1,
+  "invocation_id": "0c432a8b749d94ba9341c40451f905d6",
+  "input_digest": "221c13d3ec577d1a25df677cf9d4f8591a5872116ecf871cf744fc8a341a4d10",
+  "schema_version": "archive-extraction/2",
+  "extraction_version": "archive-understand/2",
+  "chunk_version": "archive-chunk/1",
+  "provider": "deepseek",
+  "requested_model": "deepseek/deepseek-v4-flash",
+  "model": "deepseek-v4-flash",
+  "response_model": "deepseek-flash",
+  "stop_reason": "stop",
+  "execution": {
+    "mode": "direct-provider",
+    "owner": {
+      "kind": "provider",
+      "id": "deepseek"
+    }
+  },
+  "result": {
+    "labels": [
+      "health",
+      "medical_report",
+      "laboratory",
+      "hematology"
+    ],
+    "domain": "health",
+    "document_type": "体检报告",
+    "subjects": [
+      {
+        "id": "s_patient",
+        "name": "林明",
+        "role": "patient",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "s1/body/0:46",
+            "start": 8,
+            "end": 10,
+            "quote": "林明",
+            "derived_value_ref": ""
+          }
+        ]
+      },
+      {
+        "id": "s_doctor",
+        "name": "王华",
+        "role": "doctor",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "s1/body/0:46",
+            "start": 14,
+            "end": 16,
+            "quote": "王华",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "dimensions": [
+          {
+            "kind": "unit",
+            "raw": "g/L",
+            "evidence": [
+              {
+                "view_id": "s1/body/0:46",
+                "start": 42,
+                "end": 45,
+                "quote": "g/L",
+                "derived_value_ref": ""
+              }
+            ]
+          }
+        ],
+        "subject_refs": [
+          "s_patient"
+        ],
+        "id": "f_hgb",
+        "name": "血红蛋白",
+        "raw": "145.6",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:46",
+            "start": 36,
+            "end": 41,
+            "quote": "145.6",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "decimal",
+            "value": "145.6"
+          }
+        ]
+      },
+      {
+        "dimensions": [],
+        "subject_refs": [],
+        "id": "f_date",
+        "name": "日期",
+        "raw": "2026-10-04",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:46",
+            "start": 20,
+            "end": 30,
+            "quote": "2026-10-04",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "date",
+            "value": "2026-10-04"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "id": "ev_report",
+        "type": "report",
+        "field_refs": [
+          "f_hgb",
+          "f_date"
+        ],
+        "subject_refs": [
+          "s_patient",
+          "s_doctor"
+        ],
+        "section_evidence": [
+          {
+            "view_id": "s1/body/0:46",
+            "start": 0,
+            "end": 4,
+            "quote": "体检报告",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "coverage": [
+      {
+        "view_id": "s1/body/0:46",
+        "disposition": "extracted"
+      }
+    ],
+    "issues": []
+  }
+}

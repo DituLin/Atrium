@@ -1,0 +1,2 @@
+# Preserve the exact original CRLF bytes used by parser evidence tests.
+feeding.txt -text whitespace=cr-at-eol

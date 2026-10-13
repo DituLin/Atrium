@@ -1,0 +1,57 @@
+?   	github.com/DituLin/Atrium/cmd/atrium	[no test files]
+ok  	github.com/DituLin/Atrium/cmd/atrium-brain-host	0.384s
+?   	github.com/DituLin/Atrium/cmd/home-mcp	[no test files]
+ok  	github.com/DituLin/Atrium/internal/app	11.974s
+ok  	github.com/DituLin/Atrium/internal/app/events	(cached)
+--- FAIL: TestNativeFloodReportsOutputLimit (3.01s)
+    native_parser_test.go:250: got archive: parser_timeout
+FAIL
+FAIL	github.com/DituLin/Atrium/internal/archive	17.185s
+ok  	github.com/DituLin/Atrium/internal/archiveworker	1.183s
+ok  	github.com/DituLin/Atrium/internal/auth	2.405s
+ok  	github.com/DituLin/Atrium/internal/auth/tlsgen	(cached)
+ok  	github.com/DituLin/Atrium/internal/backup	2.464s
+ok  	github.com/DituLin/Atrium/internal/brain	2.431s
+ok  	github.com/DituLin/Atrium/internal/brainhost	2.529s
+ok  	github.com/DituLin/Atrium/internal/briefing	2.849s
+ok  	github.com/DituLin/Atrium/internal/cli	3.796s
+ok  	github.com/DituLin/Atrium/internal/clock	(cached)
+ok  	github.com/DituLin/Atrium/internal/config	(cached)
+ok  	github.com/DituLin/Atrium/internal/diag	3.546s
+ok  	github.com/DituLin/Atrium/internal/domain	(cached)
+ok  	github.com/DituLin/Atrium/internal/family	(cached)
+ok  	github.com/DituLin/Atrium/internal/familyarchive	3.317s
+ok  	github.com/DituLin/Atrium/internal/homemcp	8.136s
+--- FAIL: TestFamilyMCPThroughBrainAndActualCore (0.05s)
+    family_mcp_test.go:44: 
+        	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/httpapi/family_mcp_test.go:44
+        	Error:      	"[0x5c655d4f9680 0x5c655d4f9800 0x5c655d4f9880 0x5c655d4f9900 0x5c655d4f9980 0x5c655d4f9a00 0x5c655d4f9a80 0x5c655d4f9b00 0x5c655d4f9b80 0x5c655d4f9c80 0x5c655d4f9d00 0x5c655d4f9d80 0x5c655d4f9e00 0x5c655d4f9e80 0x5c655d874000 0x5c655d874280 0x5c655d874300 0x5c655d874400 0x5c655d874500 0x5c655d874680]" should have 13 item(s), but has 20
+        	Test:       	TestFamilyMCPThroughBrainAndActualCore
+--- FAIL: TestIntegrationMCPActualCoreContract (0.03s)
+    integration_mcp_test.go:95: 
+        	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/httpapi/integration_mcp_test.go:95
+        	Error:      	"[0x5c655da29280 0x5c655da29400 0x5c655da29480 0x5c655da29500 0x5c655da29580 0x5c655da29600 0x5c655da29680 0x5c655da29700 0x5c655da29780 0x5c655da29880 0x5c655da29900 0x5c655da29980 0x5c655da29a00 0x5c655da29a80 0x5c655da29b00 0x5c655da29d00 0x5c655da29e00 0x5c655da29e80 0x5c655d4f8100 0x5c655d4f8380]" should have 13 item(s), but has 20
+        	Test:       	TestIntegrationMCPActualCoreContract
+2026/10/11 11:01:02 INFO backup written component=backup event=backup_written name=atrium-20260905-120000.db size_bytes=815104 config_copy=true
+2026/10/11 11:01:03 INFO source identity bound component=source event=identity_bound source_id=videos fstype=apfs
+2026/10/11 11:01:03 INFO source health changed component=source event=health_changed source_id=videos health=online code=""
+2026/10/11 11:01:03 INFO source identity bound component=source event=identity_bound source_id=videos fstype=apfs
+2026/10/11 11:01:03 INFO source health changed component=source event=health_changed source_id=videos health=online code=""
+FAIL
+FAIL	github.com/DituLin/Atrium/internal/httpapi	7.208s
+ok  	github.com/DituLin/Atrium/internal/indexer	3.296s
+ok  	github.com/DituLin/Atrium/internal/integration	2.498s
+ok  	github.com/DituLin/Atrium/internal/jobs	3.702s
+ok  	github.com/DituLin/Atrium/internal/logging	(cached)
+ok  	github.com/DituLin/Atrium/internal/media	3.886s
+?   	github.com/DituLin/Atrium/internal/media/testutil	[no test files]
+ok  	github.com/DituLin/Atrium/internal/screen	3.838s
+ok  	github.com/DituLin/Atrium/internal/source	4.498s
+ok  	github.com/DituLin/Atrium/internal/store	9.087s
+?   	github.com/DituLin/Atrium/internal/store/testutil	[no test files]
+?   	github.com/DituLin/Atrium/internal/version	[no test files]
+ok  	github.com/DituLin/Atrium/internal/video	2.916s
+ok  	github.com/DituLin/Atrium/internal/webui	(cached)
+ok  	github.com/DituLin/Atrium/internal/widget	2.683s
+ok  	github.com/DituLin/Atrium/internal/ws	2.634s
+FAIL

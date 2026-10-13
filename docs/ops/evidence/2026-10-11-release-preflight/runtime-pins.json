@@ -1,0 +1,29 @@
+{
+  "checked_at": "2026-10-11T06:50:12.095988+00:00",
+  "scope": "Read-only release dependency preflight; no production mutations",
+  "channel_patch_check": {
+    "verified": 10,
+    "would_change": 10,
+    "applied": false
+  },
+  "artifacts": {
+    "core": {
+      "exists": true,
+      "sha256": "3306c32171ddd632feab7461d936cc5904f80c99743efadeaf222c86823b71ef",
+      "signature_description": [
+        "designated => identifier \"io.atrium.core\" and certificate leaf = H\"30a4f180024b942443e96c19a322457694a525ca\""
+      ],
+      "signature_verify_exit": 0
+    },
+    "signing_script": {
+      "exists": true,
+      "sha256": "cbd859661c96bf266fba0e9fdae4b28ab8a1ea6da76521f69ed1f9e786fe9431"
+    },
+    "native_helper": {
+      "exists": true,
+      "sha256": "77c604fa36f3016d39c9c12411d1fd02756980de899440ebf9b11b1ab12868cd",
+      "signature_description": [],
+      "signature_verify_exit": 0
+    }
+  }
+}

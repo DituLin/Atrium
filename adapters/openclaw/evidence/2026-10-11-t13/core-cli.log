@@ -1,0 +1,4 @@
+=== RUN   TestArchiveIngressRealCoreAndHostInventory
+--- PASS: TestArchiveIngressRealCoreAndHostInventory (1.24s)
+PASS
+ok  	github.com/DituLin/Atrium/internal/store	1.581s

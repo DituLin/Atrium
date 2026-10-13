@@ -2,12 +2,12 @@ package httpapi_test
 
 import (
 	"encoding/json"
-	"github.com/google/jsonschema-go/jsonschema"
 	"net/http"
 	"os"
 	"testing"
 
 	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/stretchr/testify/require"
 )
 
@@ -63,4 +63,72 @@ func TestAdminEmptyPolicyMatchesPublishedContract(t *testing.T) {
 	resolved, err := schema.Resolve(nil)
 	require.NoError(t, err)
 	require.NoError(t, resolved.Validate(response["principal"].(map[string]any)["policy"]))
+}
+
+func TestAdminHouseholdDiscoveryAndExplicitArchiveGrant(t *testing.T) {
+	h := newPhotoHarness(t)
+	admin := h.newAdminToken()
+	resp := h.request(http.MethodGet, "/api/v1/admin/household", "", bearer(admin))
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	h.pairScreen(admin, "living_room_tv", "Living room")
+	household := decode[struct {
+		ID string `json:"id"`
+	}](t, resp)
+	require.NotEmpty(t, household.ID)
+	p, token := integrationToken(t, h, domain.IntegrationPolicy{Permissions: []string{"home.read", "screens.read", "screens.control", "family.read", "family.write"}, ScreenIDs: []string{"living_room_tv"}, SourceIDs: []string{photoSourceID}})
+	require.Equal(t, http.StatusForbidden, h.request(http.MethodGet, "/api/v1/admin/household", "", bearer(token)).StatusCode)
+	path := "/api/v1/admin/integrations/" + p.ID + "/grant-archives"
+	body := `{"permissions":["archive.read","archive.ingest"],"household_ids":["` + household.ID + `"],"expected_policy_version":1}`
+	resp = h.request(http.MethodPost, path, body, bearer(admin))
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	got := decode[domain.IntegrationPrincipal](t, resp)
+	require.EqualValues(t, 2, got.PolicyVersion)
+	require.Equal(t, p.Policy.ScreenIDs, got.Policy.ScreenIDs)
+	require.Equal(t, p.Policy.SourceIDs, got.Policy.SourceIDs)
+	require.Equal(t, p.Policy.MemberIDs, got.Policy.MemberIDs)
+	for _, permission := range p.Policy.Permissions {
+		require.True(t, got.Policy.Allows(permission))
+	}
+	require.True(t, got.Policy.Allows("archive.ingest"))
+	require.True(t, got.Policy.Allows("archive.read"))
+	require.False(t, got.Policy.Allows("archive.organize"))
+	require.False(t, got.Policy.Allows("archive.analyze"))
+	require.Equal(t, []string{household.ID}, got.Policy.HouseholdIDs)
+	require.Equal(t, http.StatusConflict, h.request(http.MethodPost, path, body, bearer(admin)).StatusCode)
+	require.Equal(t, http.StatusForbidden, h.request(http.MethodPost, path, body, bearer(token)).StatusCode)
+	// Complete replacement remains complete replacement: omitted archives are revoked.
+	resp = h.request(http.MethodPut, "/api/v1/admin/integrations/"+p.ID+"/policy", `{"permissions":["home.read"]}`, bearer(admin))
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	replaced := decode[domain.IntegrationPrincipal](t, resp)
+	require.Empty(t, replaced.Policy.HouseholdIDs)
+}
+
+func TestPublishedArchivePolicyAndGrantContract(t *testing.T) {
+	raw, err := os.ReadFile("../../docs/api/integrations.openapi.json")
+	require.NoError(t, err)
+	var doc struct {
+		Paths      map[string]json.RawMessage `json:"paths"`
+		Components struct {
+			Schemas map[string]json.RawMessage `json:"schemas"`
+		} `json:"components"`
+	}
+	require.NoError(t, json.Unmarshal(raw, &doc))
+	for _, name := range []string{"Policy", "ArchiveGrant"} {
+		var schema jsonschema.Schema
+		require.NotEmpty(t, doc.Components.Schemas[name])
+		require.NoError(t, json.Unmarshal(doc.Components.Schemas[name], &schema))
+		resolved, err := schema.Resolve(nil)
+		require.NoError(t, err)
+		input := map[string]any{"permissions": []any{"archive.read", "archive.ingest"}, "household_ids": []any{"stable-home"}}
+		if name == "ArchiveGrant" {
+			input["expected_policy_version"] = float64(1)
+		}
+		require.NoError(t, resolved.Validate(input))
+		if name == "ArchiveGrant" {
+			delete(input, "expected_policy_version")
+			require.Error(t, resolved.Validate(input))
+		}
+	}
+	require.NotEmpty(t, doc.Paths["/api/v1/admin/household"])
+	require.NotEmpty(t, doc.Paths["/api/v1/admin/integrations/{id}/grant-archives"])
 }

@@ -110,6 +110,11 @@ func (r *Runtime) Shutdown() error {
 	var errs []error
 	if err := r.server.Shutdown(ctx); err != nil {
 		errs = append(errs, fmt.Errorf("app: http shutdown: %w", err))
+		// Force-close active connections after the graceful budget. This unblocks
+		// upload Body.Read before BlobStore.Close waits on its publication lock.
+		if closeErr := r.server.HTTP().Close(); closeErr != nil {
+			errs = append(errs, closeErr)
+		}
 	}
 	if r.stopBg != nil {
 		r.stopBg()
@@ -126,6 +131,11 @@ func (r *Runtime) Shutdown() error {
 				errs = append(errs, fmt.Errorf("app: serve: %w", err))
 			}
 		case <-time.After(time.Second):
+		}
+	}
+	if r.archiveBlobs != nil {
+		if err := r.archiveBlobs.Close(); err != nil {
+			errs = append(errs, err)
 		}
 	}
 	// Jobs left running belong back in the queue (design §4.3).
@@ -187,7 +197,13 @@ func (r *Runtime) runBackground(ctx context.Context) {
 	if r.commands != nil {
 		start("screen", r.runExpirer)
 	}
+	if r.cfg.Archives.Enabled {
+		start("archives", r.runArchives)
+	}
 	start("retention", r.runRetention)
+	if r.cfg.FamilyArchive.Enabled {
+		start("family_archive", r.runFamilyArchive)
+	}
 	if r.backups != nil && r.cfg.Backup.Enabled && r.backups.Enabled() {
 		start("backup", r.runBackupScheduler)
 	}

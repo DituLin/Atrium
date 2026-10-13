@@ -1,0 +1,37 @@
+{
+  "checked_at": "2026-10-11T06:00:57.199122+00:00",
+  "scope": "isolated synthetic Core; no real IM transport or production archive deployment",
+  "browser": {
+    "name": "Chrome",
+    "version": "154.0.8037.99",
+    "tls": "ignoreHTTPSErrors for synthetic local certificate",
+    "websocket": "connected after harness Origin whitelist correction",
+    "four_domain_filters": "passed",
+    "initial_focus": "passed after fix",
+    "original_preview": "passed: actual image decoded 1800x1600 after CSP fix",
+    "pdf_boundary_focus": "independent script RED before fix; unchanged usable-focus assertion GREEN after fix"
+  },
+  "oneplus": {
+    "model": "ONEPLUS_A6013",
+    "app": "io.atrium.tv.preview",
+    "production_app_unchanged": true,
+    "webview": "119.0.6045.66",
+    "tls": "bundled synthetic CA; normal verification; no SSL bypass",
+    "normal_pairing": "passed",
+    "real_dpad_list_detail_return_focus": "passed after initial-focus fix",
+    "image_api": {
+      "http": 200,
+      "content_type": "image/png",
+      "bytes": 117288
+    },
+    "image_dom": "passed: actual image decoded 1800x1600 after CSP fix",
+    "pdf_pages": "page1 481x322; page2 and page4 322x481; decoded images and visible rotated original",
+    "pdf_boundary_focus": "passed: page2 -> previous -> page1 focuses next; page1 -> next x3 -> page4 focuses previous; actual ADB DPAD"
+  },
+  "host_show": {
+    "path": "Core query receipt -> MCP -> Brain executor -> Core screen command -> browser DOM -> applied",
+    "real_model_turn": false,
+    "evidence": "implementer TestT14LiveBrainArchiveShow 0.22s; root browser observed view requery"
+  },
+  "synthetic_fixture_warning": "Four domain UI fixture uses prepublished 70ml content with domain variation; only filter/UI plumbing, not classification quality acceptance"
+}

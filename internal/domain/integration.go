@@ -8,9 +8,11 @@ import (
 
 // IntegrationPolicy is an explicit allowlist. Empty lists grant no access.
 type IntegrationPolicy struct {
-	Permissions []string `json:"permissions"`
-	ScreenIDs   []string `json:"screen_ids"`
-	SourceIDs   []string `json:"source_ids"`
+	Permissions  []string `json:"permissions"`
+	ScreenIDs    []string `json:"screen_ids"`
+	SourceIDs    []string `json:"source_ids"`
+	MemberIDs    []string `json:"member_ids,omitempty"`
+	HouseholdIDs []string `json:"household_ids,omitempty"`
 }
 
 // Allows reports explicit permission membership.
@@ -24,10 +26,18 @@ func (p IntegrationPolicy) AllowsScreen(id string) bool { return slices.Contains
 // AllowsSource reports explicit source membership.
 func (p IntegrationPolicy) AllowsSource(id string) bool { return slices.Contains(p.SourceIDs, id) }
 
+// AllowsMember reports whether the policy explicitly grants the supplied member ID.
+func (p IntegrationPolicy) AllowsMember(id string) bool { return slices.Contains(p.MemberIDs, id) }
+
+// AllowsHousehold reports whether the household is in the archive scope allowlist.
+func (p IntegrationPolicy) AllowsHousehold(id string) bool {
+	return slices.Contains(p.HouseholdIDs, id)
+}
+
 // Validate rejects ambiguous, duplicate, wildcard and oversized entries.
 func (p IntegrationPolicy) Validate() error {
-	valid := []string{"home.read", "nas.read", "photos.read", "screens.read", "screens.control", "commands.read"}
-	for _, list := range [][]string{p.Permissions, p.ScreenIDs, p.SourceIDs} {
+	valid := []string{"home.read", "nas.read", "photos.read", "screens.read", "screens.control", "commands.read", "family.read", "family.write", "archive.read", "archive.ingest", "archive.organize", "archive.analyze"}
+	for _, list := range [][]string{p.Permissions, p.ScreenIDs, p.SourceIDs, p.MemberIDs, p.HouseholdIDs} {
 		if len(list) > 128 {
 			return Errorf(CodeInvalidRequest, "policy allowlist exceeds 128 entries")
 		}
@@ -78,4 +88,28 @@ type IntegrationCredential struct {
 // Active checks expiry and revocation at the supplied time.
 func (c IntegrationCredential) Active(now time.Time) bool {
 	return c.RevokedAt == nil && now.Before(c.ExpiresAt)
+}
+
+// IntegrationActor is a server-authenticated reference, never a request payload.
+// Repositories reload both rows; no caller-supplied policy is trusted.
+type IntegrationActor struct {
+	PrincipalID  string
+	CredentialID string
+}
+
+// AllowsArchive keeps archive permissions independent of legacy member grants.
+// Ingest delegates automatic parsing, classification and entity/fact extraction.
+// Organize permits manual correction; analysis also needs archive.read.
+func (p IntegrationPolicy) AllowsArchive(permission, household string) bool {
+	if !p.AllowsHousehold(household) {
+		return false
+	}
+	switch permission {
+	case "archive.read", "archive.ingest", "archive.organize":
+		return p.Allows(permission)
+	case "archive.analyze":
+		return p.Allows(permission) && p.Allows("archive.read")
+	default:
+		return false
+	}
 }

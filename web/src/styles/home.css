@@ -79,7 +79,7 @@
 .home-menu__cards { display: flex; align-items: flex-end; }
 .home-menu__card {
   appearance: none; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start;
-  width: calc(300 * var(--u)); height: calc(212 * var(--u)); padding: calc(28 * var(--u)); margin-right: calc(28 * var(--u));
+  width: calc(260 * var(--u)); height: calc(212 * var(--u)); padding: calc(28 * var(--u)); margin-right: calc(28 * var(--u));
   border-radius: calc(8 * var(--u)); border: 1px solid rgba(238, 233, 222, 0.18); background: rgba(238, 233, 222, 0.08);
   color: var(--moon); font: inherit; text-align: left; cursor: pointer;
   transition: transform 160ms ease, background-color 160ms ease;
@@ -94,3 +94,5 @@
 .home-menu__name { font-size: calc(40 * var(--u)); line-height: 1.2; }
 .home-menu__meta { font-size: calc(26 * var(--u)); opacity: 0.8; }
 .home-menu .hints { margin-top: calc(40 * var(--u)); }
+
+.home-menu__card:last-child { margin-right: 0; }

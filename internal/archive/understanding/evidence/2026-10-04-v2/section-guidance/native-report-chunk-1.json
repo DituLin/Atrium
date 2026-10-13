@@ -1,0 +1,173 @@
+{
+  "configuration_fingerprint": "89d56e4a5cb2d94f1089fecab52117a89302cf55bb123efbc86e69c50f6d52b0",
+  "usage": {
+    "input_tokens": 4879,
+    "output_tokens": 3490,
+    "total_tokens": 11569,
+    "cache_read_tokens": 3200,
+    "cache_write_tokens": 0,
+    "cost_usd": 0.0016692200000000001
+  },
+  "protocol_version": 1,
+  "invocation_id": "d3bdbcf7319245de71866c9d4577412e",
+  "input_digest": "38d4c888a2f884399c723c4a8cdc2e03dfec3a48596f48aa32b2cbb94b0535b8",
+  "schema_version": "archive-extraction/2",
+  "extraction_version": "archive-understand/2",
+  "chunk_version": "archive-chunk/1",
+  "provider": "deepseek",
+  "requested_model": "deepseek/deepseek-v4-flash",
+  "model": "deepseek-v4-flash",
+  "response_model": "deepseek-flash",
+  "stop_reason": "stop",
+  "execution": {
+    "mode": "direct-provider",
+    "owner": {
+      "kind": "provider",
+      "id": "deepseek"
+    }
+  },
+  "result": {
+    "labels": [
+      "health",
+      "lab_report",
+      "blood_test",
+      "hemoglobin",
+      "synthetic"
+    ],
+    "domain": "health",
+    "document_type": "health_report",
+    "subjects": [
+      {
+        "id": "s1",
+        "name": "林明",
+        "role": "patient",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "6dba6765c7c8eb838414ed49ee3d221df04a5459dda503ce3a9e8d68504e0495/body/alternative-0/0:15",
+            "start": 3,
+            "end": 5,
+            "quote": "林明",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "dimensions": [],
+        "subject_refs": [
+          "s1"
+        ],
+        "id": "f1",
+        "name": "项目",
+        "raw": "血红蛋白",
+        "evidence": [
+          {
+            "view_id": "0f430d9716dad5eac44152d554c10c49804b7189a480c007fe5ab48f9e4c0442/body/alternative-0/0:4",
+            "start": 0,
+            "end": 4,
+            "quote": "血红蛋白",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": []
+      },
+      {
+        "dimensions": [],
+        "subject_refs": [
+          "s1"
+        ],
+        "id": "f2",
+        "name": "数值",
+        "raw": "145.6",
+        "evidence": [
+          {
+            "view_id": "97f74fe31b3e90ee4309673132c52f9fc50855bbfc92a9276857b452584173ed/body/alternative-0/0:5",
+            "start": 0,
+            "end": 5,
+            "quote": "145.6",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "decimal",
+            "value": "145.6"
+          }
+        ]
+      },
+      {
+        "dimensions": [],
+        "subject_refs": [],
+        "id": "f3",
+        "name": "参考区间",
+        "raw": "130-175",
+        "evidence": [
+          {
+            "view_id": "746c998b664ffbf0d77439f1281c85f9462e6ec736a6f5cb674115588683d677/body/alternative-0/0:7",
+            "start": 0,
+            "end": 7,
+            "quote": "130-175",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": []
+      }
+    ],
+    "events": [
+      {
+        "id": "ev1",
+        "type": "report",
+        "field_refs": [
+          "f1",
+          "f2",
+          "f3"
+        ],
+        "subject_refs": [
+          "s1"
+        ],
+        "section_evidence": [
+          {
+            "view_id": "af811561eb09bc746ed85fcca8c3161bf3612b4b80dcbaaa7343fa34e0f70a89/body/alternative-0/0:23",
+            "start": 0,
+            "end": 23,
+            "quote": "合成健康报告 SYNTHETIC REPORT",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "coverage": [
+      {
+        "view_id": "5eb5438ef927d28bd6bdf652aaf020745402f2743f3774a381eb963df67301a3/body/alternative-0/0:4",
+        "disposition": "irrelevant"
+      },
+      {
+        "view_id": "86c8c566870d01a397b3cf7e4999722932a18d918c67aa7b331b24da9ab72dc3/body/alternative-0/0:2",
+        "disposition": "irrelevant"
+      },
+      {
+        "view_id": "7c6ed6308305261a7ba045e618d7324c3e0e025ed83e7315a5290e62ad37c62d/body/alternative-0/0:2",
+        "disposition": "irrelevant"
+      },
+      {
+        "view_id": "8b3b569a3466f79d8691bc53e095b375486db98da6b8769b4a42248206df7d78/body/alternative-0/0:2",
+        "disposition": "irrelevant"
+      },
+      {
+        "view_id": "97f74fe31b3e90ee4309673132c52f9fc50855bbfc92a9276857b452584173ed/body/alternative-0/0:5",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "0f430d9716dad5eac44152d554c10c49804b7189a480c007fe5ab48f9e4c0442/body/alternative-0/0:4",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "746c998b664ffbf0d77439f1281c85f9462e6ec736a6f5cb674115588683d677/body/alternative-0/0:7",
+        "disposition": "extracted"
+      }
+    ],
+    "issues": []
+  }
+}

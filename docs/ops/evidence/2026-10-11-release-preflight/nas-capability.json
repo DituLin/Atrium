@@ -1,0 +1,11 @@
+{
+  "checked_at": "2026-10-11T05:35:00.206412+00:00",
+  "scope": "synthetic temporary SMB publish/readback capability only; no archive manifest or household data copied",
+  "mount_type": "smbfs",
+  "file_fsync": true,
+  "rename": true,
+  "directory_fsync": true,
+  "readback_matches": true,
+  "bytes": 4160,
+  "temporary_files_removed": true
+}

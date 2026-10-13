@@ -1,0 +1,106 @@
+{
+  "engine": {
+    "build": "9c9c4ac321b6debbf9909e42469671f4ee6f726f557a7712afb6e657828cdf1c",
+    "helper": "atrium-native/1",
+    "language_correction": false,
+    "languages": [
+      "zh-Hans",
+      "en-US"
+    ],
+    "os_build": "24C101",
+    "recognition": "accurate",
+    "vision_revision": 3
+  },
+  "files": [
+    {
+      "file": "bad.bmp",
+      "sha256": "ddbea7640e8bfc9990493f4fb10b291651bca27fb3584b90c5b678de01181036",
+      "source_bytes": 8,
+      "status": "invalid",
+      "code": "invalid_input",
+      "complete": false,
+      "observations": 0,
+      "seconds": 0.015
+    },
+    {
+      "file": "blank.bmp",
+      "sha256": "e5a02c045642d25b60f7fc2c4072aaf6eb4ee424bba2776cb0b772dd7d550a54",
+      "source_bytes": 720054,
+      "status": "partial",
+      "code": "image_integrity_unverified",
+      "complete": false,
+      "observations": 0,
+      "seconds": 0.169
+    },
+    {
+      "file": "multi.gif",
+      "sha256": "ee677751846a587d5659830a57afb1e9e7e2792c897a4d71b181eb0c685248a8",
+      "source_bytes": 94913,
+      "status": "unsupported",
+      "code": "multiframe_image",
+      "complete": false,
+      "observations": 0,
+      "seconds": 0.02
+    },
+    {
+      "file": "report.bmp",
+      "sha256": "b3e96fb147e9005f18276763500436b7d37fbcfb5c9e5c33cf6732930a2bc415",
+      "source_bytes": 8640054,
+      "status": "partial",
+      "code": "image_integrity_unverified",
+      "complete": false,
+      "observations": 19,
+      "seconds": 0.336
+    },
+    {
+      "file": "report.gif",
+      "sha256": "de4b76477c17f2adddc7601901f2857bbd1dd5c92413f65e2b744b14c968bc89",
+      "source_bytes": 49534,
+      "status": "partial",
+      "code": "image_integrity_unverified",
+      "complete": false,
+      "observations": 19,
+      "seconds": 0.325
+    },
+    {
+      "file": "report.heic",
+      "sha256": "49c1b3c01f8421ddcdb1aec6b2d319647ceb32afa01390444846ddf336e25d1f",
+      "source_bytes": 48046,
+      "status": "partial",
+      "code": "image_integrity_unverified",
+      "complete": false,
+      "observations": 19,
+      "seconds": 0.454
+    },
+    {
+      "file": "report.tiff",
+      "sha256": "c28b366b04d4e2a3f6552844bd20a5e47de185e4112ada3e1ce81ab02a66ac22",
+      "source_bytes": 120496,
+      "status": "partial",
+      "code": "image_integrity_unverified",
+      "complete": false,
+      "observations": 19,
+      "seconds": 0.372
+    },
+    {
+      "file": "truncated-1-4.bmp",
+      "sha256": "a5a15f291a14dcfdc928f294850a2978a346fbeb3eafc52bb1222eccf0afd434",
+      "source_bytes": 2160013,
+      "status": "partial",
+      "code": "image_integrity_unverified",
+      "complete": false,
+      "observations": 0,
+      "seconds": 0.223
+    },
+    {
+      "file": "truncated-2-4.bmp",
+      "sha256": "fb4f9d04035c2ee6f30b6987a98ae66019163c2d7f0cfd913e12ce2e6d4be479",
+      "source_bytes": 4320027,
+      "status": "partial",
+      "code": "image_integrity_unverified",
+      "complete": false,
+      "observations": 7,
+      "seconds": 0.283
+    }
+  ]
+}

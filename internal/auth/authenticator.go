@@ -178,7 +178,7 @@ func (a *Authenticator) byBearer(ctx context.Context, token string) (*Identity, 
 		if !p.Active(a.now()) || !c.Active(a.now()) {
 			return nil, domain.Errorf(domain.CodeUnauthorized, "integration credential is inactive")
 		}
-		return &Identity{Scope: ScopeIntegration, Integration: p}, nil
+		return &Identity{Scope: ScopeIntegration, Integration: p, IntegrationCredentialID: c.ID}, nil
 	case ScopeScreen:
 		return a.byScreenToken(ctx, token)
 	case ScopeAdmin:

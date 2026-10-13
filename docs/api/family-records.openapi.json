@@ -1,0 +1,854 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Atrium family records",
+    "version": "1"
+  },
+  "paths": {
+    "/api/v1/family/members": {
+      "get": {
+        "summary": "List household members",
+        "security": [
+          {
+            "screenBearer": []
+          },
+          {
+            "screenCookie": []
+          },
+          {
+            "adminBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; Cache-Control: no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "members": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "name"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient scope or permission"
+          },
+          "404": {
+            "description": "Member not authorized or not found"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      }
+    },
+    "/api/v1/family/records": {
+      "get": {
+        "summary": "Read family records explicitly allowed on TV",
+        "security": [
+          {
+            "screenBearer": []
+          },
+          {
+            "screenCookie": []
+          },
+          {
+            "adminBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; Cache-Control: no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "records"
+                  ],
+                  "properties": {
+                    "records": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "member_id": {
+                            "type": "string"
+                          },
+                          "category": {
+                            "type": "string",
+                            "enum": [
+                              "growth",
+                              "health",
+                              "checkup",
+                              "meal",
+                              "note"
+                            ]
+                          },
+                          "occurred_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "title": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 300
+                          },
+                          "notes": {
+                            "type": "string",
+                            "maxLength": 16000
+                          },
+                          "measurements": {
+                            "type": "array",
+                            "maxItems": 32,
+                            "items": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "metric",
+                                "value",
+                                "unit"
+                              ],
+                              "properties": {
+                                "metric": {
+                                  "type": "string",
+                                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$"
+                                },
+                                "value": {
+                                  "type": "number"
+                                },
+                                "unit": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 32
+                                }
+                              }
+                            }
+                          },
+                          "display_on_tv": {
+                            "type": "boolean",
+                            "default": false
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "exported_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "supersedes_id": {
+                            "type": "string",
+                            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+                            "description": "Current same-member record being corrected or retracted. Query before use."
+                          },
+                          "revision_reason": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 2000
+                          },
+                          "retracted": {
+                            "type": "boolean",
+                            "description": "Retraction requires supersedes_id, revision_reason and display_on_tv=false. History is retained."
+                          },
+                          "superseded_by": {
+                            "type": "string",
+                            "description": "Query-only successor ID. This record is historical and not an additional observation."
+                          }
+                        }
+                      }
+                    },
+                    "next_cursor": {
+                      "type": "string",
+                      "description": "Absent when no older records remain."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient scope or permission"
+          },
+          "404": {
+            "description": "Member not authorized or not found"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "minimum": 1,
+              "maximum": 500
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string",
+              "maxLength": 2048
+            }
+          }
+        ],
+        "description": "Newest effective time first. Pass next_cursor unchanged to query older records; cursor is bound to member and TV projection. Authorization is rechecked on every request."
+      }
+    },
+    "/api/v1/integrations/family/members": {
+      "get": {
+        "summary": "List authorized members",
+        "security": [
+          {
+            "integrationBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; Cache-Control: no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "schema_version",
+                    "observed_at",
+                    "availability",
+                    "data"
+                  ],
+                  "properties": {
+                    "schema_version": {
+                      "const": "1"
+                    },
+                    "observed_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "availability": {
+                      "const": "available"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "members": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "name"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient scope or permission"
+          },
+          "404": {
+            "description": "Member not authorized or not found"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/family/records": {
+      "get": {
+        "summary": "Read family records (including private records for authorized members)",
+        "security": [
+          {
+            "integrationBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; Cache-Control: no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "schema_version",
+                    "observed_at",
+                    "availability",
+                    "data"
+                  ],
+                  "properties": {
+                    "schema_version": {
+                      "const": "1"
+                    },
+                    "observed_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "availability": {
+                      "const": "available"
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "records"
+                      ],
+                      "properties": {
+                        "records": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "member_id": {
+                                "type": "string"
+                              },
+                              "category": {
+                                "type": "string",
+                                "enum": [
+                                  "growth",
+                                  "health",
+                                  "checkup",
+                                  "meal",
+                                  "note"
+                                ]
+                              },
+                              "occurred_at": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "title": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 300
+                              },
+                              "notes": {
+                                "type": "string",
+                                "maxLength": 16000
+                              },
+                              "measurements": {
+                                "type": "array",
+                                "maxItems": 32,
+                                "items": {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "metric",
+                                    "value",
+                                    "unit"
+                                  ],
+                                  "properties": {
+                                    "metric": {
+                                      "type": "string",
+                                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$"
+                                    },
+                                    "value": {
+                                      "type": "number"
+                                    },
+                                    "unit": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 32
+                                    }
+                                  }
+                                }
+                              },
+                              "display_on_tv": {
+                                "type": "boolean",
+                                "default": false
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "exported_at": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "supersedes_id": {
+                                "type": "string",
+                                "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+                                "description": "Current same-member record being corrected or retracted. Query before use."
+                              },
+                              "revision_reason": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 2000
+                              },
+                              "retracted": {
+                                "type": "boolean",
+                                "description": "Retraction requires supersedes_id, revision_reason and display_on_tv=false. History is retained."
+                              },
+                              "superseded_by": {
+                                "type": "string",
+                                "description": "Query-only successor ID. This record is historical and not an additional observation."
+                              }
+                            }
+                          }
+                        },
+                        "next_cursor": {
+                          "type": "string",
+                          "description": "Absent when no older records remain."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient scope or permission"
+          },
+          "404": {
+            "description": "Member not authorized or not found"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "minimum": 1,
+              "maximum": 500
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string",
+              "maxLength": 2048
+            }
+          }
+        ],
+        "description": "Newest effective time first. Pass next_cursor unchanged to query older records; cursor is bound to member and TV projection. Authorization is rechecked on every request."
+      },
+      "post": {
+        "summary": "Record a family entry; requires family.write and member allowlist",
+        "security": [
+          {
+            "integrationBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; Cache-Control: no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "schema_version",
+                    "observed_at",
+                    "availability",
+                    "data"
+                  ],
+                  "properties": {
+                    "schema_version": {
+                      "const": "1"
+                    },
+                    "observed_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "availability": {
+                      "const": "available"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "record": {
+                          "type": "object",
+                          "properties": {
+                            "member_id": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string",
+                              "enum": [
+                                "growth",
+                                "health",
+                                "checkup",
+                                "meal",
+                                "note"
+                              ]
+                            },
+                            "occurred_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "title": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 300
+                            },
+                            "notes": {
+                              "type": "string",
+                              "maxLength": 16000
+                            },
+                            "measurements": {
+                              "type": "array",
+                              "maxItems": 32,
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                  "metric",
+                                  "value",
+                                  "unit"
+                                ],
+                                "properties": {
+                                  "metric": {
+                                    "type": "string",
+                                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$"
+                                  },
+                                  "value": {
+                                    "type": "number"
+                                  },
+                                  "unit": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 32
+                                  }
+                                }
+                              }
+                            },
+                            "display_on_tv": {
+                              "type": "boolean",
+                              "default": false
+                            },
+                            "id": {
+                              "type": "string"
+                            },
+                            "created_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "exported_at": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "supersedes_id": {
+                              "type": "string",
+                              "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+                              "description": "Current same-member record being corrected or retracted. Query before use."
+                            },
+                            "revision_reason": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2000
+                            },
+                            "retracted": {
+                              "type": "boolean",
+                              "description": "Retraction requires supersedes_id, revision_reason and display_on_tv=false. History is retained."
+                            },
+                            "superseded_by": {
+                              "type": "string",
+                              "description": "Query-only successor ID. This record is historical and not an additional observation."
+                            }
+                          }
+                        },
+                        "replayed": {
+                          "type": "boolean"
+                        },
+                        "nas_status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "synced"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient scope or permission"
+          },
+          "404": {
+            "description": "Member not authorized or not found"
+          },
+          "429": {
+            "description": "Rate limit"
+          },
+          "409": {
+            "description": "Request ID already used with different content"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "request_id",
+                  "member_id",
+                  "category",
+                  "occurred_at",
+                  "title"
+                ],
+                "properties": {
+                  "member_id": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "growth",
+                      "health",
+                      "checkup",
+                      "meal",
+                      "note"
+                    ]
+                  },
+                  "occurred_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 16000
+                  },
+                  "measurements": {
+                    "type": "array",
+                    "maxItems": 32,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "metric",
+                        "value",
+                        "unit"
+                      ],
+                      "properties": {
+                        "metric": {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$"
+                        },
+                        "value": {
+                          "type": "number"
+                        },
+                        "unit": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 32
+                        }
+                      }
+                    }
+                  },
+                  "display_on_tv": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "request_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "supersedes_id": {
+                    "type": "string",
+                    "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+                    "description": "Current same-member record being corrected or retracted. Query before use."
+                  },
+                  "revision_reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "retracted": {
+                    "type": "boolean",
+                    "description": "Retraction requires supersedes_id, revision_reason and display_on_tv=false. History is retained."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "64 KiB body limit. Idempotency is scoped to authenticated integration principal. Repeated identical payload returns original record. Synced only after NAS acknowledgement."
+      }
+    },
+    "/api/v1/admin/family/members/{id}": {
+      "put": {
+        "summary": "Create or rename a household member",
+        "security": [
+          {
+            "adminBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; Cache-Control: no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient scope or permission"
+          },
+          "404": {
+            "description": "Member not authorized or not found"
+          },
+          "429": {
+            "description": "Rate limit"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+ok  	github.com/DituLin/Atrium/internal/brain	2.650s
+ok  	github.com/DituLin/Atrium/internal/brainhost	1.405s
+ok  	github.com/DituLin/Atrium/internal/homemcp	5.242s
+ok  	github.com/DituLin/Atrium/internal/integration	1.379s
+ok  	github.com/DituLin/Atrium/internal/httpapi	60.235s
+ok  	github.com/DituLin/Atrium/internal/store	130.549s

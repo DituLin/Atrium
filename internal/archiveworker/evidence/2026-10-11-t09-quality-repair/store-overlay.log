@@ -1,0 +1,8 @@
+=== RUN   TestQualityValueDoesNotConfirmUnresolvedOwner
+--- PASS: TestQualityValueDoesNotConfirmUnresolvedOwner (0.03s)
+=== RUN   TestQualityCorrectedTransactionIdentityDoesNotConflate
+--- PASS: TestQualityCorrectedTransactionIdentityDoesNotConflate (0.02s)
+=== RUN   TestQualityValueAfterActualMergeUndo
+--- PASS: TestQualityValueAfterActualMergeUndo (0.03s)
+PASS
+ok  	github.com/DituLin/Atrium/internal/store	0.421s

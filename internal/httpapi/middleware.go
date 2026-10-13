@@ -177,7 +177,7 @@ func WithSecurityHeaders() Middleware {
 			h.Set("Referrer-Policy", "same-origin")
 			h.Set("X-Frame-Options", "DENY")
 			h.Set("Content-Security-Policy",
-				"default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "+
+				"default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; "+
 					"connect-src 'self' ws: wss:; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
 			next.ServeHTTP(w, r)
 		})

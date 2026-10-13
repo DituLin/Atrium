@@ -1,0 +1,180 @@
+{
+  "configuration_fingerprint": "88ed68580fe3ceaf4ee700fc3118e26955fbf465136fb469adc341ab7b3ad961",
+  "usage": {
+    "input_tokens": 4910,
+    "output_tokens": 5596,
+    "total_tokens": 12682,
+    "cache_read_tokens": 2176,
+    "cache_write_tokens": 0,
+    "cost_usd": 0.0022603728
+  },
+  "protocol_version": 1,
+  "invocation_id": "9247eef9d1b3899297f09c2f81e629e8",
+  "input_digest": "b1e091903760a2ed83073240dc76ac9a34bd53ddb8406c90c42c3bd716a47b90",
+  "schema_version": "archive-extraction/2",
+  "extraction_version": "archive-understand/2",
+  "chunk_version": "archive-chunk/1",
+  "provider": "deepseek",
+  "requested_model": "deepseek/deepseek-v4-flash",
+  "model": "deepseek-v4-flash",
+  "response_model": "deepseek-flash",
+  "stop_reason": "stop",
+  "execution": {
+    "mode": "direct-provider",
+    "owner": {
+      "kind": "provider",
+      "id": "deepseek"
+    }
+  },
+  "result": {
+    "labels": [
+      "health",
+      "report",
+      "synthetic"
+    ],
+    "domain": "health",
+    "document_type": "synthetic health report",
+    "subjects": [
+      {
+        "id": "patient-1",
+        "name": "林明",
+        "role": "patient",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "6dba6765c7c8eb838414ed49ee3d221df04a5459dda503ce3a9e8d68504e0495/body/alternative-0/0:15",
+            "start": 3,
+            "end": 5,
+            "quote": "林明",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "dimensions": [],
+        "subject_refs": [
+          "patient-1"
+        ],
+        "id": "f-name",
+        "name": "姓名",
+        "raw": "林明",
+        "evidence": [
+          {
+            "view_id": "6dba6765c7c8eb838414ed49ee3d221df04a5459dda503ce3a9e8d68504e0495/body/alternative-0/0:15",
+            "start": 3,
+            "end": 5,
+            "quote": "林明",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": []
+      },
+      {
+        "dimensions": [],
+        "subject_refs": [
+          "patient-1"
+        ],
+        "id": "f-birth-date",
+        "name": "出生日期",
+        "raw": "1988-03-12",
+        "evidence": [
+          {
+            "view_id": "852e33a7fb56c5e0d4459b6174cfb2ecf5652a02aa927b1f0bbab7f01b379dbe/body/alternative-0/0:15",
+            "start": 5,
+            "end": 15,
+            "quote": "1988-03-12",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "date",
+            "value": "1988-03-12"
+          }
+        ]
+      },
+      {
+        "dimensions": [],
+        "subject_refs": [],
+        "id": "f-report-date",
+        "name": "报告日期",
+        "raw": "2026-10-04",
+        "evidence": [
+          {
+            "view_id": "99cc724eaa2dfd98f4b03c26f748b721a8e694b25bbff8d27abf0b26c1c60d25/body/alternative-0/0:15",
+            "start": 5,
+            "end": 15,
+            "quote": "2026-10-04",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "date",
+            "value": "2026-10-04"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "id": "event-1",
+        "type": "report",
+        "field_refs": [
+          "f-name",
+          "f-birth-date",
+          "f-report-date"
+        ],
+        "subject_refs": [
+          "patient-1"
+        ],
+        "section_evidence": [
+          {
+            "view_id": "af811561eb09bc746ed85fcca8c3161bf3612b4b80dcbaaa7343fa34e0f70a89/body/alternative-0/0:23",
+            "start": 0,
+            "end": 23,
+            "quote": "合成健康报告 SYNTHETIC REPORT",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "coverage": [
+      {
+        "view_id": "af811561eb09bc746ed85fcca8c3161bf3612b4b80dcbaaa7343fa34e0f70a89/body/alternative-0/0:23",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "6dba6765c7c8eb838414ed49ee3d221df04a5459dda503ce3a9e8d68504e0495/body/alternative-0/0:15",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "852e33a7fb56c5e0d4459b6174cfb2ecf5652a02aa927b1f0bbab7f01b379dbe/body/alternative-0/0:15",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "99cc724eaa2dfd98f4b03c26f748b721a8e694b25bbff8d27abf0b26c1c60d25/body/alternative-0/0:15",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "5eb5438ef927d28bd6bdf652aaf020745402f2743f3774a381eb963df67301a3/body/alternative-0/0:4",
+        "disposition": "irrelevant"
+      },
+      {
+        "view_id": "86c8c566870d01a397b3cf7e4999722932a18d918c67aa7b331b24da9ab72dc3/body/alternative-0/0:2",
+        "disposition": "irrelevant"
+      },
+      {
+        "view_id": "7c6ed6308305261a7ba045e618d7324c3e0e025ed83e7315a5290e62ad37c62d/body/alternative-0/0:2",
+        "disposition": "irrelevant"
+      },
+      {
+        "view_id": "8b3b569a3466f79d8691bc53e095b375486db98da6b8769b4a42248206df7d78/body/alternative-0/0:2",
+        "disposition": "irrelevant"
+      }
+    ],
+    "issues": []
+  }
+}

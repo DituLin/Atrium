@@ -1,0 +1,1 @@
+{"id":"atrium-archive-worker","name":"Atrium Archive Worker","configSchema":{"type":"object","additionalProperties":false,"properties":{}},"cliCommands":[{"name":"atrium-archive-worker","description":"Private archive extraction worker","hasSubcommands":false}]}

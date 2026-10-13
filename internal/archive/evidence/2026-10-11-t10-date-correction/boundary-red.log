@@ -1,0 +1,87 @@
+--- FAIL: TestArchiveSearchCorrectedDatePrecision (0.21s)
+    --- FAIL: TestArchiveSearchCorrectedDatePrecision/2026-07-20 (0.03s)
+        archive_search_test.go:623: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:623
+            	Error:      	Not equal: 
+            	            	expected: []string{"2026-07-20"}
+            	            	actual  : []string{"2026-06-15"}
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1,3 +1,3 @@
+            	            	 ([]string) (len=1) {
+            	            	- (string) (len=10) "2026-07-20"
+            	            	+ (string) (len=10) "2026-06-15"
+            	            	 }
+            	Test:       	TestArchiveSearchCorrectedDatePrecision/2026-07-20
+    --- FAIL: TestArchiveSearchCorrectedDatePrecision/2026-07 (0.02s)
+        archive_search_test.go:623: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:623
+            	Error:      	Not equal: 
+            	            	expected: []string{"2026-07"}
+            	            	actual  : []string{"2026-06-15"}
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1,3 +1,3 @@
+            	            	 ([]string) (len=1) {
+            	            	- (string) (len=7) "2026-07"
+            	            	+ (string) (len=10) "2026-06-15"
+            	            	 }
+            	Test:       	TestArchiveSearchCorrectedDatePrecision/2026-07
+    --- FAIL: TestArchiveSearchCorrectedDatePrecision/2026 (0.02s)
+        archive_search_test.go:623: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:623
+            	Error:      	Not equal: 
+            	            	expected: []string{"2026"}
+            	            	actual  : []string{"2026-06-15"}
+            	            	
+            	            	Diff:
+            	            	--- Expected
+            	            	+++ Actual
+            	            	@@ -1,3 +1,3 @@
+            	            	 ([]string) (len=1) {
+            	            	- (string) (len=4) "2026"
+            	            	+ (string) (len=10) "2026-06-15"
+            	            	 }
+            	Test:       	TestArchiveSearchCorrectedDatePrecision/2026
+    --- FAIL: TestArchiveSearchCorrectedDatePrecision/2026-02-30 (0.02s)
+        archive_search_test.go:623: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:623
+            	Error:      	Should be empty, but was [2026-06-15]
+            	Test:       	TestArchiveSearchCorrectedDatePrecision/2026-02-30
+    --- FAIL: TestArchiveSearchCorrectedDatePrecision/2026-13 (0.02s)
+        archive_search_test.go:623: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:623
+            	Error:      	Should be empty, but was [2026-06-15]
+            	Test:       	TestArchiveSearchCorrectedDatePrecision/2026-13
+    --- FAIL: TestArchiveSearchCorrectedDatePrecision/26-07-20 (0.02s)
+        archive_search_test.go:623: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:623
+            	Error:      	Should be empty, but was [2026-06-15]
+            	Test:       	TestArchiveSearchCorrectedDatePrecision/26-07-20
+    --- FAIL: TestArchiveSearchCorrectedDatePrecision/07-20 (0.02s)
+        archive_search_test.go:623: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:623
+            	Error:      	Should be empty, but was [2026-06-15]
+            	Test:       	TestArchiveSearchCorrectedDatePrecision/07-20
+    --- FAIL: TestArchiveSearchCorrectedDatePrecision/日期未知 (0.02s)
+        archive_search_test.go:623: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:623
+            	Error:      	Should be empty, but was [2026-06-15]
+            	Test:       	TestArchiveSearchCorrectedDatePrecision/日期未知
+    --- FAIL: TestArchiveSearchCorrectedDatePrecision/#00 (0.02s)
+        archive_search_test.go:623: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:623
+            	Error:      	Should be empty, but was [2026-06-15]
+            	Test:       	TestArchiveSearchCorrectedDatePrecision/#00
+    --- FAIL: TestArchiveSearchCorrectedDatePrecision/2026-7-2 (0.02s)
+        archive_search_test.go:623: 
+            	Error Trace:	/Users/ditu/Documents/Projects/Atrium/.worktrees/atriumos/internal/store/archive_search_test.go:623
+            	Error:      	Should be empty, but was [2026-06-15]
+            	Test:       	TestArchiveSearchCorrectedDatePrecision/2026-7-2
+FAIL
+FAIL	github.com/DituLin/Atrium/internal/store	0.743s
+FAIL

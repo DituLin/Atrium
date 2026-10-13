@@ -1,0 +1,823 @@
+{
+  "schema_version": "1",
+  "observed_at": "2026-10-11T16:02:50.229699+08:00",
+  "availability": "available",
+  "data": {
+    "schema_version": "archive-analysis/1",
+    "query_ref": "01M4MZRT7NXC097AWHPX8MT530",
+    "snapshot_id": "01M4MZRT7NXC097AWHPX8MT530",
+    "algorithm_version": "archive-analysis/6",
+    "query": {
+      "operation": "sum",
+      "metric": "amount",
+      "domain": "finance",
+      "timezone": "Asia/Singapore"
+    },
+    "projection": "authorized",
+    "data_epoch": 116,
+    "generation": 1,
+    "input_digest": "f4fc7cc2e57af677aefd1d09e157eae8949ecc3a967318a496fa77f1705bc0a2",
+    "groups": [
+      {
+        "metric": "amount",
+        "currency": "CNY",
+        "value": "250.00000000000001",
+        "evidence": [
+          {
+            "field_name": "amount",
+            "component_id": "42456e47714c0daae24da58bebc844d101cc9d1567cb1513e812596b79e93958/numeric_raw",
+            "component_kind": "numeric_raw",
+            "document_id": "01M4MZ5RFX9N69YP716GZXT8N5",
+            "publication_id": "01M4MZMBKXT4ZH5NJVQ5HZ70AH",
+            "publication_revision": 2,
+            "observation_id": "01M4MZMBKY4XFW40RVKN0WD11A",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZGAX5505ZAAQ0CAWJD6NZ",
+            "segment_id": "42456e47714c0daae24da58bebc844d101cc9d1567cb1513e812596b79e93958",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "费用",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "B3"
+              }
+            },
+            "start": 0,
+            "end": 17,
+            "excerpt": "71.90000000000001",
+            "confirmed": true
+          },
+          {
+            "field_name": "amount",
+            "component_id": "a750531a9cb8bc7d465a66b265a5283e52ee9454ae0d9c0deef14ced46cb6466/cell_text",
+            "component_kind": "cell_text",
+            "document_id": "01M4MZ5RFX9N69YP716GZXT8N5",
+            "publication_id": "01M4MZMBKXT4ZH5NJVQ5HZ70AH",
+            "publication_revision": 2,
+            "observation_id": "01M4MZMBKY4XFW40RVKN0WD11A",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZGAX5505ZAAQ0CAWJD6NZ",
+            "segment_id": "a750531a9cb8bc7d465a66b265a5283e52ee9454ae0d9c0deef14ced46cb6466",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "费用",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "B1"
+              }
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "费用",
+            "confirmed": true
+          },
+          {
+            "field_name": "bill_date",
+            "component_id": "fdfca5b0200ccdde5c29e4a66159faba6dbd6b3c7eea43da9f99edf1c620a6ae/cell_text",
+            "component_kind": "cell_text",
+            "document_id": "01M4MZ5RFX9N69YP716GZXT8N5",
+            "publication_id": "01M4MZMBKXT4ZH5NJVQ5HZ70AH",
+            "publication_revision": 2,
+            "observation_id": "01M4MZMBKYS7AZGX1XA2PXMWTG",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZGAX5505ZAAQ0CAWJD6NZ",
+            "segment_id": "fdfca5b0200ccdde5c29e4a66159faba6dbd6b3c7eea43da9f99edf1c620a6ae",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "费用",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "E3"
+              }
+            },
+            "start": 0,
+            "end": 10,
+            "excerpt": "2026-10-01",
+            "confirmed": true
+          },
+          {
+            "field_name": "bill_date",
+            "component_id": "28ae0b7e14085f5014b98f5dfc1946ec78b6a0981a932c458ef80e5484d58df0/cell_text",
+            "component_kind": "cell_text",
+            "document_id": "01M4MZ5RFX9N69YP716GZXT8N5",
+            "publication_id": "01M4MZMBKXT4ZH5NJVQ5HZ70AH",
+            "publication_revision": 2,
+            "observation_id": "01M4MZMBKYS7AZGX1XA2PXMWTG",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZGAX5505ZAAQ0CAWJD6NZ",
+            "segment_id": "28ae0b7e14085f5014b98f5dfc1946ec78b6a0981a932c458ef80e5484d58df0",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "费用",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "E1"
+              }
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "日期",
+            "confirmed": true
+          },
+          {
+            "field_name": "bill_id",
+            "component_id": "827c5ec969702c99ae1b898b32cee5a879251aa95abc2fe74081dc9a08604d89/cell_text",
+            "component_kind": "cell_text",
+            "document_id": "01M4MZ5RFX9N69YP716GZXT8N5",
+            "publication_id": "01M4MZMBKXT4ZH5NJVQ5HZ70AH",
+            "publication_revision": 2,
+            "observation_id": "01M4MZMBKYGKADYQC1SQ24CFCP",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZGAX5505ZAAQ0CAWJD6NZ",
+            "segment_id": "827c5ec969702c99ae1b898b32cee5a879251aa95abc2fe74081dc9a08604d89",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "费用",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "A3"
+              }
+            },
+            "start": 0,
+            "end": 13,
+            "excerpt": "TEST-BILL-002",
+            "confirmed": true
+          },
+          {
+            "field_name": "bill_id",
+            "component_id": "97eb7c0208a26183ee7dc5f2a5eae53c8a7d35bfea14ae7ad12dca32d3b2e23e/cell_text",
+            "component_kind": "cell_text",
+            "document_id": "01M4MZ5RFX9N69YP716GZXT8N5",
+            "publication_id": "01M4MZMBKXT4ZH5NJVQ5HZ70AH",
+            "publication_revision": 2,
+            "observation_id": "01M4MZMBKYGKADYQC1SQ24CFCP",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZGAX5505ZAAQ0CAWJD6NZ",
+            "segment_id": "97eb7c0208a26183ee7dc5f2a5eae53c8a7d35bfea14ae7ad12dca32d3b2e23e",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "费用",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "A1"
+              }
+            },
+            "start": 0,
+            "end": 4,
+            "excerpt": "账单编号",
+            "confirmed": true
+          },
+          {
+            "field_name": "amount",
+            "component_id": "a750531a9cb8bc7d465a66b265a5283e52ee9454ae0d9c0deef14ced46cb6466/cell_text",
+            "component_kind": "cell_text",
+            "document_id": "01M4MZ5RFX9N69YP716GZXT8N5",
+            "publication_id": "01M4MZMBKXT4ZH5NJVQ5HZ70AH",
+            "publication_revision": 2,
+            "observation_id": "01M4MZMBKY4XFW40RVKN0WD11A",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZGAX5505ZAAQ0CAWJD6NZ",
+            "segment_id": "a750531a9cb8bc7d465a66b265a5283e52ee9454ae0d9c0deef14ced46cb6466",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "费用",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "B1"
+              }
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "费用",
+            "confirmed": true
+          },
+          {
+            "field_name": "amount",
+            "component_id": "46931893efe2a445049a0a3bf54ac48d83ae86d3d6aa7744e6ee9b71f172be54/numeric_raw",
+            "component_kind": "numeric_raw",
+            "document_id": "01M4MZ5RFX9N69YP716GZXT8N5",
+            "publication_id": "01M4MZMBKXT4ZH5NJVQ5HZ70AH",
+            "publication_revision": 2,
+            "observation_id": "01M4MZMBKYWE1J48GYYTCNT890",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZGAX5505ZAAQ0CAWJD6NZ",
+            "segment_id": "46931893efe2a445049a0a3bf54ac48d83ae86d3d6aa7744e6ee9b71f172be54",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "费用",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "B2"
+              }
+            },
+            "start": 0,
+            "end": 5,
+            "excerpt": "128.1",
+            "confirmed": true
+          },
+          {
+            "field_name": "amount",
+            "component_id": "a750531a9cb8bc7d465a66b265a5283e52ee9454ae0d9c0deef14ced46cb6466/cell_text",
+            "component_kind": "cell_text",
+            "document_id": "01M4MZ5RFX9N69YP716GZXT8N5",
+            "publication_id": "01M4MZMBKXT4ZH5NJVQ5HZ70AH",
+            "publication_revision": 2,
+            "observation_id": "01M4MZMBKYWE1J48GYYTCNT890",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZGAX5505ZAAQ0CAWJD6NZ",
+            "segment_id": "a750531a9cb8bc7d465a66b265a5283e52ee9454ae0d9c0deef14ced46cb6466",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "费用",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "B1"
+              }
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "费用",
+            "confirmed": true
+          },
+          {
+            "field_name": "日期",
+            "component_id": "8d544e8162327f720de978be9fe027efb57ebdc7c97c17aa4d0c2495fb9037c5/cell_text",
+            "component_kind": "cell_text",
+            "document_id": "01M4MZ5RFX9N69YP716GZXT8N5",
+            "publication_id": "01M4MZMBKXT4ZH5NJVQ5HZ70AH",
+            "publication_revision": 2,
+            "observation_id": "01M4MZMBKYNVHDKWYC2K2JQQHM",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZGAX5505ZAAQ0CAWJD6NZ",
+            "segment_id": "8d544e8162327f720de978be9fe027efb57ebdc7c97c17aa4d0c2495fb9037c5",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "费用",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "E2"
+              }
+            },
+            "start": 0,
+            "end": 10,
+            "excerpt": "2026-10-01",
+            "confirmed": true
+          },
+          {
+            "field_name": "日期",
+            "component_id": "28ae0b7e14085f5014b98f5dfc1946ec78b6a0981a932c458ef80e5484d58df0/cell_text",
+            "component_kind": "cell_text",
+            "document_id": "01M4MZ5RFX9N69YP716GZXT8N5",
+            "publication_id": "01M4MZMBKXT4ZH5NJVQ5HZ70AH",
+            "publication_revision": 2,
+            "observation_id": "01M4MZMBKYNVHDKWYC2K2JQQHM",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZGAX5505ZAAQ0CAWJD6NZ",
+            "segment_id": "28ae0b7e14085f5014b98f5dfc1946ec78b6a0981a932c458ef80e5484d58df0",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "费用",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "E1"
+              }
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "日期",
+            "confirmed": true
+          },
+          {
+            "field_name": "bill_id",
+            "component_id": "62ed88154c2eac7b3e759ee24e0ef1299c74cc2f39e7c38e1c119a5aa124155a/cell_text",
+            "component_kind": "cell_text",
+            "document_id": "01M4MZ5RFX9N69YP716GZXT8N5",
+            "publication_id": "01M4MZMBKXT4ZH5NJVQ5HZ70AH",
+            "publication_revision": 2,
+            "observation_id": "01M4MZMBKYMW3Y4CR1JJG9692N",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZGAX5505ZAAQ0CAWJD6NZ",
+            "segment_id": "62ed88154c2eac7b3e759ee24e0ef1299c74cc2f39e7c38e1c119a5aa124155a",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "费用",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "A2"
+              }
+            },
+            "start": 0,
+            "end": 13,
+            "excerpt": "TEST-BILL-001",
+            "confirmed": true
+          },
+          {
+            "field_name": "bill_id",
+            "component_id": "97eb7c0208a26183ee7dc5f2a5eae53c8a7d35bfea14ae7ad12dca32d3b2e23e/cell_text",
+            "component_kind": "cell_text",
+            "document_id": "01M4MZ5RFX9N69YP716GZXT8N5",
+            "publication_id": "01M4MZMBKXT4ZH5NJVQ5HZ70AH",
+            "publication_revision": 2,
+            "observation_id": "01M4MZMBKYMW3Y4CR1JJG9692N",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZGAX5505ZAAQ0CAWJD6NZ",
+            "segment_id": "97eb7c0208a26183ee7dc5f2a5eae53c8a7d35bfea14ae7ad12dca32d3b2e23e",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "费用",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "A1"
+              }
+            },
+            "start": 0,
+            "end": 4,
+            "excerpt": "账单编号",
+            "confirmed": true
+          },
+          {
+            "field_name": "amount",
+            "component_id": "a750531a9cb8bc7d465a66b265a5283e52ee9454ae0d9c0deef14ced46cb6466/cell_text",
+            "component_kind": "cell_text",
+            "document_id": "01M4MZ5RFX9N69YP716GZXT8N5",
+            "publication_id": "01M4MZMBKXT4ZH5NJVQ5HZ70AH",
+            "publication_revision": 2,
+            "observation_id": "01M4MZMBKYWE1J48GYYTCNT890",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZGAX5505ZAAQ0CAWJD6NZ",
+            "segment_id": "a750531a9cb8bc7d465a66b265a5283e52ee9454ae0d9c0deef14ced46cb6466",
+            "locator": {
+              "kind": "xlsx",
+              "text": null,
+              "csv": null,
+              "docx": null,
+              "xlsx": {
+                "sheet_id": "1",
+                "sheet_name": "费用",
+                "part_uri": "/xl/worksheets/sheet1.xml",
+                "cell": "B1"
+              }
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "费用",
+            "confirmed": true
+          },
+          {
+            "field_name": "amount",
+            "component_id": "8693a8892e159bda4baa2da7fc4e9c680d78b06199bf0e1f06faceb55e3649f8/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RH42ZWZX9295N07RX4M",
+            "publication_id": "01M4MZQ9Y8GK627E7QM2FR8R8K",
+            "publication_revision": 2,
+            "observation_id": "01M4MZQ9Y88Q4BFV2NKA0ZA4Q5",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZPM43Q4HWCKVRH2YRE4F4",
+            "segment_id": "8693a8892e159bda4baa2da7fc4e9c680d78b06199bf0e1f06faceb55e3649f8",
+            "locator": {
+              "kind": "text",
+              "text": {
+                "start": 0,
+                "end": 59,
+                "unit": "unicode_scalar"
+              },
+              "csv": null,
+              "docx": null,
+              "xlsx": null
+            },
+            "start": 49,
+            "end": 51,
+            "excerpt": "费用",
+            "confirmed": true
+          },
+          {
+            "field_name": "amount",
+            "component_id": "8693a8892e159bda4baa2da7fc4e9c680d78b06199bf0e1f06faceb55e3649f8/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RH42ZWZX9295N07RX4M",
+            "publication_id": "01M4MZQ9Y8GK627E7QM2FR8R8K",
+            "publication_revision": 2,
+            "observation_id": "01M4MZQ9Y88Q4BFV2NKA0ZA4Q5",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZPM43Q4HWCKVRH2YRE4F4",
+            "segment_id": "8693a8892e159bda4baa2da7fc4e9c680d78b06199bf0e1f06faceb55e3649f8",
+            "locator": {
+              "kind": "text",
+              "text": {
+                "start": 0,
+                "end": 59,
+                "unit": "unicode_scalar"
+              },
+              "csv": null,
+              "docx": null,
+              "xlsx": null
+            },
+            "start": 52,
+            "end": 54,
+            "excerpt": "50",
+            "confirmed": true
+          },
+          {
+            "field_name": "日期",
+            "component_id": "8693a8892e159bda4baa2da7fc4e9c680d78b06199bf0e1f06faceb55e3649f8/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RH42ZWZX9295N07RX4M",
+            "publication_id": "01M4MZQ9Y8GK627E7QM2FR8R8K",
+            "publication_revision": 2,
+            "observation_id": "01M4MZQ9Y8NW9CAB2RJQ04GX3M",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZPM43Q4HWCKVRH2YRE4F4",
+            "segment_id": "8693a8892e159bda4baa2da7fc4e9c680d78b06199bf0e1f06faceb55e3649f8",
+            "locator": {
+              "kind": "text",
+              "text": {
+                "start": 0,
+                "end": 59,
+                "unit": "unicode_scalar"
+              },
+              "csv": null,
+              "docx": null,
+              "xlsx": null
+            },
+            "start": 35,
+            "end": 37,
+            "excerpt": "日期",
+            "confirmed": true
+          },
+          {
+            "field_name": "日期",
+            "component_id": "8693a8892e159bda4baa2da7fc4e9c680d78b06199bf0e1f06faceb55e3649f8/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RH42ZWZX9295N07RX4M",
+            "publication_id": "01M4MZQ9Y8GK627E7QM2FR8R8K",
+            "publication_revision": 2,
+            "observation_id": "01M4MZQ9Y8NW9CAB2RJQ04GX3M",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZPM43Q4HWCKVRH2YRE4F4",
+            "segment_id": "8693a8892e159bda4baa2da7fc4e9c680d78b06199bf0e1f06faceb55e3649f8",
+            "locator": {
+              "kind": "text",
+              "text": {
+                "start": 0,
+                "end": 59,
+                "unit": "unicode_scalar"
+              },
+              "csv": null,
+              "docx": null,
+              "xlsx": null
+            },
+            "start": 38,
+            "end": 48,
+            "excerpt": "2026-10-03",
+            "confirmed": true
+          },
+          {
+            "field_name": "bill_id",
+            "component_id": "8693a8892e159bda4baa2da7fc4e9c680d78b06199bf0e1f06faceb55e3649f8/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RH42ZWZX9295N07RX4M",
+            "publication_id": "01M4MZQ9Y8GK627E7QM2FR8R8K",
+            "publication_revision": 2,
+            "observation_id": "01M4MZQ9Y8664GBBQHEHWR7AJT",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZPM43Q4HWCKVRH2YRE4F4",
+            "segment_id": "8693a8892e159bda4baa2da7fc4e9c680d78b06199bf0e1f06faceb55e3649f8",
+            "locator": {
+              "kind": "text",
+              "text": {
+                "start": 0,
+                "end": 59,
+                "unit": "unicode_scalar"
+              },
+              "csv": null,
+              "docx": null,
+              "xlsx": null
+            },
+            "start": 7,
+            "end": 11,
+            "excerpt": "账单编号",
+            "confirmed": true
+          },
+          {
+            "field_name": "bill_id",
+            "component_id": "8693a8892e159bda4baa2da7fc4e9c680d78b06199bf0e1f06faceb55e3649f8/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RH42ZWZX9295N07RX4M",
+            "publication_id": "01M4MZQ9Y8GK627E7QM2FR8R8K",
+            "publication_revision": 2,
+            "observation_id": "01M4MZQ9Y8664GBBQHEHWR7AJT",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZPM43Q4HWCKVRH2YRE4F4",
+            "segment_id": "8693a8892e159bda4baa2da7fc4e9c680d78b06199bf0e1f06faceb55e3649f8",
+            "locator": {
+              "kind": "text",
+              "text": {
+                "start": 0,
+                "end": 59,
+                "unit": "unicode_scalar"
+              },
+              "csv": null,
+              "docx": null,
+              "xlsx": null
+            },
+            "start": 12,
+            "end": 25,
+            "excerpt": "TEST-BILL-004",
+            "confirmed": true
+          },
+          {
+            "field_name": "amount",
+            "component_id": "8693a8892e159bda4baa2da7fc4e9c680d78b06199bf0e1f06faceb55e3649f8/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RH42ZWZX9295N07RX4M",
+            "publication_id": "01M4MZQ9Y8GK627E7QM2FR8R8K",
+            "publication_revision": 2,
+            "observation_id": "01M4MZQ9Y88Q4BFV2NKA0ZA4Q5",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZPM43Q4HWCKVRH2YRE4F4",
+            "segment_id": "8693a8892e159bda4baa2da7fc4e9c680d78b06199bf0e1f06faceb55e3649f8",
+            "locator": {
+              "kind": "text",
+              "text": {
+                "start": 0,
+                "end": 59,
+                "unit": "unicode_scalar"
+              },
+              "csv": null,
+              "docx": null,
+              "xlsx": null
+            },
+            "start": 49,
+            "end": 51,
+            "excerpt": "费用",
+            "confirmed": true
+          }
+        ]
+      },
+      {
+        "metric": "amount",
+        "currency": "USD",
+        "value": "20",
+        "evidence": [
+          {
+            "field_name": "amount",
+            "component_id": "79f04a244752922def9e6b669d67208c1421244f5ea962062b1722767355cd0f/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RGQDDWEHX6WCC8W21F8",
+            "publication_id": "01M4MZPK77PQWGCQX797E4ZH87",
+            "publication_revision": 2,
+            "observation_id": "01M4MZPK78B608WEXH1RZWJV6Z",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZNG2PGNXBJZ212B20WQGH",
+            "segment_id": "79f04a244752922def9e6b669d67208c1421244f5ea962062b1722767355cd0f",
+            "locator": {
+              "kind": "csv",
+              "text": null,
+              "csv": {
+                "record": 1,
+                "column": 4,
+                "physical_row": 1,
+                "byte_column": 31
+              },
+              "docx": null,
+              "xlsx": null
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "费用",
+            "confirmed": true
+          },
+          {
+            "field_name": "amount",
+            "component_id": "ae8a5ee726eea352b121acc07b369a2c217a25beedca18ab3e36a089466cc33d/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RGQDDWEHX6WCC8W21F8",
+            "publication_id": "01M4MZPK77PQWGCQX797E4ZH87",
+            "publication_revision": 2,
+            "observation_id": "01M4MZPK78B608WEXH1RZWJV6Z",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZNG2PGNXBJZ212B20WQGH",
+            "segment_id": "ae8a5ee726eea352b121acc07b369a2c217a25beedca18ab3e36a089466cc33d",
+            "locator": {
+              "kind": "csv",
+              "text": null,
+              "csv": {
+                "record": 2,
+                "column": 4,
+                "physical_row": 2,
+                "byte_column": 39
+              },
+              "docx": null,
+              "xlsx": null
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "20",
+            "confirmed": true
+          },
+          {
+            "field_name": "日期",
+            "component_id": "c078d7a555274e49f147847f27fc93f11ac844a256069ec8d0399496bc99d195/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RGQDDWEHX6WCC8W21F8",
+            "publication_id": "01M4MZPK77PQWGCQX797E4ZH87",
+            "publication_revision": 2,
+            "observation_id": "01M4MZPK78JRQT81SR359CATN4",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZNG2PGNXBJZ212B20WQGH",
+            "segment_id": "c078d7a555274e49f147847f27fc93f11ac844a256069ec8d0399496bc99d195",
+            "locator": {
+              "kind": "csv",
+              "text": null,
+              "csv": {
+                "record": 1,
+                "column": 3,
+                "physical_row": 1,
+                "byte_column": 24
+              },
+              "docx": null,
+              "xlsx": null
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "日期",
+            "confirmed": true
+          },
+          {
+            "field_name": "日期",
+            "component_id": "339ed4cb9a1784f2c5537199919d07e37121187fd37216283e6caa7fe3f870dc/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RGQDDWEHX6WCC8W21F8",
+            "publication_id": "01M4MZPK77PQWGCQX797E4ZH87",
+            "publication_revision": 2,
+            "observation_id": "01M4MZPK78JRQT81SR359CATN4",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZNG2PGNXBJZ212B20WQGH",
+            "segment_id": "339ed4cb9a1784f2c5537199919d07e37121187fd37216283e6caa7fe3f870dc",
+            "locator": {
+              "kind": "csv",
+              "text": null,
+              "csv": {
+                "record": 2,
+                "column": 3,
+                "physical_row": 2,
+                "byte_column": 28
+              },
+              "docx": null,
+              "xlsx": null
+            },
+            "start": 0,
+            "end": 10,
+            "excerpt": "2026-10-02",
+            "confirmed": true
+          },
+          {
+            "field_name": "bill_id",
+            "component_id": "c45399f4d1fe354855d25baa9108565f473264c534735648b5d3ba1a17ff0642/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RGQDDWEHX6WCC8W21F8",
+            "publication_id": "01M4MZPK77PQWGCQX797E4ZH87",
+            "publication_revision": 2,
+            "observation_id": "01M4MZPK785KH0XQ1BEV7AE24T",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZNG2PGNXBJZ212B20WQGH",
+            "segment_id": "c45399f4d1fe354855d25baa9108565f473264c534735648b5d3ba1a17ff0642",
+            "locator": {
+              "kind": "csv",
+              "text": null,
+              "csv": {
+                "record": 1,
+                "column": 1,
+                "physical_row": 1,
+                "byte_column": 1
+              },
+              "docx": null,
+              "xlsx": null
+            },
+            "start": 0,
+            "end": 4,
+            "excerpt": "账单编号",
+            "confirmed": true
+          },
+          {
+            "field_name": "bill_id",
+            "component_id": "8728613d2b1dc5c884bf4d1d565de687c1003200748ea63c5bb97edebe3040e7/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RGQDDWEHX6WCC8W21F8",
+            "publication_id": "01M4MZPK77PQWGCQX797E4ZH87",
+            "publication_revision": 2,
+            "observation_id": "01M4MZPK785KH0XQ1BEV7AE24T",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZNG2PGNXBJZ212B20WQGH",
+            "segment_id": "8728613d2b1dc5c884bf4d1d565de687c1003200748ea63c5bb97edebe3040e7",
+            "locator": {
+              "kind": "csv",
+              "text": null,
+              "csv": {
+                "record": 2,
+                "column": 1,
+                "physical_row": 2,
+                "byte_column": 1
+              },
+              "docx": null,
+              "xlsx": null
+            },
+            "start": 0,
+            "end": 13,
+            "excerpt": "TEST-BILL-003",
+            "confirmed": true
+          },
+          {
+            "field_name": "amount",
+            "component_id": "79f04a244752922def9e6b669d67208c1421244f5ea962062b1722767355cd0f/body",
+            "component_kind": "body",
+            "document_id": "01M4MZ5RGQDDWEHX6WCC8W21F8",
+            "publication_id": "01M4MZPK77PQWGCQX797E4ZH87",
+            "publication_revision": 2,
+            "observation_id": "01M4MZPK78B608WEXH1RZWJV6Z",
+            "observation_revision": 1,
+            "source_extraction_id": "01M4MZNG2PGNXBJZ212B20WQGH",
+            "segment_id": "79f04a244752922def9e6b669d67208c1421244f5ea962062b1722767355cd0f",
+            "locator": {
+              "kind": "csv",
+              "text": null,
+              "csv": {
+                "record": 1,
+                "column": 4,
+                "physical_row": 1,
+                "byte_column": 31
+              },
+              "docx": null,
+              "xlsx": null
+            },
+            "start": 0,
+            "end": 2,
+            "excerpt": "费用",
+            "confirmed": true
+          }
+        ]
+      }
+    ],
+    "coverage": {
+      "scope": "archived_only",
+      "complete": false,
+      "included": 4,
+      "excluded": 1,
+      "reasons": [
+        "unproven_duplicate_candidates"
+      ]
+    }
+  }
+}

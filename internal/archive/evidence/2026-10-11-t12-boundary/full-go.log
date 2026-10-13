@@ -1,0 +1,42 @@
+?   	github.com/DituLin/Atrium/cmd/atrium	[no test files]
+ok  	github.com/DituLin/Atrium/cmd/atrium-brain-host	0.348s
+?   	github.com/DituLin/Atrium/cmd/home-mcp	[no test files]
+ok  	github.com/DituLin/Atrium/internal/app	12.872s
+ok  	github.com/DituLin/Atrium/internal/app/events	(cached)
+--- FAIL: TestNativeReapsDescendantsOnCancelAndPipeDelay (2.23s)
+    --- FAIL: TestNativeReapsDescendantsOnCancelAndPipeDelay/cancel (1.00s)
+        native_process_test.go:36: open /var/folders/9n/qh4533dn6db5y_wc4q5v6kr40000gn/T/TestNativeReapsDescendantsOnCancelAndPipeDelaycancel548576581/001/pid: no such file or directory
+FAIL
+FAIL	github.com/DituLin/Atrium/internal/archive	18.306s
+ok  	github.com/DituLin/Atrium/internal/archiveworker	1.985s
+ok  	github.com/DituLin/Atrium/internal/auth	2.063s
+ok  	github.com/DituLin/Atrium/internal/auth/tlsgen	(cached)
+ok  	github.com/DituLin/Atrium/internal/backup	2.018s
+ok  	github.com/DituLin/Atrium/internal/brain	2.190s
+ok  	github.com/DituLin/Atrium/internal/brainhost	2.520s
+ok  	github.com/DituLin/Atrium/internal/briefing	2.180s
+ok  	github.com/DituLin/Atrium/internal/cli	3.450s
+ok  	github.com/DituLin/Atrium/internal/clock	(cached)
+ok  	github.com/DituLin/Atrium/internal/config	(cached)
+ok  	github.com/DituLin/Atrium/internal/diag	3.063s
+ok  	github.com/DituLin/Atrium/internal/domain	(cached)
+ok  	github.com/DituLin/Atrium/internal/family	(cached)
+ok  	github.com/DituLin/Atrium/internal/familyarchive	1.942s
+ok  	github.com/DituLin/Atrium/internal/homemcp	7.879s
+ok  	github.com/DituLin/Atrium/internal/httpapi	9.991s
+ok  	github.com/DituLin/Atrium/internal/indexer	3.127s
+ok  	github.com/DituLin/Atrium/internal/integration	2.699s
+ok  	github.com/DituLin/Atrium/internal/jobs	2.914s
+ok  	github.com/DituLin/Atrium/internal/logging	(cached)
+ok  	github.com/DituLin/Atrium/internal/media	4.352s
+?   	github.com/DituLin/Atrium/internal/media/testutil	[no test files]
+ok  	github.com/DituLin/Atrium/internal/screen	4.877s
+ok  	github.com/DituLin/Atrium/internal/source	5.269s
+ok  	github.com/DituLin/Atrium/internal/store	13.133s
+?   	github.com/DituLin/Atrium/internal/store/testutil	[no test files]
+?   	github.com/DituLin/Atrium/internal/version	[no test files]
+ok  	github.com/DituLin/Atrium/internal/video	2.719s
+ok  	github.com/DituLin/Atrium/internal/webui	(cached)
+ok  	github.com/DituLin/Atrium/internal/widget	2.768s
+ok  	github.com/DituLin/Atrium/internal/ws	1.553s
+FAIL

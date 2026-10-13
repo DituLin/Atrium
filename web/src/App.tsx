@@ -1,3 +1,4 @@
+import { FamilyScreen } from './screens/FamilyScreen';
 import { VideosScreen } from './screens/VideosScreen';
 import { BriefingScreen } from './screens/BriefingScreen';
 /**
@@ -28,6 +29,8 @@ export function CurrentScreen(): ReactElement {
       return <ConnectScreen />;
     case 'briefing':
       return <BriefingScreen />;
+    case 'family':
+      return <FamilyScreen />;
     case 'house':
       return <HouseScreen />;
     case 'settings':

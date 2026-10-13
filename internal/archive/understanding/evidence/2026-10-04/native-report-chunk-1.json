@@ -1,0 +1,211 @@
+{
+  "configuration_fingerprint": "0fd2243da057e295d4b430caeadf7b4aca4f6d8e07dfc194ca1083e7cbcac72b",
+  "usage": {
+    "input_tokens": 6563,
+    "output_tokens": 8916,
+    "total_tokens": 18167,
+    "cache_read_tokens": 2688,
+    "cache_write_tokens": 0,
+    "cost_usd": 0.0034228264000000005
+  },
+  "protocol_version": 1,
+  "invocation_id": "c2808ebe0bf42eb652dc3c97c94a4e24",
+  "input_digest": "0bdf34f9ce831f578bf14b7109e8c2c6d62533a454ea34a60fe18a22df304ac5",
+  "schema_version": "archive-extraction/1",
+  "extraction_version": "archive-understand/1",
+  "chunk_version": "archive-chunk/1",
+  "provider": "deepseek",
+  "requested_model": "deepseek/deepseek-v4-flash",
+  "model": "deepseek-v4-flash",
+  "response_model": "deepseek-flash",
+  "stop_reason": "stop",
+  "execution": {
+    "mode": "direct-provider",
+    "owner": {
+      "kind": "provider",
+      "id": "deepseek"
+    }
+  },
+  "result": {
+    "domain": "health",
+    "document_type": "synthetic health report",
+    "subjects": [
+      {
+        "id": "s1",
+        "name": "林明 Alice Lin",
+        "role": "patient",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "6dba6765c7c8eb838414ed49ee3d221df04a5459dda503ce3a9e8d68504e0495/body/alternative-0/0:15",
+            "start": 3,
+            "end": 15,
+            "quote": "林明 Alice Lin",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "dimensions": [
+          {
+            "kind": "unit",
+            "raw": "g/L",
+            "evidence": [
+              {
+                "view_id": "a2df4269e548f34634d70e422f761b6fdb5937dfa8a7fad1aa7ffecc82f4c2ea/body/alternative-0/0:3",
+                "start": 0,
+                "end": 3,
+                "quote": "g/L",
+                "derived_value_ref": ""
+              }
+            ]
+          }
+        ],
+        "subject_refs": [
+          "s1"
+        ],
+        "id": "f1",
+        "name": "血红蛋白",
+        "raw": "145.6",
+        "evidence": [
+          {
+            "view_id": "97f74fe31b3e90ee4309673132c52f9fc50855bbfc92a9276857b452584173ed/body/alternative-0/0:5",
+            "start": 0,
+            "end": 5,
+            "quote": "145.6",
+            "derived_value_ref": ""
+          },
+          {
+            "view_id": "0f430d9716dad5eac44152d554c10c49804b7189a480c007fe5ab48f9e4c0442/body/alternative-0/0:4",
+            "start": 0,
+            "end": 4,
+            "quote": "血红蛋白",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "decimal",
+            "value": "145.6"
+          }
+        ]
+      },
+      {
+        "dimensions": [],
+        "subject_refs": [],
+        "id": "f2",
+        "name": "参考范围",
+        "raw": "130-175",
+        "evidence": [
+          {
+            "view_id": "746c998b664ffbf0d77439f1281c85f9462e6ec736a6f5cb674115588683d677/body/alternative-0/0:7",
+            "start": 0,
+            "end": 7,
+            "quote": "130-175",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": []
+      },
+      {
+        "dimensions": [
+          {
+            "kind": "currency",
+            "raw": "CNY",
+            "evidence": [
+              {
+                "view_id": "c8834961f5f9e56b7a6c761c96532ac6d0a81946adeab4421e9f9a10c4c1182f/body/alternative-0/0:3",
+                "start": 0,
+                "end": 3,
+                "quote": "CNY",
+                "derived_value_ref": ""
+              }
+            ]
+          }
+        ],
+        "subject_refs": [],
+        "id": "f3",
+        "name": "费用 Amount",
+        "raw": "1234.50",
+        "evidence": [
+          {
+            "view_id": "3077436f351f03b4b2a15e6364c5d0fc0d250182853c6968881cf3d647dac132/body/alternative-0/0:7",
+            "start": 0,
+            "end": 7,
+            "quote": "1234.50",
+            "derived_value_ref": ""
+          },
+          {
+            "view_id": "4437b0a1eb8bd48e5f1502a3def8050f63a39205afe90884423f5c0f7f6de520/body/alternative-0/0:9",
+            "start": 0,
+            "end": 9,
+            "quote": "费用 Amount",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "decimal",
+            "value": "1234.50"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "id": "e1",
+        "type": "report",
+        "field_refs": [
+          "f1",
+          "f2",
+          "f3"
+        ],
+        "subject_refs": [
+          "s1"
+        ],
+        "section_evidence": [
+          {
+            "view_id": "af811561eb09bc746ed85fcca8c3161bf3612b4b80dcbaaa7343fa34e0f70a89/body/alternative-0/0:23",
+            "start": 0,
+            "end": 23,
+            "quote": "合成健康报告 SYNTHETIC REPORT",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "coverage": [
+      {
+        "view_id": "97f74fe31b3e90ee4309673132c52f9fc50855bbfc92a9276857b452584173ed/body/alternative-0/0:5",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "0f430d9716dad5eac44152d554c10c49804b7189a480c007fe5ab48f9e4c0442/body/alternative-0/0:4",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "746c998b664ffbf0d77439f1281c85f9462e6ec736a6f5cb674115588683d677/body/alternative-0/0:7",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "a2df4269e548f34634d70e422f761b6fdb5937dfa8a7fad1aa7ffecc82f4c2ea/body/alternative-0/0:3",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "3077436f351f03b4b2a15e6364c5d0fc0d250182853c6968881cf3d647dac132/body/alternative-0/0:7",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "4437b0a1eb8bd48e5f1502a3def8050f63a39205afe90884423f5c0f7f6de520/body/alternative-0/0:9",
+        "disposition": "extracted"
+      },
+      {
+        "view_id": "c8834961f5f9e56b7a6c761c96532ac6d0a81946adeab4421e9f9a10c4c1182f/body/alternative-0/0:3",
+        "disposition": "extracted"
+      }
+    ],
+    "issues": []
+  }
+}

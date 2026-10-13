@@ -23,7 +23,8 @@ const (
 // Defaults returns a configuration with every documented default applied.
 func Defaults() *Config {
 	return &Config{
-		Home: Home{Name: "Home", Timezone: ""},
+		Archives: Archives{MaxBytes: 32 << 20, UploadTimeout: Duration(2 * time.Minute)},
+		Home:     Home{Name: "Home", Timezone: ""},
 		Server: Server{
 			Listen:    "0.0.0.0:8443",
 			PublicURL: "",
@@ -128,6 +129,11 @@ func (c *Config) normalize() error {
 	}
 	c.Storage.DataDir = expanded
 
+	if c.FamilyArchive.Dir != "" {
+		if c.FamilyArchive.Dir, err = ExpandPath(c.FamilyArchive.Dir); err != nil {
+			return err
+		}
+	}
 	if c.Backup.Dir != "" {
 		if c.Backup.Dir, err = ExpandPath(c.Backup.Dir); err != nil {
 			return err

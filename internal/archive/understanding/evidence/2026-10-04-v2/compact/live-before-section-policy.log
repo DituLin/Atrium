@@ -1,0 +1,23 @@
+=== RUN   TestUnderstandingLivePublicWorker
+=== RUN   TestUnderstandingLivePublicWorker/health
+    understand_live_test.go:116: domain=health subjects=2 fields=2 events=1 complete=true exact_value_date_dimension_binding=true route=direct-provider/deepseek
+=== RUN   TestUnderstandingLivePublicWorker/education
+    understand_live_test.go:116: domain=education subjects=2 fields=2 events=1 complete=true exact_value_date_dimension_binding=true route=direct-provider/deepseek
+=== RUN   TestUnderstandingLivePublicWorker/finance
+    understand_live_test.go:116: domain=finance subjects=2 fields=4 events=1 complete=true exact_value_date_dimension_binding=true route=direct-provider/deepseek
+=== RUN   TestUnderstandingLivePublicWorker/finance_explicit_control
+    understand_live_test.go:116: domain=finance subjects=2 fields=4 events=1 complete=true exact_value_date_dimension_binding=true route=direct-provider/deepseek
+=== RUN   TestUnderstandingLivePublicWorker/property
+    understand_live_test.go:116: domain=property subjects=2 fields=2 events=1 complete=true exact_value_date_dimension_binding=true route=direct-provider/deepseek
+--- PASS: TestUnderstandingLivePublicWorker (65.80s)
+    --- PASS: TestUnderstandingLivePublicWorker/health (14.40s)
+    --- PASS: TestUnderstandingLivePublicWorker/education (10.97s)
+    --- PASS: TestUnderstandingLivePublicWorker/finance (14.33s)
+    --- PASS: TestUnderstandingLivePublicWorker/finance_explicit_control (13.69s)
+    --- PASS: TestUnderstandingLivePublicWorker/property (12.41s)
+=== RUN   TestUnderstandingLiveNativeReport
+    understand_live_test.go:271: report anchors differ: 2 events
+--- FAIL: TestUnderstandingLiveNativeReport (57.28s)
+FAIL
+FAIL	github.com/DituLin/Atrium/internal/archive	123.278s
+FAIL

@@ -1,0 +1,197 @@
+{
+  "configuration_fingerprint": "0fd2243da057e295d4b430caeadf7b4aca4f6d8e07dfc194ca1083e7cbcac72b",
+  "usage": {
+    "input_tokens": 518,
+    "output_tokens": 3706,
+    "total_tokens": 6912,
+    "cache_read_tokens": 2688,
+    "cache_write_tokens": 0,
+    "cost_usd": 0.0011177264
+  },
+  "protocol_version": 1,
+  "invocation_id": "51906392cfefdffd61e6f39bbe7de597",
+  "input_digest": "5caab3631d2a172858b3cb094f529608dba6ca8cdcf2d97e8cc32db666c44f0a",
+  "schema_version": "archive-extraction/1",
+  "extraction_version": "archive-understand/1",
+  "chunk_version": "archive-chunk/1",
+  "provider": "deepseek",
+  "requested_model": "deepseek/deepseek-v4-flash",
+  "model": "deepseek-v4-flash",
+  "response_model": "deepseek-flash",
+  "stop_reason": "stop",
+  "execution": {
+    "mode": "direct-provider",
+    "owner": {
+      "kind": "provider",
+      "id": "deepseek"
+    }
+  },
+  "result": {
+    "domain": "finance",
+    "document_type": "bank_transaction_record",
+    "subjects": [
+      {
+        "id": "subj_zhou",
+        "name": "周宁",
+        "role": "account_holder",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "s1/body/0:50",
+            "start": 13,
+            "end": 15,
+            "quote": "周宁",
+            "derived_value_ref": ""
+          }
+        ]
+      },
+      {
+        "id": "subj_wu",
+        "name": "吴平",
+        "role": "payee",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "s1/body/0:50",
+            "start": 47,
+            "end": 49,
+            "quote": "吴平",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "dimensions": [],
+        "subject_refs": [
+          "subj_zhou"
+        ],
+        "id": "f_holder",
+        "name": "账户持有人",
+        "raw": "周宁",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:50",
+            "start": 13,
+            "end": 15,
+            "quote": "周宁",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": []
+      },
+      {
+        "dimensions": [],
+        "subject_refs": [],
+        "id": "f_date",
+        "name": "日期",
+        "raw": "2026-10-01",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:50",
+            "start": 19,
+            "end": 29,
+            "quote": "2026-10-01",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "date",
+            "value": "2026-10-01"
+          }
+        ]
+      },
+      {
+        "dimensions": [
+          {
+            "kind": "currency",
+            "raw": "元",
+            "evidence": [
+              {
+                "view_id": "s1/body/0:50",
+                "start": 41,
+                "end": 42,
+                "quote": "元",
+                "derived_value_ref": ""
+              }
+            ]
+          }
+        ],
+        "subject_refs": [
+          "subj_zhou"
+        ],
+        "id": "f_amount",
+        "name": "交易金额",
+        "raw": "130.50",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:50",
+            "start": 35,
+            "end": 41,
+            "quote": "130.50",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "decimal",
+            "value": "130.50"
+          }
+        ]
+      },
+      {
+        "dimensions": [],
+        "subject_refs": [
+          "subj_wu"
+        ],
+        "id": "f_payee",
+        "name": "收款人",
+        "raw": "吴平",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:50",
+            "start": 47,
+            "end": 49,
+            "quote": "吴平",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": []
+      }
+    ],
+    "events": [
+      {
+        "id": "ev_txn",
+        "type": "transaction",
+        "field_refs": [
+          "f_holder",
+          "f_date",
+          "f_amount",
+          "f_payee"
+        ],
+        "subject_refs": [
+          "subj_zhou",
+          "subj_wu"
+        ],
+        "section_evidence": [
+          {
+            "view_id": "s1/body/0:50",
+            "start": 30,
+            "end": 49,
+            "quote": "交易金额：130.50元\n收款人：吴平",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "coverage": [
+      {
+        "view_id": "s1/body/0:50",
+        "disposition": "extracted"
+      }
+    ],
+    "issues": []
+  }
+}

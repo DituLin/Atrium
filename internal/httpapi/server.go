@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/DituLin/Atrium/internal/app/events"
+	"github.com/DituLin/Atrium/internal/archive"
 	"github.com/DituLin/Atrium/internal/auth"
 	"github.com/DituLin/Atrium/internal/backup"
 	"github.com/DituLin/Atrium/internal/briefing"
@@ -28,16 +29,19 @@ import (
 // Deps are the collaborators the HTTP layer needs. Everything is an explicit
 // field so tests can substitute fakes without touching package state.
 type Deps struct {
-	Config   *config.Config
-	DB       *store.DB
-	Logger   *slog.Logger
-	Auth     *auth.Authenticator
-	Pairing  *auth.PairingService
-	Home     *clock.Home
-	Snapshot *widget.Composer
-	House    *family.HouseComposer
-	Overview *briefing.Composer
-	Now      func() time.Time
+	Archives       *archive.Intake
+	ArchiveBlobs   *archive.BlobStore
+	ArchivePreview archive.NativeParser
+	Config         *config.Config
+	DB             *store.DB
+	Logger         *slog.Logger
+	Auth           *auth.Authenticator
+	Pairing        *auth.PairingService
+	Home           *clock.Home
+	Snapshot       *widget.Composer
+	House          *family.HouseComposer
+	Overview       *briefing.Composer
+	Now            func() time.Time
 	// Insecure is true when tls.mode = off; it drops the Secure cookie flag.
 	Insecure bool
 	// StartedAt feeds uptime in diagnostics.
@@ -145,6 +149,7 @@ func New(deps Deps) *API {
 	}
 	a.routes()
 	a.integrationRoutes()
+	a.archiveRoutes()
 	a.adminIntegrationRoutes()
 	a.handler = Chain(a.mux,
 		WithRequestID(),

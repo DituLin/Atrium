@@ -1,0 +1,177 @@
+{
+  "configuration_fingerprint": "89d56e4a5cb2d94f1089fecab52117a89302cf55bb123efbc86e69c50f6d52b0",
+  "usage": {
+    "input_tokens": 1953,
+    "output_tokens": 3158,
+    "total_tokens": 6903,
+    "cache_read_tokens": 1792,
+    "cache_write_tokens": 0,
+    "cost_usd": 0.0011626776
+  },
+  "protocol_version": 1,
+  "invocation_id": "7a132e875eac25a6f6480d47462c32d8",
+  "input_digest": "1374675ece3e6ea5139dba14ee7c689aaadce06d5c60f732646e8cdb3c532587",
+  "schema_version": "archive-extraction/2",
+  "extraction_version": "archive-understand/2",
+  "chunk_version": "archive-chunk/1",
+  "provider": "deepseek",
+  "requested_model": "deepseek/deepseek-v4-flash",
+  "model": "deepseek-v4-flash",
+  "response_model": "deepseek-flash",
+  "stop_reason": "stop",
+  "execution": {
+    "mode": "direct-provider",
+    "owner": {
+      "kind": "provider",
+      "id": "deepseek"
+    }
+  },
+  "result": {
+    "labels": [
+      "体检",
+      "血液检查",
+      "临床检验",
+      "健康"
+    ],
+    "domain": "health",
+    "document_type": "体检报告",
+    "subjects": [
+      {
+        "id": "subj_patient",
+        "name": "林明",
+        "role": "patient",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "s1/body/0:46",
+            "start": 8,
+            "end": 10,
+            "quote": "林明",
+            "derived_value_ref": ""
+          },
+          {
+            "view_id": "s1/body/0:46",
+            "start": 5,
+            "end": 7,
+            "quote": "患者",
+            "derived_value_ref": ""
+          }
+        ]
+      },
+      {
+        "id": "subj_doctor",
+        "name": "王华",
+        "role": "doctor",
+        "ambiguous": false,
+        "evidence": [
+          {
+            "view_id": "s1/body/0:46",
+            "start": 14,
+            "end": 16,
+            "quote": "王华",
+            "derived_value_ref": ""
+          },
+          {
+            "view_id": "s1/body/0:46",
+            "start": 11,
+            "end": 13,
+            "quote": "医生",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "fields": [
+      {
+        "dimensions": [],
+        "subject_refs": [],
+        "id": "f_date",
+        "name": "报告日期",
+        "raw": "2026-10-04",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:46",
+            "start": 20,
+            "end": 30,
+            "quote": "2026-10-04",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "date",
+            "value": "2026-10-04"
+          }
+        ]
+      },
+      {
+        "dimensions": [
+          {
+            "kind": "unit",
+            "raw": "g/L",
+            "evidence": [
+              {
+                "view_id": "s1/body/0:46",
+                "start": 42,
+                "end": 45,
+                "quote": "g/L",
+                "derived_value_ref": ""
+              }
+            ]
+          }
+        ],
+        "subject_refs": [
+          "subj_patient"
+        ],
+        "id": "f_hemoglobin",
+        "name": "血红蛋白",
+        "raw": "145.6",
+        "evidence": [
+          {
+            "view_id": "s1/body/0:46",
+            "start": 36,
+            "end": 41,
+            "quote": "145.6",
+            "derived_value_ref": ""
+          }
+        ],
+        "normalizations": [
+          {
+            "kind": "decimal",
+            "value": "145.6"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "id": "ev_report",
+        "type": "report",
+        "field_refs": [
+          "f_date",
+          "f_hemoglobin"
+        ],
+        "subject_refs": [
+          "subj_patient",
+          "subj_doctor"
+        ],
+        "section_evidence": [
+          {
+            "view_id": "s1/body/0:46",
+            "start": 0,
+            "end": 30,
+            "quote": "体检报告\n患者：林明\n医生：王华\n日期：2026-10-04",
+            "derived_value_ref": ""
+          }
+        ]
+      }
+    ],
+    "coverage": [
+      {
+        "view_id": "s1/body/0:46",
+        "disposition": "extracted"
+      }
+    ],
+    "issues": []
+  }
+}

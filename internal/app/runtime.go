@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/DituLin/Atrium/internal/app/events"
+	"github.com/DituLin/Atrium/internal/archive"
 	"github.com/DituLin/Atrium/internal/auth"
 	"github.com/DituLin/Atrium/internal/auth/tlsgen"
 	"github.com/DituLin/Atrium/internal/backup"
@@ -50,13 +51,14 @@ type Options struct {
 
 // Runtime owns the server, the store and every background goroutine.
 type Runtime struct {
-	cfg     *config.Config
-	log     *slog.Logger
-	layout  Layout
-	db      *store.DB
-	api     *httpapi.API
-	server  *httpapi.Server
-	weather *widget.WeatherService
+	cfg          *config.Config
+	log          *slog.Logger
+	layout       Layout
+	db           *store.DB
+	api          *httpapi.API
+	server       *httpapi.Server
+	weather      *widget.WeatherService
+	archiveBlobs *archive.BlobStore
 
 	// V0.3 and H1 subsystems.
 	hub      *ws.Hub
@@ -120,16 +122,24 @@ func New(ctx context.Context, opts Options) (*Runtime, error) {
 		_ = lock.Release()
 		return nil, err
 	}
+	initialized := false
+	var archiveBlobs *archive.BlobStore
+	defer func() {
+		if !initialized {
+			if archiveBlobs != nil {
+				_ = archiveBlobs.Close()
+			}
+			_ = db.Close()
+			_ = lock.Release()
+		}
+	}()
 	applied, err := db.Migrate(ctx)
 	if err != nil {
-		_ = db.Close()
-		_ = lock.Release()
 		return nil, err
 	}
 
 	home, err := clock.NewHome(cfg.Home.Timezone, clockFunc(now))
 	if err != nil {
-		_ = db.Close()
 		return nil, err
 	}
 
@@ -146,13 +156,11 @@ func New(ctx context.Context, opts Options) (*Runtime, error) {
 		lock:     lock,
 	}
 	if err := r.startupReconcile(ctx, applied); err != nil {
-		_ = db.Close()
 		return nil, err
 	}
 
 	r.weather = widget.NewWeatherService(cfg.Widgets.Weather, db, nil)
 	if err := r.buildPipeline(ctx, home); err != nil {
-		_ = db.Close()
 		return nil, err
 	}
 	authenticator := auth.NewAuthenticator(db, auth.NewOriginPolicy(cfg.DefaultAllowedOrigins()), now)
@@ -160,31 +168,42 @@ func New(ctx context.Context, opts Options) (*Runtime, error) {
 	r.buildOps(opts.Errors)
 	ui, err := r.uiHandler()
 	if err != nil {
-		_ = db.Close()
 		return nil, err
 	}
 	snapshot := widget.NewComposer(cfg, db, home, r.weather).
 		WithIndex(r.indexWidget).
 		WithSourceStats(r.sourceStats)
+	var intake *archive.Intake
+	if cfg.Archives.Enabled {
+		archiveBlobs, err = archive.NewBlobStore(layout.Archives(), cfg.Archives.MaxBytes)
+		if err != nil {
+			return nil, err
+		}
+		r.archiveBlobs = archiveBlobs
+		intake = archive.NewIntake(archiveBlobs, db.ArchiveTasksWithClock(clockFunc(now)))
+	}
 	r.api = httpapi.New(httpapi.Deps{
-		Config:     cfg,
-		DB:         db,
-		Logger:     log,
-		Auth:       authenticator,
-		Pairing:    auth.NewPairingService(db, now),
-		Home:       home,
-		Snapshot:   snapshot,
-		Now:        now,
-		Insecure:   r.insecure,
-		StartedAt:  r.started,
-		UI:         ui,
-		Sources:    r.sources,
-		Index:      r.index,
-		Queue:      r.queue,
-		Cache:      r.cache,
-		VideoCache: r.videoCache,
-		Media:      r.pipeline,
-		Bus:        r.bus,
+		Archives:       intake,
+		ArchiveBlobs:   r.archiveBlobs,
+		ArchivePreview: archive.NativeParser{HelperPath: cfg.Archives.NativeHelperPath},
+		Config:         cfg,
+		DB:             db,
+		Logger:         log,
+		Auth:           authenticator,
+		Pairing:        auth.NewPairingService(db, now),
+		Home:           home,
+		Snapshot:       snapshot,
+		Now:            now,
+		Insecure:       r.insecure,
+		StartedAt:      r.started,
+		UI:             ui,
+		Sources:        r.sources,
+		Index:          r.index,
+		Queue:          r.queue,
+		Cache:          r.cache,
+		VideoCache:     r.videoCache,
+		Media:          r.pipeline,
+		Bus:            r.bus,
 
 		Commands:     r.commands,
 		Sessions:     r.hub,
@@ -195,6 +214,7 @@ func New(ctx context.Context, opts Options) (*Runtime, error) {
 		TokenFileDir: layout.Root,
 	})
 	r.server = httpapi.NewServer(cfg.Server.Listen, r.api.Handler(), log)
+	initialized = true
 	return r, nil
 }
 

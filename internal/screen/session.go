@@ -2,7 +2,9 @@ package screen
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"strings"
 
 	"github.com/DituLin/Atrium/internal/domain"
 	"github.com/DituLin/Atrium/internal/ws"
@@ -49,7 +51,25 @@ func (s *Service) OnAck(ctx context.Context, screenID string, ack ws.CommandAck)
 		status = domain.CommandApplied
 	}
 	result := &domain.CommandResult{Route: ack.Route, ResourceID: ack.ResourceID}
-	changed, err := s.db.Commands().Resolve(ctx, cmd.ID, status, ack.ErrorCode, result, s.now())
+	var changed bool
+	if cmd.Kind == domain.CommandArchive {
+		err = s.db.InWriteTx(ctx, func(tx *sql.Tx) error {
+			now := s.now()
+			if status == domain.CommandApplied {
+				_, authorization := s.db.ArchiveTasksWithClock(archiveViewClock(s.now)).AuthorizeArchiveViewIn(ctx, tx, strings.TrimPrefix(cmd.IssuedBy, "integration:"), screenID, cmd.Payload.ArchiveViewID)
+				if authorization != nil || ack.Route == nil || ack.Route.Name != domain.RouteFamily || ack.ResourceID != cmd.Payload.ArchiveViewID || !cmd.ExpiresAt.After(now) {
+					status = domain.CommandFailed
+					ack.ErrorCode = "archive_unavailable"
+					result = nil
+				}
+			}
+			var e error
+			changed, e = s.db.Commands().ResolveInTx(ctx, tx, cmd.ID, status, ack.ErrorCode, result, now)
+			return e
+		})
+	} else {
+		changed, err = s.db.Commands().Resolve(ctx, cmd.ID, status, ack.ErrorCode, result, s.now())
+	}
 	if err != nil {
 		return err
 	}

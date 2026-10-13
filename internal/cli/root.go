@@ -34,12 +34,14 @@ func NewRoot() *cobra.Command {
 
 	root.AddCommand(
 		newVersionCmd(),
+		newMaintenanceCmd(g),
 		newInitCmd(g),
 		newServeCmd(g),
 		newTLSCmd(g),
 		newTokenCmd(g),
 		newBackupCmd(g),
 		newRestoreCmd(g),
+		newFamilyCmd(),
 		newAdminCmd(),
 	)
 	return root

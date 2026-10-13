@@ -1,0 +1,87 @@
+{
+  "format": "atrium-archive-tv-hotfix-v1",
+  "runtime_commit": "c06c6a591e9a33c6a93bc0def15d3e29061f9d07",
+  "deployment": "local_live",
+  "health": "ok",
+  "services_running": true,
+  "schema": 17,
+  "all_preupgrade_family_rows_preserved": 86,
+  "backup": "/Users/ditu/Atrium/releases/predeploy-20261011-214755",
+  "manifest_files_verified": 57,
+  "signing_identity_preserved": true,
+  "provider_files_preserved": true,
+  "channels": {
+    "discord": [
+      {
+        "enabled": true,
+        "configured": true,
+        "running": true,
+        "connected": true,
+        "error_present": false
+      },
+      {
+        "enabled": true,
+        "configured": true,
+        "running": true,
+        "connected": true,
+        "error_present": false
+      }
+    ],
+    "openclaw-weixin": [
+      {
+        "enabled": true,
+        "configured": true,
+        "running": true,
+        "connected": null,
+        "error_present": false
+      }
+    ]
+  },
+  "archive_order": {
+    "recent_first_actual_page": true,
+    "recent_first_global_pagination_regression": "passed",
+    "legacy_and_documents": "passed",
+    "timestamp_ties": "passed",
+    "public_and_private": "passed"
+  },
+  "milk_chart": {
+    "periods": [
+      {
+        "period": "day",
+        "load_ms": 799
+      },
+      {
+        "period": "week",
+        "load_ms": 1201
+      },
+      {
+        "period": "month",
+        "load_ms": 1448
+      }
+    ],
+    "remote_week_month": true,
+    "single_point_visible": true,
+    "charts_and_time_axis_fit_first_screen": true,
+    "legacy_formula_and_breastmilk": true,
+    "other_health_volumes_excluded_regression": "passed",
+    "core_decimal_totals": "passed",
+    "bounded_series_daily_fallback": "passed",
+    "generation_conflicts_hidden_regression": "passed"
+  },
+  "checks": {
+    "go_full_suite": "passed",
+    "web_full_suite": {
+      "files": 65,
+      "tests": 471,
+      "passed": true
+    },
+    "after_layout_label_changes": {
+      "files": 2,
+      "tests": 10,
+      "passed": true
+    },
+    "production_build_and_typecheck": "passed"
+  },
+  "private_evidence": "/Users/ditu/Atrium/releases/verification-20261011-c06c6a5",
+  "family_values_and_screenshots_committed": false
+}

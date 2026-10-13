@@ -28,6 +28,9 @@ func (a *API) integrationRoutes() {
 		path, permission string
 		handler          http.HandlerFunc
 	}{
+		{"GET /family/members", "family.read", a.integrationFamilyMembers},
+		{"GET /family/records", "family.read", a.integrationFamilyRecords},
+		{"POST /family/records", "family.write", a.integrationFamilyRecord},
 		{"GET /home", "home.read", a.integrationHome},
 		{"GET /nas/status", "nas.read", a.integrationNAS},
 		{"GET /photos", "photos.read", a.integrationPhotos},
@@ -44,6 +47,10 @@ func (a *API) integrationRoutes() {
 }
 
 func (a *API) requireIntegration(permission string, next http.HandlerFunc) http.HandlerFunc {
+	return a.requireIntegrationTimeout(permission, 5*time.Second, next)
+}
+
+func (a *API) requireIntegrationTimeout(permission string, timeout time.Duration, next http.HandlerFunc) http.HandlerFunc {
 	return a.requireScope(auth.ScopeIntegration, func(w http.ResponseWriter, r *http.Request) {
 		p := auth.FromContext(r.Context()).Integration
 		if p != nil {
@@ -59,7 +66,7 @@ func (a *API) requireIntegration(permission string, next http.HandlerFunc) http.
 			WriteError(w, r, domain.Errorf(domain.CodeRateLimited, "integration request limit reached"))
 			return
 		}
-		ctx, cancel := timeoutContext(r, 5*time.Second)
+		ctx, cancel := timeoutContext(r, timeout)
 		defer cancel()
 		next(w, r.WithContext(ctx))
 	})

@@ -1,0 +1,859 @@
+{
+  "native": {
+    "engine": {
+      "helper": "atrium-native/1",
+      "build": "9c9c4ac321b6debbf9909e42469671f4ee6f726f557a7712afb6e657828cdf1c",
+      "os_build": "24C101",
+      "vision_revision": 3,
+      "languages": [
+        "zh-Hans",
+        "en-US"
+      ],
+      "recognition": "accurate",
+      "language_correction": false
+    },
+    "pages": [
+      {
+        "page": 1,
+        "width": 481,
+        "height": 322,
+        "orientation": 1,
+        "rotation": 0,
+        "effective_crop": [
+          50,
+          70,
+          240.3,
+          160.70000000000002
+        ],
+        "transform": [
+          2.0016645859342486,
+          0,
+          0,
+          2.0037336652146855,
+          -100.08322929671243,
+          -140.26135656502802
+        ],
+        "ocr_complete": true,
+        "native_complete": true
+      },
+      {
+        "page": 2,
+        "width": 322,
+        "height": 481,
+        "orientation": 1,
+        "rotation": 90,
+        "effective_crop": [
+          50,
+          70,
+          240.3,
+          160.70000000000002
+        ],
+        "transform": [
+          0,
+          -2.0016645859342486,
+          2.0037336652146855,
+          0,
+          -140.26135656502802,
+          581.0832292967124
+        ],
+        "ocr_complete": true,
+        "native_complete": true
+      },
+      {
+        "page": 3,
+        "width": 481,
+        "height": 322,
+        "orientation": 1,
+        "rotation": 180,
+        "effective_crop": [
+          50,
+          70,
+          240.3,
+          160.70000000000002
+        ],
+        "transform": [
+          -2.0016645859342486,
+          0,
+          0,
+          -2.0037336652146855,
+          581.0832292967124,
+          462.26135656502805
+        ],
+        "ocr_complete": true,
+        "native_complete": true
+      },
+      {
+        "page": 4,
+        "width": 322,
+        "height": 481,
+        "orientation": 1,
+        "rotation": 270,
+        "effective_crop": [
+          50,
+          70,
+          240.3,
+          160.70000000000002
+        ],
+        "transform": [
+          0,
+          2.0016645859342486,
+          -2.0037336652146855,
+          0,
+          462.26135656502805,
+          -100.08322929671243
+        ],
+        "ocr_complete": true,
+        "native_complete": true
+      }
+    ],
+    "total_pages": 4,
+    "processed_pages": 4,
+    "annotations": "excluded",
+    "forms": "excluded",
+    "encrypted": false,
+    "allows_copying": true
+  },
+  "detected_format": "pdf",
+  "parser_version": "archive-native/1/714d0cb859975bdec262adb379fcae6b19c7ea44aefdc76421986a36d12189fe",
+  "status": "parsed",
+  "segments": [
+    {
+      "visual": {
+        "state": "confirmed",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "native",
+            "text": "ALPHA 12.34",
+            "rect": [
+              0.12484394506866414,
+              0.17660042003733667,
+              0.4034290470245526,
+              0.0995644057249534
+            ],
+            "page_space": [
+              80,
+              186.3203125,
+              96.94399999999999,
+              16
+            ],
+            "clipped": false,
+            "confidence": 0
+          },
+          {
+            "origin": "ocr",
+            "text": "ALPHA 12.34",
+            "rect": [
+              0.12448133190871365,
+              0.18012422316770182,
+              0.41078838174273863,
+              0.0931677018633541
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "fa2b5fdaa6e59ecbd624a440c422e580a66d1474d62ba6bc10303c1b37cf3b55",
+      "text": "ALPHA 12.34",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.12448133190871365,
+            0.17660042003733667,
+            0.41078838174273863,
+            0.0995644057249534
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "native_unconfirmed",
+        "requires_review": true,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "PED 123.45",
+            "rect": [
+              0,
+              0.4830160028848969,
+              0.3860570835815075,
+              0.1022909768619894
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.30000001192092896
+          },
+          {
+            "origin": "native",
+            "text": "PPED 123.45",
+            "rect": [
+              0,
+              0.487739187927816,
+              0.38218893050353714,
+              0.09956440572495329
+            ],
+            "page_space": [
+              44.896,
+              136.3203125,
+              96.944,
+              16
+            ],
+            "clipped": true,
+            "confidence": 0
+          }
+        ]
+      },
+      "id": "7bd441351080f101a78c787e945ac77654a1f8d209193891387f1104aff5cf2a",
+      "text": "",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0,
+            0.4830160028848969,
+            0.3860570835815075,
+            0.10428759076787242
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "confirmed",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "native",
+            "text": "BETA 56.78",
+            "rect": [
+              0.12484394506866414,
+              0.7677640790292471,
+              0.35901789429879327,
+              0.09956440572495329
+            ],
+            "page_space": [
+              80,
+              91.3203125,
+              86.27200000000002,
+              16
+            ],
+            "clipped": false,
+            "confidence": 0
+          },
+          {
+            "origin": "ocr",
+            "text": "BETA 56.78",
+            "rect": [
+              0.12448132963347161,
+              0.7701863362318841,
+              0.3609958506224067,
+              0.0993788819875776
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "6bea5db514f9e638c2616c0a8296f1e91c6c6a79dd3ea1f3aa0a3e978ef7b23d",
+      "text": "BETA 56.78",
+      "locator": {
+        "page": {
+          "page": 1,
+          "rect": [
+            0.12448132963347161,
+            0.7677640790292471,
+            0.3609958506224067,
+            0.1018011391902146
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "native_unconfirmed",
+        "requires_review": true,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "PED 123.45",
+            "rect": [
+              0.408178369729412,
+              0,
+              0.10763190251699883,
+              0.39051186331282417
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.30000001192092896
+          },
+          {
+            "origin": "native",
+            "text": "PPED 123.45",
+            "rect": [
+              0.4126964063472307,
+              1.1102230246251565e-16,
+              0.09956440572495329,
+              0.38218893050353714
+            ],
+            "page_space": [
+              44.896,
+              136.3203125,
+              96.944,
+              16
+            ],
+            "clipped": true,
+            "confidence": 0
+          }
+        ]
+      },
+      "id": "5e8f808c028fb426de9a1dce96ec4016536200c952f32b39123c6ab82ff61072",
+      "text": "",
+      "locator": {
+        "page": {
+          "page": 2,
+          "rect": [
+            0.408178369729412,
+            0,
+            0.10763190251699883,
+            0.39051186331282417
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "confirmed",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "ALPHA 12.34",
+            "rect": [
+              0.7204968708196857,
+              0.112033191493776,
+              0.09937892937512127,
+              0.4232365145228215
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          },
+          {
+            "origin": "native",
+            "text": "ALPHA 12.34",
+            "rect": [
+              0.7238351742377099,
+              0.12484394506866436,
+              0.0995644057249534,
+              0.4034290470245524
+            ],
+            "page_space": [
+              80,
+              186.3203125,
+              96.94399999999999,
+              16
+            ],
+            "clipped": false,
+            "confidence": 0
+          }
+        ]
+      },
+      "id": "38c2f41fe2d38d70ce57d7cec39b05815f6ada239064d1c2a80aa222ca8383ef",
+      "text": "ALPHA 12.34",
+      "locator": {
+        "page": {
+          "page": 2,
+          "rect": [
+            0.7204968708196857,
+            0.112033191493776,
+            0.10290270914297761,
+            0.4232365145228215
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "confirmed",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "BETA 56.78",
+            "rect": [
+              0.13043475873746152,
+              0.12448132519264965,
+              0.09937892937512133,
+              0.36514522821576767
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          },
+          {
+            "origin": "native",
+            "text": "BETA 56.78",
+            "rect": [
+              0.1326715152457995,
+              0.12484394506866436,
+              0.09956440572495331,
+              0.3590178942987932
+            ],
+            "page_space": [
+              80,
+              91.3203125,
+              86.27200000000002,
+              16
+            ],
+            "clipped": false,
+            "confidence": 0
+          }
+        ]
+      },
+      "id": "6a6624ddf00261b288dfbb7135ab7496388bd800fc789499a9dc76b795dadbcb",
+      "text": "BETA 56.78",
+      "locator": {
+        "page": {
+          "page": 2,
+          "rect": [
+            0.13043475873746152,
+            0.12448132519264965,
+            0.1018011622332913,
+            0.36514522821576767
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "confirmed",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "BETA 56.78",
+            "rect": [
+              0.5102713317601438,
+              0.12963772917550798,
+              0.36534944906274314,
+              0.10718416723405355
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          },
+          {
+            "origin": "native",
+            "text": "BETA 56.78",
+            "rect": [
+              0.5161381606325425,
+              0.13267151524579945,
+              0.35901789429879327,
+              0.09956440572495331
+            ],
+            "page_space": [
+              80,
+              91.3203125,
+              86.27200000000002,
+              16
+            ],
+            "clipped": false,
+            "confidence": 0
+          }
+        ]
+      },
+      "id": "dcfe91daf4131d24b544e5d3cb95572679d9162fa540097f5b7ce417472a3953",
+      "text": "BETA 56.78",
+      "locator": {
+        "page": {
+          "page": 3,
+          "rect": [
+            0.5102713317601438,
+            0.12963772917550798,
+            0.36534944906274314,
+            0.10718416723405355
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "native_unconfirmed",
+        "requires_review": true,
+        "alternatives": [
+          {
+            "origin": "native",
+            "text": "PPED 123.45",
+            "rect": [
+              0.6178110694964627,
+              0.4126964063472306,
+              0.3821889305035371,
+              0.09956440572495329
+            ],
+            "page_space": [
+              44.896,
+              136.3203125,
+              96.944,
+              16
+            ],
+            "clipped": true,
+            "confidence": 0
+          },
+          {
+            "origin": "ocr",
+            "text": "PED 123.45",
+            "rect": [
+              0.6099585045346769,
+              0.41614902022558853,
+              0.3858921161825726,
+              0.09937897676266505
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          }
+        ]
+      },
+      "id": "cf4f36b226dc7bc11d6e0c1ed29a2cb7543f1bc25fe2d7c1e8509a38c62e7057",
+      "text": "",
+      "locator": {
+        "page": {
+          "page": 3,
+          "rect": [
+            0.6099585045346769,
+            0.4126964063472306,
+            0.39004149546532285,
+            0.10283159064102299
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "confirmed",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "ALPHA 12.34",
+            "rect": [
+              0.46451702960371943,
+              0.7186049637277389,
+              0.41121489971999803,
+              0.10937392193338136
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          },
+          {
+            "origin": "native",
+            "text": "ALPHA 12.34",
+            "rect": [
+              0.4717270079067832,
+              0.7238351742377098,
+              0.40342904702455246,
+              0.09956440572495329
+            ],
+            "page_space": [
+              80,
+              186.3203125,
+              96.94399999999999,
+              16
+            ],
+            "clipped": false,
+            "confidence": 0
+          }
+        ]
+      },
+      "id": "3f0556475d078b75ef5e449fe907e5960347948dea5cd7120f10d19d08676ed6",
+      "text": "ALPHA 12.34",
+      "locator": {
+        "page": {
+          "page": 3,
+          "rect": [
+            0.46451702960371943,
+            0.7186049637277389,
+            0.41121489971999803,
+            0.10937392193338136
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "confirmed",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "ALPHA 12.34",
+            "rect": [
+              0.18012419952051387,
+              0.4647302877852697,
+              0.0993789293751213,
+              0.4273858921161826
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          },
+          {
+            "origin": "native",
+            "text": "ALPHA 12.34",
+            "rect": [
+              0.1766004200373369,
+              0.47172700790678335,
+              0.09956440572495329,
+              0.4034290470245526
+            ],
+            "page_space": [
+              80,
+              186.3203125,
+              96.94399999999999,
+              16
+            ],
+            "clipped": false,
+            "confidence": 0
+          }
+        ]
+      },
+      "id": "ff363a35c05df22030e75047caeb7d1f3109837291adee5ae9ae5ba921b0a322",
+      "text": "ALPHA 12.34",
+      "locator": {
+        "page": {
+          "page": 4,
+          "rect": [
+            0.1766004200373369,
+            0.4647302877852697,
+            0.10290270885829828,
+            0.4273858921161826
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "confirmed",
+        "requires_review": false,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "BETA 56.78",
+            "rect": [
+              0.7585883965557576,
+              0.5094757391649434,
+              0.11433328901018414,
+              0.3670915469094431
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          },
+          {
+            "origin": "native",
+            "text": "BETA 56.78",
+            "rect": [
+              0.7677640790292473,
+              0.5161381606325426,
+              0.09956440572495329,
+              0.35901789429879327
+            ],
+            "page_space": [
+              80,
+              91.3203125,
+              86.27200000000002,
+              16
+            ],
+            "clipped": false,
+            "confidence": 0
+          }
+        ]
+      },
+      "id": "006b6bb8fb8730fc49483cdc71c5c080271751dff93c04d4af25a2c7be57cc0b",
+      "text": "BETA 56.78",
+      "locator": {
+        "page": {
+          "page": 4,
+          "rect": [
+            0.7585883965557576,
+            0.5094757391649434,
+            0.11433328901018414,
+            0.3670915469094431
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    },
+    {
+      "visual": {
+        "state": "native_unconfirmed",
+        "requires_review": true,
+        "alternatives": [
+          {
+            "origin": "ocr",
+            "text": "PED 123.45",
+            "rect": [
+              0.48447202564629027,
+              0.6099585038122407,
+              0.10559010949934494,
+              0.3858921161825726
+            ],
+            "page_space": null,
+            "clipped": false,
+            "confidence": 0.5
+          },
+          {
+            "origin": "native",
+            "text": "PPED 123.45",
+            "rect": [
+              0.48773918792781606,
+              0.6178110694964629,
+              0.09956440572495334,
+              0.3821889305035371
+            ],
+            "page_space": [
+              44.896,
+              136.3203125,
+              96.944,
+              16
+            ],
+            "clipped": true,
+            "confidence": 0
+          }
+        ]
+      },
+      "id": "61b51bf2771b699062c04f7a9492382256b7cdd5778e0e502b1686dc1f2d295a",
+      "text": "",
+      "locator": {
+        "page": {
+          "page": 4,
+          "rect": [
+            0.48447202564629027,
+            0.6099585038122407,
+            0.10559010949934494,
+            0.3900414961877593
+          ]
+        },
+        "kind": "page",
+        "text": null,
+        "csv": null,
+        "docx": null,
+        "xlsx": null
+      },
+      "cell": null,
+      "docx_merge": null
+    }
+  ],
+  "warnings": null,
+  "counts": {
+    "decoded_text_bytes": 252,
+    "source_bytes": 2745,
+    "expanded_bytes": 0,
+    "text_bytes": 336,
+    "zip_entries": 0,
+    "parts_read": 0,
+    "xml_nodes": 0,
+    "strings": 0,
+    "cells": 0,
+    "segments": 12,
+    "relationships": 0
+  },
+  "coverage": {
+    "complete": true,
+    "encoding": "",
+    "offset_unit": "page_rect",
+    "notes": [
+      "geometry_order_is_not_reading_order",
+      "parsed_is_not_ocr_accuracy"
+    ],
+    "read_parts": null,
+    "skipped_parts": null,
+    "skipped_features": [
+      "annotations",
+      "form_values"
+    ]
+  },
+  "sheets": null
+}

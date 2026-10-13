@@ -17,11 +17,10 @@ func ModelTools(inventory []*mcp.Tool) ([]*mcp.Tool, error) {
 		if tool == nil {
 			continue
 		}
-		switch tool.Name {
-		case "home_get_status", "home_list_screens", "home_get_screen", "home_get_nas_status", "home_list_photos", "home_get_photo", "home_get_command", "home_refresh_screen", "home_show_photo", "home_navigate_screen":
-		default:
+		if _, allowed := modelArgumentFields[tool.Name]; !allowed || tool.Name == "home_get_operation" {
 			continue
 		}
+
 		if seen[tool.Name] {
 			return nil, errors.New("duplicate household tool")
 		}
@@ -44,6 +43,8 @@ func ModelTools(inventory []*mcp.Tool) ([]*mcp.Tool, error) {
 		}
 		delete(props, "operation_id")
 		delete(props, "wait_ms")
+		delete(props, "request_id")
+		delete(props, "resolution_key")
 		allowed := map[string]bool{}
 		for _, key := range modelArgumentFields[tool.Name] {
 			allowed[key] = true
@@ -56,17 +57,36 @@ func ModelTools(inventory []*mcp.Tool) ([]*mcp.Tool, error) {
 		required := []any{}
 		if values, ok := schema["required"].([]any); ok {
 			for _, value := range values {
-				if value != "operation_id" && value != "wait_ms" {
+				if value != "operation_id" && value != "wait_ms" && value != "request_id" && value != "resolution_key" {
 					required = append(required, value)
 				}
 			}
 		}
 		schema["required"] = required
 		schema["additionalProperties"] = false
-		if tool.Name == "home_refresh_screen" || tool.Name == "home_show_photo" || tool.Name == "home_navigate_screen" {
+		if tool.Name == "home_show_archive_query" || tool.Name == "home_refresh_screen" || tool.Name == "home_show_photo" || tool.Name == "home_navigate_screen" {
 			clone.Description = "Request an authorized screen action. The host assigns durable operation identity. accepted means pending; only applied confirms completion. Repeat the same call reference only to query the original outcome."
 		}
 		out = append(out, &clone)
 	}
 	return out, nil
+}
+
+// CompleteModelTools is the CLI startup gate. It derives the required inventory
+// from the same argument allowlist as execution rather than a stale tool count.
+func CompleteModelTools(inventory []*mcp.Tool) ([]*mcp.Tool, error) {
+	tools, err := ModelTools(inventory)
+	if err != nil {
+		return nil, err
+	}
+	seen := map[string]bool{}
+	for _, tool := range tools {
+		seen[tool.Name] = true
+	}
+	for name := range modelArgumentFields {
+		if name != "home_get_operation" && !seen[name] {
+			return nil, errors.New("incomplete household tool inventory")
+		}
+	}
+	return tools, nil
 }

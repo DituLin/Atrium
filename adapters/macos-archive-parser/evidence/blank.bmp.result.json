@@ -1,0 +1,74 @@
+{
+  "native": {
+    "engine": {
+      "helper": "atrium-native/1",
+      "build": "9c9c4ac321b6debbf9909e42469671f4ee6f726f557a7712afb6e657828cdf1c",
+      "os_build": "24C101",
+      "vision_revision": 3,
+      "languages": [
+        "zh-Hans",
+        "en-US"
+      ],
+      "recognition": "accurate",
+      "language_correction": false
+    },
+    "pages": [
+      {
+        "page": 1,
+        "width": 600,
+        "height": 400,
+        "orientation": 1,
+        "rotation": 0,
+        "effective_crop": null,
+        "transform": null,
+        "ocr_complete": true,
+        "native_complete": false
+      }
+    ],
+    "total_pages": 1,
+    "processed_pages": 1,
+    "annotations": "not_applicable",
+    "forms": "not_applicable",
+    "encrypted": false,
+    "allows_copying": true
+  },
+  "detected_format": "image",
+  "parser_version": "archive-native/1/714d0cb859975bdec262adb379fcae6b19c7ea44aefdc76421986a36d12189fe",
+  "status": "partial",
+  "segments": [],
+  "warnings": [
+    {
+      "code": "image_integrity_unverified",
+      "message": "image_integrity_unverified",
+      "part_uri": ""
+    }
+  ],
+  "counts": {
+    "decoded_text_bytes": 0,
+    "source_bytes": 720054,
+    "expanded_bytes": 0,
+    "text_bytes": 0,
+    "zip_entries": 0,
+    "parts_read": 0,
+    "xml_nodes": 0,
+    "strings": 0,
+    "cells": 0,
+    "segments": 0,
+    "relationships": 0
+  },
+  "coverage": {
+    "complete": false,
+    "encoding": "",
+    "offset_unit": "page_rect",
+    "notes": [
+      "geometry_order_is_not_reading_order",
+      "parsed_is_not_ocr_accuracy"
+    ],
+    "read_parts": null,
+    "skipped_parts": null,
+    "skipped_features": [
+      "image_integrity_validation"
+    ]
+  },
+  "sheets": null
+}

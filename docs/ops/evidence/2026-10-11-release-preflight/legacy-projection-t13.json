@@ -1,0 +1,16 @@
+{
+  "checked_at": "2026-10-11T05:31:04.593639+00:00",
+  "revision": "d19bb760491d9e15da0b9f0f054f87e6cabe1617",
+  "scope": "existing ProjectLegacyArchive applied only to isolated production DB copy, then reverse-order replay; not final backfill CLI acceptance",
+  "source_rows": 80,
+  "reverse_order_replay_verified_rows": 80,
+  "projection_count": 72,
+  "distinct_event_count": 72,
+  "legacy_mapping_count": 80,
+  "body_or_visibility_mismatches": 0,
+  "nonterminal_current_rows": 0,
+  "nonroot_roots": 0,
+  "original_family_rows_unchanged": true,
+  "integrity_ok": true,
+  "foreign_key_violations": 0
+}

@@ -4,7 +4,7 @@
 
 export const WS_SCHEMA_VERSION = 1;
 
-export const ROUTE_NAMES = ['videos', 'video', 'dashboard', 'photos', 'photo', 'pair', 'connect', 'briefing', 'house', 'settings'] as const;
+export const ROUTE_NAMES = ['videos', 'video', 'dashboard', 'photos', 'photo', 'pair', 'connect', 'briefing', 'family', 'house', 'settings'] as const;
 export type RouteName = (typeof ROUTE_NAMES)[number];
 
 export interface RouteState {
@@ -24,7 +24,7 @@ export interface Envelope<T extends string, P> {
 
 /* ----------------------------------------------------------- server → client */
 
-export const COMMAND_KINDS = ['navigate', 'show', 'refresh'] as const;
+export const COMMAND_KINDS = ['navigate', 'show', 'refresh','archive'] as const;
 export type CommandKind = (typeof COMMAND_KINDS)[number];
 
 export interface NavigateCommandPayload {
@@ -42,7 +42,7 @@ export interface ScreenCommand {
   command_id: string;
   sequence: number;
   kind: CommandKind;
-  payload: NavigateCommandPayload | ShowCommandPayload | RefreshCommandPayload;
+  payload: NavigateCommandPayload | ShowCommandPayload | {archive_view_id:string} | RefreshCommandPayload;
   issued_at: string;
   expires_at: string;
 }
@@ -54,7 +54,7 @@ export interface SessionReadyPayload {
   pending_command?: ScreenCommand;
 }
 
-export type DataChangedTopic = 'home' | 'photos' | 'nas' | 'screen';
+export type DataChangedTopic = 'home' | 'photos' | 'nas' | 'screen' | 'archives';
 
 export interface DataChangedPayload {
   topics: DataChangedTopic[];
@@ -98,6 +98,7 @@ export type CommandAckStatus = 'applied' | 'failed';
 export const COMMAND_ERROR_CODES = [
   'superseded',
   'photo_unavailable',
+  'archive_unavailable',
   'invalid_route',
   'invalid_payload',
   'render_failed',

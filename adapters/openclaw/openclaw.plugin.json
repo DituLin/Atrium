@@ -13,7 +13,20 @@
       "home_get_command",
       "home_navigate_screen",
       "home_show_photo",
-      "home_refresh_screen"
+      "home_refresh_screen",
+      "home_list_family_members",
+      "home_list_family_records",
+      "home_record_family_entry",
+      "home_search_archives",
+      "home_get_archive_evidence",
+      "home_search_archive_entities",
+      "home_get_archive_task",
+      "home_get_archive_question",
+      "home_answer_archive_question",
+      "home_revise_archive",
+      "home_analyze_archives",
+      "home_accept_archive_input",
+      "home_show_archive_query"
     ]
   },
   "activation": {
@@ -49,6 +62,45 @@
     },
     "home_refresh_screen": {
       "optional": true
+    },
+    "home_list_family_members": {
+      "optional": true
+    },
+    "home_list_family_records": {
+      "optional": true
+    },
+    "home_record_family_entry": {
+      "optional": true
+    },
+    "home_search_archives": {
+      "optional": true
+    },
+    "home_get_archive_evidence": {
+      "optional": true
+    },
+    "home_search_archive_entities": {
+      "optional": true
+    },
+    "home_get_archive_task": {
+      "optional": true
+    },
+    "home_get_archive_question": {
+      "optional": true
+    },
+    "home_answer_archive_question": {
+      "optional": true
+    },
+    "home_revise_archive": {
+      "optional": true
+    },
+    "home_analyze_archives": {
+      "optional": true
+    },
+    "home_accept_archive_input": {
+      "optional": true
+    },
+    "home_show_archive_query": {
+      "optional": true
     }
   },
   "configSchema": {
@@ -80,6 +132,38 @@
       "toolsFile": {
         "type": "string",
         "minLength": 1
+      },
+      "archives": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "root",
+          "origin",
+          "caFile",
+          "tokenFile",
+          "principal",
+          "sourceReader"
+        ],
+        "properties": {
+          "root": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "caFile": {
+            "type": "string"
+          },
+          "tokenFile": {
+            "type": "string"
+          },
+          "principal": {
+            "type": "string"
+          },
+          "sourceReader": {
+            "type": "string"
+          }
+        }
       }
     }
   }

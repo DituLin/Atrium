@@ -2,10 +2,11 @@ package auth
 
 import (
 	"context"
-	"github.com/DituLin/Atrium/internal/domain"
-	"github.com/DituLin/Atrium/internal/store"
 	"strings"
 	"time"
+
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/store"
 )
 
 // IntegrationService manages least-privilege service identities. Raw tokens are
@@ -81,4 +82,9 @@ func (s *IntegrationService) UpdatePolicy(ctx context.Context, id string, policy
 // List returns principals without credential secrets.
 func (s *IntegrationService) List(ctx context.Context) ([]domain.IntegrationPrincipal, error) {
 	return s.db.Integrations().List(ctx)
+}
+
+// GrantArchives merges explicit archive scopes without replacing legacy grants.
+func (s *IntegrationService) GrantArchives(ctx context.Context, id string, grant domain.ArchiveGrant) (*domain.IntegrationPrincipal, error) {
+	return s.db.Integrations().GrantArchives(ctx, id, grant, s.now())
 }

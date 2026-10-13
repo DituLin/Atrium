@@ -159,3 +159,25 @@ func (r *Runtime) Close() {
 		delete(r.turns, key)
 	}
 }
+
+// ClaimIngress admits a trusted canonical channel-message identity once. The
+// caller passes only a digest of channel/account/peer/sender/provider-message
+// identity; no message content is retained. Claim commits before dispatch and
+// survives crashes. A duplicate may have an unknown prior outcome, never success.
+func (r *Runtime) ClaimIngress(ctx context.Context, id string) (bool, error) {
+	key, err := runtimeKey(id)
+	if err != nil {
+		return false, err
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.closed {
+		return false, ErrRunClosed
+	}
+	result, err := r.executor.ledger.db.ExecContext(ctx, `INSERT OR IGNORE INTO brain_inbound_messages(message_key,claimed_at) VALUES(?,?)`, key, r.executor.ledger.now().UnixMilli())
+	if err != nil {
+		return false, errors.New("cannot persist inbound identity")
+	}
+	n, err := result.RowsAffected()
+	return n == 1, err
+}

@@ -1,0 +1,1035 @@
+{
+  "Parsed": {
+    "native": {
+      "engine": {
+        "helper": "atrium-native/1",
+        "build": "acd249b02673385bac7189792b95198361dae43931a613b76f4bdc9fd9e09f26",
+        "os_build": "24C101",
+        "vision_revision": 3,
+        "languages": [
+          "zh-Hans",
+          "en-US"
+        ],
+        "recognition": "accurate",
+        "language_correction": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "width": 1600,
+          "height": 1100,
+          "orientation": 1,
+          "rotation": 0,
+          "effective_crop": [
+            0,
+            0,
+            800,
+            550
+          ],
+          "transform": [
+            2,
+            0,
+            0,
+            2,
+            0,
+            0
+          ],
+          "ocr_complete": true,
+          "native_complete": true
+        }
+      ],
+      "total_pages": 1,
+      "processed_pages": 1,
+      "annotations": "excluded",
+      "forms": "excluded",
+      "encrypted": false,
+      "allows_copying": true
+    },
+    "detected_format": "pdf",
+    "parser_version": "archive-native/1/2dd2132cc61008aae7f80d47a3ffd94998a324e7fc648a28734447b434ac5893",
+    "status": "parsed",
+    "segments": [
+      {
+        "visual": {
+          "state": "ocr",
+          "requires_review": false,
+          "alternatives": [
+            {
+              "origin": "ocr",
+              "text": "虚构体检报告",
+              "rect": [
+                0.05668604474863452,
+                0.07818181766307097,
+                0.16715116500854488,
+                0.044545454545454555
+              ],
+              "page_space": null,
+              "clipped": false,
+              "confidence": 1
+            }
+          ]
+        },
+        "id": "3702f7c1b3a8dfb6e6bc9b7b298d0e945e69d7c21410bacbeb46cf4dfdbe9617",
+        "text": "虚构体检报告",
+        "locator": {
+          "page": {
+            "page": 1,
+            "rect": [
+              0.05668604474863452,
+              0.07818181766307097,
+              0.16715116500854488,
+              0.044545454545454555
+            ]
+          },
+          "kind": "page",
+          "text": null,
+          "csv": null,
+          "docx": null,
+          "xlsx": null
+        },
+        "cell": null,
+        "docx_merge": null
+      },
+      {
+        "visual": {
+          "state": "ocr",
+          "requires_review": false,
+          "alternatives": [
+            {
+              "origin": "ocr",
+              "text": "患者：张明",
+              "rect": [
+                0.056686049234434606,
+                0.16272727315109003,
+                0.13662790298461916,
+                0.042727272727272725
+              ],
+              "page_space": null,
+              "clipped": false,
+              "confidence": 0.5
+            }
+          ]
+        },
+        "id": "c7321971804c07e5824e4b44a481da6d3340dff74fa8260a66d45ecddde38644",
+        "text": "患者：张明",
+        "locator": {
+          "page": {
+            "page": 1,
+            "rect": [
+              0.056686049234434606,
+              0.16272727315109003,
+              0.13662790298461916,
+              0.042727272727272725
+            ]
+          },
+          "kind": "page",
+          "text": null,
+          "csv": null,
+          "docx": null,
+          "xlsx": null
+        },
+        "cell": null,
+        "docx_merge": null
+      },
+      {
+        "visual": {
+          "state": "ocr",
+          "requires_review": false,
+          "alternatives": [
+            {
+              "origin": "ocr",
+              "text": "出生日期：1992-08-20",
+              "rect": [
+                0.05813953879848746,
+                0.24524312955092575,
+                0.2601744079589844,
+                0.04228329745205972
+              ],
+              "page_space": null,
+              "clipped": false,
+              "confidence": 0.5
+            }
+          ]
+        },
+        "id": "03a793126dea7c0cd0b498e82b9163dbd1d498d6c00293c0b40349b67b5f88d2",
+        "text": "出生日期：1992-08-20",
+        "locator": {
+          "page": {
+            "page": 1,
+            "rect": [
+              0.05813953879848746,
+              0.24524312955092575,
+              0.2601744079589844,
+              0.04228329745205972
+            ]
+          },
+          "kind": "page",
+          "text": null,
+          "csv": null,
+          "docx": null,
+          "xlsx": null
+        },
+        "cell": null,
+        "docx_merge": null
+      },
+      {
+        "visual": {
+          "state": "ocr",
+          "requires_review": false,
+          "alternatives": [
+            {
+              "origin": "ocr",
+              "text": "报告日期：2026-07-02",
+              "rect": [
+                0.056686046763504375,
+                0.32545454628160786,
+                0.26162790298461913,
+                0.042727272727272725
+              ],
+              "page_space": null,
+              "clipped": false,
+              "confidence": 0.5
+            }
+          ]
+        },
+        "id": "67688b0b6aadfa1343e1336ab3dbcbb5879064fdd65ab67129f5654e15706adf",
+        "text": "报告日期：2026-07-02",
+        "locator": {
+          "page": {
+            "page": 1,
+            "rect": [
+              0.056686046763504375,
+              0.32545454628160786,
+              0.26162790298461913,
+              0.042727272727272725
+            ]
+          },
+          "kind": "page",
+          "text": null,
+          "csv": null,
+          "docx": null,
+          "xlsx": null
+        },
+        "cell": null,
+        "docx_merge": null
+      },
+      {
+        "visual": {
+          "state": "ocr",
+          "requires_review": false,
+          "alternatives": [
+            {
+              "origin": "ocr",
+              "text": "血红蛋白：151 g/L",
+              "rect": [
+                0.05668604740922326,
+                0.4080338266087129,
+                0.22819766998291016,
+                0.04228329745205972
+              ],
+              "page_space": null,
+              "clipped": false,
+              "confidence": 0.5
+            }
+          ]
+        },
+        "id": "43e2b9b9b3ffe9b798f51638c10a9fde3a4edcb323d8b4970a611045d443d92b",
+        "text": "血红蛋白：151 g/L",
+        "locator": {
+          "page": {
+            "page": 1,
+            "rect": [
+              0.05668604740922326,
+              0.4080338266087129,
+              0.22819766998291016,
+              0.04228329745205972
+            ]
+          },
+          "kind": "page",
+          "text": null,
+          "csv": null,
+          "docx": null,
+          "xlsx": null
+        },
+        "cell": null,
+        "docx_merge": null
+      }
+    ],
+    "warnings": null,
+    "counts": {
+      "decoded_text_bytes": 105,
+      "source_bytes": 43729,
+      "expanded_bytes": 0,
+      "text_bytes": 210,
+      "zip_entries": 0,
+      "parts_read": 0,
+      "xml_nodes": 0,
+      "strings": 0,
+      "cells": 0,
+      "segments": 5,
+      "relationships": 0
+    },
+    "coverage": {
+      "complete": true,
+      "encoding": "",
+      "offset_unit": "page_rect",
+      "notes": [
+        "geometry_order_is_not_reading_order",
+        "parsed_is_not_ocr_accuracy"
+      ],
+      "read_parts": null,
+      "skipped_parts": null,
+      "skipped_features": [
+        "annotations",
+        "form_values"
+      ]
+    },
+    "sheets": null
+  },
+  "Plan": {
+    "structural_context_limited": false,
+    "version": "archive-understand/2",
+    "parse_digest": "3081ea32687e42f8faf2e5051e9206af0714e33eccdaf84d4b172f725c2a987a",
+    "parser_version": "archive-native/1/2dd2132cc61008aae7f80d47a3ffd94998a324e7fc648a28734447b434ac5893",
+    "status": "parsed",
+    "coverage": {
+      "complete": true,
+      "encoding": "",
+      "offset_unit": "page_rect",
+      "notes": [
+        "geometry_order_is_not_reading_order",
+        "parsed_is_not_ocr_accuracy"
+      ],
+      "read_parts": null,
+      "skipped_parts": null,
+      "skipped_features": [
+        "annotations",
+        "form_values"
+      ]
+    },
+    "warnings": null,
+    "sheets": null,
+    "native": {
+      "engine": {
+        "helper": "atrium-native/1",
+        "build": "acd249b02673385bac7189792b95198361dae43931a613b76f4bdc9fd9e09f26",
+        "os_build": "24C101",
+        "vision_revision": 3,
+        "languages": [
+          "zh-Hans",
+          "en-US"
+        ],
+        "recognition": "accurate",
+        "language_correction": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "width": 1600,
+          "height": 1100,
+          "orientation": 1,
+          "rotation": 0,
+          "effective_crop": [
+            0,
+            0,
+            800,
+            550
+          ],
+          "transform": [
+            2,
+            0,
+            0,
+            2,
+            0,
+            0
+          ],
+          "ocr_complete": true,
+          "native_complete": true
+        }
+      ],
+      "total_pages": 1,
+      "processed_pages": 1,
+      "annotations": "excluded",
+      "forms": "excluded",
+      "encrypted": false,
+      "allows_copying": true
+    },
+    "chunks": [
+      {
+        "protocol_version": 1,
+        "invocation_id": "3081ea32687e42f8faf2e5051e9206af0714e33eccdaf84d4b172f725c2a987a:0",
+        "input_digest": "de06f693a50253c781a58ad38030e8bbfbe79f557eb5f622edf51ecc6acfd0a9",
+        "schema_version": "archive-extraction/2",
+        "extraction_version": "archive-understand/2",
+        "chunk_version": "archive-chunk/1",
+        "parse_digest": "3081ea32687e42f8faf2e5051e9206af0714e33eccdaf84d4b172f725c2a987a",
+        "index": 0,
+        "owned": [
+          {
+            "quote_hints": [
+              {
+                "start": 0,
+                "end": 6,
+                "text": "虚构体检报告"
+              }
+            ],
+            "view_id": "3702f7c1b3a8dfb6e6bc9b7b298d0e945e69d7c21410bacbeb46cf4dfdbe9617/body/alternative-0/0:6",
+            "parent_segment_id": "3702f7c1b3a8dfb6e6bc9b7b298d0e945e69d7c21410bacbeb46cf4dfdbe9617",
+            "alternative_id": "/alternative-0",
+            "component_id": "3702f7c1b3a8dfb6e6bc9b7b298d0e945e69d7c21410bacbeb46cf4dfdbe9617/body/alternative-0",
+            "component_kind": "body",
+            "origin": "ocr",
+            "start": 0,
+            "end": 6,
+            "text": "虚构体检报告",
+            "parse_digest": "3081ea32687e42f8faf2e5051e9206af0714e33eccdaf84d4b172f725c2a987a",
+            "parser_version": "archive-native/1/2dd2132cc61008aae7f80d47a3ffd94998a324e7fc648a28734447b434ac5893",
+            "requires_review": false,
+            "visual_state": "ocr",
+            "structure": {
+              "locator": {
+                "page": {
+                  "page": 1,
+                  "rect": [
+                    0.05668604474863452,
+                    0.07818181766307097,
+                    0.16715116500854488,
+                    0.044545454545454555
+                  ]
+                },
+                "kind": "page",
+                "text": null,
+                "csv": null,
+                "docx": null,
+                "xlsx": null
+              },
+              "cell_state": "",
+              "cell_type": "",
+              "value_present": false,
+              "cache_present": false,
+              "row_hidden": false,
+              "column_hidden": false,
+              "column_hidden_unresolved": false,
+              "merge_range": "",
+              "merge_anchor": "",
+              "docx_merge": null
+            },
+            "derived": null
+          },
+          {
+            "quote_hints": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": "患者"
+              },
+              {
+                "start": 3,
+                "end": 5,
+                "text": "张明"
+              }
+            ],
+            "view_id": "c7321971804c07e5824e4b44a481da6d3340dff74fa8260a66d45ecddde38644/body/alternative-0/0:5",
+            "parent_segment_id": "c7321971804c07e5824e4b44a481da6d3340dff74fa8260a66d45ecddde38644",
+            "alternative_id": "/alternative-0",
+            "component_id": "c7321971804c07e5824e4b44a481da6d3340dff74fa8260a66d45ecddde38644/body/alternative-0",
+            "component_kind": "body",
+            "origin": "ocr",
+            "start": 0,
+            "end": 5,
+            "text": "患者：张明",
+            "parse_digest": "3081ea32687e42f8faf2e5051e9206af0714e33eccdaf84d4b172f725c2a987a",
+            "parser_version": "archive-native/1/2dd2132cc61008aae7f80d47a3ffd94998a324e7fc648a28734447b434ac5893",
+            "requires_review": false,
+            "visual_state": "ocr",
+            "structure": {
+              "locator": {
+                "page": {
+                  "page": 1,
+                  "rect": [
+                    0.056686049234434606,
+                    0.16272727315109003,
+                    0.13662790298461916,
+                    0.042727272727272725
+                  ]
+                },
+                "kind": "page",
+                "text": null,
+                "csv": null,
+                "docx": null,
+                "xlsx": null
+              },
+              "cell_state": "",
+              "cell_type": "",
+              "value_present": false,
+              "cache_present": false,
+              "row_hidden": false,
+              "column_hidden": false,
+              "column_hidden_unresolved": false,
+              "merge_range": "",
+              "merge_anchor": "",
+              "docx_merge": null
+            },
+            "derived": null
+          },
+          {
+            "quote_hints": [
+              {
+                "start": 0,
+                "end": 4,
+                "text": "出生日期"
+              },
+              {
+                "start": 5,
+                "end": 15,
+                "text": "1992-08-20"
+              }
+            ],
+            "view_id": "03a793126dea7c0cd0b498e82b9163dbd1d498d6c00293c0b40349b67b5f88d2/body/alternative-0/0:15",
+            "parent_segment_id": "03a793126dea7c0cd0b498e82b9163dbd1d498d6c00293c0b40349b67b5f88d2",
+            "alternative_id": "/alternative-0",
+            "component_id": "03a793126dea7c0cd0b498e82b9163dbd1d498d6c00293c0b40349b67b5f88d2/body/alternative-0",
+            "component_kind": "body",
+            "origin": "ocr",
+            "start": 0,
+            "end": 15,
+            "text": "出生日期：1992-08-20",
+            "parse_digest": "3081ea32687e42f8faf2e5051e9206af0714e33eccdaf84d4b172f725c2a987a",
+            "parser_version": "archive-native/1/2dd2132cc61008aae7f80d47a3ffd94998a324e7fc648a28734447b434ac5893",
+            "requires_review": false,
+            "visual_state": "ocr",
+            "structure": {
+              "locator": {
+                "page": {
+                  "page": 1,
+                  "rect": [
+                    0.05813953879848746,
+                    0.24524312955092575,
+                    0.2601744079589844,
+                    0.04228329745205972
+                  ]
+                },
+                "kind": "page",
+                "text": null,
+                "csv": null,
+                "docx": null,
+                "xlsx": null
+              },
+              "cell_state": "",
+              "cell_type": "",
+              "value_present": false,
+              "cache_present": false,
+              "row_hidden": false,
+              "column_hidden": false,
+              "column_hidden_unresolved": false,
+              "merge_range": "",
+              "merge_anchor": "",
+              "docx_merge": null
+            },
+            "derived": null
+          },
+          {
+            "quote_hints": [
+              {
+                "start": 0,
+                "end": 4,
+                "text": "报告日期"
+              },
+              {
+                "start": 5,
+                "end": 15,
+                "text": "2026-07-02"
+              }
+            ],
+            "view_id": "67688b0b6aadfa1343e1336ab3dbcbb5879064fdd65ab67129f5654e15706adf/body/alternative-0/0:15",
+            "parent_segment_id": "67688b0b6aadfa1343e1336ab3dbcbb5879064fdd65ab67129f5654e15706adf",
+            "alternative_id": "/alternative-0",
+            "component_id": "67688b0b6aadfa1343e1336ab3dbcbb5879064fdd65ab67129f5654e15706adf/body/alternative-0",
+            "component_kind": "body",
+            "origin": "ocr",
+            "start": 0,
+            "end": 15,
+            "text": "报告日期：2026-07-02",
+            "parse_digest": "3081ea32687e42f8faf2e5051e9206af0714e33eccdaf84d4b172f725c2a987a",
+            "parser_version": "archive-native/1/2dd2132cc61008aae7f80d47a3ffd94998a324e7fc648a28734447b434ac5893",
+            "requires_review": false,
+            "visual_state": "ocr",
+            "structure": {
+              "locator": {
+                "page": {
+                  "page": 1,
+                  "rect": [
+                    0.056686046763504375,
+                    0.32545454628160786,
+                    0.26162790298461913,
+                    0.042727272727272725
+                  ]
+                },
+                "kind": "page",
+                "text": null,
+                "csv": null,
+                "docx": null,
+                "xlsx": null
+              },
+              "cell_state": "",
+              "cell_type": "",
+              "value_present": false,
+              "cache_present": false,
+              "row_hidden": false,
+              "column_hidden": false,
+              "column_hidden_unresolved": false,
+              "merge_range": "",
+              "merge_anchor": "",
+              "docx_merge": null
+            },
+            "derived": null
+          },
+          {
+            "quote_hints": [
+              {
+                "start": 0,
+                "end": 4,
+                "text": "血红蛋白"
+              },
+              {
+                "start": 5,
+                "end": 8,
+                "text": "151"
+              },
+              {
+                "start": 9,
+                "end": 12,
+                "text": "g/L"
+              }
+            ],
+            "view_id": "43e2b9b9b3ffe9b798f51638c10a9fde3a4edcb323d8b4970a611045d443d92b/body/alternative-0/0:12",
+            "parent_segment_id": "43e2b9b9b3ffe9b798f51638c10a9fde3a4edcb323d8b4970a611045d443d92b",
+            "alternative_id": "/alternative-0",
+            "component_id": "43e2b9b9b3ffe9b798f51638c10a9fde3a4edcb323d8b4970a611045d443d92b/body/alternative-0",
+            "component_kind": "body",
+            "origin": "ocr",
+            "start": 0,
+            "end": 12,
+            "text": "血红蛋白：151 g/L",
+            "parse_digest": "3081ea32687e42f8faf2e5051e9206af0714e33eccdaf84d4b172f725c2a987a",
+            "parser_version": "archive-native/1/2dd2132cc61008aae7f80d47a3ffd94998a324e7fc648a28734447b434ac5893",
+            "requires_review": false,
+            "visual_state": "ocr",
+            "structure": {
+              "locator": {
+                "page": {
+                  "page": 1,
+                  "rect": [
+                    0.05668604740922326,
+                    0.4080338266087129,
+                    0.22819766998291016,
+                    0.04228329745205972
+                  ]
+                },
+                "kind": "page",
+                "text": null,
+                "csv": null,
+                "docx": null,
+                "xlsx": null
+              },
+              "cell_state": "",
+              "cell_type": "",
+              "value_present": false,
+              "cache_present": false,
+              "row_hidden": false,
+              "column_hidden": false,
+              "column_hidden_unresolved": false,
+              "merge_range": "",
+              "merge_anchor": "",
+              "docx_merge": null
+            },
+            "derived": null
+          }
+        ],
+        "context": []
+      }
+    ],
+    "manifest_digest": "68c7ea4ae200b84c031af214d133d5dbfb7a11d42d575d8a2fa2b07cbe30951f"
+  },
+  "Understanding": {
+    "labels": [
+      {
+        "label": "体检报告",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "出生日期",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "报告日期",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "血液检查",
+        "chunk_indexes": [
+          0
+        ]
+      },
+      {
+        "label": "血红蛋白",
+        "chunk_indexes": [
+          0
+        ]
+      }
+    ],
+    "link_issues": [],
+    "events": [
+      {
+        "canonical_evidence": [
+          {
+            "parse_digest": "3081ea32687e42f8faf2e5051e9206af0714e33eccdaf84d4b172f725c2a987a",
+            "parser_version": "archive-native/1/2dd2132cc61008aae7f80d47a3ffd94998a324e7fc648a28734447b434ac5893",
+            "parent_segment_id": "3702f7c1b3a8dfb6e6bc9b7b298d0e945e69d7c21410bacbeb46cf4dfdbe9617",
+            "component_id": "3702f7c1b3a8dfb6e6bc9b7b298d0e945e69d7c21410bacbeb46cf4dfdbe9617/body/alternative-0",
+            "component_kind": "body",
+            "alternative_id": "/alternative-0",
+            "origin": "ocr",
+            "start": 0,
+            "end": 6,
+            "quote": "虚构体检报告",
+            "derived_value_ref": ""
+          },
+          {
+            "parse_digest": "3081ea32687e42f8faf2e5051e9206af0714e33eccdaf84d4b172f725c2a987a",
+            "parser_version": "archive-native/1/2dd2132cc61008aae7f80d47a3ffd94998a324e7fc648a28734447b434ac5893",
+            "parent_segment_id": "67688b0b6aadfa1343e1336ab3dbcbb5879064fdd65ab67129f5654e15706adf",
+            "component_id": "67688b0b6aadfa1343e1336ab3dbcbb5879064fdd65ab67129f5654e15706adf/body/alternative-0",
+            "component_kind": "body",
+            "alternative_id": "/alternative-0",
+            "origin": "ocr",
+            "start": 5,
+            "end": 15,
+            "quote": "2026-07-02",
+            "derived_value_ref": ""
+          }
+        ],
+        "anchor_policy": "native-report-header-section/1",
+        "id": "archive-understand/2/event/89b4e921b20167ffbd6a5334ad7c871702db1614042a830fac51dccb37d3a152",
+        "type": "report",
+        "section_evidence": [
+          {
+            "view_id": "67688b0b6aadfa1343e1336ab3dbcbb5879064fdd65ab67129f5654e15706adf/body/alternative-0/0:15",
+            "start": 5,
+            "end": 15,
+            "quote": "2026-07-02",
+            "derived_value_ref": ""
+          },
+          {
+            "view_id": "3702f7c1b3a8dfb6e6bc9b7b298d0e945e69d7c21410bacbeb46cf4dfdbe9617/body/alternative-0/0:6",
+            "start": 0,
+            "end": 6,
+            "quote": "虚构体检报告",
+            "derived_value_ref": ""
+          }
+        ],
+        "field_refs": [
+          {
+            "chunk_index": 0,
+            "local_id": "f_dob"
+          },
+          {
+            "chunk_index": 0,
+            "local_id": "f_report_date"
+          },
+          {
+            "chunk_index": 0,
+            "local_id": "f_hgb"
+          }
+        ],
+        "subject_refs": [
+          {
+            "chunk_index": 0,
+            "local_id": "s_patient"
+          }
+        ],
+        "proposals": [
+          {
+            "chunk_index": 0,
+            "local_id": "e_report"
+          }
+        ]
+      }
+    ],
+    "version": "archive-understand/2",
+    "manifest_digest": "68c7ea4ae200b84c031af214d133d5dbfb7a11d42d575d8a2fa2b07cbe30951f",
+    "parse_digest": "3081ea32687e42f8faf2e5051e9206af0714e33eccdaf84d4b172f725c2a987a",
+    "complete": true,
+    "requires_review": true,
+    "parse_status": "parsed",
+    "parse_coverage": {
+      "complete": true,
+      "encoding": "",
+      "offset_unit": "page_rect",
+      "notes": [
+        "geometry_order_is_not_reading_order",
+        "parsed_is_not_ocr_accuracy"
+      ],
+      "read_parts": null,
+      "skipped_parts": null,
+      "skipped_features": [
+        "annotations",
+        "form_values"
+      ]
+    },
+    "parse_warnings": null,
+    "sheets": null,
+    "native": {
+      "engine": {
+        "helper": "atrium-native/1",
+        "build": "acd249b02673385bac7189792b95198361dae43931a613b76f4bdc9fd9e09f26",
+        "os_build": "24C101",
+        "vision_revision": 3,
+        "languages": [
+          "zh-Hans",
+          "en-US"
+        ],
+        "recognition": "accurate",
+        "language_correction": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "width": 1600,
+          "height": 1100,
+          "orientation": 1,
+          "rotation": 0,
+          "effective_crop": [
+            0,
+            0,
+            800,
+            550
+          ],
+          "transform": [
+            2,
+            0,
+            0,
+            2,
+            0,
+            0
+          ],
+          "ocr_complete": true,
+          "native_complete": true
+        }
+      ],
+      "total_pages": 1,
+      "processed_pages": 1,
+      "annotations": "excluded",
+      "forms": "excluded",
+      "encrypted": false,
+      "allows_copying": true
+    },
+    "chunks": [
+      {
+        "receipt": {
+          "invocation_id": "f6cfd7b5a93211ca927079d85ee92fdc",
+          "input_digest": "37deee57a47da93e9d59088b596aecccae1f5f289aeba17db9af13ccf5655d00",
+          "provider": "deepseek",
+          "requested_model": "deepseek/deepseek-v4-flash",
+          "model": "deepseek-v4-flash",
+          "response_model": "deepseek-flash",
+          "stop_reason": "stop",
+          "execution": {
+            "mode": "direct-provider",
+            "owner": {
+              "kind": "provider",
+              "id": "deepseek"
+            }
+          },
+          "usage": {
+            "input_tokens": 2458,
+            "output_tokens": 4173,
+            "total_tokens": 8807,
+            "cache_read_tokens": 2176,
+            "cache_write_tokens": 0,
+            "cost_usd": 0.0015186528
+          },
+          "configuration_fingerprint": "88ed68580fe3ceaf4ee700fc3118e26955fbf465136fb469adc341ab7b3ad961"
+        },
+        "input_digest": "de06f693a50253c781a58ad38030e8bbfbe79f557eb5f622edf51ecc6acfd0a9",
+        "invocation_id": "3081ea32687e42f8faf2e5051e9206af0714e33eccdaf84d4b172f725c2a987a:0",
+        "index": 0,
+        "result": {
+          "labels": [
+            "体检报告",
+            "血液检查",
+            "血红蛋白",
+            "出生日期",
+            "报告日期"
+          ],
+          "domain": "health",
+          "document_type": "体检报告",
+          "subjects": [
+            {
+              "id": "s_patient",
+              "name": "张明",
+              "role": "patient",
+              "ambiguous": false,
+              "evidence": [
+                {
+                  "view_id": "c7321971804c07e5824e4b44a481da6d3340dff74fa8260a66d45ecddde38644/body/alternative-0/0:5",
+                  "start": 3,
+                  "end": 5,
+                  "quote": "张明",
+                  "derived_value_ref": ""
+                }
+              ]
+            }
+          ],
+          "fields": [
+            {
+              "dimensions": [],
+              "subject_refs": [
+                "s_patient"
+              ],
+              "id": "f_dob",
+              "name": "出生日期",
+              "raw": "1992-08-20",
+              "evidence": [
+                {
+                  "view_id": "03a793126dea7c0cd0b498e82b9163dbd1d498d6c00293c0b40349b67b5f88d2/body/alternative-0/0:15",
+                  "start": 5,
+                  "end": 15,
+                  "quote": "1992-08-20",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": [
+                {
+                  "kind": "date",
+                  "value": "1992-08-20"
+                }
+              ]
+            },
+            {
+              "dimensions": [],
+              "subject_refs": [],
+              "id": "f_report_date",
+              "name": "报告日期",
+              "raw": "2026-07-02",
+              "evidence": [
+                {
+                  "view_id": "67688b0b6aadfa1343e1336ab3dbcbb5879064fdd65ab67129f5654e15706adf/body/alternative-0/0:15",
+                  "start": 5,
+                  "end": 15,
+                  "quote": "2026-07-02",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": [
+                {
+                  "kind": "date",
+                  "value": "2026-07-02"
+                }
+              ]
+            },
+            {
+              "dimensions": [
+                {
+                  "kind": "unit",
+                  "raw": "g/L",
+                  "evidence": [
+                    {
+                      "view_id": "43e2b9b9b3ffe9b798f51638c10a9fde3a4edcb323d8b4970a611045d443d92b/body/alternative-0/0:12",
+                      "start": 9,
+                      "end": 12,
+                      "quote": "g/L",
+                      "derived_value_ref": ""
+                    }
+                  ]
+                }
+              ],
+              "subject_refs": [
+                "s_patient"
+              ],
+              "id": "f_hgb",
+              "name": "血红蛋白",
+              "raw": "151",
+              "evidence": [
+                {
+                  "view_id": "43e2b9b9b3ffe9b798f51638c10a9fde3a4edcb323d8b4970a611045d443d92b/body/alternative-0/0:12",
+                  "start": 5,
+                  "end": 8,
+                  "quote": "151",
+                  "derived_value_ref": ""
+                }
+              ],
+              "normalizations": [
+                {
+                  "kind": "decimal",
+                  "value": "151"
+                }
+              ]
+            }
+          ],
+          "events": [
+            {
+              "id": "e_report",
+              "type": "report",
+              "field_refs": [
+                "f_dob",
+                "f_report_date",
+                "f_hgb"
+              ],
+              "subject_refs": [
+                "s_patient"
+              ],
+              "section_evidence": [
+                {
+                  "view_id": "3702f7c1b3a8dfb6e6bc9b7b298d0e945e69d7c21410bacbeb46cf4dfdbe9617/body/alternative-0/0:6",
+                  "start": 0,
+                  "end": 6,
+                  "quote": "虚构体检报告",
+                  "derived_value_ref": ""
+                }
+              ]
+            }
+          ],
+          "coverage": [
+            {
+              "view_id": "3702f7c1b3a8dfb6e6bc9b7b298d0e945e69d7c21410bacbeb46cf4dfdbe9617/body/alternative-0/0:6",
+              "disposition": "extracted"
+            },
+            {
+              "view_id": "c7321971804c07e5824e4b44a481da6d3340dff74fa8260a66d45ecddde38644/body/alternative-0/0:5",
+              "disposition": "extracted"
+            },
+            {
+              "view_id": "03a793126dea7c0cd0b498e82b9163dbd1d498d6c00293c0b40349b67b5f88d2/body/alternative-0/0:15",
+              "disposition": "extracted"
+            },
+            {
+              "view_id": "67688b0b6aadfa1343e1336ab3dbcbb5879064fdd65ab67129f5654e15706adf/body/alternative-0/0:15",
+              "disposition": "extracted"
+            },
+            {
+              "view_id": "43e2b9b9b3ffe9b798f51638c10a9fde3a4edcb323d8b4970a611045d443d92b/body/alternative-0/0:12",
+              "disposition": "extracted"
+            }
+          ],
+          "issues": [
+            {
+              "code": "fictional_document",
+              "view_refs": [
+                "3702f7c1b3a8dfb6e6bc9b7b298d0e945e69d7c21410bacbeb46cf4dfdbe9617/body/alternative-0/0:6"
+              ]
+            }
+          ]
+        },
+        "digest": "72056c5f57c62dc1c6ebe83a1d7cd6ccb490445f241a74e96204ad2c8f8df86c"
+      }
+    ],
+    "digest": "41335e798a139969854a5f20dcefde0dc06dd033e70854e6e49e92700b24b307"
+  }
+}

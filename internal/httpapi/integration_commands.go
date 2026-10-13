@@ -72,7 +72,11 @@ func (a *API) integrationCommandLookup(w http.ResponseWriter, r *http.Request, o
 }
 
 func (a *API) safeIntegrationCommand(ctx context.Context, p *domain.IntegrationPrincipal, c *domain.Command) integration.Command {
-	dto := integration.Command{ID: c.ID, ScreenID: c.ScreenID, Sequence: c.Sequence, Kind: string(c.Kind), Payload: integration.CommandPayload{Route: string(c.Payload.Route), Collection: c.Payload.Collection, PhotoID: c.Payload.PhotoID}, IssuedAt: c.IssuedAt, ExpiresAt: c.ExpiresAt, Status: string(c.Status), ErrorCode: safeIntegrationErrorCode(c.ErrorCode)}
+	dto := integration.Command{ID: c.ID, ScreenID: c.ScreenID, Sequence: c.Sequence, Kind: string(c.Kind), Payload: integration.CommandPayload{ArchiveViewID: c.Payload.ArchiveViewID, Route: string(c.Payload.Route), Collection: c.Payload.Collection, PhotoID: c.Payload.PhotoID}, IssuedAt: c.IssuedAt, ExpiresAt: c.ExpiresAt, Status: string(c.Status), ErrorCode: safeIntegrationErrorCode(c.ErrorCode)}
+	if c.Kind == domain.CommandArchive && c.Result != nil && c.Result.ResourceID == c.Payload.ArchiveViewID && c.Result.Route != nil && c.Result.Route.Name == domain.RouteFamily {
+		dto.Result = &integration.CommandResult{Route: &integration.Route{Name: "family", ContentVisible: true}, ResourceID: c.Payload.ArchiveViewID}
+		return dto
+	}
 	// TV acknowledgements are untrusted input: project each resource separately.
 	if c.Result != nil {
 		dto.Result = &integration.CommandResult{}
@@ -108,7 +112,7 @@ func (a *API) safeIntegrationRoute(ctx context.Context, p *domain.IntegrationPri
 
 func safeIntegrationErrorCode(code string) string {
 	switch code {
-	case "", "screen_offline", "delivery_failed", "expired", "ack_timeout", "server_restart", "session_replaced", "photo_unavailable", "render_failed", "invalid_route", "superseded":
+	case "", "screen_offline", "delivery_failed", "expired", "ack_timeout", "server_restart", "session_replaced", "photo_unavailable", "archive_unavailable", "render_failed", "invalid_route", "superseded":
 		return code
 	default:
 		return "unknown"
