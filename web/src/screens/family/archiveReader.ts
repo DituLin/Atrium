@@ -1,3 +1,4 @@
+import { readGrowthTrend, type GrowthData, type GrowthPeriod } from './growthTrend';
 import { ApiError, type ApiClient } from '../../core/api';
 import type { ArchiveAnalysis, ArchiveDetail, ArchiveEntities, ArchiveFilter, ArchivePage } from '../../types/archives';
 import { readMilkTrend, type MilkPeriod, type MilkTrendData } from './feedingTrend';
@@ -9,6 +10,7 @@ export interface ArchiveSnapshot {
     analysis: ArchiveAnalysis | null;
     detail: ArchiveDetail | null;
     milk: MilkTrendData | null;
+    growth: GrowthData | null;
     at: number;
 }
 export interface ArchiveReadState {
@@ -23,6 +25,7 @@ const navigation = new WeakMap<ApiClient, {
     pages: number;
     metric: string;
     period: MilkPeriod;
+    growthPeriod: GrowthPeriod;
 }>();
 /** Owns only verified archive content. Other API successes cannot renew it.
  * Every poll rebuilds the complete loaded window, including expanded history. */
@@ -30,6 +33,7 @@ export class ArchiveReader {
     value: ArchiveReadState = { viewToken:'',snapshot: null, busy: false, failed: false, epoch: 0 };
     metric = 'volume';
     period: MilkPeriod = 'day';
+    growthPeriod: GrowthPeriod = 'all';
     filter: ArchiveFilter = {};
     documentID = '';
     viewID = '';
@@ -46,6 +50,7 @@ export class ArchiveReader {
         this.pages = saved.pages;
         this.metric = saved.metric;
         this.period = saved.period;
+        this.growthPeriod = saved.growthPeriod;
     } }
     private start() {
         if (this.timer !== null)
@@ -67,11 +72,12 @@ export class ArchiveReader {
     open(id: string) { this.documentID = id; this.invalidate(); return this.load(); }
     selectMetric(metric: string) { this.metric = metric; this.invalidate(); return this.load(); }
     selectPeriod(period: MilkPeriod) { this.period = period; this.invalidate(); return this.load(); }
+    selectGrowthPeriod(period: GrowthPeriod) { this.growthPeriod = period; this.invalidate(); return this.load(); }
     more() { if (this.value.snapshot?.page.next_cursor && this.pages < 20)
         this.pages++; return this.load(); }
     moreEntities(){if(this.entityPages<10)this.entityPages++;this.invalidate();return this.load();}
  stop() { if (!this.viewID)
-        navigation.set(this.api, { filter: { ...this.filter }, pages: this.pages, metric: this.metric, period: this.period }); this.stopped = true; if (this.timer !== null)
+        navigation.set(this.api, { filter: { ...this.filter }, pages: this.pages, metric: this.metric, period: this.period, growthPeriod: this.growthPeriod }); this.stopped = true; if (this.timer !== null)
         window.clearInterval(this.timer); this.timer = null; this.invalidate(); this.listeners.clear(); }
     async load(): Promise<void> {
         this.start();
@@ -125,6 +131,9 @@ export class ArchiveReader {
              const next=await this.api.getArchiveEntities(controller.signal,entityCursor);entities.items=entities.items.concat(next.items);entityCursor=next.next_cursor;entities.coverage.complete=entities.coverage.complete&&next.coverage.complete;
             }
             entities.next_cursor=this.entityPages<10?entityCursor:undefined;
+            const allowGrowth = !view && !documentID && !filter.ownership && (!filter.domain || filter.domain === 'health') && entities.items.some(e => e.id === filter.entity_id && e.kind === 'person');
+            const growth = allowGrowth ? await readGrowthTrend(this.api, filter, this.growthPeriod, this.timezone, controller.signal) : null;
+            if (growth && [...growth.height, ...growth.weight].some(result => `${result.data_epoch}:${result.generation}` !== generation)) throw new Error('Growth analysis generation changed');
             if (analysis && `${analysis.data_epoch}:${analysis.generation}` !== generation)
                 throw new Error('Analysis generation changed');
             if (milk && milk.generation !== generation) throw new Error('Milk analysis generation changed');
@@ -138,7 +147,7 @@ export class ArchiveReader {
                 await this.api.getArchiveView(this.viewID, controller.signal);
             if (seq !== this.sequence || controller.signal.aborted || this.stopped)
                 return;
-            this.value = { viewToken:this.viewToken,snapshot: { viewToken: this.viewToken, filter, page, entities, analysis, detail, milk, at: started }, busy: false, failed: false, epoch: this.value.epoch };
+            this.value = { viewToken:this.viewToken,snapshot: { viewToken: this.viewToken, filter, page, entities, analysis, detail, milk, growth, at: started }, busy: false, failed: false, epoch: this.value.epoch };
             this.emit();
         }
         catch {

@@ -1,11 +1,13 @@
 import type { ArchiveAnalysis } from '../../types/archives';
+import { TrendPlot, chartDay } from './TrendPlot';
 import { factLabel } from './archiveLabels';
 type Group = ArchiveAnalysis['groups'][number];
 /** Only SVG coordinates use binary floats. Every printed value is Core's
  * exact decimal string; incompatible units, currencies and samples stay apart. */
-export function ArchiveAnalysisPanel({ analysis, dateLabel }: {
+export function ArchiveAnalysisPanel({ analysis, dateLabel, timezone = 'UTC' }: {
     analysis: ArchiveAnalysis;
     dateLabel: (value: string) => string;
+    timezone?: string;
 }) {
     const buckets = new Map<string, Group[]>();
     for (const group of analysis.groups) {
@@ -21,15 +23,11 @@ export function ArchiveAnalysisPanel({ analysis, dateLabel }: {
             if (!first)
                 return null;
             const points = groups.filter(g => g.date && Number.isFinite(Number(g.value)));
-            const values = points.map(g => Number(g.value));
-            const low = Math.min(...values);
-            const high = Math.max(...values);
-            const span = high - low;
-            const path = points.map((g, i) => `${40 + i * 520 / Math.max(1, points.length - 1)},${150 - (span ? (Number(g.value) - low) / span : 0.5) * 120}`).join(' ');
             return <article className="family-trend" key={key}>
     <h3>{factLabel(first.metric)} {first.currency ?? first.unit ?? ''}</h3>
     {first.sample ? <p className="muted">样本：{first.sample}</p> : null}
-    {points.length > 1 ? <svg className="family-trend__plot" viewBox="0 0 600 180" role="img" aria-label={`${factLabel(first.metric)}趋势，精确数值见下方`}><line className="family-trend__grid" x1="40" x2="560" y1="150" y2="150"/><polyline points={path} fill="none" stroke="currentColor" strokeWidth="3"/></svg> : null}
+    <TrendPlot label={`${factLabel(first.metric)}趋势，精确数值见下方`} unit={first.currency ?? first.unit ?? ''} points={points.map(g => ({time: chartDay(g.date!, timezone), value: g.value}))} formatTime={time => new Intl.DateTimeFormat('zh-CN', {timeZone: 'UTC', year:'numeric',month:'2-digit',day:'2-digit'}).format(time)}/>
+
     {groups.map((g, i) => <div key={i} className="archive-analysis-value">
      {g.date ? <span className="muted">{dateLabel(g.date)} · </span> : null}
      <span className="serif">{g.value}</span> {g.currency ?? g.unit ?? (g.metric === 'documents' ? '份' : '')}

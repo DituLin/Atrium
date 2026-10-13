@@ -78,3 +78,20 @@ it('keeps the milk chart and day/week/month controls visible when only one feed 
  fireEvent.keyDown(document.activeElement!,{key:'ArrowRight'});
  expect(document.activeElement).toBe(screen.getByRole('button',{name:'月'}));
 });
+
+
+it('shows separate person growth charts, preserves remote period focus, and hides them on revocation',async()=>{
+ const h=setup();
+ vi.mocked(h.api.getArchiveEntities).mockResolvedValue({items:[{id:'child',kind:'person',names:['合成宝宝'],aliases:[]}],coverage:{complete:true}});
+ vi.mocked(h.api.analyzeArchives).mockImplementation(async q=>({snapshot_id:'growth',data_epoch:1,generation:1,projection:'public',algorithm_version:'test',coverage:{complete:true,included:2,excluded:0,reasons:[]},groups:q.metric==='height'||q.metric==='体重'?[{metric:q.metric,unit:q.metric==='height'?'cm':'kg',date:'2026-06-13',value:q.metric==='height'?'60.50':'6.250'},{metric:q.metric,unit:q.metric==='height'?'cm':'kg',date:'2026-10-13',value:q.metric==='height'?'70.25':'8.100'}]:[]}));
+ fireEvent.click(await screen.findByRole('button',{name:'合成宝宝'}));
+ await screen.findByRole('img',{name:/合成宝宝身高趋势/});
+ expect(screen.getByRole('img',{name:/合成宝宝体重趋势/})).toBeTruthy();
+ expect(screen.getByRole('button',{name:'全部阶段'}).getAttribute('aria-pressed')).toBe('true');
+ const quarter=screen.getByRole('button',{name:'近 3 个月'});quarter.focus();fireEvent.keyDown(quarter,{key:'ArrowRight'});
+ const year=screen.getByRole('button',{name:'近 1 年'});expect(document.activeElement).toBe(year);fireEvent.keyDown(year,{key:'Enter'});
+ await screen.findByRole('img',{name:/合成宝宝身高趋势/});expect(document.activeElement).toBe(year);
+ expect(h.api.analyzeArchives).toHaveBeenCalledWith(expect.objectContaining({metric:'height',entity_id:'child',date_from:expect.any(String)}),expect.anything());
+ vi.mocked(h.api.getArchives).mockImplementation(()=>new Promise(()=>{}));h.dispatch({type:'archives.invalidate'});
+ expect(screen.queryByRole('img',{name:/身高趋势/})).toBeNull();expect(screen.queryByText('70.25')).toBeNull();
+});
