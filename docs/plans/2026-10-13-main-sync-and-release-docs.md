@@ -13,7 +13,7 @@
 - [x] Verify HTTPS readiness returns the deployed commit; refresh remote refs and confirm `origin/main` is an ancestor of `origin/codex/atriumos`.
 - [x] Read the actual failed CI run: Go lint, Web lint and ShellCheck failed before downstream tests/builds.
 - [x] Fix only the reported Go source/test diagnostics and Web/Shell issues; do not lower lint rules. Reproduce meaningful error-propagation changes with regression tests first.
-- [ ] Run the same checks as CI, inspect a fresh review, then commit and push the fixes.
+- [x] Run the same checks as CI, inspect a fresh review, then commit and push the fixes.
 
 Validation commands (repository root, except Web commands):
 
@@ -37,10 +37,10 @@ Run ShellCheck on every path returned by `git ls-files '*.sh'`, passing paths as
 
 ## 2. Merge deployed code into main
 
-- [ ] Create a PR from `codex/atriumos` to `main` with the final validation and pre-release limits documented.
-- [ ] Attach the PR to this task and require the actual GitHub checks to pass.
-- [ ] Merge using a merge commit so the deployed source remains in history. Do not squash/rebase away the deployed commit identity.
-- [ ] Refresh refs and verify:
+- [x] Create a PR from `codex/atriumos` to `main` with the final validation and pre-release limits documented.
+- [x] Attach the PR to this task and require the actual GitHub checks to pass.
+- [x] Merge using a merge commit so the deployed source remains in history. Do not squash/rebase away the deployed commit identity.
+- [x] Refresh refs and verify:
 
 ```sh
 git fetch origin
@@ -51,12 +51,12 @@ Keep old branches/worktrees until they are no longer needed; this task does not 
 
 ## 3. Add Chinese/English project and release documentation
 
-- [ ] Make `README.md` the Chinese primary entry and keep a complete `README.en.md`, with mutual language links and matching technical facts/commands.
-- [ ] Add paired release/deployment documents under `docs/ops/`, covering branch/tag policy, current CI, candidate packaging, artifact transfer, local signing, operational backups, deployment checks and schema-safe recovery.
-- [ ] Record the language policy for future project documentation and link the new guides from the existing deployment entry.
-- [ ] Describe current delivery honestly: local archive/TV release is implemented, while complete AgentOS and unattended release acceptance remain separate work. Do not describe proposed workflows/controllers as installed.
-- [ ] Check Markdown links, command validity against code, bilingual consistency and absence of real family data/secrets. Run a fresh reader/review agent.
-- [ ] Commit, push and merge the documentation PR into `main`; verify remote main contains the delivered files.
+- [x] Make `README.md` the Chinese primary entry and keep a complete `README.en.md`, with mutual language links and matching technical facts/commands.
+- [x] Add paired release/deployment documents under `docs/ops/`, covering branch/tag policy, current CI, candidate packaging, artifact transfer, local signing, operational backups, deployment checks and schema-safe recovery.
+- [x] Record the language policy for future project documentation and link the new guides from the existing deployment entry.
+- [x] Describe current delivery honestly: local archive/TV release is implemented, while complete AgentOS and unattended release acceptance remain separate work. Do not describe proposed workflows/controllers as installed.
+- [x] Check Markdown links, command validity against code, bilingual consistency and absence of real family data/secrets. Run a fresh reader/review agent.
+- **Final GitHub delivery gate:** commit, push and merge the documentation PR into `main`, then verify remote main contains the delivered files. The follow-up PR records this final merge outcome.
 
 ## Acceptance
 
@@ -69,3 +69,9 @@ Keep old branches/worktrees until they are no longer needed; this task does not 
 ## Local merge-gate verification (2026-10-13)
 
 Fresh checks passed: all Go race tests, vet/build, gofmt, golangci-lint v2.14.0 (0 issues), Web lint and 471 tests plus build/type checks, all 13 ShellCheck scripts, and two release-tool unit tests. An independent review found no actionable findings in the CI fix diff, including maintenance error preservation, wrapped errors and fixture path validation. GitHub checks and the merge remain the next gates.
+
+## Source integration and document verification (2026-10-13)
+
+PR #4 merged as `4ad689c1e013c4a2015b5f90a1686b593cbcb7cf` after GitHub push and PR workflows passed Go, Web, Shell and Release binaries. Both the deployed `c06c6a5` and CI-fix `61db776` are ancestors of remote main. The original primary checkout has been fast-forwarded; historical branches/worktrees are preserved.
+
+Paired README/release guides passed independent reader review. Follow-up clarification covers runtime binding fields and verification limits, maintenance schema/backfill responsibilities, and stopping unsupported rollback. Final paired shell blocks and inline technical identifiers match; relative links resolve against the repository. Documentation merge status is recorded by its follow-up GitHub PR.
