@@ -1,10 +1,13 @@
 package ws
 
 import (
+	"bufio"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"io"
+	"net"
 	"net/http"
 	"time"
 
@@ -14,6 +17,45 @@ import (
 	"github.com/DituLin/Atrium/internal/auth"
 	"github.com/DituLin/Atrium/internal/domain"
 )
+
+// teardownTimeout caps graceful writer/close waiting before forced transport
+// cleanup, including a peer withholding payload that the close handshake drains.
+const teardownTimeout = 5 * time.Second
+
+type hijackCapture struct {
+	http.ResponseWriter
+	conn net.Conn
+}
+
+func (w *hijackCapture) Unwrap() http.ResponseWriter { return w.ResponseWriter }
+
+// Accept explicitly flushes writers such as Gin before hijacking them.
+func (w *hijackCapture) WriteHeaderNow() {
+	if writer, ok := w.ResponseWriter.(interface{ WriteHeaderNow() }); ok {
+		writer.WriteHeaderNow()
+	}
+}
+
+func (w *hijackCapture) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	conn, rw, err := http.NewResponseController(w.ResponseWriter).Hijack()
+	w.conn = conn
+	return conn, rw, err
+}
+
+// Preserve Accept's refusal for writers without an existing Hijacker, while
+// retaining middleware around a supported writer when capturing its transport.
+func captureHijacker(w http.ResponseWriter) *hijackCapture {
+	for current := w; ; {
+		if _, ok := current.(http.Hijacker); ok {
+			return &hijackCapture{ResponseWriter: w}
+		}
+		unwrapper, ok := current.(interface{ Unwrap() http.ResponseWriter })
+		if !ok {
+			return nil
+		}
+		current = unwrapper.Unwrap()
+	}
+}
 
 // ServeHTTP upgrades an authenticated screen request into a session. An
 // unauthenticated handshake is refused before the upgrade when possible, and
@@ -33,11 +75,19 @@ func (h *Hub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// The origin was already validated by AuthenticateWebSocket, so the
 	// library's own check is redundant and would reject non-browser clients
 	// that legitimately send no Origin with a bearer token.
-	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+	capture := captureHijacker(w)
+	acceptWriter := w
+	if capture != nil {
+		acceptWriter = capture
+	}
+	conn, err := websocket.Accept(acceptWriter, r, &websocket.AcceptOptions{
 		InsecureSkipVerify: true,
 		CompressionMode:    websocket.CompressionDisabled,
 	})
 	if err != nil {
+		if capture != nil && capture.conn != nil {
+			_ = capture.conn.Close()
+		}
 		h.opts.Logger.Warn("websocket upgrade failed", "component", "ws",
 			"event", "upgrade_failed", "screen_id", id.Screen.ID)
 		return
@@ -49,18 +99,20 @@ func (h *Hub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	s := newSession(conn, id.Screen.ID, id.Screen.Name, auth.ClientIP(r), h.opts.Now)
 	h.register(s)
-	h.serve(r.Context(), s)
+	h.serve(r.Context(), s, capture.conn)
 }
 
 // serve runs one session: the writer, the change-push coalescer and the read
 // loop, which owns the goroutine until the connection ends.
-func (h *Hub) serve(reqCtx context.Context, s *Session) {
+func (h *Hub) serve(reqCtx context.Context, s *Session, transport net.Conn) {
 	ctx, cancel := context.WithCancel(context.WithoutCancel(reqCtx))
 	defer cancel()
 
+	writerDone := make(chan struct{})
 	h.wg.Add(1)
 	go func() {
 		defer h.wg.Done()
+		defer close(writerDone)
 		s.writeLoop(ctx)
 	}()
 	if h.opts.Bus != nil {
@@ -83,12 +135,31 @@ func (h *Hub) serve(reqCtx context.Context, s *Session) {
 		s.close(CloseNormal, "ready failed")
 	}
 	h.readLoop(ctx, s)
+	timer := time.NewTimer(teardownTimeout)
+	defer timer.Stop()
 
-	cancel()
 	h.unregister(s)
 	if h.handler != nil {
 		_ = h.handler.MarkOffline(context.WithoutCancel(reqCtx), s.ScreenID)
 	}
+	// A client can receive ready before its server Write has returned. Canceling
+	// the shared context now can make the library close TCP before sending the
+	// chosen close code. Let the writer finish first, but do not let a partial
+	// peer frame pin its close handshake (CloseNow cannot abort an ongoing Close).
+	select {
+	case <-writerDone:
+	case <-timer.C:
+		_ = transport.SetDeadline(time.Now())
+		if tlsConn, ok := transport.(*tls.Conn); ok {
+			// TLS Close can extend its deadline to send close_notify. Close the
+			// underlying connection directly once the grace budget is spent.
+			_ = tlsConn.NetConn().Close()
+		} else {
+			_ = transport.Close()
+		}
+		<-writerDone
+	}
+	cancel()
 }
 
 // sendReady emits session.ready, redelivering the newest still-open command.
