@@ -21,7 +21,7 @@ var previousHeaderPrompt string
 //go:embed understanding/extraction-v2.schema.json
 var understandingSchemaText string
 
-// The fingerprint records the trusted extraction policy without paths or auth.
+// UnderstandingConfigurationFingerprint records the trusted extraction policy without paths or auth.
 func UnderstandingConfigurationFingerprint() string {
 	return understandingFingerprintForPrompt(understandingPrompt)
 }
@@ -32,6 +32,7 @@ func understandingFingerprintForPrompt(prompt string) string {
 	}{UnderstandingModel, prompt, understandingSchemaText, "deepseek/direct-provider/aliases:deepseek-v4-flash,deepseek-flash/zero-tools/reasoning:low/temperature:0/response-format:json_object/evidence-only:1", 12000})
 }
 
+// CompletionUsage records optional bounded provider token and billing totals.
 type CompletionUsage struct {
 	InputTokens      *int64   `json:"input_tokens,omitempty"`
 	OutputTokens     *int64   `json:"output_tokens,omitempty"`
@@ -40,6 +41,8 @@ type CompletionUsage struct {
 	CacheWriteTokens *int64   `json:"cache_write_tokens,omitempty"`
 	CostUSD          *float64 `json:"cost_usd,omitempty"`
 }
+
+// CompletionReceipt binds a completion to its input, provider and configuration.
 type CompletionReceipt struct {
 	InvocationID             string           `json:"invocation_id"`
 	InputDigest              string           `json:"input_digest"`

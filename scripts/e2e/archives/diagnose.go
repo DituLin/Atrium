@@ -28,7 +28,7 @@ func diagnose(ctx context.Context, d *store.DB, dir string) {
 		var c archive.UnderstandingChunk
 		readJSON(f, &c)
 		var response archive.WorkerResponse
-		raw, e := os.ReadFile(f[:len(f)-len("input.json")] + "output.json")
+		raw, e := os.ReadFile(f[:len(f)-len("input.json")] + "output.json") // #nosec G703 -- The filename comes from Glob under the marker-guarded synthetic wire directory and only its fixed input.json suffix is replaced.
 		must(e)
 		if json.Unmarshal(raw, &response) != nil || response.Provider == "" {
 			fmt.Println(filepath.Base(f), "worker rejected")

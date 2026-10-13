@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+// ArchiveScreenView identifies a short-lived archive view for an authorized screen.
 type ArchiveScreenView struct {
 	ID        string    `json:"archive_view_id"`
 	ExpiresAt time.Time `json:"expires_at"`
@@ -40,6 +41,8 @@ func (r *ArchiveTasks) saveArchiveQuery(ctx context.Context, a domain.Integratio
 	})
 	return id, e
 }
+
+// CreateArchiveScreenView creates a versioned screen view from an authorized query receipt.
 func (r *ArchiveTasks) CreateArchiveScreenView(ctx context.Context, a domain.IntegrationActor, h, query, screen, operation string) (ArchiveScreenView, error) {
 	var view ArchiveScreenView
 	id, err := ulid.ParseStrict(operation)
@@ -131,6 +134,8 @@ func (r *ArchiveTasks) AuthorizeArchiveViewIn(ctx context.Context, tx *sql.Tx, p
 	}
 	return filter, nil
 }
+
+// ArchiveScreenViewFilter returns the current filter after reauthorizing a screen view.
 func (r *ArchiveTasks) ArchiveScreenViewFilter(ctx context.Context, screen, hash, h, view string) (archive.SearchFilter, error) {
 	var filter archive.SearchFilter
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)

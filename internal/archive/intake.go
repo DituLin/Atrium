@@ -15,11 +15,14 @@ type IntakeRepository interface {
 	LookupIntake(context.Context, domain.IntegrationActor, string, domain.ArchiveSourceIdentity) (*domain.ArchiveIntakeReceipt, error)
 	GetIntakeTask(context.Context, domain.IntegrationActor, string, string) (*domain.ArchiveTask, error)
 }
+
+// Intake coordinates immutable blob storage with authorized repository intake.
 type Intake struct {
 	blobs *BlobStore
 	repo  IntakeRepository
 }
 
+// NewIntake connects a blob store to its intake repository.
 func NewIntake(blobs *BlobStore, repo IntakeRepository) *Intake {
 	return &Intake{blobs: blobs, repo: repo}
 }
@@ -52,9 +55,13 @@ func (s *Intake) Receive(ctx context.Context, actor domain.IntegrationActor, hou
 	}
 	return s.repo.AcceptIntake(ctx, actor, household, version, m, ref)
 }
+
+// Lookup returns the authorized receipt for an existing source identity.
 func (s *Intake) Lookup(ctx context.Context, actor domain.IntegrationActor, household string, source domain.ArchiveSourceIdentity) (*domain.ArchiveIntakeReceipt, error) {
 	return s.repo.LookupIntake(ctx, actor, household, source)
 }
+
+// Task returns the authorized client projection of an intake task.
 func (s *Intake) Task(ctx context.Context, actor domain.IntegrationActor, household, id string) (*domain.ArchiveTaskProjection, error) {
 	t, err := s.repo.GetIntakeTask(ctx, actor, household, id)
 	if err != nil {

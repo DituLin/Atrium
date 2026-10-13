@@ -26,8 +26,10 @@ func (p IntegrationPolicy) AllowsScreen(id string) bool { return slices.Contains
 // AllowsSource reports explicit source membership.
 func (p IntegrationPolicy) AllowsSource(id string) bool { return slices.Contains(p.SourceIDs, id) }
 
+// AllowsMember reports whether the policy explicitly grants the supplied member ID.
 func (p IntegrationPolicy) AllowsMember(id string) bool { return slices.Contains(p.MemberIDs, id) }
 
+// AllowsHousehold reports whether the household is in the archive scope allowlist.
 func (p IntegrationPolicy) AllowsHousehold(id string) bool {
 	return slices.Contains(p.HouseholdIDs, id)
 }

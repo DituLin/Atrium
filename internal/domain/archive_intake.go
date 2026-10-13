@@ -23,6 +23,7 @@ type ArchiveSourceIdentity struct {
 	SlotIndex         int              `json:"slot_index"`
 }
 
+// Validate bounds delivery fields and accepts only text or file slots.
 func (s ArchiveSourceIdentity) Validate() error {
 	if s.Kind != ArchiveInputText && s.Kind != ArchiveInputFile {
 		return Errorf(CodeInvalidRequest, "invalid intake kind")
@@ -37,6 +38,9 @@ func (s ArchiveSourceIdentity) Validate() error {
 	}
 	return nil
 }
+
+// Key returns the deterministic digest used to deduplicate a provider delivery
+// within one household and principal.
 func (s ArchiveSourceIdentity) Key(household, principal string) (string, error) {
 	if err := s.Validate(); err != nil {
 		return "", err
@@ -51,6 +55,8 @@ func (s ArchiveSourceIdentity) Key(household, principal string) (string, error) 
 	return hex.EncodeToString(sum[:]), nil
 }
 
+// ArchiveIntakeMetadata combines delivery identity with the original filename,
+// optional byte assertions and requested visibility.
 type ArchiveIntakeMetadata struct {
 	ArchiveSourceIdentity
 	OriginalName     string `json:"original_name"`
@@ -60,12 +66,16 @@ type ArchiveIntakeMetadata struct {
 	VisibilityIntent string `json:"visibility_intent,omitempty"`
 }
 
+// Intent defaults omitted visibility to "inherit" and preserves explicit choices.
 func (m ArchiveIntakeMetadata) Intent() string {
 	if m.VisibilityIntent == "" {
 		return "inherit"
 	}
 	return m.VisibilityIntent
 }
+
+// Validate checks delivery identity, filename, visibility and optional MIME,
+// size and digest assertions before intake.
 func (m ArchiveIntakeMetadata) Validate() error {
 	if err := m.ArchiveSourceIdentity.Validate(); err != nil {
 		return err
@@ -103,6 +113,8 @@ func (m ArchiveIntakeMetadata) BusinessJSON() []byte {
 	return b
 }
 
+// ArchiveIntakeReceipt acknowledges saved bytes and identifies the intake task.
+// Document and task details are included only when the caller can read the archive.
 type ArchiveIntakeReceipt struct {
 	ReceiptID      string                 `json:"receipt_id"`
 	TaskID         string                 `json:"task_id"`
@@ -129,14 +141,21 @@ type ArchiveTaskProjection struct {
 	CreatedAt           time.Time                 `json:"created_at"`
 	UpdatedAt           time.Time                 `json:"updated_at"`
 }
+
+// ArchiveTaskResult exposes a whitelisted parse status and bounded fact count.
 type ArchiveTaskResult struct {
 	ParseStatus string `json:"parse_status,omitempty"`
 	FactCount   *int64 `json:"fact_count,omitempty"`
 }
+
+// ArchiveTaskClarification exposes a permitted clarification reason without source content.
 type ArchiveTaskClarification struct {
 	Code string `json:"code"`
 }
 
+// ProjectArchiveTask builds the public task view using approved stage, error,
+// parse and clarification codes and a bounded fact count.
+// Worker checkpoints and source metadata are not copied.
 func ProjectArchiveTask(t *ArchiveTask) *ArchiveTaskProjection {
 	p := &ArchiveTaskProjection{ID: t.ID, Status: t.Status, Stage: "processing", OriginalStatus: "saved", NASStatus: "pending", CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 	switch t.Stage {

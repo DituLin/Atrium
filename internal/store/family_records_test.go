@@ -167,7 +167,7 @@ func TestConcurrentFamilyCorrectionsHaveOneWinnerAndPrivateRevisionHidesOriginal
 	history, err := repo.List(ctx, "abu", false, 50)
 	require.NoError(t, err)
 	require.Len(t, history, 2)
-	original.FamilyRecordInput.Measurements = nil
+	original.Measurements = nil
 	back, replay, err := repo.Record(ctx, "im", "original", original.FamilyRecordInput, now)
 	require.NoError(t, err)
 	require.True(t, replay)

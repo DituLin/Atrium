@@ -7,7 +7,10 @@ import (
 	"strings"
 )
 
+// PublicationAnchorRule identifies the physical evidence anchor policy.
 const PublicationAnchorRule = "physical-parent/1"
+
+// PublicationVersion identifies the durable publication format and rules.
 const PublicationVersion = "archive-publication/9"
 
 // PhysicalAnchor intentionally excludes generated segment IDs, model names,
@@ -18,10 +21,14 @@ type PhysicalAnchor struct {
 	Start, End int
 	Geometry   *PageGeometry
 }
+
+// PublicationDimension associates a literal dimension with its original evidence.
 type PublicationDimension struct {
 	Kind, Raw string
 	Evidence  []CanonicalEvidence
 }
+
+// PublicationField is a validated field prepared for durable publication.
 type PublicationField struct {
 	SourceName              string `json:",omitempty"`
 	DerivedDependencies     []DerivedValue
@@ -34,11 +41,15 @@ type PublicationField struct {
 	Dimensions              []PublicationDimension
 	Anchors                 []PhysicalAnchor
 }
+
+// PublicationEvent groups publishable fields under physical evidence anchors.
 type PublicationEvent struct {
 	AnchorKey, Type string
 	Anchors         []PhysicalAnchor
 	Fields          []PublicationField
 }
+
+// PublicationCandidate combines validated extraction, resolution and publication inputs.
 type PublicationCandidate struct {
 	Protected      []ProtectedIdentityValue
 	Resolution     ResolutionInput
@@ -451,6 +462,7 @@ func archiveSubjectField(role, field string) bool {
 	return true
 }
 
+// TransactionProof records evidence for a supported transaction identity.
 type TransactionProof struct {
 	Identifier, Type, Issuer string
 	Date                     string `json:",omitempty"`
@@ -492,11 +504,13 @@ func TransactionIdentity(fields []PublicationField) *TransactionProof {
 	return p
 }
 
+// ProtectedIdentityValue holds an evidence-backed identity value for store comparisons.
 type ProtectedIdentityValue struct {
 	MentionRef, Kind, Issuer, Value string
 	Evidence                        []string
 }
 
+// ProtectedIdentityValues collects supported protected identity fields for store comparisons.
 func ProtectedIdentityValues(fields []PublicationField) []ProtectedIdentityValue {
 	out := []ProtectedIdentityValue{}
 	for _, f := range fields {

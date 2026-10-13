@@ -16,7 +16,7 @@ import (
 func operations(ctx context.Context, d *store.DB, blobs *archive.BlobStore, dir string, s state, phase string) {
 	r := d.ArchiveTasks()
 	key := []byte("synthetic-e2e-cursor-secret-at-least32")
-	results := map[string]any{}
+	results := map[string]map[string]any{}
 	check := func(id string, run func() (any, error)) {
 		evidence, e := run()
 		status := "pass"
@@ -129,7 +129,7 @@ func operations(ctx context.Context, d *store.DB, blobs *archive.BlobStore, dir 
 					return out, e
 				}
 				n, e := io.Copy(io.Discard, original)
-				original.Close()
+				_ = original.Close() // Read-only source cleanup; read errors are handled separately.
 				if e != nil || n != ref.SizeBytes {
 					return out, fmt.Errorf("original hash/size verification failed for %s", id)
 				}
@@ -250,6 +250,6 @@ func operations(ctx context.Context, d *store.DB, blobs *archive.BlobStore, dir 
 	}
 	writeJSON(filepath.Join(dir, fmt.Sprintf("operations-%s-%d.json", phase, time.Now().UnixNano())), results)
 	for id, v := range results {
-		fmt.Println(id, v.(map[string]any)["status"])
+		fmt.Println(id, v["status"])
 	}
 }

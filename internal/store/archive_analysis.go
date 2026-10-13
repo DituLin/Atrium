@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -18,9 +19,12 @@ import (
 	"github.com/DituLin/Atrium/internal/domain"
 )
 
+// AnalyzeArchives analyzes the current projection authorized for an integration actor.
 func (r *ArchiveTasks) AnalyzeArchives(ctx context.Context, a domain.IntegrationActor, h string, public bool, q archive.AnalysisQuery) (archive.AnalysisResult, error) {
 	return r.analyzeArchives(ctx, archiveSearchActor{Integration: a}, h, public, q)
 }
+
+// AnalyzeArchivesForScreen analyzes the public projection authorized for a screen.
 func (r *ArchiveTasks) AnalyzeArchivesForScreen(ctx context.Context, id, hash, h string, q archive.AnalysisQuery) (archive.AnalysisResult, error) {
 	return r.analyzeArchives(ctx, archiveSearchActor{ScreenID: id, ScreenHash: hash}, h, true, q)
 }
@@ -69,13 +73,13 @@ func (r *ArchiveTasks) analyzeArchives(ctx context.Context, a archiveSearchActor
 		for rows.Next() {
 			var id string
 			if e = rows.Scan(&id); e != nil {
-				rows.Close()
+				_ = rows.Close() // Read-only query cursor cleanup.
 				return e
 			}
 			ids = append(ids, id)
 		}
 		e = rows.Err()
-		rows.Close()
+		_ = rows.Close() // Read-only query cursor cleanup.
 		if e != nil {
 			return e
 		}
@@ -100,9 +104,7 @@ func (r *ArchiveTasks) analyzeArchives(ctx context.Context, a archiveSearchActor
 			if e != nil {
 				return e
 			}
-			for _, f := range facts {
-				input.Facts = append(input.Facts, f)
-			}
+			input.Facts = append(input.Facts, facts...)
 			if len(input.Facts) > 4096 {
 				return domain.ErrConflict
 			}
@@ -178,9 +180,13 @@ func (r *ArchiveTasks) analyzeArchives(ctx context.Context, a archiveSearchActor
 	}
 	return result, nil
 }
+
+// ArchiveAnalysisSnapshot returns a current snapshot authorized for an integration actor.
 func (r *ArchiveTasks) ArchiveAnalysisSnapshot(ctx context.Context, a domain.IntegrationActor, h string, public bool, id string) (archive.AnalysisResult, error) {
 	return r.analysisSnapshot(ctx, archiveSearchActor{Integration: a}, h, public, id)
 }
+
+// ArchiveAnalysisSnapshotForScreen returns a current public snapshot authorized for a screen.
 func (r *ArchiveTasks) ArchiveAnalysisSnapshotForScreen(ctx context.Context, id, hash, h, snapshot string) (archive.AnalysisResult, error) {
 	return r.analysisSnapshot(ctx, archiveSearchActor{ScreenID: id, ScreenHash: hash}, h, true, snapshot)
 }
@@ -193,7 +199,7 @@ func (r *ArchiveTasks) analysisSnapshot(ctx context.Context, a archiveSearchActo
 		}
 		var raw string
 		e = tx.QueryRowContext(ctx, `SELECT s.result_json FROM archive_analysis_snapshots s JOIN archive_search_state g ON g.household_id=s.household_id AND g.epoch=s.epoch AND g.generation=s.generation WHERE s.household_id=? AND s.id=? AND s.authority=? AND s.public=? AND s.algorithm_version=?`, h, id, who, public, archive.AnalysisAlgorithmVersion).Scan(&raw)
-		if e == sql.ErrNoRows {
+		if errors.Is(e, sql.ErrNoRows) {
 			return domain.ErrNotFound
 		}
 		if e != nil {
@@ -470,7 +476,7 @@ func (r *ArchiveTasks) analysisLegacyIn(ctx context.Context, tx *sql.Tx, h strin
 	if e != nil {
 		return e
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // Read-only query cursor cleanup.
 	count := 0
 	for rows.Next() {
 		count++

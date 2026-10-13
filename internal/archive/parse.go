@@ -15,15 +15,23 @@ import (
 // ParserVersion scopes evidence IDs; they are stable only within this version.
 const ParserVersion = "archive-parse/1"
 
+// ParseStatus describes extraction completeness or the reason parsing stopped.
 type ParseStatus string
 
 const (
-	ParseParsed        ParseStatus = "parsed"
-	ParsePartial       ParseStatus = "partial"
-	ParseEmpty         ParseStatus = "empty"
-	ParseUnsupported   ParseStatus = "unsupported"
-	ParseEncrypted     ParseStatus = "encrypted"
-	ParseInvalid       ParseStatus = "invalid"
+	// ParseParsed indicates that supported content was parsed completely.
+	ParseParsed ParseStatus = "parsed"
+	// ParsePartial indicates retained content with incomplete extraction.
+	ParsePartial ParseStatus = "partial"
+	// ParseEmpty indicates a supported source with no extractable content.
+	ParseEmpty ParseStatus = "empty"
+	// ParseUnsupported indicates a format or feature outside the parser contract.
+	ParseUnsupported ParseStatus = "unsupported"
+	// ParseEncrypted indicates a source whose content requires decryption.
+	ParseEncrypted ParseStatus = "encrypted"
+	// ParseInvalid indicates malformed or inconsistent source content.
+	ParseInvalid ParseStatus = "invalid"
+	// ParseLimitExceeded indicates parsing stopped at a configured resource bound.
 	ParseLimitExceeded ParseStatus = "limit_exceeded"
 )
 
@@ -35,6 +43,8 @@ type ParseSource struct {
 	SHA256     string      `json:"sha256"`
 	FormatHint string      `json:"format_hint"`
 }
+
+// ParseLimits bounds input, expansion, structure and emitted evidence.
 type ParseLimits struct {
 	SourceBytes      int64 `json:"source_bytes"`
 	PartBytes        int64 `json:"part_bytes"`
@@ -51,10 +61,12 @@ type ParseLimits struct {
 	CompressionRatio int   `json:"compression_ratio"`
 }
 
+// DefaultParseLimits returns the host defaults for bounded archive parsing.
 func DefaultParseLimits() ParseLimits {
 	return ParseLimits{32 << 20, 16 << 20, 64 << 20, 2 << 20, 4096, 64, 200000, 100000, 256 << 10, 100000, 100000, 8192, 1000}
 }
 
+// ParseCounts records the resource usage observed while parsing.
 type ParseCounts struct {
 	DecodedTextBytes int64 `json:"decoded_text_bytes"`
 	SourceBytes      int64 `json:"source_bytes"`
@@ -68,6 +80,8 @@ type ParseCounts struct {
 	Segments         int   `json:"segments"`
 	Relationships    int   `json:"relationships"`
 }
+
+// ParseCoverage records what the parser read, skipped and completed.
 type ParseCoverage struct {
 	Complete        bool     `json:"complete"`
 	Encoding        string   `json:"encoding"`
@@ -77,11 +91,15 @@ type ParseCoverage struct {
 	SkippedParts    []string `json:"skipped_parts"`
 	SkippedFeatures []string `json:"skipped_features"`
 }
+
+// ParseWarning describes a stable parsing limitation and its source part.
 type ParseWarning struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 	PartURI string `json:"part_uri"`
 }
+
+// ParseResult contains immutable extracted evidence and its coverage.
 type ParseResult struct {
 	Native         *NativeMetadata `json:"native,omitempty"`
 	DetectedFormat string          `json:"detected_format"`
@@ -93,6 +111,8 @@ type ParseResult struct {
 	Coverage       ParseCoverage   `json:"coverage"`
 	Sheets         []SheetEvidence `json:"sheets"`
 }
+
+// Segment is one extracted text or cell component with original provenance.
 type Segment struct {
 	Visual    *VisualEvidence `json:"visual,omitempty"`
 	ID        string          `json:"id"`
@@ -101,6 +121,8 @@ type Segment struct {
 	Cell      *CellEvidence   `json:"cell"`
 	DOCXMerge *DOCXMerge      `json:"docx_merge"`
 }
+
+// Locator selects the format-specific position of a segment.
 type Locator struct {
 	Page *PageLocation `json:"page,omitempty"`
 	Kind string        `json:"kind"`
@@ -110,14 +132,14 @@ type Locator struct {
 	XLSX *XLSXLocation `json:"xlsx"`
 }
 
-// Ranges are half open Unicode scalar (Go rune) positions in decoded text, not original bytes.
+// TextLocation ranges are half open Unicode scalar (Go rune) positions in decoded text, not original bytes.
 type TextLocation struct {
 	Start int    `json:"start"`
 	End   int    `json:"end"`
 	Unit  string `json:"unit"`
 }
 
-// CSV row/column are one based logical positions. PhysicalRow/ByteColumn are
+// CSVLocation row/column are one based logical positions. PhysicalRow/ByteColumn are
 // encoding/csv.FieldPos positions in decoded input; CRLF inside fields becomes LF.
 type CSVLocation struct {
 	Record      int `json:"record"`
@@ -126,7 +148,7 @@ type CSVLocation struct {
 	ByteColumn  int `json:"byte_column"`
 }
 
-// TablePath alternates table ordinal, containing row, containing grid column,
+// DOCXLocation TablePath alternates table ordinal, containing row, containing grid column,
 // then nested table ordinal. Row/GridColumn/Paragraph are one based.
 type DOCXLocation struct {
 	PartURI    string `json:"part_uri"`
@@ -135,12 +157,16 @@ type DOCXLocation struct {
 	Row        int    `json:"row"`
 	GridColumn int    `json:"grid_column"`
 }
+
+// XLSXLocation identifies a worksheet cell and its package part.
 type XLSXLocation struct {
 	SheetID   string `json:"sheet_id"`
 	SheetName string `json:"sheet_name"`
 	PartURI   string `json:"part_uri"`
 	Cell      string `json:"cell"`
 }
+
+// DOCXMerge records table-cell merge topology and unresolved revisions.
 type DOCXMerge struct {
 	// Revisions can leave vertical topology unknown. In that case anchors and
 	// RowSpan are zero, but the physical ColumnSpan and continuation marker survive.
@@ -151,12 +177,16 @@ type DOCXMerge struct {
 	RowSpan            int  `json:"row_span"`
 	Continuation       bool `json:"continuation"`
 }
+
+// FormulaEvidence retains the original formula and cache state without evaluation.
 type FormulaEvidence struct {
 	Text         string            `json:"text"`
 	Attributes   map[string]string `json:"attributes"`
 	CachePresent bool              `json:"cache_present"`
 	CachedRaw    string            `json:"cached_raw"`
 }
+
+// CellEvidence retains literal cell content, formatting and formula provenance.
 type CellEvidence struct {
 	StyleAttributes  map[string]string `json:"style_attributes"`
 	State            string            `json:"state"`
@@ -175,6 +205,8 @@ type CellEvidence struct {
 	// Conflicting source ranges have no resolved hidden value; consult Columns.
 	ColumnHiddenUnresolved bool `json:"column_hidden_unresolved"`
 }
+
+// SheetEvidence records worksheet identity and row or column visibility.
 type SheetEvidence struct {
 	ID      string           `json:"id"`
 	Name    string           `json:"name"`
@@ -184,10 +216,14 @@ type SheetEvidence struct {
 	Columns []ColumnEvidence `json:"columns"`
 	Merges  []string         `json:"merges"`
 }
+
+// RowEvidence records a worksheet row and its hidden state.
 type RowEvidence struct {
 	Index  int  `json:"index"`
 	Hidden bool `json:"hidden"`
 }
+
+// ColumnEvidence records a worksheet column span and its hidden state.
 type ColumnEvidence struct {
 	First  int  `json:"first"`
 	Last   int  `json:"last"`
@@ -321,7 +357,7 @@ func (p *parser) run() error {
 		n, err := p.source.Reader.ReadAt(data[offset:end], int64(offset))
 		p.out.Counts.SourceBytes += int64(n)
 		offset += n
-		if err != nil && !(err == io.EOF && offset == len(data)) {
+		if err != nil && (err != io.EOF || offset != len(data)) {
 			return fmt.Errorf("archive: read original: %w", err)
 		}
 		if n == 0 {

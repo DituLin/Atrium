@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// ErrSource reports an invalid or unavailable trusted attachment.
 var ErrSource = errors.New("archive_source")
 
 // Open walks every component relative to its already-opened parent FD. Renaming
@@ -45,7 +46,7 @@ func Open(root, relative string) (*os.File, error) {
 	f := os.NewFile(uintptr(fd), "trusted-archive-source")
 	st, e := f.Stat()
 	if e != nil || !st.Mode().IsRegular() || st.Size() <= 0 || st.Size() > 32<<20 {
-		f.Close()
+		_ = f.Close() // Read-only source cleanup; read errors are handled separately.
 		return nil, ErrSource
 	}
 	return f, nil

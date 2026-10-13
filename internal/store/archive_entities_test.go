@@ -336,6 +336,9 @@ func TestEntityStrongComparisonLimitsPrivacyAndIsolation(t *testing.T) {
 			}
 		}
 		r, e := archiveCompareIdentityIn(ctx, tx, "h", IdentityProbe{Kind: "passport", Issuer: "SG", RuleVersion: IdentityExactVersion, Value: "001234"})
+		if e != nil {
+			return e
+		}
 		require.False(t, r.Complete)
 		require.Empty(t, r.EntityIDs)
 		other, e := archiveCompareIdentityIn(ctx, tx, "other", IdentityProbe{Kind: "passport", Issuer: "SG", RuleVersion: IdentityExactVersion, Value: "001234"})

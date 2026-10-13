@@ -6,10 +6,12 @@ import (
 	"time"
 )
 
+// ArchiveStorageVersion is the format version required for persisted blob metadata.
 const ArchiveStorageVersion = 1
 
 var archiveSHA256 = regexp.MustCompile(`^[0-9a-f]{64}$`)
 
+// ValidateArchiveSHA256 requires a SHA-256 digest encoded as 64 lowercase hex digits.
 func ValidateArchiveSHA256(hash string) error {
 	if !archiveSHA256.MatchString(hash) {
 		return Errorf(CodeInvalidRequest, "invalid archive SHA-256")
@@ -34,8 +36,10 @@ type ArchiveBlob struct {
 	CreatedAt time.Time
 }
 
+// ArchiveInputKind distinguishes an uploaded file from a received text occurrence.
 type ArchiveInputKind string
 
+// Archive input kinds preserve how an original arrived at intake.
 const (
 	ArchiveInputFile ArchiveInputKind = "file"
 	ArchiveInputText ArchiveInputKind = "text"
@@ -53,6 +57,8 @@ type ArchiveDocument struct {
 	CreatedAt   time.Time
 }
 
+// Validate checks the household, digest, positive size, storage version and MIME
+// syntax of a blob reference; it does not grant permission to read the original.
 func (r ArchiveBlobRef) Validate() error {
 	if err := ValidateArchiveIdentifier(r.HouseholdID); err != nil {
 		return err

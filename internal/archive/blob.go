@@ -21,15 +21,20 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// DefaultMaxBlobBytes is the default maximum original size.
 const DefaultMaxBlobBytes int64 = 32 << 20
 
 var householdPathEncoding = base32.NewEncoding("abcdefghijklmnopqrstuvwxyz234567").WithPadding(base32.NoPadding)
 
 var (
-	ErrEmpty    = errors.New("archive: empty original")
+	// ErrEmpty reports an original with no bytes.
+	ErrEmpty = errors.New("archive: empty original")
+	// ErrTooLarge reports an original exceeding the configured byte limit.
 	ErrTooLarge = errors.New("archive: original exceeds byte limit")
+	// ErrMismatch reports an original inconsistent with its expected metadata.
 	ErrMismatch = errors.New("archive: original does not match expected metadata")
-	ErrCorrupt  = errors.New("archive: stored original does not match its reference")
+	// ErrCorrupt reports stored bytes inconsistent with their immutable reference.
+	ErrCorrupt = errors.New("archive: stored original does not match its reference")
 )
 
 // BlobStore pins a trusted host-local archive root. Put/OpenVerified may run
@@ -50,6 +55,7 @@ type blobIO struct {
 	link  func(int, string, int, string, int) error
 }
 
+// PutOptions provides optional expected size and digest checks for an original.
 type PutOptions struct {
 	ExpectedSize   *int64 // nil means unspecified; explicit zero is rejected.
 	ExpectedSHA256 string // empty means unspecified; otherwise canonical lowercase.
@@ -77,7 +83,7 @@ func newBlobStore(root string, maxBytes int64, fs blobIO) (*BlobStore, error) {
 		return nil, fmt.Errorf("archive: open trusted parent: %w", err)
 	}
 	parent := os.NewFile(uintptr(fd), "archive-parent")
-	defer parent.Close()
+	defer func() { _ = parent.Close() }() // Directory descriptor cleanup; persistence is checked with Sync.
 	s := &BlobStore{maxBytes: maxBytes, fs: fs}
 	s.root, err = s.directory(parent, filepath.Base(root), true)
 	if err != nil {
@@ -86,6 +92,7 @@ func newBlobStore(root string, maxBytes int64, fs blobIO) (*BlobStore, error) {
 	return s, nil
 }
 
+// Close releases the pinned root after in-flight blob operations finish.
 func (s *BlobStore) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -113,7 +120,7 @@ func (s *BlobStore) directory(parent *os.File, name string, create bool) (*os.Fi
 	dir := os.NewFile(uintptr(fd), name)
 	if create {
 		if err := s.fs.sync(parent); err != nil {
-			dir.Close()
+			_ = dir.Close() // Directory descriptor cleanup; persistence is checked with Sync.
 			return nil, fmt.Errorf("archive: sync parent directory: %w", err)
 		}
 	}
@@ -133,7 +140,7 @@ func (s *BlobStore) blobDirectory(ref domain.ArchiveBlobRef, create bool) (*os.F
 	for _, component := range []string{householdDirectoryName(ref.HouseholdID), "blobs", ref.SHA256[:2]} {
 		next, err := s.directory(parent, component, create)
 		if parent != s.root {
-			parent.Close()
+			_ = parent.Close() // Directory descriptor cleanup; persistence is checked with Sync.
 		}
 		if err != nil {
 			return nil, err
@@ -211,7 +218,7 @@ func (s *BlobStore) Put(ctx context.Context, household string, r io.Reader, opts
 	if err != nil {
 		return out, err
 	}
-	defer dir.Close()
+	defer func() { _ = dir.Close() }() // Directory descriptor cleanup; persistence is checked with Sync.
 	if err := ctx.Err(); err != nil {
 		return out, err
 	}
@@ -256,7 +263,7 @@ func (s *BlobStore) OpenVerified(ctx context.Context, ref domain.ArchiveBlobRef)
 	if err != nil {
 		return nil, err
 	}
-	defer dir.Close()
+	defer func() { _ = dir.Close() }() // Directory descriptor cleanup; persistence is checked with Sync.
 	return openVerifiedAt(ctx, dir, ref)
 }
 
@@ -269,24 +276,24 @@ func openVerifiedAt(ctx context.Context, dir *os.File, ref domain.ArchiveBlobRef
 	f := os.NewFile(uintptr(fd), ref.SHA256)
 	var stat unix.Stat_t
 	if err := unix.Fstat(fd, &stat); err != nil {
-		f.Close()
+		_ = f.Close() // Read-only source cleanup; read errors are handled separately.
 		return nil, err
 	}
 	if stat.Mode&unix.S_IFMT != unix.S_IFREG || stat.Size != ref.SizeBytes || ref.SizeBytes == math.MaxInt64 {
-		f.Close()
+		_ = f.Close() // Read-only source cleanup; read errors are handled separately.
 		return nil, ErrCorrupt
 	}
 	size, hash, mime, err := inspectStream(ctx, f, ref.SizeBytes, nil)
 	if err != nil {
-		f.Close()
+		_ = f.Close() // Read-only source cleanup; read errors are handled separately.
 		return nil, err
 	}
 	if size != ref.SizeBytes || hash != ref.SHA256 || mime != ref.MIME {
-		f.Close()
+		_ = f.Close() // Read-only source cleanup; read errors are handled separately.
 		return nil, ErrCorrupt
 	}
 	if _, err := f.Seek(0, io.SeekStart); err != nil {
-		f.Close()
+		_ = f.Close() // Read-only source cleanup; read errors are handled separately.
 		return nil, err
 	}
 	return f, nil

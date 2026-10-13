@@ -137,7 +137,7 @@ func identity(ctx context.Context, d *store.DB, s state, id string) (corpusIdent
 			*spec.dst = append(*spec.dst, v)
 		}
 		e = rows.Err()
-		rows.Close()
+		_ = rows.Close() // Read-only query cursor cleanup.
 		if e != nil {
 			return out, e
 		}
@@ -151,7 +151,7 @@ func identity(ctx context.Context, d *store.DB, s state, id string) (corpusIdent
 		must(rows.Scan(&task, &key, &fp, &digest))
 		out.Products[task+"/"+key+"/"+fp] = digest
 	}
-	rows.Close()
+	_ = rows.Close() // Read-only query cursor cleanup.
 	var mismatch int
 	e = d.SQL().QueryRowContext(ctx, `SELECT count(*),coalesce(sum(sha256<>?),0) FROM archive_sources WHERE household_id=? AND document_id=?`, out.SHA, s.Home, out.Document).Scan(&out.Sources, &mismatch)
 	if e != nil {
@@ -209,12 +209,15 @@ func formula(ctx context.Context, blobs *archive.BlobStore, s state, dir string)
 		if f.ID != "F01-missing" {
 			continue
 		}
-		file, e := os.Open(filepath.Join(os.Args[4], f.File))
+		if filepath.Base(f.File) != f.File {
+			return nil, fmt.Errorf("invalid fixture filename")
+		}
+		file, e := os.Open(filepath.Join(os.Args[4], f.File)) // #nosec G703 -- The synthetic manifest is operator-selected; the filename is checked above to be a single basename, matching intake.
 		if e != nil {
 			return nil, e
 		}
 		ref, e := blobs.Put(ctx, s.Home, file, archive.PutOptions{})
-		file.Close()
+		_ = file.Close() // Read-only source cleanup; read errors are handled separately.
 		if e != nil {
 			return nil, e
 		}
@@ -226,7 +229,7 @@ func formula(ctx context.Context, blobs *archive.BlobStore, s state, dir string)
 			return nil, e
 		}
 		out, e = archive.Parse(ctx, archive.ParseSource{Reader: original, Size: ref.SizeBytes, SHA256: ref.SHA256, FormatHint: "xlsx"}, archive.DefaultParseLimits())
-		original.Close()
+		_ = original.Close() // Read-only source cleanup; read errors are handled separately.
 		if e != nil {
 			return out, e
 		}

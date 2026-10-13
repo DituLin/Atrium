@@ -44,31 +44,31 @@ func must(e error) {
 func writeJSON(path string, v any) {
 	b, e := json.MarshalIndent(v, "", "  ")
 	must(e)
-	must(os.WriteFile(path, append(b, '\n'), 0600))
+	must(os.WriteFile(path, append(b, '\n'), 0600)) // #nosec G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
 }
-func readJSON(path string, v any) { b, e := os.ReadFile(path); must(e); must(json.Unmarshal(b, v)) }
+func readJSON(path string, v any) { b, e := os.ReadFile(path); must(e); must(json.Unmarshal(b, v)) } // #nosec G304 G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
 func guard(dir string, create bool) error {
 	if !filepath.IsAbs(dir) || filepath.Clean(dir) == "/" {
 		return errors.New("absolute private synthetic directory required")
 	}
 	p := filepath.Join(dir, "SYNTHETIC-ONLY")
 	if create {
-		if _, e := os.Lstat(dir); !os.IsNotExist(e) {
+		if _, e := os.Lstat(dir); !os.IsNotExist(e) { // #nosec G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
 			return errors.New("init requires a new directory")
 		}
-		if e := os.Mkdir(dir, 0700); e != nil {
+		if e := os.Mkdir(dir, 0700); e != nil { // #nosec G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
 			return e
 		}
-		return os.WriteFile(p, []byte(marker), 0600)
+		return os.WriteFile(p, []byte(marker), 0600) // #nosec G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
 	}
-	i, e := os.Lstat(dir)
+	i, e := os.Lstat(dir) // #nosec G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
 	if e != nil {
 		return e
 	}
 	if !i.IsDir() || i.Mode().Perm()&0077 != 0 {
 		return errors.New("private real directory required")
 	}
-	b, e := os.ReadFile(p)
+	b, e := os.ReadFile(p) // #nosec G304 G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
 	if e != nil || string(b) != marker {
 		return errors.New("synthetic marker missing")
 	}
@@ -84,7 +84,7 @@ func main() {
 	ctx := context.Background()
 	d, e := store.Open(ctx, filepath.Join(dir, "core.sqlite"))
 	must(e)
-	defer d.Close()
+	defer func() { must(d.Close()) }()
 	_, e = d.Migrate(ctx)
 	must(e)
 	var s state
@@ -94,7 +94,7 @@ func main() {
 		screenToken, e := auth.NewScreenToken()
 		must(e)
 		must(d.Screens().Create(ctx, &domain.Screen{ID: "preview_browser", Name: "T15 合成浏览器", TokenHash: auth.HashToken(screenToken)}))
-		must(os.WriteFile(filepath.Join(dir, "screen-token"), []byte(screenToken), 0600))
+		must(os.WriteFile(filepath.Join(dir, "screen-token"), []byte(screenToken), 0600)) // #nosec G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
 		_, token, e := auth.NewIntegrationService(d, nil).Issue(ctx, "synthetic T15 only", domain.IntegrationPolicy{Permissions: []string{"archive.ingest", "archive.read", "archive.organize", "archive.analyze", "screens.read", "screens.control", "commands.read"}, HouseholdIDs: []string{h.ID}, ScreenIDs: []string{"preview_browser"}}, time.Now().Add(48*time.Hour))
 		must(e)
 		p, c, e := d.Integrations().GetByTokenHash(ctx, auth.HashToken(token))
@@ -107,7 +107,7 @@ func main() {
 	readJSON(filepath.Join(dir, "state.json"), &s)
 	blobs, e := archive.NewBlobStore(filepath.Join(dir, "originals"), 32<<20)
 	must(e)
-	defer blobs.Close()
+	defer func() { _ = blobs.Close() }() // Read-only directory descriptor cleanup.
 	switch action {
 	case "intake", "replace":
 		if len(os.Args) < 4 {
@@ -132,10 +132,10 @@ func main() {
 			if filepath.Base(f.File) != f.File {
 				panic("invalid fixture filename")
 			}
-			file, e := os.Open(filepath.Join(os.Args[3], f.File))
+			file, e := os.Open(filepath.Join(os.Args[3], f.File)) // #nosec G703 -- The CLI selects the synthetic fixture directory, and f.File is checked above to be a single basename.
 			must(e)
 			ref, e := blobs.Put(ctx, s.Home, file, archive.PutOptions{})
-			file.Close()
+			_ = file.Close() // Read-only source cleanup; read errors are handled separately.
 			must(e)
 			if ref.SHA256 != f.SHA256 {
 				panic("fixture hash mismatch")
@@ -250,7 +250,7 @@ func report(ctx context.Context, d *store.DB, dir string, s state) {
 	}
 	rows, e := d.SQL().QueryContext(ctx, `SELECT task_id,product_key,body FROM archive_products ORDER BY task_id,product_key`)
 	must(e)
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // Read-only query cursor cleanup.
 	products := map[string]map[string]json.RawMessage{}
 	for rows.Next() {
 		var task, key string

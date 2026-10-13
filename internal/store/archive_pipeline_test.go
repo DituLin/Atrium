@@ -43,7 +43,7 @@ func TestArchiveProductsAndBudgetSurviveLeaseLoss(t *testing.T) {
 	_, e = r.SaveProductAndCheckpoint(ctx, fence, product)
 	require.ErrorIs(t, e, domain.ErrConflict)
 	fence.StateVersion = next.StateVersion
-	inv, next, e := r.ReserveArchiveInvocation(ctx, fence, "chunk-0", 100, 150)
+	inv, _, e := r.ReserveArchiveInvocation(ctx, fence, "chunk-0", 100, 150)
 	require.NoError(t, e)
 	require.NotEmpty(t, inv.ID)
 	clock.Set(archiveNow.Add(time.Minute))

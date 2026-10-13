@@ -23,7 +23,7 @@ func loadProviderEnv(path string) error {
 		return fail()
 	}
 	f := os.NewFile(uintptr(fd), "provider-env")
-	defer f.Close()
+	defer func() { _ = f.Close() }() // Read-only source cleanup; read errors are handled separately.
 	var st unix.Stat_t
 	if unix.Fstat(fd, &st) != nil || st.Mode&unix.S_IFMT != unix.S_IFREG || st.Mode&07777 != 0600 || int(st.Uid) != os.Geteuid() || st.Nlink != 1 || st.Size > 8192 {
 		return fail()

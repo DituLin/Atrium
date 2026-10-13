@@ -13,7 +13,7 @@ import (
 // RestoreFamilyRecord is for a newly created recovery database. It preserves
 // archive IDs and timestamps, and never replaces existing rows or grants access.
 func (d *DB) RestoreFamilyRecord(ctx context.Context, r domain.FamilyRecord, archive string, verifiedAt time.Time) error {
-	if err := r.FamilyRecordInput.Validate(); err != nil {
+	if err := r.Validate(); err != nil {
 		return err
 	}
 	_, idErr := ulid.ParseStrict(r.ID)
@@ -28,7 +28,7 @@ func (d *DB) RestoreFamilyRecord(ctx context.Context, r domain.FamilyRecord, arc
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }() // Abort-only cleanup; the commit result is returned separately.
 	_, err = tx.ExecContext(ctx, `INSERT INTO family_records(id,member_id,principal_id,request_id,payload_json,occurred_at,display_on_tv,created_at) VALUES(?,?,?,?,?,?,?,?)`, r.ID, r.MemberID, "archive:"+archive, r.ID, string(raw), r.OccurredAt.UTC().Format("2006-01-02T15:04:05.000000000Z"), r.DisplayOnTV, r.CreatedAt.UTC().Format(time.RFC3339Nano))
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func (d *DB) RestoreFamilyRevisionLinks(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }() // Abort-only cleanup; the commit result is returned separately.
 	rows, err := tx.QueryContext(ctx, `SELECT id,payload_json FROM family_records`)
 	if err != nil {
 		return err
@@ -57,18 +57,18 @@ func (d *DB) RestoreFamilyRevisionLinks(ctx context.Context) error {
 	for rows.Next() {
 		var id, raw string
 		if err = rows.Scan(&id, &raw); err != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return err
 		}
 		var in domain.FamilyRecordInput
 		if err = json.Unmarshal([]byte(raw), &in); err != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return err
 		}
 		records[id] = in
 	}
 	err = rows.Err()
-	rows.Close()
+	_ = rows.Close() // Read-only query cursor cleanup.
 	if err != nil {
 		return err
 	}

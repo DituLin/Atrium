@@ -16,16 +16,21 @@ type ArchiveWorkFence struct {
 	HouseholdID, TaskID, Token string
 	StateVersion               int64
 }
+
+// ArchiveProduct contains one checkpoint product bound to an extraction fingerprint.
 type ArchiveProduct struct {
 	Key, Fingerprint, Digest string
 	Body                     json.RawMessage
 	InvocationID             string
 }
+
+// ArchiveInvocation records an immutable operation budget reservation.
 type ArchiveInvocation struct {
 	ID, Operation string
 	Reserved      int64
 }
 
+// MaxArchiveProductBytes bounds a durable archive checkpoint product.
 const MaxArchiveProductBytes = 32 << 20
 
 func productDigest(b []byte) string { h := sha256.Sum256(b); return hex.EncodeToString(h[:]) }
@@ -71,6 +76,8 @@ func saveProductIn(ctx context.Context, tx *sql.Tx, f ArchiveWorkFence, p Archiv
 	_, e = tx.ExecContext(ctx, `INSERT INTO archive_products VALUES(?,?,?,?,?,?)`, f.HouseholdID, f.TaskID, p.Key, p.Fingerprint, digest, []byte(p.Body))
 	return e
 }
+
+// SaveProductAndCheckpoint stores a fenced product and advances its task checkpoint atomically.
 func (r *ArchiveTasks) SaveProductAndCheckpoint(ctx context.Context, f ArchiveWorkFence, p ArchiveProduct) (*domain.ArchiveTask, error) {
 	var out *domain.ArchiveTask
 	e := r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
@@ -109,6 +116,8 @@ func (r *ArchiveTasks) SaveProductAndCheckpoint(ctx context.Context, f ArchiveWo
 	})
 	return out, e
 }
+
+// ArchiveProducts returns the checkpoint products authorized by the current work fence.
 func (r *ArchiveTasks) ArchiveProducts(ctx context.Context, f ArchiveWorkFence, fingerprint string) ([]ArchiveProduct, error) {
 	var out []ArchiveProduct
 	e := r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
@@ -140,7 +149,7 @@ func (r *ArchiveTasks) ArchiveProducts(ctx context.Context, f ArchiveWorkFence, 
 		if e != nil {
 			return e
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }() // Read-only query cursor cleanup.
 		for rows.Next() {
 			var p ArchiveProduct
 			if e = rows.Scan(&p.Key, &p.Fingerprint, &p.Digest, &p.Body); e != nil {
@@ -156,7 +165,7 @@ func (r *ArchiveTasks) ArchiveProducts(ctx context.Context, f ArchiveWorkFence, 
 	return out, e
 }
 
-// Reservations are never refunded, including unknown outcomes after a crash.
+// ReserveArchiveInvocation never refunds reservations, including unknown outcomes after a crash.
 // The first maximum is immutable; later configurations cannot reset spent work.
 func (r *ArchiveTasks) ReserveArchiveInvocation(ctx context.Context, f ArchiveWorkFence, operation string, cost, maximum int64) (ArchiveInvocation, *domain.ArchiveTask, error) {
 	var inv ArchiveInvocation
@@ -205,6 +214,7 @@ func (r *ArchiveTasks) ReserveArchiveInvocation(ctx context.Context, f ArchiveWo
 	return inv, out, e
 }
 
+// ArchiveWorkSource returns the immutable original referenced by fenced extraction work.
 func (r *ArchiveTasks) ArchiveWorkSource(ctx context.Context, f ArchiveWorkFence) (domain.ArchiveBlobRef, string, error) {
 	var ref domain.ArchiveBlobRef
 	var hint string

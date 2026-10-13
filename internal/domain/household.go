@@ -13,6 +13,8 @@ type ArchiveGrant struct {
 	ExpectedPolicyVersion int64    `json:"expected_policy_version"`
 }
 
+// Validate requires a policy version and nonempty household and permission lists,
+// accepting only archive permissions and valid explicit allowlist entries.
 func (g ArchiveGrant) Validate() error {
 	if g.ExpectedPolicyVersion < 1 || len(g.Permissions) == 0 || len(g.HouseholdIDs) == 0 {
 		return Errorf(CodeInvalidRequest, "archive grant requires permissions, households and expected policy version")

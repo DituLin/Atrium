@@ -23,6 +23,7 @@ type SearchFilter struct {
 	Cursor       string `json:"cursor,omitempty"`
 }
 
+// Normalize validates and canonicalizes the bounded search filter.
 func (f SearchFilter) Normalize() (SearchFilter, error) {
 	f.Query = strings.TrimSpace(f.Query)
 	if f.Timezone != "" {
@@ -63,6 +64,7 @@ func (f SearchFilter) Normalize() (SearchFilter, error) {
 // punctuation and prefixes never acquire user-controlled FTS grammar.
 func LiteralFTS(s string) string { return `"` + strings.ReplaceAll(s, `"`, `""`) + `"` }
 
+// SearchEvidence contains authorized field evidence and its original locator.
 type SearchEvidence struct {
 	FieldName            string          `json:"field_name,omitempty"`
 	SourceNormalizations []Normalization `json:"source_normalizations,omitempty"`
@@ -86,6 +88,8 @@ type SearchEvidence struct {
 	Excerpt              string          `json:"excerpt"`
 	Confirmed            bool            `json:"confirmed"`
 }
+
+// SearchItem is the current authorized projection of one archive document.
 type SearchItem struct {
 	Processing       string             `json:"processing,omitempty"`
 	TaskSummary      *ScreenTaskSummary `json:"task_summary,omitempty"`
@@ -105,10 +109,14 @@ type SearchItem struct {
 	MetadataOnly     bool               `json:"metadata_only"`
 	Truncated        bool               `json:"truncated"`
 }
+
+// SearchCoverage indicates whether an authorized search projection is complete.
 type SearchCoverage struct {
 	Complete bool   `json:"complete"`
 	Reason   string `json:"reason,omitempty"`
 }
+
+// SearchPage contains one bounded page of document results and continuation state.
 type SearchPage struct {
 	QueryRef    string         `json:"query_ref,omitempty"`
 	Generation  string         `json:"generation,omitempty"`
@@ -118,12 +126,15 @@ type SearchPage struct {
 	IndexStatus string         `json:"index_status"`
 }
 
+// SearchEntity is an authorized entity summary with its visible names.
 type SearchEntity struct {
 	ID      string   `json:"id"`
 	Kind    string   `json:"kind"`
 	Names   []string `json:"names"`
 	Aliases []string `json:"aliases"`
 }
+
+// EntityPage contains one bounded page of authorized entity summaries.
 type EntityPage struct {
 	Items      []SearchEntity `json:"items"`
 	NextCursor string         `json:"next_cursor,omitempty"`

@@ -25,7 +25,7 @@ func (d *DB) InReadTx(ctx context.Context, fn func(*sql.Tx) error) error {
 	if e != nil {
 		return e
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }() // Abort-only cleanup; the commit result is returned separately.
 	if e = fn(tx); e != nil {
 		return e
 	}
@@ -48,7 +48,7 @@ func searchBound(s string, n int) string {
 	return s
 }
 
-// Search rows are disposable projections. A household epoch invalidates every
+// IndexArchives maintains disposable search projections. A household epoch invalidates every
 // dependency (including assertions carried by another document) atomically.
 // Rebuilding writes bounded batches alongside the old generation; stale rows
 // are never treated as current or counted as complete zero results.
@@ -80,13 +80,13 @@ func (r *ArchiveTasks) IndexArchives(ctx context.Context, h string, limit int) (
 		for rows.Next() {
 			var id string
 			if e = rows.Scan(&id); e != nil {
-				rows.Close()
+				_ = rows.Close() // Read-only query cursor cleanup.
 				return e
 			}
 			ids = append(ids, id)
 		}
 		e = rows.Err()
-		rows.Close()
+		_ = rows.Close() // Read-only query cursor cleanup.
 		if e != nil {
 			return e
 		}
@@ -139,6 +139,8 @@ func (r *ArchiveTasks) IndexArchives(ctx context.Context, h string, limit int) (
 	}
 	return count, nil
 }
+
+// RebuildArchiveSearch invalidates the current search generation for a household.
 func (r *ArchiveTasks) RebuildArchiveSearch(ctx context.Context, h string) error {
 	return r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
 		_, e := tx.ExecContext(ctx, `UPDATE archive_search_state SET generation=generation+1 WHERE household_id=?`, h)
@@ -242,13 +244,13 @@ func (r *ArchiveTasks) searchProjectionIn(ctx context.Context, tx *sql.Tx, h, id
 	for rows.Next() {
 		var v string
 		if e = rows.Scan(&v); e != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return p, e
 		}
 		secrets = append(secrets, v)
 	}
 	e = rows.Err()
-	rows.Close()
+	_ = rows.Close() // Read-only query cursor cleanup.
 	if e != nil {
 		return p, e
 	}
@@ -563,6 +565,7 @@ type archiveSearchActor struct {
 	ScreenID, ScreenHash string
 }
 
+// SearchArchives returns a bounded document page authorized for an integration actor.
 func (r *ArchiveTasks) SearchArchives(ctx context.Context, a domain.IntegrationActor, h string, public bool, f archive.SearchFilter, key []byte) (archive.SearchPage, error) {
 	page, e := r.searchArchives(ctx, archiveSearchActor{Integration: a}, h, public, f, key, "")
 	if e == nil {
@@ -570,6 +573,8 @@ func (r *ArchiveTasks) SearchArchives(ctx context.Context, a domain.IntegrationA
 	}
 	return page, e
 }
+
+// SearchArchivesForScreen returns a bounded public document page authorized for a screen.
 func (r *ArchiveTasks) SearchArchivesForScreen(ctx context.Context, id, hash, h string, f archive.SearchFilter, key []byte) (archive.SearchPage, error) {
 	return r.searchArchives(ctx, archiveSearchActor{ScreenID: id, ScreenHash: hash}, h, true, f, key, "")
 }
@@ -646,7 +651,7 @@ SELECT 'legacy:'||p.root_record_id,1,f.payload_json,'',1,p.entity_id,f.id,coales
 		if e != nil {
 			return e
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }() // Read-only query cursor cleanup.
 		scanned, chars := 0, 0
 		last := c.After
 		lastTime := c.AfterTime
@@ -808,6 +813,8 @@ func searchMatches(i archive.SearchItem, text string, f archive.SearchFilter) bo
 func (r *ArchiveTasks) ArchiveEvidence(ctx context.Context, a domain.IntegrationActor, h string, public bool, id string, f archive.SearchFilter, key []byte) (archive.SearchPage, error) {
 	return r.archiveEvidence(ctx, archiveSearchActor{Integration: a}, h, public, id, f, key)
 }
+
+// ArchiveEvidenceForScreen returns public document evidence after reauthorizing the screen.
 func (r *ArchiveTasks) ArchiveEvidenceForScreen(ctx context.Context, screen, hash, h, id string, f archive.SearchFilter, key []byte) (archive.SearchPage, error) {
 	return r.archiveEvidence(ctx, archiveSearchActor{ScreenID: screen, ScreenHash: hash}, h, true, id, f, key)
 }
@@ -900,9 +907,12 @@ func (r *ArchiveTasks) archiveEvidence(ctx context.Context, a archiveSearchActor
 	return out, e
 }
 
+// SearchArchiveEntities returns an entity page authorized for an integration actor.
 func (r *ArchiveTasks) SearchArchiveEntities(ctx context.Context, a domain.IntegrationActor, h string, public bool, f archive.SearchFilter, key []byte) (archive.EntityPage, error) {
 	return r.searchEntities(ctx, archiveSearchActor{Integration: a}, h, public, f, key)
 }
+
+// SearchArchiveEntitiesForScreen returns a public entity page authorized for a screen.
 func (r *ArchiveTasks) SearchArchiveEntitiesForScreen(ctx context.Context, id, hash, h string, f archive.SearchFilter, key []byte) (archive.EntityPage, error) {
 	return r.searchEntities(ctx, archiveSearchActor{ScreenID: id, ScreenHash: hash}, h, true, f, key)
 }
@@ -1078,7 +1088,7 @@ OR (a.legacy_member_id IS NOT NULL AND EXISTS(SELECT 1 FROM local_household l WH
 	if e != nil {
 		return nil, false, e
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // Read-only query cursor cleanup.
 	out := []entityAttribute{}
 	for rows.Next() {
 		var a entityAttribute

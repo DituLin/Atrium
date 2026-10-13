@@ -19,7 +19,7 @@ func main() {
 	if err != nil {
 		os.Exit(1)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }() // Read-only source cleanup; read errors are handled separately.
 	n, err := io.Copy(os.Stdout, io.LimitReader(f, (32<<20)+1))
 	if err != nil || n == 0 || n > 32<<20 {
 		os.Exit(1)

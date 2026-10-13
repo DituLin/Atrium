@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// UnderstandingModel is the trusted model route for archive extraction.
 const UnderstandingModel = "deepseek/deepseek-v4-flash"
 
 var understandingSlots = make(chan struct{}, 2)
@@ -25,14 +26,20 @@ type OpenClawUnderstandingAdapter struct {
 	APIKey                                           string
 	Timeout                                          time.Duration
 }
+
+// WorkerOwner identifies the provider responsible for a completion.
 type WorkerOwner struct {
 	Kind string `json:"kind"`
 	ID   string `json:"id"`
 }
+
+// WorkerExecution describes the completion route and its owner.
 type WorkerExecution struct {
 	Mode  string      `json:"mode"`
 	Owner WorkerOwner `json:"owner"`
 }
+
+// WorkerResponse contains the strict completion result and its invocation provenance.
 type WorkerResponse struct {
 	ConfigurationFingerprint string           `json:"configuration_fingerprint"`
 	Usage                    *CompletionUsage `json:"usage,omitempty"`
@@ -136,7 +143,7 @@ func (a OpenClawUnderstandingAdapter) complete(ctx context.Context, c Understand
 	if err != nil {
 		return bad("understand_unavailable")
 	}
-	defer os.RemoveAll(root)
+	defer func() { _ = os.RemoveAll(root) }() // Best-effort disposal of this invocation's temporary workspace.
 	for _, name := range []string{"home", "state", "workspace", "cwd"} {
 		if err := os.Mkdir(filepath.Join(root, name), 0700); err != nil {
 			return bad("understand_unavailable")
@@ -164,7 +171,7 @@ func (a OpenClawUnderstandingAdapter) complete(ctx context.Context, c Understand
 	if len(input) > MaxChunkInput {
 		return bad("understand_input_limit")
 	}
-	cmd := exec.CommandContext(ctx, a.NodePath, a.OpenClawPath, "--no-color", "--log-level", "silent", "atrium-archive-worker", "--json")
+	cmd := exec.CommandContext(ctx, a.NodePath, a.OpenClawPath, "--no-color", "--log-level", "silent", "atrium-archive-worker", "--json") // #nosec G204 -- Executable paths come from trusted host configuration and are checked above; document evidence travels only by stdin, with fixed CLI arguments.
 	cmd.Dir = filepath.Join(root, "cwd")
 	cmd.Env = []string{"HOME=" + filepath.Join(root, "home"), "PATH=/opt/homebrew/bin:/usr/bin:/bin", "LANG=en_US.UTF-8", "LC_ALL=en_US.UTF-8", "OPENCLAW_HOME=" + filepath.Join(root, "home"), "OPENCLAW_STATE_DIR=" + filepath.Join(root, "state"), "OPENCLAW_CONFIG_PATH=" + configPath, "OPENCLAW_DISABLE_BUNDLED_PLUGINS=1", "OPENCLAW_NO_RESPAWN=1"}
 	if a.APIKey != "" {

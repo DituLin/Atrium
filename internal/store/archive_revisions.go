@@ -9,8 +9,10 @@ import (
 	"strings"
 )
 
+// ArchiveRevision contains a human correction with its audit reason.
 type ArchiveRevision struct{ Kind, ObservationID, Value, EntityID, Reason string }
 
+// ReviseArchive applies an authorized correction at the expected document revision.
 func (r *ArchiveTasks) ReviseArchive(ctx context.Context, a domain.IntegrationActor, h, doc string, expected int64, change ArchiveRevision) (int64, error) {
 	var revision int64
 	if len(change.Value) > 16384 || len(change.Reason) > 1024 || strings.TrimSpace(change.Reason) == "" {

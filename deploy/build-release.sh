@@ -4,9 +4,12 @@ set -eu
 umask 077
 out=${1:?Usage: build-release.sh /absolute/new/package [git-sha]}
 case "$out" in /*) ;; *) echo 'absolute output required' >&2; exit 2;; esac
-[ ! -e "$out" ] && [ ! -L "$out" ] || { echo 'output already exists' >&2; exit 2; }
+if [ -e "$out" ] || [ -L "$out" ]; then
+ echo 'output already exists' >&2
+ exit 2
+fi
 [ "$(uname -s)/$(uname -m)" = Darwin/arm64 ] || { echo 'Darwin arm64 required' >&2; exit 2; }
-repo=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+repo=$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)
 sha=$(git -C "$repo" rev-parse --verify "${2:-HEAD}^{commit}")
 work=$(mktemp -d /private/tmp/atrium-release.XXXXXX)
 trap 'rm -rf "$work"' EXIT HUP INT TERM

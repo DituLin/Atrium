@@ -9,6 +9,7 @@ import (
 	"github.com/DituLin/Atrium/internal/domain"
 )
 
+// ArchivePublicationBundle contains the validated parse, understanding and publication inputs.
 type ArchivePublicationBundle struct {
 	Parsed        archive.ParseResult
 	Plan          archive.UnderstandingPlan
@@ -117,18 +118,18 @@ func (r *ArchiveTasks) PublishExtraction(ctx context.Context, f ArchiveWorkFence
 		for rows.Next() {
 			var k, raw string
 			if e = rows.Scan(&k, &raw); e != nil {
-				rows.Close()
+				_ = rows.Close() // Read-only query cursor cleanup.
 				return e
 			}
 			var anchors []archive.PhysicalAnchor
 			if e = json.Unmarshal([]byte(raw), &anchors); e != nil {
-				rows.Close()
+				_ = rows.Close() // Read-only query cursor cleanup.
 				return e
 			}
 			old[k] = anchors
 		}
 		e = rows.Err()
-		rows.Close()
+		_ = rows.Close() // Read-only query cursor cleanup.
 		if e != nil {
 			return e
 		}
@@ -422,18 +423,18 @@ func archiveReconcileObservationSlotsIn(ctx context.Context, tx *sql.Tx, h, even
 	for rows.Next() {
 		var key, raw string
 		if e = rows.Scan(&key, &raw); e != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return e
 		}
 		var body struct{ Field archive.PublicationField }
 		if e = json.Unmarshal([]byte(raw), &body); e != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return e
 		}
 		old[key] = body.Field.Anchors
 	}
 	e = rows.Err()
-	rows.Close()
+	_ = rows.Close() // Read-only query cursor cleanup.
 	if e != nil {
 		return e
 	}

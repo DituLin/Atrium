@@ -28,24 +28,29 @@ import (
 )
 
 const nativeProtocol = 1
+
+// NativeParserVersion identifies native extraction evidence and protocol rules.
 const NativeParserVersion = "archive-native/1"
 const nativeStdoutLimit = 8 << 20
 const nativeTextLimit = 2 << 20
 
 var nativeSlots = make(chan struct{}, 1)
 
+// NativeSource is an authorized immutable original opened by the host.
 type NativeSource struct {
 	File   *os.File
 	SHA256 string
 }
 
-// HelperPath is trusted administrator configuration, never document input. No
+// NativeParser uses a trusted HelperPath from administrator configuration, never document input. No
 // arguments/environment are accepted from a document. Zero Timeout is 120s;
 // callers may shorten it. The helper is only supported on macOS.
 type NativeParser struct {
 	HelperPath string
 	Timeout    time.Duration
 }
+
+// NativeParserError reports a stable native-parser failure code.
 type NativeParserError struct {
 	Code  string
 	cause error
@@ -58,10 +63,14 @@ func nativeError(code string, cause error) error { return &NativeParserError{cod
 // Rect is normalized display-top-left [x,y,width,height]. No reading order or
 // table relationship is implied. PageSpace/Transform use PDF points -> pixels.
 type Rect [4]float64
+
+// PageLocation locates visual evidence on a page.
 type PageLocation struct {
 	Page int  `json:"page"`
 	Rect Rect `json:"rect"`
 }
+
+// NativeEngine identifies the native helper and recognition settings.
 type NativeEngine struct {
 	Helper             string   `json:"helper"`
 	Build              string   `json:"build"`
@@ -71,6 +80,8 @@ type NativeEngine struct {
 	Recognition        string   `json:"recognition"`
 	LanguageCorrection bool     `json:"language_correction"`
 }
+
+// PageGeometry records the rendering geometry and crop transform for a page.
 type PageGeometry struct {
 	Page           int         `json:"page"`
 	Width          int         `json:"width"`
@@ -82,6 +93,8 @@ type PageGeometry struct {
 	OCRComplete    bool        `json:"ocr_complete"`
 	NativeComplete bool        `json:"native_complete"`
 }
+
+// VisualAlternative retains a competing recognition result with its origin.
 type VisualAlternative struct {
 	Origin     string  `json:"origin"`
 	Text       string  `json:"text"`
@@ -90,11 +103,15 @@ type VisualAlternative struct {
 	Clipped    bool    `json:"clipped"`
 	Confidence float64 `json:"confidence"`
 }
+
+// VisualEvidence records recognition confidence, alternatives and review requirements.
 type VisualEvidence struct {
 	State          string              `json:"state"`
 	RequiresReview bool                `json:"requires_review"`
 	Alternatives   []VisualAlternative `json:"alternatives"`
 }
+
+// NativeMetadata summarizes the native engine, pages and excluded features.
 type NativeMetadata struct {
 	Engine         NativeEngine   `json:"engine"`
 	Pages          []PageGeometry `json:"pages"`
@@ -140,6 +157,7 @@ type nativeWire struct {
 	AllowsCopying bool                `json:"allows_copying"`
 }
 
+// Parse extracts bounded native evidence from an already opened original.
 func (p NativeParser) Parse(ctx context.Context, s NativeSource) (ParseResult, error) {
 	if runtime.GOOS != "darwin" {
 		return ParseResult{}, nativeError("parser_unavailable", nil)
@@ -181,7 +199,7 @@ func (p NativeParser) parseProcess(ctx context.Context, s NativeSource) (ParseRe
 		return bad("parser_canceled", ctx.Err())
 	}
 	defer func() { <-nativeSlots }()
-	cmd := exec.CommandContext(ctx, p.HelperPath, "--protocol=1")
+	cmd := exec.CommandContext(ctx, p.HelperPath, "--protocol=1") // #nosec G204 -- HelperPath is trusted host configuration, checked above as an absolute regular executable; arguments are fixed and the source travels only by FD.
 	cmd.Env = []string{"PATH=/usr/bin:/bin", "LANG=en_US.UTF-8", "LC_ALL=en_US.UTF-8"}
 	cmd.Stdin = strings.NewReader("{\"protocol\":1}\n")
 	cmd.ExtraFiles = []*os.File{s.File}
@@ -263,7 +281,8 @@ func uniqueJSON(d *json.Decoder, depth int) error {
 	if !ok {
 		return nil
 	}
-	if v == '{' {
+	switch v {
+	case '{':
 		seen := map[string]bool{}
 		for d.More() {
 			k, err := d.Token()
@@ -279,13 +298,13 @@ func uniqueJSON(d *json.Decoder, depth int) error {
 				return err
 			}
 		}
-	} else if v == '[' {
+	case '[':
 		for d.More() {
 			if err = uniqueJSON(d, depth+1); err != nil {
 				return err
 			}
 		}
-	} else {
+	default:
 		return errors.New("delimiter")
 	}
 	_, err = d.Token()
@@ -417,7 +436,7 @@ func decodeNative(b []byte, size int64) (nativeWire, error) {
 		return bad()
 	}
 	allowedCodes := map[string]bool{"": true, "no_text_detected": true, "invalid_input": true, "unsupported_image": true, "multiframe_image": true, "source_bytes": true, "image_dimensions": true, "jpeg_resources": true, "webp_resources": true, "unsupported_jpeg_precision": true, "image_integrity_unverified": true, "page_limit": true, "text_limit": true, "segment_limit": true, "page_failed": true, "locked_pdf": true, "parser_unavailable": true, "annotations_forms_excluded": true}
-	if !allowedCodes[w.Code] || (w.Counts.SourceBytes != size && !(w.Code == "parser_unavailable" && w.Counts.SourceBytes == 0)) || w.Counts.Segments != len(w.Segments) || len(w.Segments) > 20000 || w.Counts.TextBytes > nativeTextLimit || w.Counts.TextBytes < 0 || w.Coverage.TotalPages < 0 || w.Coverage.TotalPages > 2147483647 || w.Coverage.ProcessedPages < 0 || w.Coverage.ProcessedPages > w.Coverage.TotalPages || len(w.Pages) > 100 {
+	if !allowedCodes[w.Code] || (w.Counts.SourceBytes != size && (w.Code != "parser_unavailable" || w.Counts.SourceBytes != 0)) || w.Counts.Segments != len(w.Segments) || len(w.Segments) > 20000 || w.Counts.TextBytes > nativeTextLimit || w.Counts.TextBytes < 0 || w.Coverage.TotalPages < 0 || w.Coverage.TotalPages > 2147483647 || w.Coverage.ProcessedPages < 0 || w.Coverage.ProcessedPages > w.Coverage.TotalPages || len(w.Pages) > 100 {
 		return bad()
 	}
 	if w.Coverage.TotalPages > 100 && (w.Status != ParseLimitExceeded || w.Code != "page_limit" || len(w.Pages) != 0 || len(w.Segments) != 0 || w.Coverage.ProcessedPages != 0) {
@@ -444,7 +463,7 @@ func decodeNative(b []byte, size int64) (nativeWire, error) {
 	if w.Coverage.Complete != complete || complete && (w.Coverage.TotalPages == 0 || w.Coverage.ProcessedPages != w.Coverage.TotalPages || len(w.Pages) != w.Coverage.TotalPages) || w.Status == ParseEmpty && len(w.Segments) != 0 || w.Status == ParseParsed && len(w.Segments) == 0 {
 		return bad()
 	}
-	if w.Format != "image" && w.Format != "pdf" && !(w.Format == "" && !complete) {
+	if w.Format != "image" && w.Format != "pdf" && (w.Format != "" || complete) {
 		return bad()
 	}
 	if (w.Coverage.Annotations != "excluded" && w.Coverage.Annotations != "not_applicable") || (w.Coverage.Forms != "excluded" && w.Coverage.Forms != "not_applicable") {

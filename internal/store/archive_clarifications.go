@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// ArchiveQuestion contains a versioned identity clarification and its allowed targets.
 type ArchiveQuestion struct {
 	SubjectName      string            `json:"subject_name,omitempty"`
 	SubjectRole      string            `json:"subject_role,omitempty"`
@@ -29,6 +30,8 @@ type ArchiveQuestion struct {
 	Targets            map[string]int64 `json:"targets"`
 	Reason             string           `json:"reason"`
 }
+
+// ArchiveAnswer contains a human clarification bound to the expected question version.
 type ArchiveAnswer struct {
 	Name               string `json:"name,omitempty"`
 	QuestionID         string `json:"question_id"`
@@ -89,6 +92,8 @@ func archiveCreateQuestionIn(ctx context.Context, tx *sql.Tx, f ArchiveWorkFence
 	_, e := tx.ExecContext(ctx, `INSERT INTO archive_questions(household_id,id,task_id,version,body_json) VALUES(?,?,?,?,?)`, f.HouseholdID, q.ID, f.TaskID, q.Version, entityJSON(q))
 	return q, e
 }
+
+// ArchiveQuestion returns the currently authorized clarification for a task.
 func (r *ArchiveTasks) ArchiveQuestion(ctx context.Context, a domain.IntegrationActor, h, task string) (ArchiveQuestion, error) {
 	var q ArchiveQuestion
 	e := r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
@@ -104,6 +109,8 @@ func (r *ArchiveTasks) ArchiveQuestion(ctx context.Context, a domain.Integration
 	})
 	return q, e
 }
+
+// AnswerArchiveQuestion applies a version-checked human answer to an authorized task.
 func (r *ArchiveTasks) AnswerArchiveQuestion(ctx context.Context, a domain.IntegrationActor, h, task string, answer ArchiveAnswer) (*domain.ArchiveTask, error) {
 	var out *domain.ArchiveTask
 	if archiveIdentifiers(answer.ResolutionKey) != nil {
@@ -298,13 +305,13 @@ func (r *ArchiveTasks) RefreshStaleArchiveQuestions(ctx context.Context, h strin
 		for rows.Next() {
 			var id string
 			if e = rows.Scan(&id); e != nil {
-				rows.Close()
+				_ = rows.Close() // Read-only query cursor cleanup.
 				return e
 			}
 			ids = append(ids, id)
 		}
 		e = rows.Err()
-		rows.Close()
+		_ = rows.Close() // Read-only query cursor cleanup.
 		if e != nil {
 			return e
 		}

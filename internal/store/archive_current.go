@@ -9,6 +9,7 @@ import (
 	"github.com/DituLin/Atrium/internal/domain"
 )
 
+// ArchiveCurrentObservation records a current observation and its active source revisions.
 type ArchiveCurrentObservation struct {
 	ID, ExtractionID, EventID, PublicationID string
 	SourceDocumentID                         string
@@ -83,7 +84,7 @@ func archiveCurrentObservationsIn(ctx context.Context, tx *sql.Tx, h, doc string
 		if e != nil {
 			return e
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }() // Read-only query cursor cleanup.
 		total, count := 0, 0
 		for rows.Next() {
 			var item ArchiveCurrentObservation
@@ -175,7 +176,7 @@ func archivePrivateAnchorsIn(ctx context.Context, tx *sql.Tx, h, doc string) ([]
 	if e != nil {
 		return nil, e
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // Read-only query cursor cleanup.
 	out := []archive.PhysicalAnchor{}
 	total, count := 0, 0
 	for rows.Next() {
@@ -200,7 +201,7 @@ func archivePrivateAnchorsIn(ctx context.Context, tx *sql.Tx, h, doc string) ([]
 	return out, rows.Err()
 }
 
-// Value and ownership are independent sticky assertions. Each is selected from
+// ArchiveAssertionProvenance records independent sticky value and ownership assertions. Each is selected from
 // its immutable audit entry and authored observation revision, while a current
 // publication of that same source must still carry the observation at or after
 // that revision. Global observation revision orders replacements within an axis.
@@ -228,26 +229,26 @@ func archiveCurrentAssertionsIn(ctx context.Context, tx *sql.Tx, h, publication 
 		var raw, change, authoredBody string
 		e = rows.Scan(&a.Source.ID, &a.Source.Revision, &a.Source.ExtractionID, &raw, &a.Source.SourceDocumentID, &a.Source.DocumentRevision, &a.Source.PublicationID, &a.Source.EventID, &a.Provenance.ID, &a.Provenance.Actor, &a.Provenance.Kind, &change, &a.Provenance.ActivePublicationID, &a.Provenance.DocumentRevision, &a.Provenance.PublicationID, &a.Provenance.ExtractionID, &a.Provenance.ObservationRevision, &authoredBody)
 		if e != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return nil, e
 		}
 		a.Source.Body = json.RawMessage(raw)
 		a.AuthoredBody = json.RawMessage(authoredBody)
 		a.Source.AssertionKind = "user"
 		if e = json.Unmarshal([]byte(change), &a.Change); e != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return nil, e
 		}
 		a.Provenance.DocumentID = a.Source.SourceDocumentID
 		total += len(raw) + len(change) + len(authoredBody)
 		items = append(items, a)
 		if total > 4<<20 || len(items) > 4096 {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return nil, domain.ErrConflict
 		}
 	}
 	e = rows.Err()
-	rows.Close()
+	_ = rows.Close() // Read-only query cursor cleanup.
 	if e != nil {
 		return nil, e
 	}
@@ -356,18 +357,18 @@ func archiveCurrentAmountProofsIn(ctx context.Context, tx *sql.Tx, h, publicatio
 	for rows.Next() {
 		var p rawProof
 		if e = rows.Scan(&p.id, &p.doc, &p.body); e != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return nil, e
 		}
 		total += len(p.body)
 		raws = append(raws, p)
 		if total > 4<<20 || len(raws) > 4096 {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return nil, domain.ErrConflict
 		}
 	}
 	e = rows.Err()
-	rows.Close()
+	_ = rows.Close() // Read-only query cursor cleanup.
 	if e != nil {
 		return nil, e
 	}
@@ -471,17 +472,17 @@ func archiveConfirmedLinksIn(ctx context.Context, tx *sql.Tx, h, doc string) (ma
 	for linkRows.Next() {
 		var mention, target string
 		if e = linkRows.Scan(&mention, &target); e != nil {
-			linkRows.Close()
+			_ = linkRows.Close() // Read-only query cursor cleanup.
 			return nil, e
 		}
 		confirmed[mention] = target
 		if len(confirmed) > 2048 {
-			linkRows.Close()
+			_ = linkRows.Close() // Read-only query cursor cleanup.
 			return nil, domain.ErrConflict
 		}
 	}
 	e = linkRows.Err()
-	linkRows.Close()
+	_ = linkRows.Close() // Read-only query cursor cleanup.
 	if e != nil {
 		return nil, e
 	}

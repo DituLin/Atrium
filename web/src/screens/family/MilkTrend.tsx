@@ -20,8 +20,14 @@ export function MilkTrend({ data, period, busy, timezone, onPeriod, onLeft, onUp
     return <section className="milk-trend" aria-label="奶量趋势与时间范围">
         <div className="family-section-heading"><h2 className="page__section-title">奶量趋势</h2><div className="milk-period" aria-label="奶量时间范围">
             {periods.map((p, i) => <RemoteButton key={p.id} ref={el => { buttons.current[i] = el; }} className="btn" aria-pressed={period === p.id} onClick={() => onPeriod(p.id)} onDirection={key => {
-                if (key === 'left') i ? buttons.current[i - 1]?.focus() : onLeft();
-                if (key === 'right') i < periods.length - 1 ? buttons.current[i + 1]?.focus() : onRead();
+                if (key === 'left') {
+                    if (i) buttons.current[i - 1]?.focus();
+                    else onLeft();
+                }
+                if (key === 'right') {
+                    if (i < periods.length - 1) buttons.current[i + 1]?.focus();
+                    else onRead();
+                }
                 if (key === 'up') onUp(); if (key === 'down') onDown();
             }}>{p.label}</RemoteButton>)}
         </div></div>

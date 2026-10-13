@@ -15,7 +15,10 @@ import (
 // the record so a NAS outage cannot lose a pending archive operation.
 type FamilyRecords struct{ db *DB }
 
+// FamilyRecords returns the structured family record repository.
 func (d *DB) FamilyRecords() *FamilyRecords { return &FamilyRecords{db: d} }
+
+// PutMember validates and upserts a local family member.
 func (r *FamilyRecords) PutMember(ctx context.Context, m domain.FamilyMember, now time.Time) error {
 	if err := m.Validate(); err != nil {
 		return err
@@ -23,12 +26,14 @@ func (r *FamilyRecords) PutMember(ctx context.Context, m domain.FamilyMember, no
 	_, err := r.db.sql.ExecContext(ctx, `INSERT INTO family_members(id,name,updated_at) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,updated_at=excluded.updated_at`, m.ID, m.Name, now.UTC().Format(time.RFC3339Nano))
 	return err
 }
+
+// Members returns family members ordered by name and ID.
 func (r *FamilyRecords) Members(ctx context.Context) ([]domain.FamilyMember, error) {
 	rows, err := r.db.sql.QueryContext(ctx, `SELECT id,name FROM family_members ORDER BY name,id`)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // Read-only query cursor cleanup.
 	out := []domain.FamilyMember{}
 	for rows.Next() {
 		var m domain.FamilyMember
@@ -61,7 +66,7 @@ func (r *FamilyRecords) Record(ctx context.Context, principal, request string, i
 	if err != nil {
 		return nil, false, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }() // Abort-only cleanup; the commit result is returned separately.
 	var id, payload, created string
 	err = tx.QueryRowContext(ctx, `SELECT id,payload_json,created_at FROM family_records WHERE principal_id=? AND request_id=?`, principal, request).Scan(&id, &payload, &created)
 	if err == nil {
@@ -126,7 +131,7 @@ const familyRecordSelect = `SELECT r.id,r.payload_json,r.created_at,e.exported_a
 const familyTVFilter = `(?=0 OR (r.display_on_tv=1 AND COALESCE(json_extract(r.payload_json,'$.retracted'),0)=0 AND NOT EXISTS(SELECT 1 FROM family_records s WHERE s.supersedes_id=r.id)))`
 
 func readFamilyRecords(rows *sql.Rows) ([]domain.FamilyRecord, error) {
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // Read-only query cursor cleanup.
 	out := []domain.FamilyRecord{}
 	for rows.Next() {
 		var r domain.FamilyRecord
@@ -144,6 +149,8 @@ func readFamilyRecords(rows *sql.Rows) ([]domain.FamilyRecord, error) {
 	}
 	return out, rows.Err()
 }
+
+// List returns a bounded member history in the requested TV projection.
 func (r *FamilyRecords) List(ctx context.Context, member string, tvOnly bool, limit int) ([]domain.FamilyRecord, error) {
 	if limit < 1 || limit > 500 {
 		return nil, domain.Errorf(domain.CodeInvalidRequest, "limit must be 1 to 500")
@@ -154,6 +161,8 @@ func (r *FamilyRecords) List(ctx context.Context, member string, tvOnly bool, li
 	}
 	return readFamilyRecords(rows)
 }
+
+// PendingExports returns a bounded batch of unacknowledged immutable records.
 func (r *FamilyRecords) PendingExports(ctx context.Context, limit int) ([]domain.FamilyRecord, error) {
 	if limit < 1 || limit > 500 {
 		return nil, domain.Errorf(domain.CodeInvalidRequest, "limit must be 1 to 500")
@@ -168,6 +177,8 @@ func (r *FamilyRecords) PendingExports(ctx context.Context, limit int) ([]domain
 	}
 	return records, err
 }
+
+// MarkExported acknowledges a completed immutable archive publication.
 func (r *FamilyRecords) MarkExported(ctx context.Context, id string, now time.Time) error {
 	res, err := r.db.sql.ExecContext(ctx, `UPDATE family_record_exports SET exported_at=COALESCE(exported_at,?) WHERE record_id=?`, now.UTC().Format(time.RFC3339Nano), id)
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 	"github.com/DituLin/Atrium/internal/domain"
 )
 
+// ArchiveExtraction identifies a fenced extraction and its source revisions.
 type ArchiveExtraction struct {
 	ID, DocumentID, Fingerprint          string
 	DocumentRevision, ResolutionRevision int64
@@ -18,9 +19,13 @@ func archiveExtractionIn(ctx context.Context, tx *sql.Tx, f ArchiveWorkFence, fi
 	e := tx.QueryRowContext(ctx, `SELECT id,document_id,fingerprint,document_revision,resolution_revision FROM archive_extractions WHERE household_id=? AND task_id=? AND fingerprint=? ORDER BY rowid DESC LIMIT 1`, f.HouseholdID, f.TaskID, fingerprint).Scan(&x.ID, &x.DocumentID, &x.Fingerprint, &x.DocumentRevision, &x.ResolutionRevision)
 	return x, e
 }
+
+// BeginArchiveExtraction starts or resumes extraction under the supplied work fence.
 func (r *ArchiveTasks) BeginArchiveExtraction(ctx context.Context, f ArchiveWorkFence, fingerprint string) (ArchiveExtraction, *domain.ArchiveTask, error) {
 	return r.beginArchiveExtraction(ctx, f, fingerprint, false)
 }
+
+// RebaseArchiveExtraction rebases fenced work onto current source and resolution revisions.
 func (r *ArchiveTasks) RebaseArchiveExtraction(ctx context.Context, f ArchiveWorkFence, fingerprint string) (ArchiveExtraction, *domain.ArchiveTask, error) {
 	return r.beginArchiveExtraction(ctx, f, fingerprint, true)
 }

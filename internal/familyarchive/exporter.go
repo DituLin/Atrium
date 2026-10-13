@@ -18,16 +18,25 @@ import (
 	"time"
 )
 
+// MarkerFile is the archive-root identity marker filename.
 const MarkerFile = ".atrium-family-archive"
+
+// MaxDocumentBytes bounds one immutable family archive document.
 const MaxDocumentBytes = 128 * 1024
 
+// ErrUnavailable reports an archive that could not be safely accessed or published.
 var ErrUnavailable = errors.New("family archive unavailable")
+
+// ErrConflict reports content that conflicts with an immutable archive document.
 var ErrConflict = errors.New("family archive content conflict")
 
+// Document is the versioned immutable family record stored in an archive.
 type Document struct {
 	SchemaVersion string              `json:"schema_version"`
 	Record        domain.FamilyRecord `json:"record"`
 }
+
+// Options configures the family exporter and its trusted archive root.
 type Options struct {
 	DB         *store.DB
 	Root       string
@@ -36,12 +45,15 @@ type Options struct {
 	Now        func() time.Time
 	Timeout    time.Duration
 }
+
+// Exporter publishes pending family records with bounded filesystem concurrency.
 type Exporter struct {
 	opts Options
 	fs   *source.OSFS
 	slot chan struct{}
 }
 
+// New validates exporter configuration and creates its filesystem probe.
 func New(o Options) (*Exporter, error) {
 	if o.DB == nil || !filepath.IsAbs(o.Root) || strings.TrimSpace(o.Identity) == "" || len(o.Identity) > 128 {
 		return nil, errors.New("invalid family archive configuration")
@@ -100,7 +112,7 @@ func (e *Exporter) export(ctx context.Context) (int, error) {
 	if err != nil {
 		return 0, ErrUnavailable
 	}
-	defer root.Close()
+	defer func() { _ = root.Close() }() // Read-only directory descriptor cleanup.
 	marker, err := readBounded(root, MarkerFile, 256)
 	if err != nil || strings.TrimSpace(string(marker)) != e.opts.Identity {
 		return 0, ErrUnavailable
@@ -165,7 +177,7 @@ func readBounded(root *os.Root, path string, limit int64) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }() // Read-only source cleanup; read errors are handled separately.
 	raw, err := io.ReadAll(io.LimitReader(f, limit+1))
 	if err != nil {
 		return nil, err
@@ -181,7 +193,7 @@ func publish(root *os.Root, path string, raw []byte) error {
 	if err != nil {
 		return ErrUnavailable
 	}
-	defer root.Remove(temp)
+	defer func() { _ = root.Remove(temp) }() // Best-effort unpublished staging cleanup; Rename removes this name on success.
 	_, err = f.Write(raw)
 	if err == nil {
 		err = f.Sync()

@@ -113,6 +113,8 @@ func (c *Commands) MarkDelivered(ctx context.Context, id string, now time.Time) 
 func (c *Commands) Resolve(ctx context.Context, id string, status domain.CommandStatus, errCode string, result *domain.CommandResult, now time.Time) (bool, error) {
 	return c.resolveWith(ctx, c.db.sql, id, status, errCode, result, now)
 }
+
+// ResolveInTx resolves a command using the caller-owned transaction.
 func (c *Commands) ResolveInTx(ctx context.Context, tx *sql.Tx, id string, status domain.CommandStatus, errCode string, result *domain.CommandResult, now time.Time) (bool, error) {
 	return c.resolveWith(ctx, tx, id, status, errCode, result, now)
 }

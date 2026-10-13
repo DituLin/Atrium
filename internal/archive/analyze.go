@@ -9,7 +9,10 @@ import (
 	"time"
 )
 
+// AnalysisVersion identifies the analysis result schema.
 const AnalysisVersion = "archive-analysis/1"
+
+// AnalysisAlgorithmVersion identifies the deterministic analysis rules.
 const AnalysisAlgorithmVersion = "archive-analysis/6"
 
 // AnalysisQuery is a bounded business query. Projection and authority are host supplied.
@@ -27,6 +30,7 @@ type AnalysisQuery struct {
 	Timezone     string `json:"timezone"`
 }
 
+// Normalize validates and canonicalizes the bounded analysis query.
 func (q AnalysisQuery) Normalize() (AnalysisQuery, error) {
 	q.Metric = CanonicalFieldName(strings.TrimSpace(q.Metric))
 	q.Query = strings.TrimSpace(q.Query)
@@ -54,6 +58,7 @@ func (q AnalysisQuery) Normalize() (AnalysisQuery, error) {
 	return q, nil
 }
 
+// AnalysisFact carries one authorized observation and the evidence needed to analyze it.
 type AnalysisFact struct {
 	HistoricalCache                                                        bool
 	FormulaAggregate                                                       bool
@@ -85,6 +90,7 @@ func CompatibleAggregateBoundary(a, b AnalysisFact) bool {
 	return true
 }
 
+// AnalysisInput contains the selected archive facts and their coverage limits.
 type AnalysisInput struct {
 	// DocumentsInRange marks Core document selection using the complete search filter.
 	DocumentsInRange bool
@@ -93,6 +99,8 @@ type AnalysisInput struct {
 	Complete         bool
 	Reasons          []string
 }
+
+// AnalysisCoverage describes the included and excluded sources for a result.
 type AnalysisCoverage struct {
 	Scope    string   `json:"scope"`
 	Complete bool     `json:"complete"`
@@ -100,6 +108,8 @@ type AnalysisCoverage struct {
 	Excluded int      `json:"excluded"`
 	Reasons  []string `json:"reasons"`
 }
+
+// AnalysisGroup reports one comparable metric group with its evidence.
 type AnalysisGroup struct {
 	ChangePercentPoints string           `json:"change_percent_points,omitempty"`
 	BaselineDate        string           `json:"baseline_date,omitempty"`
@@ -115,6 +125,8 @@ type AnalysisGroup struct {
 	Rounding            string           `json:"rounding,omitempty"`
 	Evidence            []SearchEvidence `json:"evidence"`
 }
+
+// AnalysisResult is an authorized analysis snapshot with versioned provenance.
 type AnalysisResult struct {
 	SchemaVersion    string           `json:"schema_version"`
 	QueryRef         string           `json:"query_ref,omitempty"`
@@ -171,6 +183,8 @@ func DateInterval(s, zone string) (time.Time, time.Time, string, bool) {
 	}
 	return time.Time{}, time.Time{}, "unknown", false
 }
+
+// Analyze computes a bounded result from the supplied facts and coverage.
 func Analyze(q AnalysisQuery, in AnalysisInput) (AnalysisResult, error) {
 	q, e := q.Normalize()
 	r := AnalysisResult{SchemaVersion: AnalysisVersion, AlgorithmVersion: AnalysisAlgorithmVersion, Query: q, Groups: []AnalysisGroup{}, Coverage: AnalysisCoverage{Scope: "archived_only", Complete: in.Complete, Reasons: append([]string{}, in.Reasons...)}}

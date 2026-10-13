@@ -21,6 +21,8 @@ func (r *ArchiveTasks) authorizeIntake(ctx context.Context, tx *sql.Tx, actor do
 	}
 	return p, nil
 }
+
+// IntakePreflight validates source metadata and returns the authorized policy version.
 func (r *ArchiveTasks) IntakePreflight(ctx context.Context, actor domain.IntegrationActor, household string, m domain.ArchiveIntakeMetadata) (int64, error) {
 	if err := m.Validate(); err != nil {
 		return 0, err
@@ -84,7 +86,7 @@ func (r *ArchiveTasks) AcceptIntake(ctx context.Context, actor domain.Integratio
 	if ref.HouseholdID != household {
 		return nil, domain.ErrNotFound
 	}
-	key, err := m.ArchiveSourceIdentity.Key(household, actor.PrincipalID)
+	key, err := m.Key(household, actor.PrincipalID)
 	if err != nil {
 		return nil, err
 	}
@@ -171,6 +173,8 @@ func (r *ArchiveTasks) AcceptIntake(ctx context.Context, actor domain.Integratio
 	}
 	return out, nil
 }
+
+// LookupIntake returns an existing receipt after authorizing its source identity.
 func (r *ArchiveTasks) LookupIntake(ctx context.Context, actor domain.IntegrationActor, household string, s domain.ArchiveSourceIdentity) (*domain.ArchiveIntakeReceipt, error) {
 	key, err := s.Key(household, actor.PrincipalID)
 	if err != nil {

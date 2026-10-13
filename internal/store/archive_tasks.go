@@ -20,6 +20,7 @@ type ArchiveTasks struct {
 	clock clock.Clock
 }
 
+// ArchiveTasks returns the archive repository with the system clock.
 func (d *DB) ArchiveTasks() *ArchiveTasks { return d.ArchiveTasksWithClock(clock.SystemClock{}) }
 
 // ArchiveTasksWithClock installs a trusted host clock, not a timestamp supplied
@@ -160,6 +161,7 @@ func (r *ArchiveTasks) enqueueInTx(ctx context.Context, tx *sql.Tx, actor domain
 	return archiveClientResult(out, p), false, nil
 }
 
+// Get returns a task after authorizing the integration actor and household.
 func (r *ArchiveTasks) Get(ctx context.Context, actor domain.IntegrationActor, household, id string) (*domain.ArchiveTask, error) {
 	if err := archiveIdentifiers(household, id); err != nil {
 		return nil, err
@@ -211,7 +213,7 @@ func (r *ArchiveTasks) Events(ctx context.Context, actor domain.IntegrationActor
 		if err != nil {
 			return err
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }() // Read-only query cursor cleanup.
 		out = []domain.ArchiveTaskEvent{}
 		for rows.Next() {
 			var raw string
@@ -382,6 +384,7 @@ func (r *ArchiveTasks) mutateInTx(ctx context.Context, tx *sql.Tx, actor *domain
 	return task, nil
 }
 
+// Renew extends an active worker lease using its current token.
 func (r *ArchiveTasks) Renew(ctx context.Context, household, id, token string, ttl time.Duration) (*domain.ArchiveTask, error) {
 	if err := archiveLeaseDuration(ttl); err != nil {
 		return nil, err
@@ -463,6 +466,7 @@ func (r *ArchiveTasks) Finish(ctx context.Context, household, id, token string, 
 	return r.mutate(ctx, nil, household, id, token, true, "finished", func(task *domain.ArchiveTask, now time.Time) error { return applyArchiveUpdate(task, update, status) })
 }
 
+// Retry reschedules leased work while retaining its checkpoint and audit state.
 func (r *ArchiveTasks) Retry(ctx context.Context, household, id, token string, update domain.ArchiveTaskUpdate, availableAt time.Time) (*domain.ArchiveTask, error) {
 	if err := archiveTime(availableAt); err != nil {
 		return nil, err
@@ -483,6 +487,7 @@ func (r *ArchiveTasks) Retry(ctx context.Context, household, id, token string, u
 	})
 }
 
+// Wait moves leased work into the waiting state with a normalized update.
 func (r *ArchiveTasks) Wait(ctx context.Context, household, id, token string, update domain.ArchiveTaskUpdate) (*domain.ArchiveTask, error) {
 	update, err := normalizeArchiveUpdate(update)
 	if err != nil {

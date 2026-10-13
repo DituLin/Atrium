@@ -14,6 +14,7 @@ import (
 // expired running tasks may be claimed. waiting_input requires an explicit resolution.
 type ArchiveTaskStatus string
 
+// Archive task lifecycle states and limits bound checkpoints, leases and retries.
 const (
 	ArchiveTaskQueued       ArchiveTaskStatus = "queued"
 	ArchiveTaskRunning      ArchiveTaskStatus = "running"
@@ -101,6 +102,8 @@ type ArchiveTaskEvent struct {
 
 var archiveIdentifier = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$`)
 
+// ValidateArchiveIdentifier requires a bounded ASCII ID beginning with a letter
+// or digit and containing only letters, digits, underscores, dots, colons or hyphens.
 func ValidateArchiveIdentifier(value string) error {
 	if !archiveIdentifier.MatchString(value) {
 		return Errorf(CodeInvalidRequest, "invalid archive identifier")
@@ -203,6 +206,8 @@ type ArchiveDocumentDate struct {
 // using time.Parse to validate the calendar date.
 var archiveDatetimeShape = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]{1,9})?(Z|[+-]([01][0-9]|2[0-3]):[0-5][0-9])$`)
 
+// Validate checks that the value matches its declared calendar precision,
+// including an empty unknown value or a bounded RFC3339 datetime.
 func (d ArchiveDocumentDate) Validate() error {
 	const maxDateBytes = len("2006-01-02T15:04:05.123456789+07:00")
 	if len(d.Value) > maxDateBytes {

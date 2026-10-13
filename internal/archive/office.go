@@ -109,7 +109,7 @@ func (p *parser) preflightZIP(data []byte) error {
 		return invalid("invalid_zip")
 	}
 	seen := 0
-	for at := int(offset); at < end; {
+	for at := int(offset); at < end; { // #nosec G115 -- preflight bounds offset by the nonnegative int end before this conversion.
 		if at+46 > end || binary.LittleEndian.Uint32(data[at:at+4]) != 0x02014b50 {
 			return invalid("invalid_zip")
 		}
@@ -186,11 +186,11 @@ func (p *parser) parseOffice(data []byte) error {
 		if f.Method != zip.Store && f.Method != zip.Deflate {
 			return reject(ParseUnsupported, "unsupported_zip_method", "Only Store and Deflate are supported")
 		}
-		if f.UncompressedSize64 > uint64(p.limits.PartBytes) {
+		if f.UncompressedSize64 > uint64(p.limits.PartBytes) { // #nosec G115 -- Parse validates PartBytes as positive and at most 1 GiB before ZIP processing.
 			return limit("part_bytes")
 		}
 		declared += f.UncompressedSize64
-		if declared > uint64(p.limits.ExpandedBytes) {
+		if declared > uint64(p.limits.ExpandedBytes) { // #nosec G115 -- Parse validates ExpandedBytes as positive and at most 1 GiB before ZIP processing.
 			return limit("expanded_bytes")
 		}
 		if f.UncompressedSize64 > 0 && (f.CompressedSize64 == 0 || float64(f.UncompressedSize64)/float64(f.CompressedSize64) > float64(p.limits.CompressionRatio)) {
@@ -205,7 +205,7 @@ func (p *parser) parseOffice(data []byte) error {
 		if e != nil {
 			return invalid("corrupt_zip_part")
 		}
-		var r io.ReadCloser = io.NopCloser(raw)
+		r := io.NopCloser(raw)
 		if f.Method == zip.Deflate {
 			r = flate.NewReader(raw)
 		}
@@ -213,14 +213,14 @@ func (p *parser) parseOffice(data []byte) error {
 		buf := make([]byte, 32*1024)
 		for {
 			if e = p.ctx.Err(); e != nil {
-				r.Close()
+				_ = r.Close() // Read-only decompressor cleanup after a parsing failure.
 				return e
 			}
 			remaining := min(p.limits.PartBytes-int64(out.Len()), p.limits.ExpandedBytes-p.out.Counts.ExpandedBytes)
 			n, readErr := r.Read(buf[:min(int64(len(buf)), remaining+1)])
 			p.out.Counts.ExpandedBytes += int64(n)
 			if int64(out.Len()+n) > p.limits.PartBytes || p.out.Counts.ExpandedBytes > p.limits.ExpandedBytes {
-				r.Close()
+				_ = r.Close() // Read-only decompressor cleanup after a parsing failure.
 				return limit("actual_expanded_bytes")
 			}
 			out.Write(buf[:n])
@@ -228,18 +228,18 @@ func (p *parser) parseOffice(data []byte) error {
 				break
 			}
 			if readErr != nil {
-				r.Close()
+				_ = r.Close() // Read-only decompressor cleanup after a parsing failure.
 				return invalid("corrupt_zip_part")
 			}
 			if n == 0 {
-				r.Close()
+				_ = r.Close() // Read-only decompressor cleanup after a parsing failure.
 				return invalid("corrupt_zip_part")
 			}
 		}
 		if e = r.Close(); e != nil {
 			return invalid("corrupt_zip_part")
 		}
-		if uint64(out.Len()) != f.UncompressedSize64 || crc32.ChecksumIEEE(out.Bytes()) != f.CRC32 {
+		if uint64(out.Len()) != f.UncompressedSize64 || crc32.ChecksumIEEE(out.Bytes()) != f.CRC32 { // #nosec G115 -- Buffer length is nonnegative and bounded by the validated PartBytes limit.
 			return invalid("corrupt_zip_part")
 		}
 		p.out.Counts.PartsRead++
@@ -360,7 +360,7 @@ func (p *parser) readXML(b []byte) (*xmlNode, error) {
 			return nil, err
 		}
 		tok, err := d.Token()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
@@ -583,8 +583,8 @@ func validateLocalZIPHeaders(data []byte) error {
 		if compressed == 0xffffffff || expanded == 0xffffffff {
 			return reject(ParseUnsupported, "unsupported_zip64", "ZIP64 packages are unsupported")
 		}
-		finish := uint64(offset) + compressed
-		if finish > uint64(start) {
+		finish := uint64(offset) + compressed // #nosec G115 -- The local-header offset is nonnegative and bounded by the preflight-validated central directory.
+		if finish > uint64(start) {           // #nosec G115 -- preflightZIP validates the central-directory start within the nonnegative input length.
 			return invalid("invalid_zip_local_header")
 		}
 		if flags&8 == 0 {
@@ -592,7 +592,7 @@ func validateLocalZIPHeaders(data []byte) error {
 				return invalid("corrupt_zip_part")
 			}
 		} else {
-			descriptor := int(finish)
+			descriptor := int(finish) // #nosec G115 -- finish was checked above to be at most the int central-directory start.
 			if descriptor+4 <= start && binary.LittleEndian.Uint32(data[descriptor:descriptor+4]) == 0x08074b50 {
 				descriptor += 4
 			}
@@ -601,7 +601,7 @@ func validateLocalZIPHeaders(data []byte) error {
 			}
 			finish = uint64(descriptor + 12)
 		}
-		spans = append(spans, [2]int{localAt, int(finish)})
+		spans = append(spans, [2]int{localAt, int(finish)}) // #nosec G115 -- finish is bounded by start; a data descriptor is range-checked before adding its 12 bytes.
 		at += 46 + nameLen + extraLen + commentLen
 	}
 	sort.Slice(spans, func(i, j int) bool { return spans[i][0] < spans[j][0] })

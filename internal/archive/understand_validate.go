@@ -15,6 +15,7 @@ import (
 	"unicode/utf8"
 )
 
+// EvidenceReference identifies an exact quote from an immutable evidence view.
 type EvidenceReference struct {
 	ViewID          string `json:"view_id"`
 	Start           int    `json:"start"`
@@ -22,6 +23,8 @@ type EvidenceReference struct {
 	Quote           string `json:"quote"`
 	DerivedValueRef string `json:"derived_value_ref"`
 }
+
+// LocalSubject is an extraction-local subject with its supporting evidence.
 type LocalSubject struct {
 	ID        string              `json:"id"`
 	Name      string              `json:"name"`
@@ -29,15 +32,21 @@ type LocalSubject struct {
 	Ambiguous bool                `json:"ambiguous"`
 	Evidence  []EvidenceReference `json:"evidence"`
 }
+
+// Normalization records a typed interpretation of literal field content.
 type Normalization struct {
 	Kind  string `json:"kind"`
 	Value string `json:"value"`
 }
+
+// LiteralDimension associates a literal unit or scope with original evidence.
 type LiteralDimension struct {
 	Kind     string              `json:"kind"`
 	Raw      string              `json:"raw"`
 	Evidence []EvidenceReference `json:"evidence"`
 }
+
+// ExtractedField retains a literal field, its subjects and normalization evidence.
 type ExtractedField struct {
 	Dimensions     []LiteralDimension  `json:"dimensions"`
 	SubjectRefs    []string            `json:"subject_refs"`
@@ -47,6 +56,8 @@ type ExtractedField struct {
 	Evidence       []EvidenceReference `json:"evidence"`
 	Normalizations []Normalization     `json:"normalizations"`
 }
+
+// EventProposal groups extraction-local fields and subjects under section evidence.
 type EventProposal struct {
 	ID              string              `json:"id"`
 	Type            string              `json:"type"`
@@ -54,14 +65,20 @@ type EventProposal struct {
 	SubjectRefs     []string            `json:"subject_refs"`
 	SectionEvidence []EvidenceReference `json:"section_evidence"`
 }
+
+// UnitCoverage records how the worker handled one owned evidence view.
 type UnitCoverage struct {
 	ViewID      string `json:"view_id"`
 	Disposition string `json:"disposition"`
 }
+
+// ExtractionIssue records a worker limitation and the affected evidence views.
 type ExtractionIssue struct {
 	Code     string   `json:"code"`
 	ViewRefs []string `json:"view_refs"`
 }
+
+// Extraction contains evidence-backed proposals before durable identity resolution.
 type Extraction struct {
 	Labels       []string          `json:"labels"`
 	Domain       string            `json:"domain"`
@@ -72,6 +89,8 @@ type Extraction struct {
 	Coverage     []UnitCoverage    `json:"coverage"`
 	Issues       []ExtractionIssue `json:"issues"`
 }
+
+// ChunkUnderstanding binds one validated extraction to its immutable input chunk.
 type ChunkUnderstanding struct {
 	Receipt      *CompletionReceipt `json:"receipt,omitempty"`
 	InputDigest  string             `json:"input_digest"`
@@ -83,12 +102,16 @@ type ChunkUnderstanding struct {
 
 func (r ChunkUnderstanding) digest() string { r.Digest = ""; return digestJSON(r) }
 
+// ScopedLocalReference identifies an extraction-local item within a specific chunk.
 type ScopedLocalReference struct {
 	ChunkIndex int    `json:"chunk_index"`
 	LocalID    string `json:"local_id"`
 }
 
+// NativeHeadingAnchorPolicy identifies the native report heading anchor rules.
 const NativeHeadingAnchorPolicy = "native-report-heading-anchor/1"
+
+// NativeReportSectionPolicy identifies the native report section grouping rules.
 const NativeReportSectionPolicy = "native-report-header-section/1"
 
 // CanonicalEvidence identifies original evidence independently of a chunk view.
@@ -118,6 +141,7 @@ func (r CanonicalEvidence) componentIdentity() string {
 	return digestJSON(r)
 }
 
+// MergedEvent retains canonical anchors and the chunk-local proposals they group.
 type MergedEvent struct {
 	CanonicalEvidence []CanonicalEvidence    `json:"canonical_evidence"`
 	AnchorPolicy      string                 `json:"anchor_policy"`
@@ -128,10 +152,14 @@ type MergedEvent struct {
 	SubjectRefs       []ScopedLocalReference `json:"subject_refs"`
 	Proposals         []ScopedLocalReference `json:"proposals"`
 }
+
+// UnderstandingLabel records a document label and the chunks that support it.
 type UnderstandingLabel struct {
 	Label        string `json:"label"`
 	ChunkIndexes []int  `json:"chunk_indexes"`
 }
+
+// Understanding contains merged validated extractions and their parse coverage.
 type Understanding struct {
 	Labels         []UnderstandingLabel `json:"labels"`
 	LinkIssues     []string             `json:"link_issues"`
@@ -216,6 +244,7 @@ func strictJSON(data []byte, dst any) error {
 	return nil
 }
 
+// ValidateChunk checks worker output against the immutable plan and evidence quotes.
 func ValidateChunk(p UnderstandingPlan, c UnderstandingChunk, data []byte) (ChunkUnderstanding, error) {
 	bad := func(code string) (ChunkUnderstanding, error) { return ChunkUnderstanding{}, understandingError(code) }
 	if !validPlan(p) || c.Index < 0 || c.Index >= len(p.Chunks) || c.InputDigest != c.inputDigest() || digestJSON(c) != digestJSON(p.Chunks[c.Index]) {

@@ -11,15 +11,20 @@ import (
 
 var familyID = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$`)
 
+// FamilyMember associates a stable record owner ID with a display name.
 type FamilyMember struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
+
+// FamilyMeasurement is a named numeric observation with its display unit.
 type FamilyMeasurement struct {
 	Metric string  `json:"metric"`
 	Value  float64 `json:"value"`
 	Unit   string  `json:"unit"`
 }
+
+// FamilyRecordInput describes a member observation or revision before persistence.
 type FamilyRecordInput struct {
 	MemberID       string              `json:"member_id"`
 	Category       string              `json:"category"`
@@ -32,6 +37,8 @@ type FamilyRecordInput struct {
 	RevisionReason string              `json:"revision_reason,omitempty"`
 	Retracted      bool                `json:"retracted,omitempty"`
 }
+
+// FamilyRecord adds durable identity, creation time and export status to an observation.
 type FamilyRecord struct {
 	FamilyRecordInput
 	ID         string     `json:"id"`
@@ -41,12 +48,16 @@ type FamilyRecord struct {
 	SupersededBy string `json:"superseded_by,omitempty"`
 }
 
+// Validate requires a bounded member ID and a nonblank display name.
 func (m FamilyMember) Validate() error {
 	if !familyID.MatchString(m.ID) || strings.TrimSpace(m.Name) == "" || len(m.Name) > 200 {
 		return Errorf(CodeInvalidRequest, "invalid family member")
 	}
 	return nil
 }
+
+// Validate checks observation bounds, categories and unique finite measurements,
+// and requires a valid target and reason for revisions or retractions.
 func (r FamilyRecordInput) Validate() error {
 	if r.SupersedesID == "" {
 		if r.RevisionReason != "" || r.Retracted {

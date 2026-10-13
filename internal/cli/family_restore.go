@@ -17,11 +17,11 @@ func newFamilyCmd() *cobra.Command {
 	var o familyarchive.RestoreOptions
 	var membersPath string
 	restore := &cobra.Command{Use: "restore", Short: "Validate NAS records and create a NEW family-only recovery database", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		file, err := os.Open(membersPath)
+		file, err := os.Open(membersPath) // #nosec G304 -- This file is explicitly selected by the offline CLI operator; regular-file type, size and strict member JSON are validated below.
 		if err != nil {
 			return err
 		}
-		defer file.Close()
+		defer func() { _ = file.Close() }() // Read-only source cleanup; read errors are handled separately.
 		info, err := file.Stat()
 		if err != nil {
 			return err

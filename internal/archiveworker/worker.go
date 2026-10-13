@@ -15,6 +15,7 @@ import (
 	"time"
 )
 
+// Worker runs fenced archive extraction against immutable originals.
 type Worker struct {
 	Tasks                  *store.ArchiveTasks
 	Blobs                  *archive.BlobStore
@@ -25,6 +26,7 @@ type Worker struct {
 	understand             func(context.Context, archive.UnderstandingPlan, archive.UnderstandingChunk) (archive.ChunkUnderstanding, error)
 }
 
+// RunOne claims and processes at most one eligible extraction task.
 func (w *Worker) RunOne(ctx context.Context) (bool, error) {
 	if w.Fingerprint == "" || w.understand == nil {
 		fp, e := w.ConfigurationFingerprint()
@@ -127,7 +129,7 @@ func (w *Worker) RunOne(ctx context.Context) (bool, error) {
 		if e == nil && parsed.Status == archive.ParseUnsupported && (strings.HasPrefix(ref.MIME, "image/") || ref.MIME == "application/pdf") {
 			parsed, e = w.Native.Parse(ctx, archive.NativeSource{File: file, SHA256: ref.SHA256})
 		}
-		file.Close()
+		_ = file.Close() // Read-only source cleanup; read errors are handled separately.
 		if e != nil {
 			return true, fail("parse_failed", false)
 		}

@@ -167,7 +167,7 @@ func TestIntakeConflictBeforePrivacyAndAtomicAudit(t *testing.T) {
 	var auditActor, auditSource, auditTime string
 	var beforeVisible, afterVisible bool
 	require.NoError(t, h.db.SQL().QueryRow(`SELECT actor_principal_id,source_key,before_visible,after_visible,created_at FROM archive_visibility_events WHERE household_id=? AND document_id=? AND version=2`, h.household, first.DocumentID).Scan(&auditActor, &auditSource, &beforeVisible, &afterVisible, &auditTime))
-	sourceKey, keyErr := m.ArchiveSourceIdentity.Key(h.household, h.actor.PrincipalID)
+	sourceKey, keyErr := m.Key(h.household, h.actor.PrincipalID)
 	require.NoError(t, keyErr)
 	require.Equal(t, h.actor.PrincipalID, auditActor)
 	require.Equal(t, sourceKey, auditSource)

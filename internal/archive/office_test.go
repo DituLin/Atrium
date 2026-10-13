@@ -498,7 +498,7 @@ func FuzzParseBounded(f *testing.F) {
 		}
 		f.Add(b)
 	}
-	for _, b := range [][]byte{[]byte("a,b\r\n1,2\r\n"), []byte{255, 254, 0x2d, 0x4e}, []byte("PK truncated"), []byte(`<!DOCTYPE a><a/>`)} {
+	for _, b := range [][]byte{[]byte("a,b\r\n1,2\r\n"), {255, 254, 0x2d, 0x4e}, []byte("PK truncated"), []byte(`<!DOCTYPE a><a/>`)} {
 		f.Add(b)
 	}
 	f.Fuzz(func(t *testing.T, b []byte) {

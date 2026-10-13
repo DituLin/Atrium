@@ -60,7 +60,7 @@ func archiveBillDateNeedsReviewIn(ctx context.Context, tx *sql.Tx, h string, fie
 	if err != nil {
 		return false, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // Read-only query cursor cleanup.
 	for rows.Next() {
 		var raw string
 		if err := rows.Scan(&raw); err != nil {

@@ -16,13 +16,16 @@ import (
 
 const maxEntityCandidates = 4096
 const maxIdentityFacts = 1024
+
+// IdentityExactVersion identifies exact protected identity comparison rules.
 const IdentityExactVersion = "identity-exact/1"
 
-// This repository exposes authorized human reads and revisions only. Automatic
+// ArchiveEntities exposes authorized human reads and revisions only. Automatic
 // ingestion uses package-private *In helpers in T09's fenced publication tx.
 // There is intentionally no standalone CreateEntity/ApplyPlan service API.
 type ArchiveEntities struct{ db *DB }
 
+// ArchiveEntities returns the authorized entity repository.
 func (d *DB) ArchiveEntities() *ArchiveEntities { return &ArchiveEntities{db: d} }
 func (r *ArchiveEntities) authorize(ctx context.Context, tx *sql.Tx, a domain.IntegrationActor, h string, write bool) error {
 	p, e := r.db.ArchiveTasks().authorizeArchiveClient(ctx, tx, a, h, "archive.read", time.Now())
@@ -34,6 +37,8 @@ func (r *ArchiveEntities) authorize(ctx context.Context, tx *sql.Tx, a domain.In
 	}
 	return nil
 }
+
+// Candidates returns a bounded identity snapshot authorized for the integration actor.
 func (r *ArchiveEntities) Candidates(ctx context.Context, a domain.IntegrationActor, h string) (archive.CandidateSnapshot, error) {
 	var out archive.CandidateSnapshot
 	e := r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
@@ -49,6 +54,8 @@ func (r *ArchiveEntities) Candidates(ctx context.Context, a domain.IntegrationAc
 	}
 	return out, nil
 }
+
+// Merge records an authorized, version-checked human identity merge.
 func (r *ArchiveEntities) Merge(ctx context.Context, a domain.IntegrationActor, h, source, target string, sv, tv int64, reason string) (string, error) {
 	var id string
 	e := r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
@@ -64,6 +71,8 @@ func (r *ArchiveEntities) Merge(ctx context.Context, a domain.IntegrationActor, 
 	}
 	return id, nil
 }
+
+// UndoMerge reverses a version-checked human merge while retaining its audit history.
 func (r *ArchiveEntities) UndoMerge(ctx context.Context, a domain.IntegrationActor, h, id string, version int64, reason string) error {
 	return r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
 		if e := r.authorize(ctx, tx, a, h, true); e != nil {
@@ -73,12 +82,14 @@ func (r *ArchiveEntities) UndoMerge(ctx context.Context, a domain.IntegrationAct
 	})
 }
 
+// ArchiveEntityProjection contains visible names and identity metadata for an entity.
 type ArchiveEntityProjection struct {
 	ID, Kind       string
 	Names, Aliases []string
 	Birth          archive.IdentityDate
 }
 
+// Public returns authorized public entity projections.
 func (r *ArchiveEntities) Public(ctx context.Context, a domain.IntegrationActor, h string) ([]ArchiveEntityProjection, error) {
 	var out []ArchiveEntityProjection
 	e := r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
@@ -160,7 +171,7 @@ func archiveAttributesIn(ctx context.Context, tx *sql.Tx, h string, public bool)
 	if e != nil {
 		return nil, false, e
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // Read-only query cursor cleanup.
 	out := []entityAttribute{}
 	for rows.Next() {
 		var a entityAttribute
@@ -199,13 +210,13 @@ func archiveEntitySnapshotIn(ctx context.Context, tx *sql.Tx, h string, probes m
 	for rows.Next() {
 		var c archive.EntityCandidate
 		if e = rows.Scan(&c.ID, &c.Kind, &c.Version); e != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return s, e
 		}
 		all = append(all, c)
 	}
 	e = rows.Err()
-	rows.Close()
+	_ = rows.Close() // Read-only query cursor cleanup.
 	if e != nil {
 		return s, e
 	}
@@ -249,18 +260,18 @@ func archiveEntitySnapshotIn(ctx context.Context, tx *sql.Tx, h string, probes m
 		var b archive.ConfirmedBinding
 		var evidence string
 		if e = rows.Scan(&b.Scope, &b.ScopeKey, &b.EntityID, &b.ConfirmedBy, &b.Version, &evidence, &b.Conflict); e != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return s, e
 		}
 		if e = json.Unmarshal([]byte(evidence), &b.Evidence); e != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return s, e
 		}
 		b.EntityID = canonical[b.EntityID]
 		s.Bindings = append(s.Bindings, b)
 	}
 	e = rows.Err()
-	rows.Close()
+	_ = rows.Close() // Read-only query cursor cleanup.
 	if e != nil {
 		return s, e
 	}
@@ -569,13 +580,13 @@ func archiveActiveMergeContextIn(ctx context.Context, tx *sql.Tx, h, id string) 
 	for rows.Next() {
 		var m merge
 		if e = rows.Scan(&m.id, &m.target); e != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return nil, e
 		}
 		ms = append(ms, m)
 	}
 	e = rows.Err()
-	rows.Close()
+	_ = rows.Close() // Read-only query cursor cleanup.
 	if e != nil {
 		return nil, e
 	}
@@ -725,6 +736,8 @@ func archiveBindingPutIn(ctx context.Context, tx *sql.Tx, h, scope, key, id, act
 	}
 	return archiveEntityHistoryIn(ctx, tx, h, oldID, "binding", actor, "scoped_confirmation", map[string]any{"target": oldTarget, "version": v, "actor": oldActor, "evidence": oldEvidence, "confirmation_version": oldConfirmationVersion, "conflict": oldConflict}, map[string]any{"target": id, "version": v + 1, "confirmation_version": v + 1, "scope": scope, "key": key, "evidence": evidence, "merge_context": contexts, "conflict": false})
 }
+
+// ConfirmDocumentMention binds a version-checked document mention to a human-selected entity.
 func (r *ArchiveEntities) ConfirmDocumentMention(ctx context.Context, a domain.IntegrationActor, h, doc, mention, target string, expected int64, evidence []string) error {
 	return r.db.InWriteTx(ctx, func(tx *sql.Tx) error {
 		if e := r.authorize(ctx, tx, a, h, true); e != nil {
@@ -782,7 +795,7 @@ func archiveLegacyEntityIn(ctx context.Context, tx *sql.Tx, h, member string) (s
 	return id, e
 }
 
-// Values never leave store comparison code. These are trusted Core inputs, not
+// IdentityProbe values never leave store comparison code. These are trusted Core inputs, not
 // model candidate DTOs; even accidental JSON/String formatting omits values.
 type IdentityProbe struct {
 	Additional                []IdentityProbe `json:"-"`
@@ -794,6 +807,7 @@ type IdentityProbe struct {
 
 func (p IdentityProbe) String() string { return "[protected identity probe]" }
 
+// ProtectedIdentityFact holds an evidence-backed protected value for internal comparisons.
 type ProtectedIdentityFact struct {
 	DocumentID, Kind, Issuer, RuleVersion, LinkID string
 	Value                                         string `json:"-"`
@@ -898,7 +912,7 @@ func archiveCompareSingleIdentityIn(ctx context.Context, tx *sql.Tx, h string, p
 		var id, rule, value, evidence string
 		var conflict bool
 		if e = rows.Scan(&id, &rule, &value, &evidence, &conflict); e != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return r, e
 		}
 		count++
@@ -917,14 +931,14 @@ func archiveCompareSingleIdentityIn(ctx context.Context, tx *sql.Tx, h string, p
 		if value == p.Value || exclusiveIdentity(p.Kind) {
 			var ev []string
 			if e = json.Unmarshal([]byte(evidence), &ev); e != nil {
-				rows.Close()
+				_ = rows.Close() // Read-only query cursor cleanup.
 				return r, e
 			}
 			matches = append(matches, match{id, ev, conflict, value == p.Value})
 		}
 	}
 	e = rows.Err()
-	rows.Close()
+	_ = rows.Close() // Read-only query cursor cleanup.
 	if e != nil {
 		return r, e
 	}
@@ -950,7 +964,7 @@ func archiveCompareSingleIdentityIn(ctx context.Context, tx *sql.Tx, h string, p
 	return r, nil
 }
 
-// MatchedEntityID is immutable history; CanonicalEntityID is a read-time view.
+// ArchiveEntityLink retains MatchedEntityID as immutable history; CanonicalEntityID is a read-time view.
 // Unresolved links deliberately have no canonical identity for fact consumers.
 type ArchiveEntityLink struct {
 	ID, DocumentID, MentionRef, Role, MatchedEntityID, CanonicalEntityID, Status string
@@ -966,13 +980,13 @@ func archiveEntityLinksIn(ctx context.Context, tx *sql.Tx, h, doc string) ([]Arc
 	for rows.Next() {
 		var l ArchiveEntityLink
 		if e = rows.Scan(&l.ID, &l.DocumentID, &l.MentionRef, &l.Role, &l.MatchedEntityID, &l.Status, &l.Version); e != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return nil, e
 		}
 		out = append(out, l)
 	}
 	e = rows.Err()
-	rows.Close()
+	_ = rows.Close() // Read-only query cursor cleanup.
 	if e != nil {
 		return nil, e
 	}
@@ -1004,7 +1018,7 @@ func archiveEvidenceLinkIn(ctx context.Context, tx *sql.Tx, h, doc, entity, requ
 	if e != nil {
 		return "", e
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // Read-only query cursor cleanup.
 	ids := []string{}
 	for rows.Next() {
 		var id string
@@ -1035,13 +1049,13 @@ func archiveInvalidateMergeBindingsIn(ctx context.Context, tx *sql.Tx, h, merge,
 	for rows.Next() {
 		var b binding
 		if e = rows.Scan(&b.id, &b.version, &b.target); e != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return e
 		}
 		bs = append(bs, b)
 	}
 	e = rows.Err()
-	rows.Close()
+	_ = rows.Close() // Read-only query cursor cleanup.
 	if e != nil {
 		return e
 	}

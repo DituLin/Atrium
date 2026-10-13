@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"reflect"
@@ -14,21 +15,34 @@ import (
 	"unicode/utf8"
 )
 
+// UnderstandingVersion identifies the extraction policy applied to worker output.
 const UnderstandingVersion = "archive-understand/2"
+
+// UnderstandingSchema identifies the strict worker extraction schema.
 const UnderstandingSchema = "archive-extraction/2"
+
+// ChunkVersion identifies evidence chunk layout and identity rules.
 const ChunkVersion = "archive-chunk/1"
+
+// WorkerProtocol is the supported worker request and response protocol.
 const WorkerProtocol = 1
+
+// MaxChunkInput bounds the serialized input to one completion.
 const MaxChunkInput = 32 << 10
+
+// MaxChunkOutput bounds the serialized output from one completion.
 const MaxChunkOutput = 64 << 10
 const maxEvidenceBytes = 24 << 10
 const maxChunks = 256
 
+// UnderstandingError reports a stable extraction-boundary failure code.
 type UnderstandingError struct{ Code string }
 
 func (e *UnderstandingError) Error() string { return "archive: " + e.Code }
 func understandingError(code string) error  { return &UnderstandingError{code} }
 func errorCode(err error) string {
-	if e, ok := err.(*UnderstandingError); ok {
+	var e *UnderstandingError
+	if errors.As(err, &e) {
 		return e.Code
 	}
 	return ""
@@ -39,6 +53,7 @@ func digestJSON(v any) string {
 	return hex.EncodeToString(h[:])
 }
 
+// DerivedValue records a deterministic value derived from original components.
 type DerivedValue struct {
 	Ref                 string `json:"ref"`
 	OriginalComponentID string `json:"original_component_id"`
@@ -47,6 +62,8 @@ type DerivedValue struct {
 	ParserVersion       string `json:"parser_version"`
 	Value               string `json:"value"`
 }
+
+// EvidenceStructure retains the original locator and surrounding structural metadata.
 type EvidenceStructure struct {
 	Locator                Locator    `json:"locator"`
 	CellState              string     `json:"cell_state"`
@@ -60,11 +77,15 @@ type EvidenceStructure struct {
 	MergeAnchor            string     `json:"merge_anchor"`
 	DOCXMerge              *DOCXMerge `json:"docx_merge"`
 }
+
+// EvidenceSpan identifies a quoted rune range within an evidence view.
 type EvidenceSpan struct {
 	Start int    `json:"start"`
 	End   int    `json:"end"`
 	Text  string `json:"text"`
 }
+
+// EvidenceView is an immutable original component or bounded slice supplied to a worker.
 type EvidenceView struct {
 	QuoteHints      []EvidenceSpan    `json:"quote_hints"`
 	ViewID          string            `json:"view_id"`
@@ -83,6 +104,8 @@ type EvidenceView struct {
 	Structure       EvidenceStructure `json:"structure"`
 	Derived         *DerivedValue     `json:"derived"`
 }
+
+// UnderstandingChunk contains owned evidence and read-only context for one completion.
 type UnderstandingChunk struct {
 	ProtocolVersion   int            `json:"protocol_version"`
 	InvocationID      string         `json:"invocation_id"`
@@ -96,11 +119,13 @@ type UnderstandingChunk struct {
 	Context           []EvidenceView `json:"context"`
 }
 
+// Evidence returns owned views followed by read-only context views.
 func (c UnderstandingChunk) Evidence() []EvidenceView {
 	return append(append([]EvidenceView{}, c.Owned...), c.Context...)
 }
 func (c UnderstandingChunk) inputDigest() string { c.InputDigest = ""; return digestJSON(c) }
 
+// UnderstandingPlan partitions parse evidence into bounded completion requests.
 type UnderstandingPlan struct {
 	StructuralContextLimited bool                 `json:"structural_context_limited"`
 	Version                  string               `json:"version"`
@@ -443,9 +468,6 @@ func allEvidenceStringsValid(v reflect.Value) bool {
 	return true
 }
 
-func contextBudgetBytes(parseDigest string, views []EvidenceView) int {
-	return contextBudgetBytesForPrompt(parseDigest, views, understandingPrompt)
-}
 func contextBudgetBytesForPrompt(parseDigest string, views []EvidenceView, prompt string) int {
 	return completionInputBytesForPrompt(UnderstandingChunk{ProtocolVersion: WorkerProtocol, InvocationID: strings.Repeat("a", 160), InputDigest: strings.Repeat("a", 64), SchemaVersion: UnderstandingSchema, ExtractionVersion: UnderstandingVersion, ChunkVersion: ChunkVersion, ParseDigest: parseDigest, Index: 255, Owned: views, Context: []EvidenceView{}}, prompt)
 }
@@ -453,9 +475,6 @@ func contextBudgetBytesForPrompt(parseDigest string, views []EvidenceView, promp
 // Context is a read-only copy of existing host views. Header and nearby boundary
 // units help retain a report's subject and row label/unit relationships. They
 // never alter the owned partition, and remain inside every actual wire budget.
-func addUnderstandingContext(p *UnderstandingPlan) {
-	addUnderstandingContextForPrompt(p, understandingPrompt)
-}
 func addUnderstandingContextForPrompt(p *UnderstandingPlan, prompt string) {
 	all := []EvidenceView{}
 	positions := map[string]int{}

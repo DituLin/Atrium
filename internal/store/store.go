@@ -264,7 +264,7 @@ func ValidateSchemaHandle(ctx context.Context, handle *sql.DB) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() // Read-only query cursor cleanup.
 	i, last := 0, 0
 	for rows.Next() {
 		var v int

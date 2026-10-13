@@ -17,6 +17,7 @@ import (
 	"time"
 )
 
+// PreviewPage contains a bounded rendered page and its dimensions.
 type PreviewPage struct {
 	PNG                             []byte
 	Page, TotalPages, Width, Height int
@@ -57,7 +58,7 @@ func (p NativeParser) Preview(ctx context.Context, s NativeSource, page int) (Pr
 		return bad("preview_timeout")
 	}
 	defer func() { <-nativeSlots }()
-	cmd := exec.CommandContext(ctx, p.HelperPath, "--protocol=1")
+	cmd := exec.CommandContext(ctx, p.HelperPath, "--protocol=1") // #nosec G204 -- HelperPath is trusted host configuration, checked above as an absolute regular executable; preview input travels by stdin and FD.
 	cmd.Env = []string{"PATH=/usr/bin:/bin", "LANG=en_US.UTF-8", "LC_ALL=en_US.UTF-8"}
 	cmd.Stdin = strings.NewReader(fmt.Sprintf("{\"protocol\":1,\"preview_page\":%d}\n", page))
 	cmd.ExtraFiles = []*os.File{s.File}

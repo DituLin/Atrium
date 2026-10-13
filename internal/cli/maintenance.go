@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/DituLin/Atrium/internal/app"
 	"github.com/DituLin/Atrium/internal/store"
@@ -14,7 +15,7 @@ func newMaintenanceCmd(g *globalFlags) *cobra.Command {
 	c.PersistentFlags().StringVar(&g.dataDir, "data-dir", "", "data directory")
 	for _, name := range []string{"schema", "backfill"} {
 		name := name
-		sub := &cobra.Command{Use: name, RunE: func(cmd *cobra.Command, _ []string) error {
+		sub := &cobra.Command{Use: name, RunE: func(cmd *cobra.Command, _ []string) (err error) {
 			cfg, e := g.loadConfig()
 			if e != nil {
 				return e
@@ -27,7 +28,7 @@ func newMaintenanceCmd(g *globalFlags) *cobra.Command {
 			if e != nil {
 				return e
 			}
-			defer db.Close()
+			defer func() { err = errors.Join(err, db.Close()) }()
 			v, e := db.ValidateSchema(cmd.Context())
 			if e != nil {
 				return e

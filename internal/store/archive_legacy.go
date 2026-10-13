@@ -79,6 +79,8 @@ func (d *DB) ProjectLegacyArchive(ctx context.Context, record string) error {
 		return e
 	})
 }
+
+// ProjectPendingLegacyArchives projects a bounded batch of pending legacy family records.
 func (d *DB) ProjectPendingLegacyArchives(ctx context.Context, limit int) (int, error) {
 	if limit < 1 || limit > 100 {
 		return 0, domain.ErrConflict
@@ -91,13 +93,13 @@ func (d *DB) ProjectPendingLegacyArchives(ctx context.Context, limit int) (int, 
 	for rows.Next() {
 		var id string
 		if e = rows.Scan(&id); e != nil {
-			rows.Close()
+			_ = rows.Close() // Read-only query cursor cleanup.
 			return 0, e
 		}
 		ids = append(ids, id)
 	}
 	e = rows.Err()
-	rows.Close()
+	_ = rows.Close() // Read-only query cursor cleanup.
 	if e != nil {
 		return 0, e
 	}

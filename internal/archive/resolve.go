@@ -11,7 +11,10 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
+// ResolutionRuleVersion identifies the deterministic entity attribution rules.
 const ResolutionRuleVersion = "entity-resolution/2"
+
+// NameKeyVersion identifies the canonical name-key normalization rules.
 const NameKeyVersion = "nfc-space-ascii/1-xtext-0.31.0"
 
 // NameKey preserves punctuation, word boundaries and all non-ASCII case.
@@ -25,13 +28,15 @@ func NameKey(s string) string {
 	}, s)
 }
 
-// References below are Core-validated immutable evidence/field references, not
+// IdentityDate contains a date supported by Core-validated immutable evidence/field references, not
 // model-supplied durable entity IDs. They may point to protected source facts.
 type IdentityDate struct {
 	Precision, Value string
 	Evidence         []string
 	Conflict         bool
 }
+
+// ResolutionMention is an evidence-backed local mention proposed for attribution.
 type ResolutionMention struct {
 	Ref, Kind, Name, Role                                           string
 	Subject, Ambiguous, OCRConflict, FullAddress, HasStrongIdentity bool
@@ -39,20 +44,28 @@ type ResolutionMention struct {
 	Birth                                                           IdentityDate
 	BindingScope, BindingKey                                        string // set by trusted Core, never an LLM
 }
+
+// ResolutionField associates a field reference with its local subjects.
 type ResolutionField struct {
 	Ref         string
 	SubjectRefs []string
 }
+
+// ResolutionInput contains Core-validated mentions and fields for one document.
 type ResolutionInput struct {
 	HouseholdID, DocumentID string
 	Mentions                []ResolutionMention
 	Fields                  []ResolutionField
 }
+
+// CandidateName records a primary name or alias with its provenance.
 type CandidateName struct {
 	Value    string
 	Alias    bool
 	Evidence []string
 }
+
+// EntityCandidate is a versioned existing or proposed identity candidate.
 type EntityCandidate struct {
 	ID, PlanRef, Kind string
 	Version           int64
@@ -60,6 +73,8 @@ type EntityCandidate struct {
 	Birth             IdentityDate
 	Conflict          bool
 }
+
+// ConfirmedBinding records a human-confirmed identity binding and its scope.
 type ConfirmedBinding struct {
 	Scope, ScopeKey, EntityID, ConfirmedBy string
 	Version                                int64
@@ -74,6 +89,8 @@ type StrongIdentityMatch struct {
 	EntityIDs, Evidence, PeerRefs             []string
 	ConflictingEntityIDs, ConflictingPeerRefs []string
 }
+
+// CandidateSnapshot contains bounded identity candidates and trusted match conclusions.
 type CandidateSnapshot struct {
 	HouseholdID string
 	Revision    int64
@@ -82,10 +99,14 @@ type CandidateSnapshot struct {
 	Bindings    []ConfirmedBinding
 	Strong      map[string]StrongIdentityMatch
 }
+
+// ResolutionDecision records the attribution action and evidence for one mention.
 type ResolutionDecision struct {
 	MentionRef, Action, EntityID, PlanRef, Reason string
 	Evidence                                      []string
 }
+
+// ResolutionPlan contains versioned decisions and their identity dependencies.
 type ResolutionPlan struct {
 	HouseholdID, DocumentID, RuleVersion, NameVersion string
 	Revision                                          int64
@@ -203,7 +224,7 @@ func ResolveEntities(in ResolutionInput, s CandidateSnapshot) (ResolutionPlan, e
 			if d.Action == "link_existing" {
 				for i := range candidates {
 					c := &candidates[i]
-					if !(d.EntityID != "" && c.ID == d.EntityID || d.PlanRef != "" && c.PlanRef == d.PlanRef) {
+					if (d.EntityID == "" || c.ID != d.EntityID) && (d.PlanRef == "" || c.PlanRef != d.PlanRef) {
 						continue
 					}
 					// Every linked spelling becomes a candidate for subsequent
@@ -311,7 +332,7 @@ func ResolveEntities(in ResolutionInput, s CandidateSnapshot) (ResolutionPlan, e
 				for _, c := range candidates {
 					if (targets[c.ID] || targets[c.PlanRef]) && c.Kind == m.Kind {
 						found = true
-						if !(identityConflicts[c.ID] || identityConflicts[c.PlanRef]) && !c.Conflict && !birthConflict(m.Birth, c.Birth) {
+						if !identityConflicts[c.ID] && !identityConflicts[c.PlanRef] && !c.Conflict && !birthConflict(m.Birth, c.Birth) {
 							reason := "strong_identity"
 							if binding {
 								reason = "confirmed_binding"
@@ -349,7 +370,7 @@ func ResolveEntities(in ResolutionInput, s CandidateSnapshot) (ResolutionPlan, e
 			}
 			if nameMatch {
 				named = append(named, c)
-				if proven && !(identityConflicts[c.ID] || identityConflicts[c.PlanRef]) && !c.Conflict && !birthConflict(m.Birth, c.Birth) && (m.Kind == "property" || fullBirth(m.Birth) && fullBirth(c.Birth) && m.Birth.Value == c.Birth.Value) {
+				if proven && !identityConflicts[c.ID] && !identityConflicts[c.PlanRef] && !c.Conflict && !birthConflict(m.Birth, c.Birth) && (m.Kind == "property" || fullBirth(m.Birth) && fullBirth(c.Birth) && m.Birth.Value == c.Birth.Value) {
 					eligible = append(eligible, c)
 				}
 			}

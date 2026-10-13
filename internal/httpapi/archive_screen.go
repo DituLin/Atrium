@@ -73,7 +73,7 @@ func (a *API) archiveScreenPreview(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, r, domain.ErrNotFound)
 		return
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }() // Read-only source cleanup; read errors are handled separately.
 	result, e := a.deps.ArchivePreview.Preview(r.Context(), archive.NativeSource{File: f, SHA256: ref.SHA256}, page)
 	if e != nil {
 		WriteError(w, r, domain.Errorf(domain.CodeNotFound, "preview unavailable"))

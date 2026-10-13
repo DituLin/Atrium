@@ -81,7 +81,7 @@ func prepareRestart(ctx context.Context, d *store.DB, blobs *archive.BlobStore, 
 		return nil, e
 	}
 	parsed, e := archive.Parse(ctx, archive.ParseSource{Reader: source, Size: ref.SizeBytes, SHA256: ref.SHA256, FormatHint: "txt"}, archive.DefaultParseLimits())
-	source.Close()
+	_ = source.Close() // Read-only source cleanup; read errors are handled separately.
 	if e != nil {
 		return nil, e
 	}

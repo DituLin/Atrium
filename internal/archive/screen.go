@@ -13,6 +13,7 @@ type ScreenDocument struct {
 	Coverage      SearchCoverage    `json:"coverage"`
 }
 
+// ScreenProcessing derives the screen-facing processing state from a current item.
 func ScreenProcessing(i SearchItem) string {
 	// A failed reprocessing attempt does not invalidate an existing publication.
 	if !i.MetadataOnly {
@@ -44,6 +45,7 @@ type ScreenTaskSummary struct {
 	Attribution   string `json:"attribution"`
 }
 
+// SummarizeScreenTask summarizes parse, understanding and attribution status for display.
 func SummarizeScreenTask(i SearchItem) ScreenTaskSummary {
 	s := ScreenTaskSummary{Parse: i.ParseStatus, Understanding: "complete", Attribution: i.Ownership}
 	if i.MetadataOnly {
@@ -69,6 +71,7 @@ func SummarizeScreenTask(i SearchItem) ScreenTaskSummary {
 	return s
 }
 
+// PresentScreenItem adds processing and task-summary fields to a screen item.
 func PresentScreenItem(i *SearchItem) {
 	i.Processing = ScreenProcessing(*i)
 	summary := SummarizeScreenTask(*i)

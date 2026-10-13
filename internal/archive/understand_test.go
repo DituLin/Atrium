@@ -2,12 +2,32 @@ package archive
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
 	"testing"
 	"unicode/utf8"
 )
+
+func TestErrorCodeWrappedUnderstandingError(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		err  error
+		want string
+	}{
+		{"direct", &UnderstandingError{Code: "understand_group_limit"}, "understand_group_limit"},
+		{"wrapped", fmt.Errorf("wrapped: %w", &UnderstandingError{Code: "understand_group_limit"}), "understand_group_limit"},
+		{"ordinary", errors.New("ordinary error"), ""},
+		{"nil", nil, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := errorCode(tc.err); got != tc.want {
+				t.Fatalf("errorCode(%v) = %q, want %q", tc.err, got, tc.want)
+			}
+		})
+	}
+}
 
 func understandingParse(s string) ParseResult {
 	return ParseResult{ParserVersion: ParserVersion, Status: ParseParsed, Coverage: ParseCoverage{Complete: true}, Segments: []Segment{{ID: "s1", Text: s}}}

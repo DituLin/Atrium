@@ -38,7 +38,7 @@ func serve(ctx context.Context, d *store.DB, blobs *archive.BlobStore, dir strin
 	bus := events.NewBus()
 	server := httptest.NewUnstartedServer(nil)
 	addressPath := filepath.Join(dir, "listen-address")
-	address, addressErr := os.ReadFile(addressPath)
+	address, addressErr := os.ReadFile(addressPath) // #nosec G304 G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
 	if addressErr == nil {
 		host, _, err := net.SplitHostPort(string(address))
 		must(err)
@@ -49,7 +49,7 @@ func serve(ctx context.Context, d *store.DB, blobs *archive.BlobStore, dir strin
 		server.Listener, e = net.Listen("tcp", string(address))
 		must(e)
 	} else if errors.Is(addressErr, os.ErrNotExist) {
-		must(os.WriteFile(addressPath, []byte(server.Listener.Addr().String()), 0600))
+		must(os.WriteFile(addressPath, []byte(server.Listener.Addr().String()), 0600)) // #nosec G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
 	} else {
 		must(addressErr)
 	}
@@ -63,18 +63,18 @@ func serve(ctx context.Context, d *store.DB, blobs *archive.BlobStore, dir strin
 	server.Config.Handler = api.Handler()
 	server.StartTLS()
 	defer server.Close()
-	must(os.WriteFile(filepath.Join(dir, "ca.crt"), pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw}), 0600))
-	screenToken, e := os.ReadFile(filepath.Join(dir, "screen-token"))
+	must(os.WriteFile(filepath.Join(dir, "ca.crt"), pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw}), 0600)) // #nosec G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
+	screenToken, e := os.ReadFile(filepath.Join(dir, "screen-token"))                                                                            // #nosec G304 G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
 	must(e)
 	adminPath := filepath.Join(dir, "admin-token")
-	adminBytes, err := os.ReadFile(adminPath)
+	adminBytes, err := os.ReadFile(adminPath) // #nosec G304 G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
 	if errors.Is(err, os.ErrNotExist) {
 		admin, _, issueErr := auth.NewAdminService(d).EnsureInitial(ctx, "T15 synthetic", time.Now())
 		must(issueErr)
 		if admin == "" {
 			panic("existing synthetic admin has no retained token; explicit recovery required")
 		}
-		must(os.WriteFile(adminPath, []byte(admin), 0600))
+		must(os.WriteFile(adminPath, []byte(admin), 0600)) // #nosec G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
 		adminBytes = []byte(admin)
 	} else {
 		must(err)
@@ -95,7 +95,7 @@ func serve(ctx context.Context, d *store.DB, blobs *archive.BlobStore, dir strin
 		case <-deadline.C:
 			return
 		case <-ticker.C:
-			if _, e := os.Stat(filepath.Join(dir, "stop")); e == nil {
+			if _, e := os.Stat(filepath.Join(dir, "stop")); e == nil { // #nosec G703 -- Paths are selected by the CLI operator or generated under the marker-guarded synthetic directory, never supplied by document or model content.
 				return
 			}
 			_, e := d.ArchiveTasks().IndexArchives(ctx, s.Home, 32)

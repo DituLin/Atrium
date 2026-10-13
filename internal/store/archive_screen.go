@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+// ArchiveDocumentForScreen returns the current public document authorized for a screen.
 func (r *ArchiveTasks) ArchiveDocumentForScreen(ctx context.Context, screen, hash, h, id string) (archive.ScreenDocument, error) {
 	out := archive.ScreenDocument{NASStatus: "pending", Preview: "structured", Coverage: archive.SearchCoverage{Complete: true}}
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)

@@ -13,6 +13,7 @@ import (
 	"strings"
 )
 
+// ConfigurationFingerprint hashes bounded trusted artifacts and the extraction policy.
 func (w *Worker) ConfigurationFingerprint() (string, error) {
 	artifacts := map[string]string{}
 	// A provider's peer SDK link may point only at the configured OpenClaw
@@ -25,7 +26,7 @@ func (w *Worker) ConfigurationFingerprint() (string, error) {
 			return "", err
 		}
 		candidate := filepath.Dir(entry)
-		raw, err := os.ReadFile(filepath.Join(candidate, "package.json"))
+		raw, err := os.ReadFile(filepath.Join(candidate, "package.json")) // #nosec G304 -- Read only package.json adjacent to the explicitly configured OpenClaw entry point; its name and the bounded artifact digest are checked below.
 		var pkg struct {
 			Name string `json:"name"`
 		}
@@ -139,17 +140,17 @@ func artifactDigestWithPolicy(path, peerRuntime, runtimeRoot string, maxFiles in
 		}
 		h.Write([]byte(rel))
 		h.Write([]byte{0})
-		f, e := os.Open(p)
+		f, e := os.Open(p) // #nosec G304 G122 -- Administrator-configured runtime/plugin trees must remain unchanged during fingerprinting; symlink policy, regular-file/SameFile checks and byte bounds remain enforced.
 		if e != nil {
 			return e
 		}
 		opened, e := f.Stat()
 		if e != nil || !opened.Mode().IsRegular() || !os.SameFile(info, opened) {
-			f.Close()
+			_ = f.Close() // Read-only source cleanup; read errors are handled separately.
 			return domain.ErrConflict
 		}
 		n, e := io.Copy(h, io.LimitReader(f, info.Size()+1))
-		f.Close()
+		_ = f.Close() // Read-only source cleanup; read errors are handled separately.
 		if e == nil && n != info.Size() {
 			return domain.ErrConflict
 		}

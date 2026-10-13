@@ -4,6 +4,7 @@ import (
 	"context"
 )
 
+// ArchiveBackfillStats reports completed legacy projections and search indexing work.
 type ArchiveBackfillStats struct {
 	Scanned          int `json:"scanned"`
 	PendingProjected int `json:"pending_projected"`
@@ -27,13 +28,13 @@ func (d *DB) BackfillArchives(ctx context.Context) (stats ArchiveBackfillStats, 
 		for rr.Next() {
 			var id string
 			if e = rr.Scan(&id); e != nil {
-				rr.Close()
+				_ = rr.Close() // Read-only query cursor cleanup.
 				return stats, e
 			}
 			ids = append(ids, id)
 		}
 		e = rr.Err()
-		rr.Close()
+		_ = rr.Close() // Read-only query cursor cleanup.
 		if e != nil {
 			return stats, e
 		}
