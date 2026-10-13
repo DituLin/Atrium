@@ -28,3 +28,5 @@
 README 以中文为主，完整英文版为 `README.en.md`。新增或实质改写的对外项目、使用、部署文档优先提供中英文，并同步技术事实、命令和状态；历史证据和已有设计文档可保留原语言，改写时再补对应版本。详见[贡献语言约定](../AGENTS.md)。
 
 The primary README is Chinese, with a complete `README.en.md`. New or substantially rewritten public-facing project, usage and deployment documentation should provide Chinese and English with matching facts, commands and status. Historical evidence and existing designs may retain their original language until rewritten. See the [documentation language policy](../AGENTS.md).
+
+- [成长趋势看板](usage/growth-dashboard.md) · [Growth dashboard](usage/growth-dashboard.en.md)

@@ -102,3 +102,21 @@ it('includes legacy formula and breastmilk but never medicine, water or puree vo
  expect(reader.value.snapshot?.milk?.groups.map(g=>g.metric).sort()).toEqual(['breast_milk','breastmilk','formula','volume']);
  reader.stop();
 });
+
+it('loads person growth from all authorized records with Chinese aliases and calendar ranges',async()=>{
+ vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-13T09:00:00Z'));
+ const a=api();vi.mocked(a.getArchiveEntities).mockResolvedValue({items:[{id:'synthetic-child',kind:'person',names:['合成宝宝'],aliases:[]}],coverage:{complete:true}});const reader=new ArchiveReader(a);reader.filter={entity_id:'synthetic-child',domain:'health'};
+ await reader.selectGrowthPeriod('quarter');
+ const calls=vi.mocked(a.analyzeArchives).mock.calls.map(([q])=>q).filter(q=>['height','身高','身长','weight','体重'].includes(q.metric??''));
+ expect(calls).toHaveLength(5);
+ expect(calls.every(q=>q.entity_id==='synthetic-child'&&q.date_from==='2026-07-13'&&q.date_to==='2026-10-13'&&q.operation==='series')).toBe(true);
+ expect(reader.value.snapshot?.growth).not.toBeNull();
+ reader.invalidate();expect(reader.value.snapshot).toBeNull();reader.stop();
+});
+it('rejects growth from another generation and does not merge people',async()=>{
+ vi.useFakeTimers();const a=api();vi.mocked(a.analyzeArchives).mockImplementation(async q=>({data_epoch:1,generation:q.metric==='height'?2:1,groups:[],coverage:{complete:true}} as never));
+ vi.mocked(a.getArchiveEntities).mockResolvedValue({items:[{id:'synthetic-child',kind:'person',names:['合成宝宝'],aliases:[]}],coverage:{complete:true}});
+ const reader=new ArchiveReader(a);await reader.select({entity_id:'synthetic-child'});
+ expect(reader.value.snapshot).toBeNull();expect(reader.value.failed).toBe(true);
+ await reader.select({domain:'finance'});expect(reader.value.snapshot?.growth).toBeNull();reader.stop();
+});
