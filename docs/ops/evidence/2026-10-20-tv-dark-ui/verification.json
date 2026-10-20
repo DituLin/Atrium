@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-20",
+  "kind": "frontend-only-overlay",
+  "frontend_commit": "041b4833678109735c5799de6d1f65ac88b11067",
+  "backend_commit": "c06c6a591e9a33c6a93bc0def15d3e29061f9d07",
+  "version": "tv-ui-041b483+c06c6a591e9a33c6a93bc0def15d3e29061f9d07",
+  "schema": 17,
+  "health_live": "ok",
+  "health_ready": "ok",
+  "served_bundle_verified": true,
+  "signature_requirement_preserved": true,
+  "configuration_unchanged": true,
+  "business_data_preserved": true,
+  "consistent_backup_verified": true,
+  "services": {
+    "core": "running",
+    "gateway": "running"
+  },
+  "synthetic_preflight": {
+    "passed": true,
+    "records": 9,
+    "api_requests": 56
+  },
+  "frontend_tests": {
+    "files": 69,
+    "passed": 486
+  },
+  "device": {
+    "model": "OnePlus6T",
+    "webview_major": 119,
+    "six_pages": true,
+    "native_remote": true,
+    "page_errors": 0
+  },
+  "nas": {
+    "before": "offline",
+    "after": "offline",
+    "last_success_date": "2026-10-19"
+  },
+  "physical_tcl_acceptance": "pending"
+}

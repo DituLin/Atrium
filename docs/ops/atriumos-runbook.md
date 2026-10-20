@@ -1,5 +1,8 @@
 # AtriumOS 发布与恢复
 
+2026-10-20：已部署 [TV 深色 UI 更新](evidence/2026-10-20-tv-dark-ui/README.md)，前端 `041b483`，后端保持 `c06c6a5`，schema 17 未变；运行版本为 `tv-ui-041b483+c06c6a591e9a33c6a93bc0def15d3e29061f9d07`。下文保留此前发布历史。
+
+
 状态更新：2026-10-13。当前本机部署基线为 `c06c6a591e9a33c6a93bc0def15d3e29061f9d07`，见 [TV 排序与奶量趋势热修验证](evidence/2026-10-11-archive-tv-hotfix/README.md)。线上源码已合入 `main`；本次整合未更换运行程序。完整 T17 验收仍未完成。下文保留 2026-10-11 首次上线及各次预检的历史状态，包括早期 `3fb9d38` 的发布结果。当前构建、部署和恢复顺序请阅读[中文发布指南](deployment-release.md) / [English release guide](deployment-release.en.md)。
 
 ## 发布包

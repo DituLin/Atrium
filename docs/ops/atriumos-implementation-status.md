@@ -1,5 +1,8 @@
 # AtriumOS 实施与验收记录
 
+2026-10-20：已部署 [TV 深色 UI 更新](evidence/2026-10-20-tv-dark-ui/README.md)，前端 `041b483`，后端保持 `c06c6a5`，schema 17 未变；运行版本为 `tv-ui-041b483+c06c6a591e9a33c6a93bc0def15d3e29061f9d07`。下文保留此前发布历史。
+
+
 更新：2026-10-13。线上代码已通过 [PR #4](https://github.com/DituLin/Atrium/pull/4) 合入 `main`，保留 `codex/atriumos` 开发历史；源码整合未重新部署。本机已部署固定版本 `c06c6a591e9a33c6a93bc0def15d3e29061f9d07`；运行版本不自动跟随开发分支。下方历史记录保留各次验证时的状态，当前交付边界以状态表及最后的正式部署记录为准。
 
 构建与发布入口：[中文](deployment-release.md) / [English](deployment-release.en.md)。公开仓库托管构建、独立受控部署与本机签名的边界，以该说明为准。

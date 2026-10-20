@@ -36,7 +36,7 @@ Host and OnePlus development-device verification does not replace real-TV, reboo
 
 The TV can use a browser or the standalone Android host. Home, Media, Today, Archives, House and Settings share a dark interface with direction, OK and Back controls. A direction key opens the home menu, which closes after 12 seconds without input. Remote-control browsing and public projections share the same client; completed background tasks do not automatically take over the current page.
 
-This dark UI update has passed browser checks with synthetic data and build compatibility checks. Visual and performance acceptance on a physical TCL TV / Chrome 66 is still pending. Design examples without a data contract, such as household environment charts, are not presented as real data.
+The [dark UI update](docs/ops/evidence/2026-10-20-tv-dark-ui/README.en.md) was deployed on 2026-10-20 with frontend `041b483` and the existing `c06c6a5` backend. Synthetic browser tests, build compatibility checks, and all six pages and remote controls in the official OnePlus app passed. Visual and performance acceptance on a physical TCL TV / Chrome 66 is still pending. Design examples without a data contract, such as household environment charts, are not presented as real data.
 
 ## Integrated archives
 

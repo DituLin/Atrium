@@ -2,7 +2,7 @@
 
 [中文](deployment-release.md) · [Documentation](../README.md) · [Project overview](../../README.en.md)
 
-Updated: 2026-10-13. This guide is for maintainers. The deployed baseline is fixed commit `c06c6a591e9a33c6a93bc0def15d3e29061f9d07`; updating the main branch does not automatically change the running version.
+Updated: 2026-10-20. This guide is for maintainers. The backend baseline remains fixed commit `c06c6a591e9a33c6a93bc0def15d3e29061f9d07`, embedding frontend `041b4833678109735c5799de6d1f65ac88b11067`. The running version is `tv-ui-041b483+c06c6a591e9a33c6a93bc0def15d3e29061f9d07`. This is a [frontend overlay deployment](evidence/2026-10-20-tv-dark-ui/README.en.md), not an upgrade of the complete main branch. Updating main does not automatically change the running version.
 
 ## 1. Release boundary and current implementation
 
