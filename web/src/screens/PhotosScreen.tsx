@@ -126,17 +126,18 @@ export function PhotosScreen() {
     else if (target.closest('.photos__recovery')) setRegion('recovery');
   }}>
     <TopNav onDown={focusTab} />
+    <header className="page__heading library__heading">
+      <h1 className="page__title">影像</h1>
+      <p className="library__order">{ORDER_TEXT[collection]}</p>
+      <p className="library__count photos__count">
+        {!readyForRoute || list.status === 'loading' || list.status === 'idle' ? '正在加载…'
+          : failed ? '数量暂不可用' : total !== null ? `共 ${total.toLocaleString('en-US')} 张` : `已载入 ${list.items.length}${list.cursor ? '+' : ''} 张`}
+      </p>
+    </header>
     <div className="library__body">
       <MediaRail selected={collection} count={total === null ? null : total.toLocaleString('en-US')}
         onSelect={selectEntry} onRight={focusContent} onKey={() => { awaitingCollection.current = null; }} />
       <section className="library__content" aria-label="照片">
-        <header className="library__bar">
-          <p className="library__order">{ORDER_TEXT[collection]}</p>
-          <p className="library__count photos__count">
-            {!readyForRoute || list.status === 'loading' || list.status === 'idle' ? '正在加载…'
-              : failed ? '数量暂不可用' : total !== null ? `共 ${total.toLocaleString('en-US')} 张` : `已载入 ${list.items.length}${list.cursor ? '+' : ''} 张`}
-          </p>
-        </header>
         {list.returnNotice ? <p className="library__note" role="status">{list.returnNotice}</p> : null}
         {collection === 'captured_today' && readyForRoute && unknownCount > 0 ? <p className="library__note" role="status">{unknownCount} 张照片缺少拍摄时间，未列入此合集。</p> : null}
         {hasRecovery ? <div className="library__empty">

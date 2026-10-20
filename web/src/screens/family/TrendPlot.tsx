@@ -1,3 +1,6 @@
+import { useId } from 'react';
+import { trendSegments } from './trendCurve';
+
 export interface TrendPoint { time: number; value: string }
 /** Partial dates stay in the textual record; a plot must not invent a day. */
 export function chartTime(value: string): number {
@@ -18,6 +21,7 @@ export function TrendPlot({ points, label, unit, formatTime, range, zero = false
     points: TrendPoint[]; label: string; unit: string; formatTime: (time: number) => string;
     range?: [number, number]; zero?: boolean;
 }) {
+    const gradientID = `trend-${useId().replace(/:/g, '')}`;
     const sorted = points.filter(p => Number.isFinite(p.time) && p.value.trim() !== '' && Number.isFinite(Number(p.value)) && Math.abs(Number(p.value)) <= Number.MAX_SAFE_INTEGER).sort((a, b) => a.time - b.time);
     const first = sorted[0], last = sorted[sorted.length - 1];
     if (!first || !last) return null;
@@ -37,7 +41,9 @@ export function TrendPlot({ points, label, unit, formatTime, range, zero = false
     const y = (value: number) => 188 - (value - min) / (max - min) * 144;
     const xTicks = start === end ? [start] : [start, start + (end - start) / 2, end];
     const tickLabel = (v: number) => Math.abs(v) >= 1e7 ? v.toExponential(1) : Number(v.toPrecision(10)).toLocaleString('zh-CN', { maximumFractionDigits: 10 });
+    const curves = trendSegments(sorted.map(p => ({ x: x(p.time), y: y(Number(p.value)) })), 188);
     return <svg className="family-trend__plot" viewBox="0 0 600 252" role="img" aria-label={label}>
+        <defs><linearGradient id={gradientID} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="currentColor" stopOpacity=".24"/><stop offset="100%" stopColor="currentColor" stopOpacity="0"/></linearGradient></defs>
         <g data-axis="y"><text x="88" y="22">{unit || '数值'}</text>
             {yTicks.map((tick, i) => <g key={i}><line className="family-trend__grid" x1="88" x2="568" y1={y(tick)} y2={y(tick)}/><text x="76" y={y(tick) + 5} textAnchor="end">{tickLabel(tick)}</text></g>)}
             <line className="family-trend__axis" x1="88" x2="88" y1="44" y2="188"/>
@@ -46,7 +52,10 @@ export function TrendPlot({ points, label, unit, formatTime, range, zero = false
             {xTicks.map((tick, i) => <g key={i}><line className="family-trend__axis" x1={x(tick)} x2={x(tick)} y1="188" y2="195"/><text x={x(tick)} y="217" textAnchor={xTicks.length === 1 ? 'middle' : i === 0 ? 'start' : i === xTicks.length - 1 ? 'end' : 'middle'}>{formatTime(tick)}</text></g>)}
             <text x="328" y="246" textAnchor="middle">日期 / 时间</text>
         </g>
-        {sorted.length > 1 ? <polyline points={sorted.map(p => `${x(p.time)},${y(Number(p.value))}`).join(' ')} fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round"/> : null}
-        {sorted.map((p, i) => <circle key={i} cx={x(p.time)} cy={y(Number(p.value))} r="4" fill="currentColor"><title>{formatTime(p.time)} · {p.value} {unit}</title></circle>)}
+        {curves.map((curve, i) => <g key={i}>
+            {curve.fill ? <path d={curve.fill} fill={`url(#${gradientID})`} aria-hidden="true"/> : null}
+            <path d={curve.line} fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round"/>
+        </g>)}
+        {sorted.map((p, i) => <circle key={i} cx={x(p.time)} cy={y(Number(p.value))} r={i === sorted.length - 1 ? 5 : 3} fill="currentColor" stroke="currentColor" strokeWidth={i === sorted.length - 1 ? 8 : 0} strokeOpacity=".2"><title>{formatTime(p.time)} · {p.value} {unit}</title></circle>)}
     </svg>;
 }

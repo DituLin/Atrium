@@ -81,6 +81,7 @@ export function BriefingScreen() {
           {!projected ? <p className="info-empty">{status === 'failed' ? '暂时无法读取简报' : '正在读取今日事项…'}</p> : notices.length === 0
             ? <section className="info-empty"><h3 className="info-empty__title serif">当前没有可展示的提示</h3><p className="muted">{NOTICE_EMPTY[noticeSource!.availability]}</p></section>
             : notices.map(({ entry, item }) => <article className="info-notice" key={entry.id} data-entry={entry.id}>
+              <span className="info-notice__source">{noticeSource!.source_label}</span>
               <p className="info-notice__text">{item.text}</p>
               <p className="info-notice__meta">
                 {noticeSource!.availability === 'stale' ? <span>旧数据</span> : null}

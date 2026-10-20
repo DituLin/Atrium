@@ -1,6 +1,7 @@
 import {act,fireEvent,render,screen,waitFor} from '@testing-library/react';
 import {useReducer} from 'react';
-import {expect,it,vi} from 'vitest';
+import {afterEach,expect,it,vi} from 'vitest';
+afterEach(() => vi.useRealTimers());
 import {AppContext} from '../app/context';
 import {appReducer,createInitialState} from '../app/state';
 import type {AppAction,AppState} from '../app/state';
@@ -62,6 +63,9 @@ it('shows verified cards with an explicit analysis limit instead of hiding the a
 });
 
 it('keeps the milk chart and day/week/month controls visible when only one feed is recorded',async()=>{
+ // Keep the observation inside the selected date range regardless of run date.
+ vi.useFakeTimers({toFake:['Date']});
+ vi.setSystemTime(new Date('2026-10-11T12:00:00Z'));
  const h=setup();
  vi.mocked(h.api.analyzeArchives).mockImplementation(async q=>({snapshot_id:'milk',data_epoch:1,generation:1,projection:'public',algorithm_version:'archive-analysis/6',coverage:{complete:true,included:1,excluded:0,reasons:[]},groups:q.metric==='formula'?[{metric:'formula',unit:'ml',date:'2026-10-11T09:00:00Z',value:'60'}]:[{metric:'documents',value:'4'}]}));
  await screen.findByRole('heading',{name:'奶量趋势'});
@@ -94,4 +98,18 @@ it('shows separate person growth charts, preserves remote period focus, and hide
  expect(h.api.analyzeArchives).toHaveBeenCalledWith(expect.objectContaining({metric:'height',entity_id:'child',date_from:expect.any(String)}),expect.anything());
  vi.mocked(h.api.getArchives).mockImplementation(()=>new Promise(()=>{}));h.dispatch({type:'archives.invalidate'});
  expect(screen.queryByRole('img',{name:/身高趋势/})).toBeNull();expect(screen.queryByText('70.25')).toBeNull();
+});
+
+it('reaches the domain pills with the remote and enters analysis controls without applying a focused domain', async () => {
+ const h=setup();await screen.findByText('合成property');
+ const whole=screen.getByRole('button',{name:'全家'});whole.focus();
+ fireEvent.keyDown(whole,{key:'ArrowRight'});
+ expect(document.activeElement).toBe(screen.getByRole('button',{name:'全部领域'}));
+ fireEvent.keyDown(document.activeElement!,{key:'ArrowRight'});
+ expect(document.activeElement).toBe(screen.getByRole('button',{name:'健康'}));
+ expect(h.api.getArchives).not.toHaveBeenCalledWith(expect.objectContaining({domain:'health'}),expect.anything());
+ fireEvent.keyDown(document.activeElement!,{key:'ArrowDown'});
+ expect(document.activeElement).toBe(screen.getByRole('button',{name:'日'}));
+ fireEvent.keyDown(document.activeElement!,{key:'ArrowUp'});
+ expect(document.activeElement).toBe(screen.getByRole('button',{name:'全部领域'}));
 });

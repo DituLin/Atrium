@@ -105,7 +105,7 @@ export function DashboardScreen(): ReactElement {
 
       {!menu.open ? (
         <section className="home__clock" aria-label="时钟">
-          <div className="home__date serif">{homeDateLine(now, options)}</div>
+          <div className="home__date serif">{homeDateLine(now, options)}{lunar ? ` · ${lunar}` : ''}</div>
           <div className="home__time serif">{clock.time}</div>
           {isTimeUnverified(state.clock, state.nowMs) ? <div className="home__unverified" role="status">时间未经核验</div> : null}
           {notices[0] ? (

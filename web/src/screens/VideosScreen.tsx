@@ -196,6 +196,11 @@ export function VideosScreen() {
   return <>
     <div ref={screenRef} className="screen library surface--ink screen--videos" style={selected ? { display: 'none' } : undefined}>
       <TopNav onDown={focusRail} />
+      <header className="page__heading library__heading">
+        <h1 className="page__title">影像</h1>
+        <p className="library__order">按加入时间，最新在前</p>
+        <p className="library__count">{listStatus === 'loading' ? '正在读取…' : listStatus === 'error' ? '数量暂不可用' : `已载入 ${items.length}${cursor ? '+' : ''} 段`}</p>
+      </header>
       <div className="library__body">
         <MediaRail selected="videos" onSelect={selectEntry} onRight={focusContent} />
         <section className="library__content" aria-label="视频">
@@ -205,7 +210,6 @@ export function VideosScreen() {
               if (key === 'up') focusTopNav();
               if (key === 'left') focusRail();
             }}>{listStatus === 'error' ? '重试' : '刷新'}</RemoteButton>
-            <p className="library__count">{listStatus === 'loading' ? '正在读取…' : listStatus === 'error' ? '数量暂不可用' : `已载入 ${items.length}${cursor ? '+' : ''} 段 · 按加入时间`}</p>
           </header>
           {listStatus === 'error' && <p className="library__note" role="status">暂时无法读取视频列表</p>}
           {listStatus === 'loading' && <p className="library__note" role="status">正在读取视频…</p>}

@@ -1,4 +1,4 @@
-/* Song-inspired paper and celadon television surface. */
+/* Atrium TV dark presentation. */
 @import './ui/design-tokens.css';
 
 * {
@@ -18,6 +18,8 @@ body {
   font-family: var(--font-body);
   font-size: var(--fs-primary);
   line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
   overflow: hidden;
 }
 
@@ -315,7 +317,7 @@ body {
 
 .statusbar { flex-wrap: wrap; }
 
-/* Serif display text supplies the quiet print character; numbers stay sans. */
+/* Legacy widget titles share the TV system font. */
 .clock__date,
 .photos__title,
 .pair__title,
@@ -357,10 +359,6 @@ body {
   .screen--photos > .masthead { display: none; }
 }
 
-/* Song settings: sidebar selection is separate from the remote focus frame. */
-
-/* Song House: one remote-scrollable reading surface, with a fixed check action. */
-
-/* 今日 is a reading sheet: its sources and controls stay in view. */
-
-/* A quiet six-week almanac: today is a celadon seal, controls stay outside it. */
+/* Match the supplied fixed 16:9 artboards, centered on wider/shorter WebViews. */
+html, body { background:#000; }
+#root { position:absolute; left:50%; top:50%; width:calc(1920 * var(--u)); height:calc(1080 * var(--u)); transform:translate(-50%,-50%); overflow:hidden; }

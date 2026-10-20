@@ -1,53 +1,40 @@
-/* Local weight-400 GB2312 subsets; dynamic names can fall back to system CJK.
- * Vite resolves these CSS URLs into hashed production assets. See fonts/SOURCES.md. */
-@font-face {
-  font-family: 'Atrium Noto Serif SC';
-  src: url('../assets/fonts/title.woff2') format('woff2');
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Atrium Noto Sans SC';
-  src: url('../assets/fonts/body.woff2') format('woff2');
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-
+/* Atrium TV dark surfaces. Legacy paper/ink aliases share one palette so
+ * pairing, offline and archive details remain consistent with the six views. */
 :root {
-  --paper: #f2eee5;
-  --text: #28332f;
-  --muted: #59645d;
-  --celadon: #315e54;
-  --surface: #e6dfd2;
-  --rule: #a9b1a6;
-  --warning: #8b4a35;
-  --surface-warning: #ede1d4;
-  --photo-background: #141a17;
-  --photo-text: #f2eee5;
-  --photo-muted: #c4cdc5;
-  --photo-surface: #202621;
-  --photo-line: #717c74;
-  --photo-focus: #a7c6b9;
+  color-scheme: dark;
+  --paper: #0c0e0d;
+  --text: #f2f4f3;
+  --muted: #a3aaa6;
+  --subtle: #7d8480;
+  --celadon: #83d8bb;
+  --surface: #171a19;
+  --surface-focus: #262b29;
+  --rule: rgba(255, 255, 255, 0.08);
+  --warning: #efb780;
+  --surface-warning: #29231b;
+  --photo-background: #0c0e0d;
+  --photo-text: #f2f4f3;
+  --photo-muted: #a3aaa6;
+  --photo-surface: #171a19;
+  --photo-line: rgba(255, 255, 255, 0.12);
+  --photo-focus: #83d8bb;
+  --ink: #0c0e0d;
+  --ink-deep: #080a09;
+  --ink-raised: #171a19;
+  --ink-line: rgba(255, 255, 255, 0.08);
+  --moon: #f2f4f3;
+  --moon-dim: #c3c9c6;
+  --moon-muted: #a3aaa6;
+  --celadon-light: #83d8bb;
+  --ochre-light: #efb780;
+  --hairline: rgba(255, 255, 255, 0.08);
+  --silk: #171a19;
+  --accent-blue: #8ecbfa;
+  --accent-amber: #eac780;
+  --accent-purple: #c6a5ee;
 
-  /* 墨夜 (ink) surfaces for photos, video and the home screen. */
-  --ink: #121714;
-  --ink-deep: #0e1210;
-  --ink-raised: #1b221e;
-  --ink-line: rgba(238, 233, 222, 0.18);
-  --moon: #eee9de;
-  --moon-dim: #c9d0c8;
-  --moon-muted: #a9b2aa;
-  --celadon-light: #a9cdbe;
-  --ochre-light: #d99a7e;
-  /* 纸白 (paper) hairline and raised surface used by information pages. */
-  --hairline: #cfc6b6;
-  --silk: #e9e2d5;
-
-  --font-title: 'Atrium Noto Serif SC', 'Songti SC', 'STSong', serif;
-  --font-body: 'Atrium Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-title: -apple-system, 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --font-body: -apple-system, 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
 
   /* One design pixel at 1920×1080. Both dimensions constrain scale, including
    * 804×384 WebViews; physical-pixel font floors must not force overflow. */
@@ -74,7 +61,7 @@
   --focus: var(--celadon);
   --gap: calc(24 * var(--design-pixel));
   --pad: var(--safe-margin);
-  --radius: calc(3 * var(--design-pixel));
+  --radius: calc(28 * var(--design-pixel));
   --fs-body: var(--fs-aux);
   --fs-primary: var(--fs-text);
   --fs-heading: var(--fs-title);

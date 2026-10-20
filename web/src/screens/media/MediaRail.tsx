@@ -18,12 +18,12 @@ import { COLLECTION_LABELS } from './viewerPosition';
 
 export type MediaEntry = PhotoCollection | 'videos';
 
-const ENTRIES: readonly { id: MediaEntry; label: string }[] = [
-  { id: 'recent', label: COLLECTION_LABELS.recent },
-  { id: 'captured_today', label: COLLECTION_LABELS.captured_today },
-  { id: 'random', label: COLLECTION_LABELS.random },
-  { id: 'all', label: COLLECTION_LABELS.all },
-  { id: 'videos', label: '视频' },
+const ENTRIES: readonly { id: MediaEntry; label: string; icon: string }[] = [
+  { id: 'recent', label: COLLECTION_LABELS.recent, icon: 'M12 7v5l3 2 M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18' },
+  { id: 'captured_today', label: COLLECTION_LABELS.captured_today, icon: 'M4 7h3l2-3h6l2 3h3v12H4z M12 10a3 3 0 1 0 0 6a3 3 0 1 0 0-6' },
+  { id: 'random', label: COLLECTION_LABELS.random, icon: 'M4 7h3l10 10h3 M4 17h3l3-3 M14 10l3-3h3' },
+  { id: 'all', label: COLLECTION_LABELS.all, icon: 'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z' },
+  { id: 'videos', label: '视频', icon: 'M3 6h13v12H3z M16 10l5-3v10l-5-3' },
 ];
 
 /** Focus the selected rail entry inside `root` (the current screen). */
@@ -44,8 +44,7 @@ export interface MediaRailProps {
 export function MediaRail(props: MediaRailProps): ReactElement {
   const entries = useRef<(HTMLButtonElement | null)[]>([]);
   return (
-    <aside className="media-rail">
-      <h1 className="media-rail__title serif">影像</h1>
+    <aside className="media-rail" aria-label="影像合集">
       <div className="media-rail__entries" role="tablist" aria-orientation="vertical" aria-label="影像分类">
         {ENTRIES.map((entry, index) => {
           const selected = entry.id === props.selected;
@@ -65,7 +64,7 @@ export function MediaRail(props: MediaRailProps): ReactElement {
                 if (key === 'right') props.onRight();
               }}
             >
-              <span className="media-rail__dot" aria-hidden="true" />
+              <span className="media-rail__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={entry.icon} /></svg></span>
               <span className="media-rail__label">{entry.label}</span>
               {selected && props.count ? <span className="media-rail__count" aria-hidden="true">{props.count}</span> : null}
             </RemoteButton>

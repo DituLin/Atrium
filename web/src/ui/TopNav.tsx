@@ -1,5 +1,5 @@
 /**
- * Top navigation for paper information pages (首页 · 影像 · 今日 · 档案 · 房屋 · 设置).
+ * Top navigation shared by the dark information and media pages (首页 · 影像 · 今日 · 档案 · 房屋 · 设置).
  * It sits above the content so page controls can never collide with it.
  *
  * Remote: Left/Right move between entries and stop at the edges, Down hands
