@@ -76,7 +76,7 @@ func (v *Videos) GetByPath(ctx context.Context, sourceID, rel string) (*domain.V
 // SetMetadata returns false when the task revision has become stale or revoked.
 // Ready describes a successful probe, not a promise about all TV decoders.
 func (v *Videos) SetMetadata(ctx context.Context, id string, revision int64, m domain.VideoMetadata, now time.Time) (bool, error) {
-	if m.Width <= 0 || m.Height <= 0 || m.DurationMS <= 0 || m.VideoCodec == "" || m.Container == "" {
+	if !m.LivePhoto && (m.Width <= 0 || m.Height <= 0 || m.DurationMS <= 0 || m.VideoCodec == "" || m.Container == "") {
 		return false, fmt.Errorf("store: invalid video metadata")
 	}
 	data, err := json.Marshal(m)
@@ -84,7 +84,7 @@ func (v *Videos) SetMetadata(ctx context.Context, id string, revision int64, m d
 		return false, fmt.Errorf("store: encode video metadata: %w", err)
 	}
 	res, err := v.ex.ExecContext(ctx, `UPDATE videos SET metadata_json=?,status='ready',updated_at=?
- WHERE id=? AND revision=? AND status IN ('pending','ready')
+ WHERE id=? AND revision=? AND status IN ('pending','ready','unsupported')
  AND EXISTS (SELECT 1 FROM data_sources s WHERE s.id=videos.source_id AND s.status='active')`, string(data), FormatTime(now), id, revision)
 	if err != nil {
 		return false, fmt.Errorf("store: publish video metadata: %w", err)

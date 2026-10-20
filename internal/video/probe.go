@@ -20,7 +20,8 @@ func parseProbe(data []byte) (domain.VideoMetadata, error) {
 		Format struct {
 			Duration string `json:"duration"`
 			Tags     struct {
-				Brand string `json:"major_brand"`
+				Brand             string `json:"major_brand"`
+				ContentIdentifier string `json:"com.apple.quicktime.content.identifier"`
 			} `json:"tags"`
 		} `json:"format"`
 		Streams []struct {
@@ -39,6 +40,11 @@ func parseProbe(data []byte) (domain.VideoMetadata, error) {
 	var m domain.VideoMetadata
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return m, ErrMetadata
+	}
+	// The identifier is only a classification signal. Do not retain it or
+	// require playable video metadata for a Live Photo companion.
+	if strings.TrimSpace(raw.Format.Tags.ContentIdentifier) != "" {
+		return domain.VideoMetadata{LivePhoto: true}, nil
 	}
 	seconds, err := strconv.ParseFloat(raw.Format.Duration, 64)
 	if err != nil || math.IsNaN(seconds) || math.IsInf(seconds, 0) || seconds <= 0 || seconds > 7*24*3600 {

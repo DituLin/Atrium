@@ -27,7 +27,7 @@ Host and OnePlus development-device verification does not replace real-TV, reboo
 | --- | --- |
 | Home dashboard | Household-zone time and date, media display, Core/NAS/connection state |
 | Photos | Read-only indexing, preview and thumbnail cache, collections, single-photo viewing and slideshow |
-| Videos | Video browsing and playback from read-only media sources; availability depends on format and host processing support |
+| Videos | Video browsing and playback from read-only media sources; Apple Live Photo markers exclude paired clips from the video list while still photos remain available; availability depends on format and host processing support |
 | Daily briefing | Household information, time and status from configured sources |
 | House | Configured house information and source status |
 | Calendar | Source interface and synchronization status are retained; it is unconfigured by default, not a completed calendar service |

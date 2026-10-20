@@ -3,6 +3,7 @@ package video
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"image/jpeg"
 	"os"
 	"os/exec"
@@ -42,4 +43,28 @@ func TestToolsRealDescriptorProbeAndCover(t *testing.T) {
 	require.NoError(t, err)
 	require.LessOrEqual(t, img.Bounds().Dx(), 640)
 	require.Positive(t, img.Bounds().Dy())
+}
+
+func TestToolsRealDescriptorProbeIdentifiesLivePhotoMOV(t *testing.T) {
+	ffmpeg, err := exec.LookPath("ffmpeg")
+	if err != nil {
+		t.Skip("ffmpeg not installed")
+	}
+	ffprobe, err := exec.LookPath("ffprobe")
+	if err != nil {
+		t.Skip("ffprobe not installed")
+	}
+	path := filepath.Join(t.TempDir(), "live-photo.mov")
+	const identifier = "synthetic-live-photo-identifier"
+	out, err := exec.Command(ffmpeg, "-v", "error", "-f", "lavfi", "-i", "color=c=blue:s=96x64:d=1", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "use_metadata_tags", "-metadata", "com.apple.quicktime.content.identifier="+identifier, path).CombinedOutput()
+	require.NoError(t, err, string(out))
+	f, err := os.Open(path)
+	require.NoError(t, err)
+	defer f.Close()
+	m, err := (Tools{FFprobe: ffprobe, FFmpeg: ffmpeg}).Probe(context.Background(), f)
+	require.NoError(t, err)
+	data, err := json.Marshal(m)
+	require.NoError(t, err)
+	require.Contains(t, string(data), `"live_photo":true`)
+	require.NotContains(t, string(data), identifier)
 }

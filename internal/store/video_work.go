@@ -33,7 +33,8 @@ func (w *VideoWork) RetainedTokens(ctx context.Context, now time.Time) (map[stri
 	rows, err := w.db.sql.QueryContext(ctx, `SELECT w.token FROM video_work w JOIN videos v ON v.id=w.video_id
  JOIN data_sources s ON s.id=v.source_id LEFT JOIN settings g ON g.key='source_observation_generation:'||s.id
  WHERE w.revision=v.revision AND s.status='active' AND COALESCE(g.value,'')=w.source_generation
- AND v.status IN ('pending','ready') AND (w.lease_until>? OR (v.status='ready' AND w.cover_bytes>0)) AND `+videoNotExcluded, FormatTime(now))
+ AND v.status IN ('pending','ready','unsupported')
+ AND (w.lease_until>? OR (v.status='ready' AND w.cover_bytes>0 AND `+videoNotLivePhoto+`)) AND `+videoNotExcluded, FormatTime(now))
 	if err != nil {
 		return nil, err
 	}
@@ -57,6 +58,11 @@ const videoNotExcluded = `NOT EXISTS (SELECT 1 FROM photo_exclusions e WHERE e.s
  AND length(trim(e.pattern,'/'))>0 AND (v.rel_path=trim(e.pattern,'/') OR
  (e.match_kind='prefix' AND substr(v.rel_path,1,length(trim(e.pattern,'/'))+1)=trim(e.pattern,'/')||'/')))`
 
+// Missing classification is legacy work, while a confirmed Live Photo is never
+// independently exposed as video. No Apple asset identifier is retained.
+const videoNotLivePhoto = `COALESCE(json_extract(v.metadata_json,'$.live_photo'),0)<>1`
+const videoClassifiable = `v.status IN ('pending','ready','unsupported')`
+
 // Claim returns nil when no eligible work is due. It serializes selection and
 // lease replacement so workers and process restarts cannot share a claim.
 func (w *VideoWork) Claim(ctx context.Context, now time.Time, ttl time.Duration) (*VideoTask, error) {
@@ -69,8 +75,9 @@ func (w *VideoWork) Claim(ctx context.Context, now time.Time, ttl time.Duration)
 		err := tx.QueryRowContext(ctx, `SELECT v.id FROM videos v JOIN data_sources s ON s.id=v.source_id
  LEFT JOIN settings g ON g.key='source_observation_generation:'||s.id
  LEFT JOIN video_work w ON w.video_id=v.id
- WHERE v.status IN ('pending','ready') AND s.status='active' AND s.health='online'
- AND (w.video_id IS NULL OR w.revision<>v.revision OR w.source_generation<>COALESCE(g.value,'') OR w.cover_bytes=0)
+ WHERE `+videoClassifiable+` AND s.status='active' AND s.health='online'
+ AND (w.video_id IS NULL OR w.revision<>v.revision OR w.source_generation<>COALESCE(g.value,'')
+ OR json_type(v.metadata_json,'$.live_photo') IS NULL OR (v.status<>'unsupported' AND w.cover_bytes=0 AND `+videoNotLivePhoto+`))
  AND (w.video_id IS NULL OR w.revision<>v.revision OR w.source_generation<>COALESCE(g.value,'') OR (w.lease_until<=? AND w.next_run_at<=?))
  AND `+videoNotExcluded+` ORDER BY v.first_seen_at,v.id LIMIT 1`, FormatTime(now), FormatTime(now)).Scan(&id)
 		if errors.Is(err, sql.ErrNoRows) {
@@ -103,6 +110,14 @@ func (w *VideoWork) Claim(ctx context.Context, now time.Time, ttl time.Duration)
 		if err != nil {
 			return err
 		}
+		// This revision/authority has not completed classification yet. Clear
+		// an older result in the same transaction so a crash or transient probe
+		// failure remains eligible after lease expiry, including old Live Photos
+		// and unsupported files being retried under a new source authority.
+		if _, err := tx.ExecContext(ctx, `UPDATE videos SET status='pending',metadata_json='{}',updated_at=? WHERE id=?`, FormatTime(now), id); err != nil {
+			return err
+		}
+		video.Status, video.Metadata = domain.VideoPending, domain.VideoMetadata{}
 		task = &VideoTask{Video: *video, Source: ObservationLease{Source: *src, generation: generation}, Token: token, Attempts: attempts}
 		return nil
 	})
@@ -117,7 +132,7 @@ func (w *VideoWork) current(ctx context.Context, tx *sql.Tx, t VideoTask, now ti
 	err := tx.QueryRowContext(ctx, `SELECT count(*) FROM video_work w JOIN videos v ON v.id=w.video_id
  JOIN data_sources s ON s.id=v.source_id LEFT JOIN settings g ON g.key='source_observation_generation:'||s.id
  WHERE v.id=? AND v.revision=? AND w.revision=v.revision AND w.token=? AND w.lease_until>?
- AND w.cover_bytes=0 AND v.status IN ('pending','ready') AND s.status='active' AND s.health='online'
+ AND w.cover_bytes=0 AND `+videoClassifiable+` AND s.status='active' AND s.health='online'
  AND s.id=? AND s.root_path=? AND w.source_generation=? AND COALESCE(g.value,'')=w.source_generation AND `+videoNotExcluded,
 		t.Video.ID, t.Video.Revision, t.Token, FormatTime(now), t.Source.Source.ID, t.Source.Source.RootPath, t.Source.generation).Scan(&n)
 	return n == 1, err
@@ -126,7 +141,7 @@ func (w *VideoWork) current(ctx context.Context, tx *sql.Tx, t VideoTask, now ti
 // Publish commits a validated JPEG reference and metadata together. The cache
 // object is keyed by Token; a false result requires the caller to discard it.
 func (w *VideoWork) Publish(ctx context.Context, t VideoTask, m domain.VideoMetadata, bytes int64, width, height int, now time.Time) (bool, error) {
-	if bytes <= 0 || bytes > 2*1024*1024 || width <= 0 || height <= 0 || width > 640 || height > 640 {
+	if m.LivePhoto || bytes <= 0 || bytes > 2*1024*1024 || width <= 0 || height <= 0 || width > 640 || height > 640 {
 		return false, fmt.Errorf("store: invalid video cover")
 	}
 	published := false
@@ -145,6 +160,30 @@ func (w *VideoWork) Publish(ctx context.Context, t VideoTask, m domain.VideoMeta
 	})
 	if err != nil {
 		return false, fmt.Errorf("store: publish video work: %w", err)
+	}
+	return published, nil
+}
+
+// PublishLivePhoto records a terminal classification under the same claim and
+// source authority as cover publication, without deriving a video cover. The
+// still photo has its independent index and is never modified here.
+func (w *VideoWork) PublishLivePhoto(ctx context.Context, t VideoTask, now time.Time) (bool, error) {
+	published := false
+	err := w.db.InTx(ctx, func(tx *sql.Tx) error {
+		ok, err := w.current(ctx, tx, t, now)
+		if err != nil || !ok {
+			return err
+		}
+		ok, err = w.db.Videos().WithTx(tx).SetMetadata(ctx, t.Video.ID, t.Video.Revision, domain.VideoMetadata{LivePhoto: true}, now)
+		if err != nil || !ok {
+			return err
+		}
+		_, err = tx.ExecContext(ctx, `UPDATE video_work SET cover_bytes=0,cover_width=0,cover_height=0,lease_until=?,error_code='' WHERE video_id=? AND token=?`, FormatTime(now), t.Video.ID, t.Token)
+		published = err == nil
+		return err
+	})
+	if err != nil {
+		return false, fmt.Errorf("store: publish live photo classification: %w", err)
 	}
 	return published, nil
 }
@@ -197,7 +236,7 @@ func (w *VideoWork) FailUnsupported(ctx context.Context, t VideoTask, now time.T
 		if err != nil || !ok {
 			return err
 		}
-		if _, err = tx.ExecContext(ctx, `UPDATE videos SET status='unsupported',metadata_json='{}',updated_at=? WHERE id=?`, FormatTime(now), t.Video.ID); err != nil {
+		if _, err = tx.ExecContext(ctx, `UPDATE videos SET status='unsupported',metadata_json='{"live_photo":false}',updated_at=? WHERE id=?`, FormatTime(now), t.Video.ID); err != nil {
 			return err
 		}
 		_, err = tx.ExecContext(ctx, `UPDATE video_work SET error_code='unsupported',lease_until=? WHERE video_id=? AND token=?`, FormatTime(now), t.Video.ID, t.Token)

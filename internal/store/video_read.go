@@ -37,7 +37,7 @@ func videoScopeWhere(scopes []VideoScope) (string, []any) {
 	if len(parts) == 0 {
 		return "0", args
 	}
-	return `s.status='active' AND v.status IN ('pending','ready','unsupported') AND (` + strings.Join(parts, " OR ") + `) AND ` + videoNotExcluded, args
+	return `s.status='active' AND v.status IN ('pending','ready','unsupported') AND (` + strings.Join(parts, " OR ") + `) AND ` + videoNotLivePhoto + ` AND ` + videoNotExcluded, args
 }
 
 // Read metadata is hidden after reauthorization until a new worker republishes.

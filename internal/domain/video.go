@@ -27,6 +27,7 @@ type VideoObservation struct {
 // Empty AudioCodec means no audio stream. No paths or arbitrary probe output
 // are retained here.
 type VideoMetadata struct {
+	LivePhoto  bool   `json:"live_photo"`
 	Container  string `json:"container"`
 	VideoCodec string `json:"video_codec"`
 	AudioCodec string `json:"audio_codec"`

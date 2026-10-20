@@ -25,7 +25,7 @@ func inputArgs(protocols string) []string {
 
 // Probe derives only the metadata retained by the video index.
 func (t Tools) Probe(ctx context.Context, input *os.File) (domain.VideoMetadata, error) {
-	args := append(inputArgs("fd"), "-show_entries", "format=duration:format_tags=major_brand:stream=codec_type,codec_name,width,height:stream_disposition=attached_pic:stream_side_data=rotation", "-of", "json")
+	args := append(inputArgs("fd"), "-show_entries", "format=duration:format_tags=major_brand,com.apple.quicktime.content.identifier:stream=codec_type,codec_name,width,height:stream_disposition=attached_pic:stream_side_data=rotation", "-of", "json")
 	data, err := runTool(ctx, t.FFprobe, args, input, 512*1024)
 	if err != nil {
 		return domain.VideoMetadata{}, err

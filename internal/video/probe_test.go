@@ -1,8 +1,11 @@
 package video
 
 import (
-	"github.com/stretchr/testify/require"
+	"encoding/json"
 	"testing"
+
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseProbeDisplayDimensionsAndAudio(t *testing.T) {
@@ -25,4 +28,39 @@ func TestParseProbeRejectsUnusableMetadata(t *testing.T) {
 	m, err := parseProbe([]byte(`{"format":{"duration":"1"},"streams":[{"codec_type":"video","codec_name":"hevc","width":1920,"height":1080}]}`))
 	require.NoError(t, err)
 	require.Empty(t, m.AudioCodec)
+}
+
+func TestVideoMetadataAlwaysSerializesLivePhotoClassification(t *testing.T) {
+	data, err := json.Marshal(domain.VideoMetadata{})
+	require.NoError(t, err)
+	require.Contains(t, string(data), `"live_photo":false`)
+}
+
+func TestParseProbeIdentifiesLivePhotoBeforeVideoValidation(t *testing.T) {
+	for _, raw := range []string{
+		`{"format":{"duration":"3","tags":{"major_brand":"qt  ","com.apple.quicktime.content.identifier":"synthetic-live-photo-identifier"}},"streams":[{"codec_type":"video","codec_name":"hevc","width":1920,"height":1080}]}`,
+		`{"format":{"tags":{"com.apple.quicktime.content.identifier":"synthetic-live-photo-identifier"}}}`,
+		`{"format":{"duration":"NaN","tags":{"com.apple.quicktime.content.identifier":"  synthetic-live-photo-identifier  "}},"streams":[{"codec_type":"video","width":0,"height":0}]}`,
+	} {
+		m, err := parseProbe([]byte(raw))
+		require.NoError(t, err, raw)
+		data, err := json.Marshal(m)
+		require.NoError(t, err)
+		require.Contains(t, string(data), `"live_photo":true`)
+		require.NotContains(t, string(data), "synthetic-live-photo-identifier")
+	}
+}
+
+func TestParseProbeKeepsOrdinaryShortAndLongMOV(t *testing.T) {
+	for _, duration := range []string{"1", "3", "6", "3600"} {
+		for _, marker := range []string{"", "   "} {
+			raw := `{"format":{"duration":"` + duration + `","tags":{"major_brand":"qt  ","com.apple.quicktime.content.identifier":"` + marker + `"}},"streams":[{"codec_type":"video","codec_name":"h264","width":96,"height":64}]}`
+			m, err := parseProbe([]byte(raw))
+			require.NoError(t, err)
+			require.Equal(t, "mov", m.Container)
+			data, err := json.Marshal(m)
+			require.NoError(t, err)
+			require.Contains(t, string(data), `"live_photo":false`)
+		}
+	}
 }

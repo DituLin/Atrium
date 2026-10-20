@@ -2,6 +2,7 @@ package store_test
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -10,6 +11,44 @@ import (
 	"github.com/DituLin/Atrium/internal/store/testutil"
 	"github.com/stretchr/testify/require"
 )
+
+func TestVideoReadExcludesLivePhotoButKeepsOrdinaryShortMOV(t *testing.T) {
+	db := testutil.NewDB(t)
+	ctx := context.Background()
+	now := seedSource(t, db, "mixed")
+	require.NoError(t, db.Sources().SetHealth(ctx, "mixed", domain.HealthOnline, "", true, now))
+	src, err := db.Sources().Get(ctx, "mixed")
+	require.NoError(t, err)
+	scope := []store.VideoScope{{SourceID: "mixed", Root: src.RootPath, MOV: true}}
+	var liveID string
+	for _, name := range []string{"live.mov", "ordinary.mov"} {
+		v, err := db.Videos().Observe(ctx, domain.VideoObservation{SourceID: "mixed", RelPath: name, SizeBytes: 1, Generation: 1}, now)
+		require.NoError(t, err)
+		task, err := db.VideoWork().Claim(ctx, now, time.Minute)
+		require.NoError(t, err)
+		require.NotNil(t, task)
+		var m domain.VideoMetadata
+		require.NoError(t, json.Unmarshal([]byte(`{"container":"mov","video_codec":"h264","width":10,"height":10,"duration_ms":1500,"live_photo":false}`), &m))
+		ok, err := db.VideoWork().Publish(ctx, *task, m, 100, 10, 10, now)
+		require.NoError(t, err)
+		require.True(t, ok)
+		if name == "live.mov" {
+			liveID = v.ID
+			require.NoError(t, json.Unmarshal([]byte(`{"live_photo":true}`), &m))
+			ok, err = db.Videos().SetMetadata(ctx, v.ID, v.Revision, m, now)
+			require.NoError(t, err)
+			require.True(t, ok)
+		}
+	}
+	rows, err := db.Videos().ListVisible(ctx, scope, nil, 10)
+	require.NoError(t, err)
+	require.Len(t, rows, 1)
+	require.Equal(t, "ordinary.mov", rows[0].RelPath)
+	_, err = db.Videos().GetVisible(ctx, scope, liveID)
+	require.ErrorIs(t, err, domain.ErrNotFound)
+	_, err = db.Videos().GetCover(ctx, scope, liveID)
+	require.ErrorIs(t, err, domain.ErrNotFound)
+}
 
 func TestVideoReadScopePaginationAndImmediateExclusion(t *testing.T) {
 	db := testutil.NewDB(t)

@@ -22,13 +22,66 @@ type stubProcessor struct {
 	afterProbe func()
 	afterCover func()
 	probeErr   error
+	livePhoto  bool
 }
 
 func (p stubProcessor) Probe(context.Context, *os.File) (domain.VideoMetadata, error) {
 	if p.afterProbe != nil {
 		p.afterProbe()
 	}
-	return domain.VideoMetadata{Container: "mp4", VideoCodec: "h264", Width: 10, Height: 10, DurationMS: 1000}, p.probeErr
+	return domain.VideoMetadata{LivePhoto: p.livePhoto, Container: "mp4", VideoCodec: "h264", Width: 10, Height: 10, DurationMS: 1000}, p.probeErr
+}
+
+func TestWorkerLivePhotoKeepsStillAndSkipsVideoCover(t *testing.T) {
+	ctx := context.Background()
+	probes := 0
+	w, db, id, file := workerFixture(t, stubProcessor{livePhoto: true, afterProbe: func() { probes++ }, afterCover: func() { t.Error("Live Photo must not derive a video cover") }}, 1<<20)
+	now := time.Now()
+	photo := &domain.Photo{SourceID: "mixed", RelPath: "a.jpg", Ext: "jpg", SizeBytes: 123, Status: domain.PhotoReady, FirstSeenAt: now, LastSeenAt: now, CreatedAt: now, UpdatedAt: now}
+	require.NoError(t, db.Photos().Insert(ctx, photo))
+	before, err := db.Photos().Get(ctx, photo.ID)
+	require.NoError(t, err)
+	worked, err := w.RunOnce(ctx)
+	require.NoError(t, err)
+	require.True(t, worked)
+	v, err := db.Videos().Get(ctx, id)
+	require.NoError(t, err)
+	require.True(t, v.Metadata.LivePhoto)
+	used, err := w.opts.Cache.Bytes()
+	require.NoError(t, err)
+	require.Zero(t, used)
+	worked, err = w.RunOnce(ctx)
+	require.NoError(t, err)
+	require.False(t, worked)
+	require.Equal(t, 1, probes)
+	after, err := db.Photos().Get(ctx, photo.ID)
+	require.NoError(t, err)
+	require.Equal(t, before, after)
+	data, err := os.ReadFile(file)
+	require.NoError(t, err)
+	require.Equal(t, "video", string(data))
+}
+
+func TestWorkerRejectsLivePhotoClassificationAfterFileOrAuthorityChanges(t *testing.T) {
+	for _, scenario := range []string{"changed", "revoked"} {
+		t.Run(scenario, func(t *testing.T) {
+			ctx := context.Background()
+			w, db, id, file := workerFixture(t, stubProcessor{}, 1<<20)
+			w.opts.Processor = stubProcessor{livePhoto: true, afterProbe: func() {
+				if scenario == "changed" {
+					require.NoError(t, os.WriteFile(file, []byte("replacement file"), 0600))
+				} else {
+					require.NoError(t, db.Sources().Revoke(ctx, "mixed", "test", time.Now()))
+				}
+			}}
+			worked, err := w.RunOnce(ctx)
+			require.True(t, worked)
+			require.Error(t, err)
+			v, err := db.Videos().Get(ctx, id)
+			require.NoError(t, err)
+			require.False(t, v.Metadata.LivePhoto)
+		})
+	}
 }
 func (p stubProcessor) Cover(context.Context, *os.File) ([]byte, error) {
 	var b bytes.Buffer

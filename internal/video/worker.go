@@ -208,6 +208,16 @@ func (w *Worker) process(ctx context.Context, t store.VideoTask) error {
 	if err != nil {
 		return err
 	}
+	if meta.LivePhoto {
+		published, err := w.opts.DB.VideoWork().PublishLivePhoto(ctx, t, w.opts.Now())
+		if err != nil {
+			return err
+		}
+		if !published {
+			return ErrStale
+		}
+		return nil
+	}
 	f, err = openVideo(ctx, entry, t)
 	if err != nil {
 		return err
