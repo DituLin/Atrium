@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-20",
+  "kind": "backend-hotfix-over-existing-frontend",
+  "fix_commit": "96b093ac57667fbb0a6642f0e8d1e8511791ae4e",
+  "backend_commit": "c06c6a591e9a33c6a93bc0def15d3e29061f9d07",
+  "frontend_commit": "041b4833678109735c5799de6d1f65ac88b11067",
+  "version": "live-photo-96b093a+c06c6a591e9a33c6a93bc0def15d3e29061f9d07",
+  "schema": 17,
+  "signature_requirement_preserved": true,
+  "unchanged_package_files": 56,
+  "consistent_backup_verified": true,
+  "business_data_preserved": true,
+  "photos_preserved": true,
+  "identity_preserved": true,
+  "config_unchanged": true,
+  "bundle_verified": true,
+  "nas_online": true,
+  "synthetic_preflight": {
+    "legacy_videos": 2,
+    "live_photo_hidden": 1,
+    "ordinary_short_video": 1,
+    "still_photos": 1,
+    "bundle_verified": true,
+    "passed": true
+  },
+  "live_photo_runtime_statuses": {
+    "detail": 404,
+    "cover": 404,
+    "ticket": 404,
+    "content": 404
+  },
+  "normal_video_detail_status": 200,
+  "normal_video_range_status": 206,
+  "full_go_tests": "passed",
+  "final_reclassification_race_regressions": "passed",
+  "oneplus_archives_command": "applied",
+  "existing_index_backfill_complete": false
+}

@@ -402,4 +402,6 @@ T14 最终固定 `f6f9e81c90f146f0336bebf13ae12a9530915306` 获需求与完整�
 
 最终签名包 `c06c6a5` 已部署。切换前静止备份 `predeploy-20261011-214755`，86条已有家庭记录逐行保留，schema17、integrity/FK、签名身份及受保护 provider 文件核对通过。Core、OpenClaw running；微信 probe running且无错误，Discord两个账号 connected且无错误。该 probe 不代替新的真实渠道消息验收。
 
+2026-10-20 在相同后端基线上先部署深色 TV 前端 `041b483`，再部署 Live Photo 分类窄补丁 `96b093a`。当前运行版本为 `live-photo-96b093a+c06c6a591e9a33c6a93bc0def15d3e29061f9d07`，schema17、既有签名身份、配置、照片与家庭/档案数据保持。已分类的 Apple Live Photo 片段不作为独立视频，静态照片保留；旧索引后台重新分类尚在推进。全量 Go、相关 race、合成旧索引升级与线上 API 抽查通过。详见[中英文部署证据](evidence/2026-10-20-live-photo/README.md)；不据此扩大 T15–T18 的验收结论。
+
 正式 OnePlus 应用 `io.atrium.tv` 的日、周、月实际图表核验通过，实际遥控 Right/OK 切换周/月且焦点保留；紧凑布局中两类奶量曲线与横轴完整位于首屏，最近记录显示在前。实际日/周/月加载约0.8/1.2/1.4秒。全量 Go、Web65文件471项与生产构建/typecheck通过；最终布局和标签修改后相关10项回归通过。脱敏记录见 [热修验证](evidence/2026-10-11-archive-tv-hotfix/README.md)，真实家庭值及设备截图仅保留本机受保护目录。此热修不改变上方剩余 AgentOS 交付边界。

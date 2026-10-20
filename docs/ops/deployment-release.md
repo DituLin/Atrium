@@ -2,7 +2,7 @@
 
 [English](deployment-release.en.md) · [文档导航](../README.md) · [项目介绍](../../README.md)
 
-更新：2026-10-20。本流程面向维护者。线上后端基线仍为固定提交 `c06c6a591e9a33c6a93bc0def15d3e29061f9d07`，已嵌入前端 `041b4833678109735c5799de6d1f65ac88b11067`，运行版本为 `tv-ui-041b483+c06c6a591e9a33c6a93bc0def15d3e29061f9d07`。这是[仅前端覆盖发布](evidence/2026-10-20-tv-dark-ui/README.md)，不是完整主分支升级；主分支更新不会自动改变运行版本。
+更新：2026-10-20。本流程面向维护者。线上后端基线仍为固定提交 `c06c6a591e9a33c6a93bc0def15d3e29061f9d07`，叠加 [Live Photo 分类修复](evidence/2026-10-20-live-photo/README.md) `96b093ac57667fbb0a6642f0e8d1e8511791ae4e`，前端保留 `041b4833678109735c5799de6d1f65ac88b11067`，运行版本为 `live-photo-96b093a+c06c6a591e9a33c6a93bc0def15d3e29061f9d07`。这是现有后端上的窄补丁，包含此前的[深色 UI 发布](evidence/2026-10-20-tv-dark-ui/README.md)，不是完整主分支升级；主分支更新不会自动改变运行版本。
 
 ## 1. 发布边界与现状
 
