@@ -7,7 +7,7 @@ button.archive-dashboard__card:focus { outline:none; background:var(--surface-fo
 .archive-dashboard__milk { grid-column:span 2; padding:calc(26 * var(--u)) calc(32 * var(--u)); color:var(--archive-health); }
 .archive-dashboard__mix { padding:calc(30 * var(--u)) calc(28 * var(--u)) calc(26 * var(--u)); }
 .archive-dashboard__card-heading { display:flex; align-items:center; justify-content:space-between; width:100%; min-height:calc(34 * var(--u)); }
-.archive-dashboard__card-heading h3 { display:flex; align-items:center; margin:0; min-width:0; font-size:calc(24 * var(--u)); font-weight:600; line-height:1.35; }
+.archive-dashboard__card-heading h3 { display:flex; align-items:center; margin:0; min-width:0; flex:1; white-space:nowrap; overflow:hidden; font-size:calc(24 * var(--u)); font-weight:600; line-height:1.35; }
 .archive-dashboard__milk h3,.archive-dashboard__mix h3 { font-size:calc(25 * var(--u)); }
 .archive-dashboard__mix h3 { color:#c9cfcc; }
 .archive-dashboard__dot { display:inline-block; flex:0 0 calc(12 * var(--u)); height:calc(12 * var(--u)); margin-right:calc(12 * var(--u)); border-radius:calc(4 * var(--u)); background:currentColor; }
