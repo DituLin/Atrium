@@ -31,7 +31,7 @@ Host and OnePlus development-device verification does not replace real-TV, reboo
 | Daily briefing | Household information, time and status from configured sources |
 | House | Configured house information and source status |
 | Calendar | Source interface and synchronization status are retained; it is unconfigured by default, not a completed calendar service |
-| Archives | Person/domain/type filters, evidence and original viewing, review state and bounded analysis |
+| Archives | Person/domain/type filters, evidence and original viewing, review state, bounded analysis, measured growth curves and optional WHO references |
 | Screen control | CLI/API `navigate`, `show` and `refresh`, with actual execution receipts |
 
 The TV can use a browser or the standalone Android host. Home, Media, Today, Archives, House and Settings share a dark interface with direction, OK and Back controls. A direction key opens the home menu, which closes after 12 seconds without input. Remote-control browsing and public projections share the same client; completed background tasks do not automatically take over the current page.
@@ -41,6 +41,8 @@ The [dark UI update](docs/ops/evidence/2026-10-20-tv-dark-ui/README.en.md) was d
 The [Live Photo classification fix](docs/ops/evidence/2026-10-20-live-photo/README.en.md) `96b093a` was deployed over the same backend baseline that day. Only a boolean classification from the Apple marker is retained; still photos remain available and companion clips are excluded as standalone videos. Existing entries are automatically rechecked in the background.
 
 The [archive dashboard design alignment](docs/ops/evidence/2026-10-21-archive-dashboard/README.en.md) `6127858`, including native-title fix `6bca2a1`, was deployed on 2026-10-21. The three-column dashboard contains a large milk card, archive composition, height, weight and financial amounts, with public archive counts in the sidebar. Statistics use actual records and explicit definitions; missing data keeps an empty card. Synthetic browser checks and remote-control checks in the official OnePlus app passed.
+
+The [full-width growth curve](docs/ops/evidence/2026-10-21-growth-curve/README.en.md) `ec9c5cd` was deployed the same day. Height/weight controls sit below milk; confirmed person information enables age in months, WHO P50 and P3–P97 references, and percentiles. Reference parameters are computed offline; without measurements, only reference lines appear. See the [growth curve guide](docs/usage/growth-dashboard.en.md) for configuration and use.
 
 ## Integrated archives
 
