@@ -40,6 +40,7 @@ it('serves synthetic whole-family counts and typed entities with one consistent 
     expect(overview).toMatchObject({ generation: '1:1', total: 128, confirmed: 120, pending: 8, ownership: { household: 19, unassigned: 5, waiting: 3 }, coverage: { complete: true } });
     expect(overview.domains).toEqual([{ domain: 'health', count: 56 }, { domain: 'finance', count: 34 }, { domain: 'education', count: 22 }, { domain: 'property', count: 16 }]);
     const entities = await data<ArchiveEntities>('/api/v1/archives/entities');
+    expect(overview.growth_profiles).toEqual([{entity_id:'synthetic_child',birth_date:expect.any(String),sex:'male',height_measurement:'length'}]);
     expect(entities.items).toHaveLength(4); expect(entities.items[0]?.names).toEqual(['合成宝宝']);
     expect(overview.entities.find(e => e.id === 'synthetic_child')?.count).toBe(61);
     const page = await data<ArchivePage>('/api/v1/archives/search?limit=10');
@@ -75,6 +76,7 @@ it('serves day milk total and feeds, growth deltas and adjacent monthly finance 
 it('offers an empty-state control with a new shared generation and restores populated fixtures', async () => {
     const response = await post('/__control/archives', { empty: true }); expect(response.status).toBe(200);
     const overview = await data<ArchiveOverview>('/api/v1/archives/overview'); expect(overview).toMatchObject({ generation: '1:2', total: 0 });
+    expect(overview.growth_profiles).toBeUndefined();
     const page = await data<ArchivePage>('/api/v1/archives/search'); expect(page.items).toEqual([]); expect(page.generation).toBe(overview.generation);
     const analysis = await data<ArchiveAnalysis>('/api/v1/archives/analysis?operation=series&metric=height&domain=health');
     expect(analysis.groups).toEqual([]); expect(`${analysis.data_epoch}:${analysis.generation}`).toBe(overview.generation);

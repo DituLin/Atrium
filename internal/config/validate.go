@@ -6,12 +6,15 @@ import (
 	"net"
 	"net/url"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/DituLin/Atrium/internal/domain"
 )
+
+var growthProfileEntityID = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$`)
 
 // Validate enforces every rule from technical design §10.
 func (c *Config) Validate() error {
@@ -60,6 +63,34 @@ func (c *Config) Validate() error {
 	}
 	if time.Duration(c.Archives.UploadTimeout) < 100*time.Millisecond || time.Duration(c.Archives.UploadTimeout) > 10*time.Minute {
 		add("archives.upload_timeout must be between 100ms and 10m")
+	}
+	if len(c.Archives.GrowthProfiles) > 16 {
+		add("archives.growth_profiles must contain at most 16 profiles")
+	}
+	profileIDs := map[string]bool{}
+	profileNow := time.Now()
+	if loc, err := time.LoadLocation(c.Home.Timezone); err == nil {
+		profileNow = profileNow.In(loc)
+	}
+	for i, p := range c.Archives.GrowthProfiles {
+		prefix := fmt.Sprintf("archives.growth_profiles[%d]", i)
+		if !growthProfileEntityID.MatchString(p.EntityID) {
+			add("%s.entity_id must be a bounded archive entity ID", prefix)
+		}
+		if profileIDs[p.EntityID] {
+			add("%s.entity_id is duplicated", prefix)
+		}
+		profileIDs[p.EntityID] = true
+		birthday, err := time.Parse("2006-01-02", p.BirthDate)
+		if err != nil || birthday.Format("2006-01-02") != p.BirthDate || p.BirthDate < "1900-01-01" || p.BirthDate > profileNow.Format("2006-01-02") {
+			add("%s.birth_date must be a valid YYYY-MM-DD date from 1900 through today", prefix)
+		}
+		if p.Sex != "male" && p.Sex != "female" {
+			add("%s.sex must be male or female", prefix)
+		}
+		if p.HeightMeasurement != "" && p.HeightMeasurement != "length" && p.HeightMeasurement != "height" {
+			add("%s.height_measurement must be length or height when supplied", prefix)
+		}
 	}
 
 	seen := make(map[string]struct{}, len(c.Sources))

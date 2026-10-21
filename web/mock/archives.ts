@@ -57,7 +57,8 @@ export class MockArchives {
     overview(now = new Date()): ArchiveOverview {
         const items = this.items(now);
         const confirmed = items.filter(item => ['confirmed', 'household'].includes(item.ownership) && !item.review_required).length;
-        return { generation: `1:${this.generation}`, total: items.length, confirmed, pending: items.length - confirmed,
+        const birth = new Date(Date.UTC(Number(homeDate(now).slice(0,4))-1,Number(homeDate(now).slice(5,7))-1,Number(homeDate(now).slice(8,10)))).toISOString().slice(0,10);
+        return { ...(items.length ? {growth_profiles:[{entity_id:'synthetic_child',birth_date:birth,sex:'male' as const,height_measurement:'length' as const}]} : {}),generation: `1:${this.generation}`, total: items.length, confirmed, pending: items.length - confirmed,
             domains: DOMAINS.map(domain => ({ domain, count: items.filter(item => item.domain === domain).length })),
             entities: ENTITIES.map(entity => ({ id: entity.id, count: items.filter(item => item.entity_ids.includes(entity.id)).length })),
             ownership: { household: items.filter(item => item.ownership === 'household').length, unassigned: items.filter(item => item.ownership === 'unassigned').length, waiting: items.filter(item => item.ownership === 'waiting').length }, coverage: { complete: true } };

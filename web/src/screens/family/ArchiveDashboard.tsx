@@ -4,6 +4,7 @@ import { RemoteButton } from '../../ui/RemoteButton';
 import type { RemoteKey } from '../../ui/keys';
 import { factLabel } from './archiveLabels';
 import { DashboardPlot } from './DashboardPlot';
+import { GrowthCurve } from './GrowthCurve';
 import { summarizeFinance, summarizeGrowth, summarizeMilk } from './dashboardStats';
 import type { DashboardSeries } from './dashboardStats';
 import type { MilkPeriod, MilkTrendData } from './feedingTrend';
@@ -18,6 +19,7 @@ export interface ArchiveDashboardProps {
     growth: GrowthData | null;
     finance: FinanceTrendData | null;
     personName: string | null;
+    personID?: string;
     scopeName?: string;
     domain?: string;
     ownership?: string;
@@ -42,9 +44,11 @@ function shortDate(value: string | undefined, timezone: string, monthOnly = fals
     return new Intl.DateTimeFormat('zh-CN', { timeZone: literal ? 'UTC' : timezone, month: 'numeric', ...(monthOnly ? {} : { day: 'numeric' }) }).format(time);
 }
 
-export function ArchiveDashboard({ overview, milk, milkPeriod, growth, finance, personName, scopeName, domain, ownership, busy, timezone, onMilkPeriod, onLeft, onUp, onDown, onRead }: ArchiveDashboardProps) {
+export function ArchiveDashboard({ overview, milk, milkPeriod, growth, finance, personName, personID, scopeName, domain, ownership, busy, timezone, onMilkPeriod, onLeft, onUp, onDown, onRead }: ArchiveDashboardProps) {
     const milkName = scopeName ?? personName ?? '全家';
     const periodButtons = useRef<(HTMLButtonElement | null)[]>([]);
+    const dashboard = useRef<HTMLElement>(null);
+    const focusGrowth = () => dashboard.current?.querySelector<HTMLButtonElement>('.growth-curve__switch button[aria-pressed="true"]')?.focus();
     const cards = useRef<(HTMLButtonElement | null)[]>([]);
     const milkSeries = ownership ? [] : summarizeMilk(milk, milkPeriod);
     const height = ownership ? [] : summarizeGrowth(growth, 'height', timezone);
@@ -59,8 +63,8 @@ export function ArchiveDashboard({ overview, milk, milkPeriod, growth, finance, 
     const domainDimmed = (id: string) => !!domain && (id === 'other' ? domains.some(d => d.id === domain) : domain !== id);
     const empty = (kind: 'milk' | 'growth' | 'finance') => ownership ? '所选归属不纳入确定统计' : busy ? '正在核验记录…' : kind === 'growth' && !personName ? '选择一位家人查看成长记录' : kind === 'milk' ? milk ? '所选时间范围暂无奶量记录' : '奶量统计暂不可用' : kind === 'finance' ? finance ? '本月暂无已确认金额' : '财务金额统计暂不可用' : growth ? '暂无日期、数值和单位完整的测量记录' : '成长记录暂不可用';
     const cardDirection = (index: number, key: RemoteKey) => {
-        if (key === 'up') { if (index === 0) onUp(); else if (index === 3) cards.current[0]?.focus(); else periodButtons.current[milkPeriod === 'day' ? 0 : milkPeriod === 'week' ? 1 : 2]?.focus(); }
-        if (key === 'down') { if (index === 0) cards.current[3]?.focus(); else onDown(); }
+        if (key === 'up') { if (index === 0) onUp(); else focusGrowth(); }
+        if (key === 'down') { if (index === 0) focusGrowth(); else onDown(); }
         if (key === 'left') { if (index === 0) periodButtons.current[2]?.focus(); else if (index === 1) onLeft(); else cards.current[index - 1]?.focus(); }
         if (key === 'right') { if (index === 0 || index === 3) onRead(); else cards.current[index + 1]?.focus(); }
     };
@@ -75,13 +79,13 @@ export function ArchiveDashboard({ overview, milk, milkPeriod, growth, finance, 
             {!group.complete ? <p className="archive-dashboard__coverage">部分记录待确认或超出统计范围</p> : null}
         </div>)}
     </RemoteButton>;
-    return <section className="archive-dashboard" aria-label="公开档案分析">
+    return <section ref={dashboard} className="archive-dashboard" aria-label="公开档案分析">
         <div className="archive-dashboard__grid">
             <article className="archive-dashboard__card archive-dashboard__milk" aria-label="奶量趋势与时间范围">
                 <div className="archive-dashboard__card-heading"><h3><span className="archive-dashboard__dot"/>奶量 · {milkName}</h3><div className="milk-period archive-dashboard__period" aria-label="奶量时间范围">{periods.map((p, i) => <RemoteButton ref={el => { periodButtons.current[i] = el; }} key={p.id} className="btn" aria-pressed={milkPeriod === p.id} onClick={() => onMilkPeriod(p.id)} onDirection={key => {
                     if (key === 'left') { if (i) periodButtons.current[i - 1]?.focus(); else onLeft(); }
                     if (key === 'right') { if (i < 2) periodButtons.current[i + 1]?.focus(); else cards.current[0]?.focus(); }
-                    if (key === 'up') onUp(); if (key === 'down') cards.current[i === 2 ? 2 : 1]?.focus();
+                    if (key === 'up') onUp(); if (key === 'down') focusGrowth();
                 }}>{p.label}</RemoteButton>)}</div></div>
                 {!milkSeries.length ? <><div className="archive-dashboard__number archive-dashboard__number--large"><strong>—</strong><span>ml</span></div><p className="archive-dashboard__caption">{empty('milk')}</p><div className="archive-dashboard__milk-space" aria-hidden="true"/></> : milkSeries.map(group => <div className="archive-dashboard__series" key={group.key}>
                     {milkSeries.length > 1 || group.sample ? <p className="archive-dashboard__series-label">{[milkSeries.length > 1 ? factLabel(group.metric) : null, group.sample].filter(Boolean).join(' · ')}</p> : null}
@@ -101,6 +105,7 @@ export function ArchiveDashboard({ overview, milk, milkPeriod, growth, finance, 
                 {inconsistentComposition ? <p className="archive-dashboard__coverage">领域数量尚待核验，暂不展示占比</p> : null}
                 {overview && !overview.coverage.complete ? <p className="archive-dashboard__coverage">档案统计尚未完整核验</p> : null}
             </RemoteButton>
+            <GrowthCurve key={personID??'household'} data={growth} personName={personName} profile={overview?.growth_profiles?.find(profile=>profile.entity_id===personID)??null} timezone={timezone} busy={busy} ownership={ownership} onUp={()=>periodButtons.current[milkPeriod==='day'?0:milkPeriod==='week'?1:2]?.focus()} onDown={()=>cards.current[1]?.focus()} onLeft={onLeft} onRead={onRead}/>
             {mini('height', '身高', height, 1)}
             {mini('weight', '体重', weight, 2)}
             {mini('finance', '财务金额', financeSeries, 3)}

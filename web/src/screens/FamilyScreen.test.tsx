@@ -91,19 +91,20 @@ it('shows compact person growth cards with measured deltas and hides them on rev
  fireEvent.click(await screen.findByRole('button',{name:'合成宝宝'}));
  await screen.findByRole('img',{name:/身高 · 合成宝宝/});
  expect(screen.getByRole('img',{name:/体重 · 合成宝宝/})).toBeTruthy();
- expect(screen.getByText('+9.75 cm')).toBeTruthy();expect(screen.getByText('+1.85 kg')).toBeTruthy();
+ expect(screen.getByRole('button',{name:'身高 · 合成宝宝'}).textContent).toContain('+9.75 cm');expect(screen.getByRole('button',{name:'体重 · 合成宝宝'}).textContent).toContain('+1.85 kg');
  const day=screen.getByRole('button',{name:'日'});day.focus();fireEvent.keyDown(day,{key:'ArrowDown'});
- expect(document.activeElement).toBe(screen.getByRole('button',{name:'身高 · 合成宝宝'}));
- fireEvent.keyDown(document.activeElement!,{key:'ArrowRight'});expect(document.activeElement).toBe(screen.getByRole('button',{name:'体重 · 合成宝宝'}));
+ expect(document.activeElement).toBe(screen.getByRole('button',{name:'身高'}));
+ fireEvent.keyDown(document.activeElement!,{key:'ArrowRight'});expect(document.activeElement).toBe(screen.getByRole('button',{name:'体重'}));
+ fireEvent.keyDown(document.activeElement!,{key:'ArrowDown'});expect(document.activeElement).toBe(screen.getByRole('region',{name:'家庭档案与分析'}));
  expect(h.api.analyzeArchives).toHaveBeenCalledWith(expect.objectContaining({metric:'height',entity_id:'child'}),expect.anything());
  vi.mocked(h.api.getArchives).mockImplementation(()=>new Promise(()=>{}));h.dispatch({type:'archives.invalidate'});
  expect(screen.queryByRole('img',{name:/身高 · 合成宝宝/})).toBeNull();expect(screen.queryByText('70.25')).toBeNull();
 });
 
-it('keeps the five design slots and whole-family counts independent of the visible archive page',async()=>{
+it('keeps the six design slots and whole-family counts independent of the visible archive page',async()=>{
  const h=setup();await screen.findByText('合成property');
  const dashboard=screen.getByRole('region',{name:'公开档案分析'});
- expect(dashboard.querySelectorAll('.archive-dashboard__grid > *')).toHaveLength(5);
+ expect(dashboard.querySelectorAll('.archive-dashboard__grid > *')).toHaveLength(6);
  expect(dashboard.querySelector('.archive-dashboard__grid')?.firstElementChild?.className).toContain('archive-dashboard__milk');
  expect(screen.getByRole('button',{name:'档案构成 · 全家公开范围'}).textContent).toContain('128');
  expect(screen.getByRole('button',{name:'全家'}).textContent).toContain('128');

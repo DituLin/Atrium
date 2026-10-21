@@ -10,7 +10,7 @@ const overview: ArchiveOverview = {
 };
 const props = (more: Partial<ArchiveDashboardProps> = {}): ArchiveDashboardProps => ({ overview, milk: null, milkPeriod: 'day', growth: null, finance: null, personName: null, busy: false, timezone: 'Asia/Singapore', onMilkPeriod: () => {}, onLeft: () => {}, onUp: () => {}, onDown: () => {}, onRead: () => {}, ...more });
 
-it('preserves all five dashboard card positions while unavailable data stays empty', () => {
+it('preserves all original dashboard card positions while unavailable data stays empty', () => {
     const { container } = render(<ArchiveDashboard {...props()}/>);
     expect(container.querySelectorAll('.archive-dashboard__milk')).toHaveLength(1);
     expect(container.querySelectorAll('.archive-dashboard__mix')).toHaveLength(1);
@@ -45,8 +45,8 @@ it('switches milk periods and moves the remote focus spatially through the grid'
     fireEvent.keyDown(month, { key: 'ArrowRight' });
     expect(document.activeElement?.textContent).toContain('档案构成');
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
-    expect(document.activeElement?.textContent).toContain('财务金额');
-    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+    expect(document.activeElement?.textContent).toBe('身高');
+    fireEvent.keyDown(screen.getByRole('button',{name:'财务金额'}), { key: 'ArrowDown' });
     expect(onDown).toHaveBeenCalledOnce();
 });
 
@@ -103,4 +103,13 @@ it('labels property-scoped milk records with their filter instead of the whole f
     expect(screen.getByRole('heading', { name: '奶量 · 测试屋' })).toBeTruthy();
     expect(screen.getByRole('img', { name: /奶量 · 测试屋/ })).toBeTruthy();
     expect(screen.getAllByText('选择一位家人查看成长记录')).toHaveLength(2);
+});
+
+it('inserts a full-row growth curve immediately below milk and composition, ahead of the small cards',()=>{
+ const {container}=render(<ArchiveDashboard {...props()}/>);
+ const cards=[...container.querySelector('.archive-dashboard__grid')!.children];
+ expect(cards).toHaveLength(6);expect(cards[2]!.classList.contains('growth-curve')).toBe(true);expect(cards[3]!.classList.contains('archive-dashboard__mini--height')).toBe(true);
+ expect(screen.getByRole('heading',{name:'生长曲线'})).toBeTruthy();
+ const day=screen.getByRole('button',{name:'日'});day.focus();fireEvent.keyDown(day,{key:'ArrowDown'});const curve=within(screen.getByRole('article',{name:'生长曲线'}));expect(document.activeElement).toBe(curve.getByRole('button',{name:'身高'}));
+ fireEvent.keyDown(curve.getByRole('button',{name:'体重'}),{key:'ArrowUp'});expect(document.activeElement).toBe(day);
 });

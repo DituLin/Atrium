@@ -215,12 +215,23 @@ type FamilyArchive struct {
 
 // Archives enables local durable intake independently of the legacy NAS exporter.
 type Archives struct {
-	NativeHelperPath string   `yaml:"native_helper_path"`
-	NodePath         string   `yaml:"node_path"`
-	OpenClawPath     string   `yaml:"openclaw_path"`
-	WorkerPluginPath string   `yaml:"worker_plugin_path"`
-	ProviderPath     string   `yaml:"provider_path"`
-	Enabled          bool     `yaml:"enabled"`
-	MaxBytes         int64    `yaml:"max_bytes"`
-	UploadTimeout    Duration `yaml:"upload_timeout"`
+	NativeHelperPath string          `yaml:"native_helper_path"`
+	NodePath         string          `yaml:"node_path"`
+	OpenClawPath     string          `yaml:"openclaw_path"`
+	WorkerPluginPath string          `yaml:"worker_plugin_path"`
+	ProviderPath     string          `yaml:"provider_path"`
+	Enabled          bool            `yaml:"enabled"`
+	MaxBytes         int64           `yaml:"max_bytes"`
+	UploadTimeout    Duration        `yaml:"upload_timeout"`
+	GrowthProfiles   []GrowthProfile `yaml:"growth_profiles,omitempty"`
+}
+
+// GrowthProfile is an operator-confirmed profile for one archive entity. It is
+// independent of extracted identity facts and must remain in private config.
+// A profile is disclosed to a TV only alongside that entity's public overview.
+type GrowthProfile struct {
+	EntityID          string `yaml:"entity_id"`
+	BirthDate         string `yaml:"birth_date"`
+	Sex               string `yaml:"sex"`
+	HeightMeasurement string `yaml:"height_measurement,omitempty"`
 }

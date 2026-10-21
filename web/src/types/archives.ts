@@ -83,8 +83,15 @@ export interface ArchiveEntities {
         complete: boolean;
     };
 }
+export interface ArchiveGrowthProfile {
+    entity_id: string;
+    birth_date: string;
+    sex: 'male' | 'female';
+    height_measurement?: 'length' | 'height';
+}
 /** Whole-family public document counts, independent of list pagination. */
 export interface ArchiveOverview {
+    growth_profiles?: ArchiveGrowthProfile[];
     generation: string;
     total: number;
     confirmed: number;

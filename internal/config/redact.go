@@ -9,6 +9,9 @@ import (
 // disclose the NAS layout are replaced with a stable placeholder.
 func (c *Config) Redacted() *Config {
 	cp := *c
+	// The display projection authorizes profiles per public entity; printable
+	// configuration never carries personal birth dates, sex, or entity bindings.
+	cp.Archives.GrowthProfiles = nil
 	if cp.FamilyArchive.Dir != "" {
 		cp.FamilyArchive.Dir = "<redacted>"
 	}
