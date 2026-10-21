@@ -1,7 +1,9 @@
+import { ArchiveGenerationChanged } from './archiveGeneration';
 import { readGrowthTrend, type GrowthData, type GrowthPeriod } from './growthTrend';
 import { ApiError, type ApiClient } from '../../core/api';
-import type { ArchiveAnalysis, ArchiveDetail, ArchiveEntities, ArchiveFilter, ArchivePage } from '../../types/archives';
+import type { ArchiveAnalysis, ArchiveDetail, ArchiveEntities, ArchiveFilter, ArchivePage, ArchiveOverview } from '../../types/archives';
 import { readMilkTrend, type MilkPeriod, type MilkTrendData } from './feedingTrend';
+import { readFinanceTrend, type FinanceTrendData } from './financeTrend';
 export interface ArchiveSnapshot {
     viewToken: string;
     filter: ArchiveFilter;
@@ -11,6 +13,8 @@ export interface ArchiveSnapshot {
     detail: ArchiveDetail | null;
     milk: MilkTrendData | null;
     growth: GrowthData | null;
+    overview: ArchiveOverview | null;
+    finance: FinanceTrendData | null;
     at: number;
 }
 export interface ArchiveReadState {
@@ -105,25 +109,28 @@ export class ArchiveReader {
                 seen.add(cursor);
                 const more = this.viewID ? (await this.api.getArchiveView(this.viewID, controller.signal, cursor)).page : await this.api.getArchives({ ...filter, limit: 10, cursor }, controller.signal);
                 if (more.generation !== generation)
-                    throw new Error('Generation changed');
+                    throw new ArchiveGenerationChanged('Generation changed');
                 page.items = page.items.concat(more.items);
                 cursor = more.next_cursor;
                 page.coverage.complete = page.coverage.complete && more.coverage.complete;
             }
             page.next_cursor = cursor;
             if(this.pages===20&&cursor){page.next_cursor=undefined;page.coverage={complete:false,reason:'presentation_window_limit'};}
+            if (seq !== this.sequence || controller.signal.aborted || this.stopped) return;
             const query = { ownership: filter.ownership, domain: filter.domain, entity_id: filter.entity_id, query: filter.query };
-            const allowMilk = !view && !documentID && !filter.ownership && (!filter.domain || filter.domain === 'health') && this.metric === 'volume';
+            const allowMilk = !view && !documentID && !filter.ownership;
             const boundedAnalysis = (error: unknown) => {
                 if (error instanceof ApiError && error.status === 409 && error.code === 'conflict' && error.details?.reason === 'analysis_response_limit') return null;
                 throw error;
             };
             const analysisRequest = view ? Promise.resolve(view.analysis) : allowMilk && filter.domain === 'health' ? Promise.resolve(null) : this.api.analyzeArchives(filter.ownership ? { ...query, operation: 'count', count: 'documents' } : filter.domain === 'finance' ? { ...query, operation: 'sum', metric: 'amount' } : filter.domain === 'education' ? { ...query, operation: 'ratio', metric: 'score' } : filter.domain === 'health' ? { ...query, operation: 'series', metric: this.metric } : { ...query, operation: 'count', count: 'documents' }, controller.signal).catch(boundedAnalysis);
-            const [entities, analysis, detail, milk] = await Promise.all([
+            const [entities, analysis, detail, milk, overview, finance] = await Promise.all([
                 this.api.getArchiveEntities(controller.signal),
                 analysisRequest,
                 documentID ? this.api.getArchiveDocument(documentID, controller.signal) : Promise.resolve(null),
                 allowMilk ? readMilkTrend(this.api, filter, this.period, this.timezone, controller.signal).catch(boundedAnalysis) : Promise.resolve(null),
+                view ? Promise.resolve(null) : this.api.getArchiveOverview(controller.signal),
+                !view && !documentID && !filter.ownership ? readFinanceTrend(this.api, {}, this.timezone, controller.signal) : Promise.resolve(null),
             ]);
             let entityCursor=entities.next_cursor;const entityCursors=new Set<string>();
             for(let i=1;i<this.entityPages&&entityCursor;i++){
@@ -131,28 +138,32 @@ export class ArchiveReader {
              const next=await this.api.getArchiveEntities(controller.signal,entityCursor);entities.items=entities.items.concat(next.items);entityCursor=next.next_cursor;entities.coverage.complete=entities.coverage.complete&&next.coverage.complete;
             }
             entities.next_cursor=this.entityPages<10?entityCursor:undefined;
-            const allowGrowth = !view && !documentID && !filter.ownership && (!filter.domain || filter.domain === 'health') && entities.items.some(e => e.id === filter.entity_id && e.kind === 'person');
+            const allowGrowth = !view && !documentID && !filter.ownership && entities.items.some(e => e.id === filter.entity_id && e.kind === 'person');
             const growth = allowGrowth ? await readGrowthTrend(this.api, filter, this.growthPeriod, this.timezone, controller.signal) : null;
-            if (growth && [...growth.height, ...growth.weight].some(result => `${result.data_epoch}:${result.generation}` !== generation)) throw new Error('Growth analysis generation changed');
+            if (growth && [...growth.height, ...growth.weight].some(result => `${result.data_epoch}:${result.generation}` !== generation)) throw new ArchiveGenerationChanged('Growth analysis generation changed');
             if (analysis && `${analysis.data_epoch}:${analysis.generation}` !== generation)
-                throw new Error('Analysis generation changed');
-            if (milk && milk.generation !== generation) throw new Error('Milk analysis generation changed');
+                throw new ArchiveGenerationChanged('Analysis generation changed');
+            if (milk && milk.generation !== generation) throw new ArchiveGenerationChanged('Milk analysis generation changed');
+            if (overview && overview.generation !== generation) throw new ArchiveGenerationChanged('Overview generation changed');
+            if (finance?.generation && finance.generation !== generation) throw new ArchiveGenerationChanged('Finance generation changed');
             if (!analysis && !milk) {
                 const verified = await this.api.getArchives({ ...filter, limit: 1 }, controller.signal);
-                if (verified.generation !== generation) throw new Error('Generation changed');
+                if (verified.generation !== generation) throw new ArchiveGenerationChanged('Generation changed');
             }
             if (detail && detail.generation !== generation)
-                throw new Error('Generation changed');
+                throw new ArchiveGenerationChanged('Generation changed');
             if (this.viewID)
                 await this.api.getArchiveView(this.viewID, controller.signal);
             if (seq !== this.sequence || controller.signal.aborted || this.stopped)
                 return;
-            this.value = { viewToken:this.viewToken,snapshot: { viewToken: this.viewToken, filter, page, entities, analysis, detail, milk, growth, at: started }, busy: false, failed: false, epoch: this.value.epoch };
+            this.value = { viewToken:this.viewToken,snapshot: { viewToken: this.viewToken, filter, page, entities, analysis, detail, milk, growth, overview, finance, at: started }, busy: false, failed: false, epoch: this.value.epoch };
             this.emit();
         }
         catch {
             if (seq === this.sequence && !this.stopped) {
-                this.value = { ...this.value, snapshot: this.viewID ? null : this.value.snapshot, busy: false, failed: true };
+                // A failed parallel batch cannot prove its remaining requests
+                // still share the earlier public scope. Clear the whole view.
+                this.value = { ...this.value, snapshot: null, busy: false, failed: true };
                 this.emit();
             }
         }

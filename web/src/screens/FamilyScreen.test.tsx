@@ -11,15 +11,15 @@ import {FamilyScreen} from './FamilyScreen';
 const item=(id:string,domain:string):ArchiveItem=>({document_id:id,document_revision:2,domain,document_type:'record',ownership:'household',parse_status:'parsed',entity_ids:[],dates:['2026-10'],evidence:[{field_name:'title',excerpt:`合成${id}`,confirmed:true,locator:{},start:0,end:3}],metadata_only:false,truncated:false,review_required:false});
 function setup(){
  const page:ArchivePage={items:['health','education','finance','property'].map(d=>item(d,d)),generation:'1:1',coverage:{complete:true},index_status:'ready'};
- const api={getArchives:vi.fn(async()=>({...page,items:[...page.items]})),getArchiveEntities:vi.fn(async()=>({items:[{id:'house',kind:'property',names:['测试屋'],aliases:[]}],coverage:{complete:true}})),analyzeArchives:vi.fn(async()=>({data_epoch:1,generation:1,groups:[{metric:'documents',value:'4'}],coverage:{complete:true},algorithm_version:'archive-analysis/5'})),getArchivePreview:vi.fn(async()=>({blob:new Blob(["png"],{type:"image/png"}),pages:2})),getArchiveDocument:vi.fn(async(id:string)=>({item:item(id,'health'),original_saved:true,nas_status:'pending',processing:'ready',preview:'structured',generation:'1:1',coverage:{complete:true}}))} as unknown as ApiClient;
+ const api={getArchives:vi.fn(async()=>({...page,items:[...page.items]})),getArchiveOverview:vi.fn(async()=>({generation:'1:1',total:128,confirmed:124,pending:4,domains:[{domain:'health',count:56},{domain:'finance',count:34},{domain:'education',count:22},{domain:'property',count:16}],entities:[{id:'house',count:14}],ownership:{household:19,unassigned:5,waiting:3},coverage:{complete:true}})),getArchiveEntities:vi.fn(async()=>({items:[{id:'house',kind:'property',names:['测试屋'],aliases:[]}],coverage:{complete:true}})),analyzeArchives:vi.fn(async()=>({data_epoch:1,generation:1,groups:[{metric:'documents',value:'4'}],coverage:{complete:true},algorithm_version:'archive-analysis/5'})),getArchivePreview:vi.fn(async()=>({blob:new Blob(["png"],{type:"image/png"}),pages:2})),getArchiveDocument:vi.fn(async(id:string)=>({item:item(id,'health'),original_saved:true,nas_status:'pending',processing:'ready',preview:'structured',generation:'1:1',coverage:{complete:true}}))} as unknown as ApiClient;
  let send!:(a:AppAction)=>void;let latest!:AppState;
  function Harness(){const [state,dispatch]=useReducer(appReducer,0,createInitialState);send=dispatch;latest=state;return <AppContext.Provider value={{api,state,dispatch,house:{load:async()=>{},invalidate(){}},overview:{load:async()=>{},invalidate(){}},clientVersion:'test',goBack(){}}}><FamilyScreen/></AppContext.Provider>;}
  const view=render(<Harness/>);return {api,view,state:()=>latest,dispatch:(a:AppAction)=>act(()=>send(a))};
 }
 it('starts with the whole family and four domains without registered people',async()=>{
  const h=setup();await screen.findByText('合成property');expect(h.api.getArchives).toHaveBeenCalledWith({limit:10},expect.anything());expect(screen.getByRole('button',{name:'全家'}).getAttribute('aria-pressed')).toBe('true');expect(screen.getAllByText('2026年10月')).toHaveLength(4);
- fireEvent.click(screen.getByRole('button',{name:'房屋 · 测试屋'}));await waitFor(()=>expect(h.api.getArchives).toHaveBeenCalledWith(expect.objectContaining({entity_id:'house'}),expect.anything()));
- fireEvent.click(screen.getByRole('button',{name:'待归属'}));await waitFor(()=>expect(h.api.getArchives).toHaveBeenCalledWith(expect.objectContaining({ownership:'unassigned'}),expect.anything()));
+ fireEvent.click(screen.getByRole('button',{name:'房屋 · 测试屋'}));await waitFor(()=>expect(h.api.getArchives).toHaveBeenCalledWith(expect.objectContaining({entity_id:'house'}),expect.anything()));await waitFor(()=>expect(h.view.container.querySelector('.family-page__scope')?.textContent).toBe('测试屋'));expect(screen.getByRole('heading',{name:'奶量 · 测试屋'})).toBeTruthy();
+ fireEvent.click(screen.getByRole('button',{name:'待归属'}));await waitFor(()=>expect(h.api.getArchives).toHaveBeenCalledWith(expect.objectContaining({ownership:'unassigned'}),expect.anything()));expect(h.view.container.querySelector('.family-page__scope')?.textContent).toBe('待归属');
 });
 it('returns to the same card with remote Back and does not treat reading as card activation',async()=>{
  setup();const card=await screen.findByRole('button',{name:/合成health/});card.focus();fireEvent.keyDown(card,{key:'Enter'});await screen.findByRole('button',{name:'返回档案'});await screen.findByText('NAS 待同步',{exact:false});fireEvent.keyDown(screen.getByRole('button',{name:'返回档案'}),{key:'Escape'});await waitFor(()=>expect(document.activeElement?.textContent).toContain('合成health'));
@@ -59,7 +59,7 @@ it('replaces an earlier query only with the new query DOM and ignores reset resp
 
 it('shows verified cards with an explicit analysis limit instead of hiding the archive page',async()=>{
  const h=setup();vi.mocked(h.api.analyzeArchives).mockRejectedValue(new ApiError(409,'conflict','bounded',null,{reason:'analysis_response_limit'}));
- await screen.findByRole('button',{name:/合成health/});expect(screen.getByText(/下方档案已核验，统计暂不可用/)).toBeTruthy();expect(screen.queryByText('等待重新核验')).toBeNull();expect(screen.queryByText('200')).toBeNull();
+ await screen.findByRole('button',{name:/合成health/});expect(screen.getByText('奶量统计暂不可用')).toBeTruthy();expect(screen.getByRole('button',{name:'财务金额'}).textContent).toContain('—');expect(screen.queryByText('等待重新核验')).toBeNull();expect(screen.queryByText('200')).toBeNull();
 });
 
 it('keeps the milk chart and day/week/month controls visible when only one feed is recorded',async()=>{
@@ -68,11 +68,11 @@ it('keeps the milk chart and day/week/month controls visible when only one feed 
  vi.setSystemTime(new Date('2026-10-11T12:00:00Z'));
  const h=setup();
  vi.mocked(h.api.analyzeArchives).mockImplementation(async q=>({snapshot_id:'milk',data_epoch:1,generation:1,projection:'public',algorithm_version:'archive-analysis/6',coverage:{complete:true,included:1,excluded:0,reasons:[]},groups:q.metric==='formula'?[{metric:'formula',unit:'ml',date:'2026-10-11T09:00:00Z',value:'60'}]:[{metric:'documents',value:'4'}]}));
- await screen.findByRole('heading',{name:'奶量趋势'});
+ await screen.findByRole('heading',{name:'奶量 · 全家'});
  expect(screen.getByRole('button',{name:'日'}).getAttribute('aria-pressed')).toBe('true');
  expect(screen.getByRole('button',{name:'周'})).toBeTruthy();
  expect(screen.getByRole('button',{name:'月'})).toBeTruthy();
- expect(screen.getByRole('img',{name:/奶量趋势/})).toBeTruthy();
+ expect(screen.getByRole('img',{name:/奶量 · 全家，每次记录/})).toBeTruthy();
  const day=screen.getByRole('button',{name:'日'});day.focus();fireEvent.keyDown(day,{key:'ArrowRight'});
  expect(document.activeElement).toBe(screen.getByRole('button',{name:'周'}));
  fireEvent.keyDown(document.activeElement!,{key:'Enter'});
@@ -84,20 +84,33 @@ it('keeps the milk chart and day/week/month controls visible when only one feed 
 });
 
 
-it('shows separate person growth charts, preserves remote period focus, and hides them on revocation',async()=>{
+it('shows compact person growth cards with measured deltas and hides them on revocation',async()=>{
  const h=setup();
  vi.mocked(h.api.getArchiveEntities).mockResolvedValue({items:[{id:'child',kind:'person',names:['合成宝宝'],aliases:[]}],coverage:{complete:true}});
  vi.mocked(h.api.analyzeArchives).mockImplementation(async q=>({snapshot_id:'growth',data_epoch:1,generation:1,projection:'public',algorithm_version:'test',coverage:{complete:true,included:2,excluded:0,reasons:[]},groups:q.metric==='height'||q.metric==='体重'?[{metric:q.metric,unit:q.metric==='height'?'cm':'kg',date:'2026-06-13',value:q.metric==='height'?'60.50':'6.250'},{metric:q.metric,unit:q.metric==='height'?'cm':'kg',date:'2026-10-13',value:q.metric==='height'?'70.25':'8.100'}]:[]}));
  fireEvent.click(await screen.findByRole('button',{name:'合成宝宝'}));
- await screen.findByRole('img',{name:/合成宝宝身高趋势/});
- expect(screen.getByRole('img',{name:/合成宝宝体重趋势/})).toBeTruthy();
- expect(screen.getByRole('button',{name:'全部阶段'}).getAttribute('aria-pressed')).toBe('true');
- const quarter=screen.getByRole('button',{name:'近 3 个月'});quarter.focus();fireEvent.keyDown(quarter,{key:'ArrowRight'});
- const year=screen.getByRole('button',{name:'近 1 年'});expect(document.activeElement).toBe(year);fireEvent.keyDown(year,{key:'Enter'});
- await screen.findByRole('img',{name:/合成宝宝身高趋势/});expect(document.activeElement).toBe(year);
- expect(h.api.analyzeArchives).toHaveBeenCalledWith(expect.objectContaining({metric:'height',entity_id:'child',date_from:expect.any(String)}),expect.anything());
+ await screen.findByRole('img',{name:/身高 · 合成宝宝/});
+ expect(screen.getByRole('img',{name:/体重 · 合成宝宝/})).toBeTruthy();
+ expect(screen.getByText('+9.75 cm')).toBeTruthy();expect(screen.getByText('+1.85 kg')).toBeTruthy();
+ const day=screen.getByRole('button',{name:'日'});day.focus();fireEvent.keyDown(day,{key:'ArrowDown'});
+ expect(document.activeElement).toBe(screen.getByRole('button',{name:'身高 · 合成宝宝'}));
+ fireEvent.keyDown(document.activeElement!,{key:'ArrowRight'});expect(document.activeElement).toBe(screen.getByRole('button',{name:'体重 · 合成宝宝'}));
+ expect(h.api.analyzeArchives).toHaveBeenCalledWith(expect.objectContaining({metric:'height',entity_id:'child'}),expect.anything());
  vi.mocked(h.api.getArchives).mockImplementation(()=>new Promise(()=>{}));h.dispatch({type:'archives.invalidate'});
- expect(screen.queryByRole('img',{name:/身高趋势/})).toBeNull();expect(screen.queryByText('70.25')).toBeNull();
+ expect(screen.queryByRole('img',{name:/身高 · 合成宝宝/})).toBeNull();expect(screen.queryByText('70.25')).toBeNull();
+});
+
+it('keeps the five design slots and whole-family counts independent of the visible archive page',async()=>{
+ const h=setup();await screen.findByText('合成property');
+ const dashboard=screen.getByRole('region',{name:'公开档案分析'});
+ expect(dashboard.querySelectorAll('.archive-dashboard__grid > *')).toHaveLength(5);
+ expect(dashboard.querySelector('.archive-dashboard__grid')?.firstElementChild?.className).toContain('archive-dashboard__milk');
+ expect(screen.getByRole('button',{name:'档案构成 · 全家公开范围'}).textContent).toContain('128');
+ expect(screen.getByRole('button',{name:'全家'}).textContent).toContain('128');
+ expect(screen.getByRole('button',{name:'房屋 · 测试屋'}).textContent).toContain('14');
+ fireEvent.click(screen.getByRole('button',{name:'财务'}));await waitFor(()=>expect(h.api.getArchives).toHaveBeenCalledWith(expect.objectContaining({domain:'finance'}),expect.anything()));
+ await waitFor(()=>expect(screen.getByRole('button',{name:'档案构成 · 全家公开范围'}).textContent).toContain('128'));
+ expect(screen.getAllByRole('button',{name:/合成(?:health|education|finance|property)/})).toHaveLength(4);
 });
 
 it('reaches the domain pills with the remote and enters analysis controls without applying a focused domain', async () => {

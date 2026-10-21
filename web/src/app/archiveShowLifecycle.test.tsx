@@ -16,7 +16,7 @@ const page={items:[],generation:'1:1',coverage:{complete:true},index_status:'rea
 const analysis={data_epoch:1,generation:1,groups:[],coverage:{complete:true},projection:'public'};
 function harness(strict=false){
  socket.acks=[];let current!:AppState;let send!:(a:AppAction)=>void;
- const api={getArchives:vi.fn(async()=>({...page})),getArchiveEntities:vi.fn(async()=>({items:[],coverage:{complete:true}})),analyzeArchives:vi.fn(async()=>analysis),getArchiveView:vi.fn(async(id:string)=>({archive_view_id:id,page:{...page},analysis}))} as unknown as ApiClient;
+ const api={getArchives:vi.fn(async()=>({...page})),getArchiveOverview:vi.fn(async()=>({generation:'1:1',total:0,confirmed:0,pending:0,domains:[],entities:[],ownership:{household:0,unassigned:0,waiting:0},coverage:{complete:true}})),getArchiveEntities:vi.fn(async()=>({items:[],coverage:{complete:true}})),analyzeArchives:vi.fn(async()=>analysis),getArchiveView:vi.fn(async(id:string)=>({archive_view_id:id,page:{...page},analysis}))} as unknown as ApiClient;
  const house={load:async()=>{},invalidate(){}};
  function Harness(){const [state,dispatch]=useReducer(appReducer,0,createInitialState);current=state;send=dispatch;useConnection({house,api,state,dispatch,enabled:true,clientVersion:'test'});return <AppContext.Provider value={{api,state,dispatch,house,overview:house,clientVersion:'test',goBack(){}}}>{state.router.route.name==='family'?<FamilyScreen/>:<p>首页</p>}</AppContext.Provider>;}
  const view=render(strict?<StrictMode><Harness/></StrictMode>:<Harness/>);

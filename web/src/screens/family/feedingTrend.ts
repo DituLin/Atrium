@@ -1,3 +1,4 @@
+import { ArchiveGenerationChanged } from './archiveGeneration';
 import { ApiError, type ApiClient } from '../../core/api';
 import type { ArchiveAnalysis, ArchiveFilter } from '../../types/archives';
 
@@ -6,6 +7,7 @@ export interface MilkTrendData {
     dates: string[];
     generation: string;
     groups: ArchiveAnalysis['groups'];
+    totals?: ArchiveAnalysis['groups'];
     complete: boolean;
 }
 // Legacy measurements retain their original metric names. A health volume
@@ -16,6 +18,8 @@ const milkMetrics = ['volume', 'formula', 'breastmilk', 'breast_milk'];
  * Core performs every decimal sum. Four concurrent requests keep monthly
  * evidence within each existing response bound without increasing that bound. */
 export async function readMilkTrend(api: ApiClient, filter: ArchiveFilter, period: MilkPeriod, timezone: string, signal: AbortSignal): Promise<MilkTrendData> {
+    const cancelled = () => { if (signal.aborted) throw new DOMException('Request cancelled', 'AbortError'); };
+    cancelled();
     const parts = new Intl.DateTimeFormat('en', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
     const part = (type: string) => parts.find(p => p.type === type)!.value;
     const today = `${part('year')}-${part('month')}-${part('day')}`;
@@ -47,32 +51,40 @@ export async function readMilkTrend(api: ApiClient, filter: ArchiveFilter, perio
         }
         for (const date of allDays ? dates : [...selected].sort()) queries.push({ date, metric: milkMetrics[index]! });
     });
-    const results: ArchiveAnalysis[] = new Array(queries.length);
+    if (period === 'day') for (const metric of milkMetrics) queries.push({ date: today, metric });
+    let boundedTotal = false;
+    const results: (ArchiveAnalysis | null)[] = new Array(queries.length);
     let next = 0;
     await Promise.all(Array.from({ length: 4 }, async () => {
         while (next < queries.length) {
-            if (signal.aborted) throw new DOMException('Request cancelled', 'AbortError');
+            cancelled();
             const index = next++;
             const { date, metric } = queries[index]!;
-            results[index] = await analyze('sum', metric, date, date);
+            try { results[index] = await analyze('sum', metric, date, date); }
+            catch (error) {
+                if (error instanceof ApiError && error.status === 409 && error.code === 'conflict' && error.details?.reason === 'analysis_response_limit') { results[index] = null; boundedTotal = true; }
+                else throw error;
+            }
         }
     }));
-    const proofs = discovery.filter((result): result is ArchiveAnalysis => result !== null).concat(results);
+    cancelled();
+    const proofs = discovery.concat(results).filter((result): result is ArchiveAnalysis => result !== null);
     const first = proofs[0];
     if (!first) throw new Error('Milk analysis missing');
     const generation = `${first.data_epoch}:${first.generation}`;
-    if (proofs.some(result => `${result.data_epoch}:${result.generation}` !== generation)) throw new Error('Milk analysis generation changed');
+    if (proofs.some(result => `${result.data_epoch}:${result.generation}` !== generation)) throw new ArchiveGenerationChanged('Milk analysis generation changed');
     const groups: ArchiveAnalysis['groups'] = [];
     if (period === 'day') discovery.forEach((result, index) => {
         for (const group of result?.groups ?? []) if (group.metric === milkMetrics[index]) groups.push(group);
     });
     else results.forEach((result, index) => {
-        for (const group of result.groups) {
+        for (const group of result?.groups ?? []) {
             if (group.metric === queries[index]!.metric) groups.push({ ...group, date: queries[index]!.date, date_precision: 'day' });
         }
     });
     return {
         dates, generation, groups,
-        complete: proofs.every(result => result.coverage.complete),
+        ...(period === 'day' ? { totals: results.reduce<ArchiveAnalysis['groups']>((totals, result, index) => totals.concat((result?.groups ?? []).filter(group => group.metric === queries[index]!.metric)), []) } : {}),
+        complete: !boundedTotal && proofs.every(result => result.coverage.complete),
     };
 }

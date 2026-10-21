@@ -4,8 +4,27 @@ import {ApiError, type ApiClient} from '../../core/api';
 import type {ArchivePage} from '../../types/archives';
 
 const page:ArchivePage={items:[],generation:'1:1',coverage:{complete:true},index_status:'ready'};
-function api(){return {getArchives:vi.fn().mockResolvedValue(page),getArchiveEntities:vi.fn().mockResolvedValue({items:[],coverage:{complete:true}}),analyzeArchives:vi.fn().mockResolvedValue({data_epoch:1,generation:1,groups:[{value:'200',currency:'CNY'}],coverage:{complete:true}}),getArchiveDocument:vi.fn()} as unknown as ApiClient;}
+const overview={generation:'1:1',total:120,confirmed:115,pending:5,domains:[],entities:[],ownership:{household:10,unassigned:2,waiting:3},coverage:{complete:true}};
+function api(){return {getArchives:vi.fn().mockResolvedValue(page),getArchiveOverview:vi.fn().mockResolvedValue(overview),getArchiveEntities:vi.fn().mockResolvedValue({items:[],coverage:{complete:true}}),analyzeArchives:vi.fn().mockResolvedValue({data_epoch:1,generation:1,groups:[{value:'200',currency:'CNY'}],coverage:{complete:true}}),getArchiveDocument:vi.fn()} as unknown as ApiClient;}
 afterEach(()=>vi.useRealTimers());
+it('loads whole-family counts independently from the selected person and visible page',async()=>{
+ vi.useFakeTimers();const a=api();const reader=new ArchiveReader(a);
+ await reader.select({entity_id:'child',domain:'health'});
+ expect(a.getArchiveOverview).toHaveBeenCalledWith(expect.any(AbortSignal));
+ expect(reader.value.snapshot?.overview?.total).toBe(120);
+ expect(reader.value.snapshot?.page.items).toHaveLength(0);reader.stop();
+});
+it('immediately hides a verified dashboard when overview reports a changed generation',async()=>{
+ vi.useFakeTimers();const a=api();const reader=new ArchiveReader(a);await reader.load();
+ expect(reader.value.snapshot).not.toBeNull();
+ vi.mocked(a.getArchiveOverview).mockResolvedValue({...overview,generation:'1:2'});
+ await reader.load();expect(reader.value.snapshot).toBeNull();expect(reader.value.failed).toBe(true);reader.stop();
+});
+it('does not retain known unauthorized overview counts from the previous snapshot',async()=>{
+ vi.useFakeTimers();const a=api();const reader=new ArchiveReader(a);await reader.load();
+ vi.mocked(a.getArchiveOverview).mockRejectedValue(new ApiError(403,'forbidden','revoked'));
+ await reader.load();expect(reader.value.snapshot).toBeNull();reader.stop();
+});
 describe('archive authorization lifetime',()=>{
  it('hides stale content at 30s even while history is expanded and unrelated requests work',async()=>{
   vi.useFakeTimers();const a=api();const reader=new ArchiveReader(a);await reader.load();expect(reader.value.snapshot).not.toBeNull();
@@ -64,7 +83,7 @@ it('loads all 30 local days with Core decimal totals and the selected person',as
  vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-10T17:00:00Z'));
  const a=api();vi.mocked(a.analyzeArchives).mockImplementation(async q=>({data_epoch:1,generation:1,groups:q.metric==='volume'?(q.operation==='series'?[{metric:'volume',unit:'ml',date:'2026-10-11T00:00:00Z',value:'60.1'},{metric:'volume',unit:'ml',date:'2026-10-11T01:00:00Z',value:'60.025'}]:[{metric:'volume',unit:'ml',value:'120.125'}]):[],coverage:{complete:true}} as never));
  const reader=new ArchiveReader(a);reader.filter={domain:'health',entity_id:'baby',query:'喂奶'};await reader.selectPeriod('month');
- const calls=vi.mocked(a.analyzeArchives).mock.calls.map(([q])=>q);
+ const calls=vi.mocked(a.analyzeArchives).mock.calls.map(([q])=>q).filter(q=>q.domain==='health');
  expect(calls).toHaveLength(5);expect(reader.value.snapshot?.milk?.dates).toHaveLength(30);
  expect([...new Set(calls.map(q=>q.metric))].sort()).toEqual(['breast_milk','breastmilk','formula','volume']);
  expect(calls[0]).toEqual(expect.objectContaining({operation:'series',domain:'health',entity_id:'baby',query:'喂奶',date_from:'2026-09-12',date_to:'2026-10-11'}));
@@ -87,7 +106,7 @@ it('falls back to every Core daily total only for a milk series exceeding the pr
   return {data_epoch:1,generation:1,groups:q.metric==='formula'?[{metric:'formula',unit:'ml',value:'120.125'}]:[],coverage:{complete:true}} as never;
  });
  const reader=new ArchiveReader(a);reader.filter={domain:'health'};await reader.selectPeriod('month');
- expect(a.analyzeArchives).toHaveBeenCalledTimes(34);expect(reader.value.snapshot?.milk?.groups).toHaveLength(30);
+ expect(vi.mocked(a.analyzeArchives).mock.calls.filter(([q])=>q.domain==='health')).toHaveLength(34);expect(reader.value.snapshot?.milk?.groups).toHaveLength(30);
  expect(reader.value.snapshot?.milk?.groups[0]).toEqual({metric:'formula',unit:'ml',value:'120.125',date:'2026-09-12',date_precision:'day'});
  expect(reader.value.snapshot?.milk?.complete).toBe(true);reader.stop();
 });
@@ -119,4 +138,22 @@ it('rejects growth from another generation and does not merge people',async()=>{
  const reader=new ArchiveReader(a);await reader.select({entity_id:'synthetic-child'});
  expect(reader.value.snapshot).toBeNull();expect(reader.value.failed).toBe(true);
  await reader.select({domain:'finance'});expect(reader.value.snapshot?.growth).toBeNull();reader.stop();
+});
+
+it.each(['milk','finance'] as const)('drops an earlier verified dashboard when %s subrequests disagree on generation',async(kind)=>{
+ vi.useFakeTimers();const a=api();const reader=new ArchiveReader(a);await reader.load();expect(reader.value.snapshot).not.toBeNull();
+ vi.mocked(a.analyzeArchives).mockImplementation(async q=>({data_epoch:1,generation:kind==='milk'?(q.metric==='formula'?2:1):(q.domain==='finance'&&q.date_from?.endsWith('-01')&&q.date_to?.endsWith('-31')?2:1),groups:[],coverage:{complete:true}} as never));
+ // A fixed month provides both 30- and 31-day finance request boundaries.
+ vi.setSystemTime(new Date('2026-10-21T12:00:00Z'));
+ await reader.load();expect(reader.value.snapshot).toBeNull();expect(reader.value.failed).toBe(true);reader.stop();
+});
+
+it('clears the batch on an early network failure before a later forbidden response arrives',async()=>{
+ vi.useFakeTimers();const a=api();const reader=new ArchiveReader(a);await reader.load();expect(reader.value.snapshot).not.toBeNull();
+ let rejectLate!:(error:unknown)=>void;
+ vi.mocked(a.getArchiveOverview).mockRejectedValue(new Error('network failure'));
+ vi.mocked(a.analyzeArchives).mockImplementation(q=>q.metric==='volume'&&q.operation==='series'?new Promise((_resolve,reject)=>{rejectLate=reject;}):Promise.resolve({data_epoch:1,generation:1,groups:[],coverage:{complete:true}} as never));
+ await reader.load();expect(reader.value.failed).toBe(true);
+ rejectLate(new ApiError(403,'forbidden','share revoked'));await Promise.resolve();await Promise.resolve();
+ expect(reader.value.snapshot).toBeNull();reader.stop();
 });

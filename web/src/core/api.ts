@@ -1,4 +1,4 @@
-import type {ArchiveFilter, ArchivePage, ArchiveEntities, ArchiveDetail, ArchiveAnalysis, ArchiveAnalysisQuery} from '../types/archives';
+import type {ArchiveFilter, ArchivePage, ArchiveEntities, ArchiveDetail, ArchiveAnalysis, ArchiveAnalysisQuery, ArchiveOverview} from '../types/archives';
 import type { FamilyMember, FamilyRecordPage } from '../types/family';
 /**
  * HTTP client for `/api/v1` (design §8). All auth transport goes through
@@ -194,6 +194,9 @@ export class ApiClient {
   }
   getArchiveEntities(signal?: AbortSignal,cursor?:string): Promise<ArchiveEntities> {
     return this.archiveGet(`${API_BASE}/archives/entities${archiveQuery({limit:25,cursor})}`,signal);
+  }
+  getArchiveOverview(signal?: AbortSignal): Promise<ArchiveOverview> {
+    return this.archiveGet(`${API_BASE}/archives/overview`, signal);
   }
   getArchiveDocument(id:string, signal?:AbortSignal):Promise<ArchiveDetail> {
     return this.archiveGet(`${API_BASE}/archives/documents/${encodeURIComponent(id)}`,signal);

@@ -32,9 +32,11 @@ import {
   startPairing,
 } from './core.ts';
 import type { Screen } from './core.ts';
+import { MockArchives } from './archives.ts';
 
 const PORT = Number(process.env.ATRIUM_MOCK_PORT ?? 8788);
 const HOST = process.env.ATRIUM_MOCK_HOST ?? '127.0.0.1';
+const archives = new MockArchives();
 
 // Test controls only. Values are captured per request so delayed-response races are reproducible.
 let overviewOverride: OverviewResponse | null = null;
@@ -306,6 +308,8 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
           homeStatus = Number(body.home_status ?? 200);
         }
         return json(res, 200, { snapshot: overviewOverride, status: overviewStatus, delay_ms: overviewDelayMs, home_status: homeStatus });
+      case '/__control/archives':
+        return json(res, 200, archives.control(method === 'POST' && typeof body.empty === 'boolean' ? body.empty : undefined));
       case '/__control/house':
         if (method === 'POST') {
           houseOverride = body.snapshot ?? null;
@@ -375,6 +379,27 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   if (path.startsWith('/api/v1/')) {
     const screen = authenticate(req);
     if (!screen) return fail(res, 401, 'unauthorized', 'no screen credential');
+
+    // Archives use the same authenticated public envelope as Core. Only the
+    // development control above can switch this entirely synthetic fixture.
+    if (path.startsWith('/api/v1/archives/')) {
+      if (method !== 'GET') return fail(res, 405, 'invalid_request');
+      const archive = (data: unknown) => json(res, 200, { schema_version: '1', availability: 'available', data });
+      if (path === '/api/v1/archives/entities') return archive(archives.entities());
+      if (path === '/api/v1/archives/overview') return archive(archives.overview());
+      if (path === '/api/v1/archives/search') return archive(archives.search({
+        entity_id: url.searchParams.get('entity_id') ?? undefined, domain: url.searchParams.get('domain') ?? undefined,
+        ownership: url.searchParams.get('ownership') ?? undefined, query: url.searchParams.get('query') ?? undefined,
+        cursor: url.searchParams.get('cursor') ?? undefined, limit: Number(url.searchParams.get('limit')) || 10,
+      }));
+      if (path === '/api/v1/archives/analysis') return archive(archives.analysis(url.searchParams));
+      const document = /^\/api\/v1\/archives\/documents\/([^/]+)$/.exec(path);
+      if (document) {
+        const detail = archives.detail(decodeURIComponent(document[1]!));
+        return detail ? archive(detail) : fail(res, 404, 'not_found');
+      }
+      return fail(res, 404, 'not_found');
+    }
 
     if (path === '/api/v1/family/overview') {
       const snapshot = overviewOverride ?? overviewSnapshot();

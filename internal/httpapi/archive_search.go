@@ -9,6 +9,7 @@ import (
 )
 
 func (a *API) archiveSearchRoutes() {
+	a.archiveOverviewRoutes()
 	a.archiveAnalysisRoutes()
 	a.archiveScreenRoutes()
 	prefix := APIPrefix + "/integrations/archives"

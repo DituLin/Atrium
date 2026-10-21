@@ -83,6 +83,17 @@ export interface ArchiveEntities {
         complete: boolean;
     };
 }
+/** Whole-family public document counts, independent of list pagination. */
+export interface ArchiveOverview {
+    generation: string;
+    total: number;
+    confirmed: number;
+    pending: number;
+    domains: { domain: string; count: number }[];
+    entities: { id: string; count: number }[];
+    ownership: { household: number; unassigned: number; waiting: number };
+    coverage: { complete: boolean; reason?: string };
+}
 export interface ArchiveTaskSummary {parse:string;understanding:'pending'|'complete'|'needs_review'|'unavailable';attribution:string}
 export interface ArchiveDetail {
  task_summary?:ArchiveTaskSummary;
