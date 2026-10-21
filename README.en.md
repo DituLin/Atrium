@@ -40,6 +40,8 @@ The [dark UI update](docs/ops/evidence/2026-10-20-tv-dark-ui/README.en.md) was d
 
 The [Live Photo classification fix](docs/ops/evidence/2026-10-20-live-photo/README.en.md) `96b093a` was deployed over the same backend baseline that day. Only a boolean classification from the Apple marker is retained; still photos remain available and companion clips are excluded as standalone videos. Existing entries are automatically rechecked in the background.
 
+The [archive dashboard design alignment](docs/ops/evidence/2026-10-21-archive-dashboard/README.en.md) `6127858`, including native-title fix `6bca2a1`, was deployed on 2026-10-21. The three-column dashboard contains a large milk card, archive composition, height, weight and financial amounts, with public archive counts in the sidebar. Statistics use actual records and explicit definitions; missing data keeps an empty card. Synthetic browser checks and remote-control checks in the official OnePlus app passed.
+
 ## Integrated archives
 
 - Automatic classification prioritizes health, education, finance and home documents, retaining domains, document types and extensible labels.
