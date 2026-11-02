@@ -2,7 +2,7 @@
 
 [中文](daily-memories.md) | English
 
-Updated: 2026-11-02. Status: implemented; this release and its device validation are pending. This guide describes the implemented behavior and onboarding process, not a completed upgrade of the running version. Deployment and physical-device results depend on this release's verification record.
+Updated: 2026-11-02. Status: implemented and deployed with browser validation; physical TV validation awaits available devices.
 
 ## Playback and resume
 
@@ -59,3 +59,11 @@ Adding a source does not automatically expand any integration's source allowlist
 Home uses the screen-authenticated `GET /api/v1/photos/memories` endpoint. The server derives a stable order from household day, screen and photo identifiers, with cursor pagination. Resume requests recheck currently visible photos instead of reusing earlier authorization results. No database schema migration is required.
 
 This release version, test results, source onboarding and device verification should be recorded separately. This guide does not replace release acceptance or promise that every photo will be played within one day.
+
+## 2026-11-02 release verification
+
+The feature commit is `db99b2c`; the signed Core version is `daily-memories-db99b2c+c06c6a591e9a33c6a93bc0def15d3e29061f9d07`. The database retains its existing 17 migrations. This release uses the verified backend baseline and existing patches, adding only this feature and its matching frontend.
+
+All 627 frontend tests, lint, TypeScript builds and the Chrome 66 style check passed. Full Go regression suites passed for both the repository and the actual release source, along with the memories race check. The signed candidate passed 17 real-server checks with synthetic photos, covering two sources, complete pagination, resume, day changes and server restarts. A temporary verification screen then confirmed the deployed daily order, reload resume, new-source mixing, preview decoding, photo viewing and archive overview. The verification screen was revoked afterward. Existing business data, source identities, photo identities and screen pairings were preserved during activation.
+
+Physical TVs were offline during acceptance, so these results cover the service and browser; physical-device acceptance remains pending. Remaining metadata and previews from the new source's initial import continue through the background queue, and ready items enter the playback pool progressively. Actual household paths, library counts, authentication materials and private acceptance evidence are excluded from the repository.
