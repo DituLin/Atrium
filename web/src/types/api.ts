@@ -60,6 +60,11 @@ export interface PhotoListResponse {
   meta?: PhotoListMeta;
 }
 
+/** Home-only daily order; deliberately excluded from the media collection routes. */
+export interface MemoriesItem extends PhotoItem { resume_cursor: string }
+export interface MemoriesMeta { collection: 'memories'; day: string; screen_id: string; total: number }
+export interface MemoriesResponse { items: MemoriesItem[]; next_cursor: string | null; meta: MemoriesMeta }
+
 export interface PhotoNeighbors {
   previous_id: string | null;
   next_id: string | null;

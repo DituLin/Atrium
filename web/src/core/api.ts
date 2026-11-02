@@ -8,6 +8,7 @@ import type { FamilyMember, FamilyRecordPage } from '../types/family';
 import type {
   ApiErrorBody,
   HomeResponse,
+  MemoriesResponse,
   HouseResponse,
   OverviewResponse,
   NasStatusResponse,
@@ -278,6 +279,26 @@ export class ApiClient {
     if (params.limit) query.set('limit', String(params.limit));
     if (params.seed) query.set('seed', params.seed);
     return this.get<PhotoListResponse>(`${API_BASE}/photos?${query.toString()}`);
+  }
+
+  async listMemories(params: { cursor?: string | null; limit?: number } = {}): Promise<MemoriesResponse> {
+    const query = new URLSearchParams();
+    if (params.cursor) query.set('cursor', params.cursor);
+    if (params.limit) query.set('limit', String(params.limit));
+    const suffix = query.toString();
+    const page = await this.request<MemoriesResponse>(`${API_BASE}/photos/memories${suffix ? `?${suffix}` : ''}`, {
+      method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-store',
+    }, true);
+    if (!page || !Array.isArray(page.items) || !page.meta || page.meta.collection !== 'memories'
+      || typeof page.meta.day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(page.meta.day)
+      || typeof page.meta.screen_id !== 'string' || !page.meta.screen_id
+      || !Number.isInteger(page.meta.total) || page.meta.total < 0
+      || !(page.next_cursor === null || typeof page.next_cursor === 'string')
+      || page.items.some(item => !item || typeof item.id !== 'string' || !item.preview
+        || typeof item.resume_cursor !== 'string' || !item.resume_cursor || item.resume_cursor.length > 4096)) {
+      throw new Error('Invalid memories response');
+    }
+    return page;
   }
 
   getPhoto(id: string, neighbors?: PhotoCollection): Promise<PhotoDetailResponse> {

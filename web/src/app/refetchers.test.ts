@@ -105,3 +105,23 @@ it('awaits Overview independently of failing home and preserves route, history a
   await Promise.resolve(); expect(settled).toBe(false); expect(getHome).not.toHaveBeenCalled();
   finish(); await task; expect(state.router).toBe(router);
 });
+
+it('refreshes daily memories inclusively around the visible photo and drops stale refreshes after movement', async () => {
+  let state = createInitialState(0);
+  const dispatch = (action: AppAction) => { state = appReducer(state, action); };
+  const item = (id: string) => ({ id, preview: { status: 'ready' }, resume_cursor: `inclusive:${id}` }) as PhotoItem & { resume_cursor: string };
+  const page = { items: [item('b'), item('c')], next_cursor: null, meta: { collection: 'memories' as const, day: '2026-11-02', screen_id: 'tv', total: 2 } };
+  dispatch({ type: 'slideshow.memoriesStarted', resumeCursor: null });
+  dispatch({ type: 'slideshow.memoriesLoaded', generation: state.slideshow.generation, page });
+  dispatch({ type: 'slideshow.displayed', id: 'b', generation: state.slideshow.generation });
+  let finish!: (value: typeof page) => void;
+  const listMemories = vi.fn(() => new Promise<typeof page>(resolve => { finish = resolve; }));
+  const refetch = createRefetchers({ api: { listMemories } as unknown as ApiClient, dispatch, getState: () => state });
+  const pending = refetch.slideshow();
+  expect(listMemories).toHaveBeenCalledWith({ cursor: 'inclusive:b', limit: 50 });
+  dispatch({ type: 'slideshow.advance' });
+  dispatch({ type: 'slideshow.displayed', id: 'c', generation: state.slideshow.generation });
+  finish(page); await pending;
+  expect(state.slideshow.displayedId).toBe('c');
+  expect(state.slideshow.round[state.slideshow.index]?.id).toBe('c');
+});

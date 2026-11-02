@@ -1,3 +1,4 @@
+import { clearMemoriesProgress } from './memoriesProgress';
 import { VideoRefresh } from './videoRefresh';
 /**
  * Composition root: builds the API client, runs the reducer, and wires the
@@ -33,6 +34,7 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
   const { api, dispatch, house, overview } = useMemo(() => {
     const send = (action: AppAction) => {
       if (action.type === 'app.needsPairing' || action.type === 'app.authExpired' || action.type === 'pair.claimed') {
+        clearMemoriesProgress();
         house.invalidate(); overview.invalidate();
         client.invalidateAuthorization();
         if (action.type !== 'pair.claimed') clearLastAuthOkAt();

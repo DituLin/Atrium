@@ -41,7 +41,7 @@ export interface AppState {
   home: HomeResponse | null;
   house: HouseState;
   overview: OverviewState;
-  /** Dashboard slideshow: one seeded `random` round (W-201). */
+  /** Dashboard slideshow: one server-owned daily memories order. */
   slideshow: SlideshowState;
   /** The collection browser's page, focus and cursor (W-202). */
   collection: PhotoListState;
@@ -164,8 +164,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     if (state.authExpired || state.needsPairing) return state;
     const slideshow = slideshowReducer(state.slideshow, action as SlideshowAction);
     if (slideshow === state.slideshow) return state;
-    // A viewer opened from home keeps going through the same random round.
-    const viewer = action.type === 'slideshow.pageLoaded' && state.viewer.origin === 'slideshow'
+    // A viewer opened from home keeps going through the same daily order.
+    const viewer = (action.type === 'slideshow.pageLoaded' || action.type === 'slideshow.memoriesLoaded') && state.viewer.origin === 'slideshow'
       ? photoViewerReducer(state.viewer, { type: 'viewer.extend', ids: slideshow.round.map(item => item.id) }) : state.viewer;
     return { ...state, slideshow, viewer };
   }

@@ -16,6 +16,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { WebSocketServer } from 'ws';
 import type { WebSocket } from 'ws';
 
+import { memoriesPage } from './memories.ts';
 import { collectionPage, neighborsIn } from './collections.ts';
 import { placeholderSvg, PHOTOS } from './data.ts';
 import {
@@ -417,6 +418,14 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
     if (path === '/api/v1/nas/status') return json(res, 200, nasStatus());
     if (path === '/api/v1/screens/me') {
       return json(res, 200, { id: screen.id, name: screen.name, status: 'active' });
+    }
+    if (path === '/api/v1/photos/memories') {
+      const home = homeSnapshot() as HomeResponse;
+      const parts = new Intl.DateTimeFormat('en-CA', { timeZone: home.home.timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+      const part = (name: string) => parts.find(value => value.type === name)?.value;
+      const day = `${part('year')}-${part('month')}-${part('day')}`;
+      try { return json(res, 200, memoriesPage(PHOTOS, day, screen.id, url.searchParams.get('cursor'), Math.min(100, Math.max(1, Number(url.searchParams.get('limit')) || 50)))); }
+      catch { return fail(res, 400, 'invalid_request', 'Invalid memories cursor'); }
     }
     if (path === '/api/v1/photos') {
       const collection = url.searchParams.get('collection') ?? 'recent';

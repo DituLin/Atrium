@@ -263,3 +263,18 @@ it('passes a Overview abort signal to transport and ignores successful JSON afte
   expect(fetchImpl.mock.calls[0]?.[1]?.signal).toBe(abort.signal);
   abort.abort(); finish({}); expect(await old).toMatchObject({ name: 'AbortError' }); expect(onAuthOk).not.toHaveBeenCalled();
 });
+
+it('reads daily memories through its dedicated authenticated no-store endpoint', async () => {
+  const fetchImpl = vi.fn(async (_path: string, _init?: RequestInit) => jsonResponse(200, { items: [], next_cursor: null, meta: { collection: 'memories', day: '2026-11-02', screen_id: 'screen-a', total: 0 } }));
+  const client = new ApiClient({ fetchImpl });
+  await client.listMemories({ cursor: 'inclusive + anchor', limit: 50 });
+  expect(fetchImpl.mock.calls[0]?.[0]).toBe('/api/v1/photos/memories?cursor=inclusive+%2B+anchor&limit=50');
+  expect(fetchImpl.mock.calls[0]?.[1]).toMatchObject({ cache: 'no-store', credentials: 'same-origin' });
+});
+
+it('rejects incomplete daily envelopes before they can enter slideshow state', async () => {
+  for (const body of [{ items: [], next_cursor: null }, { items: [], next_cursor: null, meta: { collection: 'memories', day: 'wrong', screen_id: 'tv', total: 0 } }]) {
+    const client = new ApiClient({ fetchImpl: async () => jsonResponse(200, body) });
+    await expect(client.listMemories()).rejects.toThrow('Invalid memories response');
+  }
+});

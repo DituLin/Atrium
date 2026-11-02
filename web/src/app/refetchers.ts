@@ -100,6 +100,17 @@ export function createRefetchers(ports: RefetchPorts): Refetchers {
   };
 
   const slideshow = async (): Promise<void> => {
+    const snapshot = getState().slideshow;
+    if (snapshot.memoriesMode) {
+      const anchor = snapshot.displayedCursor;
+      const generation = snapshot.generation;
+      const page = await api.listMemories({ cursor: anchor, limit: SLIDESHOW_PAGE_SIZE });
+      const latest = getState();
+      if (latest.authExpired || latest.needsPairing || latest.slideshow.generation !== generation
+        || latest.slideshow.displayedCursor !== anchor || latest.slideshow.index !== snapshot.index) return;
+      dispatch({ type: 'slideshow.memoriesLoaded', generation, page, replace: true });
+      return;
+    }
     const seed = getState().slideshow.seed;
     if (!seed) return;
     const page = await api.listPhotos({ collection: 'random', seed, limit: SLIDESHOW_PAGE_SIZE });
@@ -123,7 +134,7 @@ export function createRefetchers(ports: RefetchPorts): Refetchers {
     switch (target.name) {
  case 'family': if(!ports.archives)throw new Error('Archive reader unavailable');jobs.push(ports.archives.load(target));break;
       case 'dashboard':
-        if (getState().slideshow.seed) jobs.push(slideshow());
+        if (getState().slideshow.seed || getState().slideshow.memoriesMode) jobs.push(slideshow());
         break;
       case 'photos':
         jobs.push(collection());

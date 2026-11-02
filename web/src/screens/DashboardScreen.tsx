@@ -72,7 +72,7 @@ export function DashboardScreen(): ReactElement {
   const go = (id: CardId, route: AppRoute) => () =>
     dispatch({ type: 'router.navigate', sourceFocus: `home-${id}`, route });
   const cards: HomeMenuCard[] = [
-    { id: 'photo', name: '这张照片', meta: '全屏查看', icon: ICONS.photo, onOpen: () => hero.current?.click() },
+    { id: 'photo', name: '精彩回忆', meta: '每天一轮 · 接着播放', icon: ICONS.photo, onOpen: () => hero.current?.click() },
     { id: 'media', name: '影像', meta: photo ? `${photo.totals.ready} 张照片` : '照片与视频', icon: ICONS.media, onOpen: go('media', { name: 'photos', collection: DEFAULT_COLLECTION }) },
     { id: 'today', name: '今日', meta: notices.length ? `${notices.length} 条家庭提示` : lunar ?? '家庭概览', icon: ICONS.today, onOpen: go('today', { name: 'briefing' }) },
     { id: 'family', name: '档案', meta: '健康 · 教育 · 财务 · 房屋', icon: ICONS.family, onOpen: go('family', { name: 'family' }) },

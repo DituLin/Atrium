@@ -30,6 +30,7 @@ func (a *API) routes() {
 	m.HandleFunc("GET "+APIPrefix+"/screens/me", a.requireScope(auth.ScopeScreen, a.handleScreenMe))
 	m.HandleFunc("GET "+APIPrefix+"/nas/status", a.requireScope(auth.ScopeScreen, a.handleNASStatus))
 	m.HandleFunc("GET "+APIPrefix+"/photos", a.requireScope(auth.ScopeScreen, a.handlePhotosList))
+	m.HandleFunc("GET "+APIPrefix+"/photos/memories", a.requireScope(auth.ScopeScreen, a.handleMemories))
 	m.HandleFunc("GET "+APIPrefix+"/photos/{id}", a.requireScope(auth.ScopeScreen, a.handlePhotoGet))
 	m.HandleFunc("GET "+APIPrefix+"/media/photos/{id}", a.requireScope(auth.ScopeScreen, a.handleMediaGet))
 	if a.deps.WS != nil {

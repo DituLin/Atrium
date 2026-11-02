@@ -12,7 +12,7 @@
  *    and no new round is started.
  */
 
-import type { PhotoItem } from '../types/api';
+import type { MemoriesMeta, MemoriesResponse, PhotoItem } from '../types/api';
 import { MEDIA_MAX_RETRIES } from '../core/media';
 
 export type SlideshowStatus = 'idle' | 'loading' | 'playing' | 'empty' | 'error';
@@ -25,6 +25,11 @@ export const MIN_SLIDESHOW_INTERVAL_MS = 3000;
 
 export interface SlideshowState {
   seed: string | null;
+  memories: MemoriesMeta | null;
+  memoriesMode: boolean;
+  initialCursor: string | null;
+  loaded: boolean;
+  displayedCursor: string | null;
   round: readonly PhotoItem[];
   cursor: string | null;
   index: number;
@@ -45,6 +50,11 @@ export interface SlideshowState {
 
 export const initialSlideshowState: SlideshowState = {
   seed: null,
+  memories: null,
+  memoriesMode: false,
+  initialCursor: null,
+  loaded: false,
+  displayedCursor: null,
   round: [],
   cursor: null,
   index: 0,
@@ -59,6 +69,8 @@ export const initialSlideshowState: SlideshowState = {
 };
 
 export type SlideshowAction =
+  | { type: 'slideshow.memoriesStarted'; resumeCursor: string | null }
+  | { type: 'slideshow.memoriesLoaded'; generation: number; page: MemoriesResponse; replace?: boolean; baseCursor?: string | null }
   | { type: 'slideshow.configure'; intervalSeconds: number }
   | { type: 'slideshow.roundStarted'; seed: string }
   | {
@@ -69,7 +81,7 @@ export type SlideshowAction =
     }
   | { type: 'slideshow.loadFailed' }
   | { type: 'slideshow.advance' }
-  | { type: 'slideshow.displayed'; id: string }
+  | { type: 'slideshow.displayed'; id: string; generation?: number }
   | { type: 'slideshow.mediaProcessing'; id: string }
   | { type: 'slideshow.mediaGone'; id: string }
   | { type: 'slideshow.mediaUnavailable'; id: string }
@@ -119,7 +131,7 @@ export function nextSlide(state: SlideshowState): PhotoItem | null {
 
 /** True while a single photo (or none) is shown without advancing (PRD 5.2). */
 export function isFixedDisplay(state: SlideshowState): boolean {
-  return state.cursor === null && playableCount(state) < 2;
+  return state.cursor === null && playableCount(state) < 2 && !(state.memoriesMode && (state.memories?.total ?? 0) > 1);
 }
 
 /* ---------------------------------------------------------------- reducer */
@@ -173,6 +185,27 @@ export function slideshowReducer(
   action: SlideshowAction,
 ): SlideshowState {
   switch (action.type) {
+    case 'slideshow.memoriesStarted':
+      return { ...startRound(state, ''), memoriesMode: true, memories: null, initialCursor: action.resumeCursor,
+        loaded: false, displayedId: null, displayedCursor: null };
+    case 'slideshow.memoriesLoaded': {
+      if (!state.memoriesMode || action.generation !== state.generation) return state;
+      if (action.baseCursor !== undefined && state.loaded && action.baseCursor !== state.cursor) return state;
+      if (state.memories?.screen_id === action.page.meta.screen_id && action.page.meta.day < state.memories.day) return state;
+      const changedDay = state.memories !== null && (state.memories.day !== action.page.meta.day || state.memories.screen_id !== action.page.meta.screen_id);
+      const replace = action.replace || changedDay || !state.loaded;
+      const ready = action.page.items.filter(isReady);
+      const known = new Set((replace ? [] : state.round).map(item => item.id));
+      const round = replace ? ready : [...state.round, ...ready.filter(item => !known.has(item.id))];
+      const displayedStillPresent = round.some(item => item.id === state.displayedId);
+      return withStatus({ ...state, round, index: replace ? 0 : state.index, loaded: true,
+        generation: changedDay || action.replace ? state.generation + 1 : state.generation,
+        memories: action.page.meta, seed: `memories:${action.page.meta.day}:${action.page.meta.screen_id}`,
+        cursor: action.page.next_cursor, roundComplete: false,
+        retries: replace ? {} : state.retries, skipped: replace ? [] : state.skipped,
+        displayedId: changedDay || !displayedStillPresent ? null : state.displayedId,
+        displayedCursor: changedDay || !displayedStillPresent ? null : state.displayedCursor });
+    }
     case 'slideshow.configure': {
       const seconds = action.intervalSeconds;
       const intervalMs =
@@ -202,11 +235,16 @@ export function slideshowReducer(
       if (next >= 0) return { ...state, index: next };
       // Nothing playable left in this round.
       if (state.cursor !== null) return state; // the driver is fetching a page
-      if (playableCount(state) < 2) return state; // fixed display (PRD 5.2)
+      if (playableCount(state) < 2 && !(state.memoriesMode && (state.memories?.total ?? 0) > 1 && playableCount(state) > 0)) return state; // fixed or all failed
       return { ...state, roundComplete: true };
     }
-    case 'slideshow.displayed':
-      return state.displayedId === action.id ? state : { ...state, displayedId: action.id };
+    case 'slideshow.displayed': {
+      if (action.generation !== undefined && action.generation !== state.generation) return state;
+      const item = state.round.find(item => item.id === action.id);
+      if (!item || state.memoriesMode && currentSlide(state)?.id !== action.id) return state;
+      const anchor = 'resume_cursor' in item && typeof item.resume_cursor === 'string' ? item.resume_cursor : null;
+      return state.displayedId === action.id && state.displayedCursor === anchor ? state : { ...state, displayedId: action.id, displayedCursor: anchor };
+    }
     case 'slideshow.mediaProcessing': {
       const attempts = (state.retries[action.id] ?? 0) + 1;
       const retries = { ...state.retries, [action.id]: attempts };
@@ -241,7 +279,7 @@ export function slideshowReducer(
     case 'slideshow.resume':
       return state.paused ? { ...state, paused: false } : state;
     case 'slideshow.reset':
-      return { ...initialSlideshowState, intervalMs: state.intervalMs };
+      return { ...initialSlideshowState, intervalMs: state.intervalMs, generation: state.generation + 1 };
     default:
       return state;
   }

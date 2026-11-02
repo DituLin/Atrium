@@ -71,7 +71,7 @@ export function PhotoPane(props: PhotoPaneProps): ReactElement {
 
   return (
     <section ref={pane} className="ambient" data-home-hero=""
-      aria-label={props.interactive ? '打开当前照片' : '照片'}
+      aria-label={props.interactive ? '打开当前照片' : '精彩回忆'}
       role={props.interactive ? 'button' : undefined} tabIndex={props.interactive ? 0 : undefined}
       onClick={open} onFocus={props.onFocus} onKeyDown={event => {
         if (!props.interactive) return;

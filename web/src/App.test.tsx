@@ -65,6 +65,8 @@ function stubApi(): void {
   vi.stubGlobal(
     'fetch',
     vi.fn((input: string) => {
+      if (input === '/api/v1/screens/me') return Promise.resolve(jsonResponse({ id: 'tv', name: 'TV', status: 'active' }));
+      if (input.startsWith('/api/v1/photos/memories')) return Promise.resolve(jsonResponse({ items: [], next_cursor: null, meta: { collection: 'memories', day: '2026-11-02', screen_id: 'tv', total: 0 } }));
       if (input.startsWith('/api/v1/photos')) {
         return Promise.resolve(jsonResponse({ items: [], next_cursor: null, meta: {} }));
       }
@@ -78,11 +80,11 @@ describe('App shell', () => {
     stubApi();
     render(<App />);
     await waitFor(() => expect(screen.getByLabelText('时钟')).toBeDefined());
-    // The slideshow asks for a seeded `random` round and reports the empty
+    // The slideshow asks for the server's daily memories and reports the empty
     // library instead of showing a black rectangle (W-201, FR-03).
     await waitFor(() => expect(screen.getByText('暂无照片')).toBeDefined());
     const calls = (globalThis.fetch as unknown as { mock: { calls: string[][] } }).mock.calls;
-    expect(calls.some(([url]) => /collection=random&limit=50&seed=\w+/.test(url ?? ''))).toBe(
+    expect(calls.some(([url]) => url === '/api/v1/photos/memories?limit=50')).toBe(
       true,
     );
     expect(screen.getByLabelText('系统状态')).toBeDefined();

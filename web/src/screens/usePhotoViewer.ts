@@ -138,6 +138,16 @@ export function usePhotoViewer(
         .then(page => dispatch({ type: 'photos.pageLoaded', collection: source, generation: list.generation, items: page.items, nextCursor: page.next_cursor, meta: page.meta ?? null, append: true }))
         .catch(() => { pageRef.current = ''; dispatch({ type: 'photos.loadFailed', generation: list.generation }); });
     } else if (viewer.origin === 'slideshow') {
+      if (round.memoriesMode) {
+        if (!round.cursor) return;
+        const key = `m:${round.generation}:${round.cursor}`;
+        if (pageRef.current === key) return;
+        pageRef.current = key;
+        void api.listMemories({ cursor: round.cursor, limit: SLIDESHOW_PAGE_SIZE })
+          .then(page => dispatch({ type: 'slideshow.memoriesLoaded', generation: round.generation, page, baseCursor: round.cursor }))
+          .catch(() => { pageRef.current = ''; });
+        return;
+      }
       const { seed, cursor } = round;
       if (seed === null || cursor === null) return;
       const key = `s:${seed}:${cursor}`;

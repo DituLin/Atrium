@@ -34,6 +34,7 @@ describe('home remote navigation', () => {
     const dispatch = setup();
     fireEvent.keyDown(hero(), { key: 'ArrowDown' });
     expect(document.activeElement).toBe(screen.getByRole('button', { name: /^影像/ }));
+    expect(screen.getByRole('button', { name: /^精彩回忆/ })).toBeDefined();
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
     expect(document.activeElement).toBe(screen.getByRole('button', { name: /^今日/ }));
     expect(dispatch).not.toHaveBeenCalled();
