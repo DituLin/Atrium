@@ -213,7 +213,11 @@ describe('collection browser (W-202)', () => {
     expect(document.querySelector('.viewer')).toBeNull();
     finish(new Response(JSON.stringify({ items: [photo(7)], next_cursor: null, meta: {} }), { status: 200 }));
     await waitFor(() => expect(document.activeElement).toBe(document.querySelector('.thumb')));
-    expect(document.querySelector('.thumb img')?.getAttribute('src')).toBe('/t/ph_7');
+    // Pixels are prepared only once the replacement card is in the viewport.
+    const frame = document.querySelector('.tile__frame')!;
+    vi.spyOn(frame, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 100, 100));
+    fireEvent(window, new Event('resize'));
+    await waitFor(() => expect(document.querySelector('.thumb img')?.getAttribute('src')).toBe('/t/ph_7'));
   });
 
   it('enters a collection from the shared rail on the video page and waits for confirmation', async () => {

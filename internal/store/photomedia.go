@@ -9,6 +9,12 @@ import (
 	"github.com/DituLin/Atrium/internal/domain"
 )
 
+// previewWritable is checked in the same UPDATE as every worker transition.
+// A job's earlier read cannot authorize overwriting a later terminal verdict,
+// operator exclusion/removal, or source revocation. Explicit Retry is separate.
+const previewWritable = `status IN ('pending','ready') AND preview_status != 'failed'
+	AND EXISTS (SELECT 1 FROM data_sources WHERE id = photos.source_id AND status = 'active')`
+
 // MetaResult is what the extract_meta job writes back.
 type MetaResult struct {
 	Fingerprint           string
@@ -20,6 +26,9 @@ type MetaResult struct {
 	CapturedConfidence    domain.CapturedConfidence
 	CapturedDay           string
 	Error                 string
+	// PublishWithoutPreview makes a metadata-ready pending photo discoverable
+	// in on-demand mode, without changing terminal or operator-hidden states.
+	PublishWithoutPreview bool
 }
 
 // SetMeta stores the outcome of metadata extraction.
@@ -27,12 +36,17 @@ func (p *Photos) SetMeta(ctx context.Context, id string, res MetaResult, now tim
 	sqlRes, err := p.ex.ExecContext(ctx, `
 		UPDATE photos SET fingerprint = ?, width = ?, height = ?, orientation = ?,
 			captured_at = ?, captured_offset_seconds = ?, captured_confidence = ?, captured_day = ?,
-			meta_status = 'ready', meta_error = ?, updated_at = ?
+			meta_status = 'ready', meta_error = ?,
+			status = CASE WHEN ? AND status = 'pending'
+				AND preview_status != 'failed'
+				AND EXISTS (SELECT 1 FROM data_sources WHERE id = photos.source_id AND status = 'active')
+				THEN 'ready' ELSE status END,
+			updated_at = ?
 		WHERE id = ?`,
 		nullString(res.Fingerprint), nullZeroInt(res.Width), nullZeroInt(res.Height), nullZeroInt(res.Orientation),
 		FormatTimePtr(res.CapturedAt), nullIntPtr(res.CapturedOffsetSeconds),
 		string(res.CapturedConfidence), nullString(res.CapturedDay),
-		nullString(res.Error), FormatTime(now), id)
+		nullString(res.Error), res.PublishWithoutPreview, FormatTime(now), id)
 	if err != nil {
 		return fmt.Errorf("store: set photo meta %q: %w", id, err)
 	}
@@ -53,7 +67,7 @@ func (p *Photos) SetMetaFailed(ctx context.Context, id, code string, now time.Ti
 // SetPreviewProcessing marks a preview build as in flight.
 func (p *Photos) SetPreviewProcessing(ctx context.Context, id string, now time.Time) error {
 	res, err := p.ex.ExecContext(ctx,
-		`UPDATE photos SET preview_status = 'processing', updated_at = ? WHERE id = ?`,
+		`UPDATE photos SET preview_status = 'processing', updated_at = ? WHERE id = ? AND `+previewWritable,
 		FormatTime(now), id)
 	if err != nil {
 		return fmt.Errorf("store: set preview processing %q: %w", id, err)
@@ -67,9 +81,9 @@ func (p *Photos) SetPreviewReady(ctx context.Context, id string, now time.Time) 
 	res, err := p.ex.ExecContext(ctx, `
 		UPDATE photos SET preview_status = 'ready', preview_error = NULL, preview_attempts = 0,
 			preview_next_retry_at = NULL,
-			status = CASE WHEN status IN ('pending','unsupported') THEN 'ready' ELSE status END,
+			status = CASE WHEN status = 'pending' THEN 'ready' ELSE status END,
 			updated_at = ?
-		WHERE id = ?`, FormatTime(now), id)
+		WHERE id = ? AND `+previewWritable, FormatTime(now), id)
 	if err != nil {
 		return fmt.Errorf("store: set preview ready %q: %w", id, err)
 	}
@@ -81,7 +95,7 @@ func (p *Photos) SetPreviewRetry(ctx context.Context, id, code string, nextRetry
 	res, err := p.ex.ExecContext(ctx, `
 		UPDATE photos SET preview_status = 'pending', preview_error = ?, preview_attempts = preview_attempts + 1,
 			preview_next_retry_at = ?, updated_at = ?
-		WHERE id = ?`, nullString(code), FormatTime(nextRetry), FormatTime(now), id)
+		WHERE id = ? AND `+previewWritable, nullString(code), FormatTime(nextRetry), FormatTime(now), id)
 	if err != nil {
 		return fmt.Errorf("store: set preview retry %q: %w", id, err)
 	}
@@ -93,7 +107,7 @@ func (p *Photos) SetPreviewFailed(ctx context.Context, id, code string, now time
 	res, err := p.ex.ExecContext(ctx, `
 		UPDATE photos SET preview_status = 'failed', preview_error = ?, preview_attempts = preview_attempts + 1,
 			preview_next_retry_at = NULL, updated_at = ?
-		WHERE id = ?`, nullString(code), FormatTime(now), id)
+		WHERE id = ? AND `+previewWritable, nullString(code), FormatTime(now), id)
 	if err != nil {
 		return fmt.Errorf("store: set preview failed %q: %w", id, err)
 	}
@@ -107,7 +121,7 @@ func (p *Photos) SetUnsupported(ctx context.Context, id, code string, now time.T
 	res, err := p.ex.ExecContext(ctx, `
 		UPDATE photos SET status = 'unsupported', preview_status = 'failed', preview_error = ?,
 			preview_attempts = preview_attempts + 1, preview_next_retry_at = NULL, updated_at = ?
-		WHERE id = ?`, nullString(code), FormatTime(now), id)
+		WHERE id = ? AND `+previewWritable, nullString(code), FormatTime(now), id)
 	if err != nil {
 		return fmt.Errorf("store: set photo unsupported %q: %w", id, err)
 	}
@@ -119,7 +133,8 @@ func (p *Photos) SetUnsupported(ctx context.Context, id, code string, now time.T
 func (p *Photos) SetPreviewEvicted(ctx context.Context, id string, now time.Time) error {
 	res, err := p.ex.ExecContext(ctx, `
 		UPDATE photos SET preview_status = 'evicted', preview_error = NULL, updated_at = ?
-		WHERE id = ? AND status != 'removed'`, FormatTime(now), id)
+		WHERE id = ? AND status = 'ready'
+			AND preview_status IN ('ready','pending','processing','evicted','unavailable')`, FormatTime(now), id)
 	if err != nil {
 		return fmt.Errorf("store: set preview evicted %q: %w", id, err)
 	}

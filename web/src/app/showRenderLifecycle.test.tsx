@@ -5,7 +5,7 @@ import type { ApiClient } from '../core/api';
 import type { WsClientOptions } from '../core/ws';
 import type * as WsModule from '../core/ws';
 import { PhotoScreen } from '../screens/PhotoScreen';
-import type { PhotoItem } from '../types/api';
+import type { PhotoItem, PreviewStatus } from '../types/api';
 import type { CommandAckPayload, ServerMessage } from '../types/ws';
 import { AppContext } from './context';
 import { appReducer, createInitialState } from './state';
@@ -20,11 +20,11 @@ vi.mock('../core/ws', async (original) => ({
   },
 }));
 const item: PhotoItem = { id: 'photo', source_id: 'source', captured_at: null, captured_confidence: 'unknown', first_seen_at: '2026-09-07T00:00:00Z', is_baseline: false, width: 100, height: 100, preview: { status: 'ready', width: 100, height: 100 }, urls: { preview: '/preview', thumb: '/thumb' } };
-function harness(strict = false, probeMedia = vi.fn(async () => 200)) {
+function harness(strict = false, probeMedia = vi.fn(async () => 200), previewStatus: PreviewStatus = 'ready') {
   socket.acks = [];
   let current: AppState;
   let dispatch: (action: AppAction) => void;
-  const api = { getPhoto: vi.fn(async () => ({ item })), probeMedia, mediaUrl: () => '/preview' } as unknown as ApiClient;
+  const api = { getPhoto: vi.fn(async () => ({ item: { ...item, preview: { ...item.preview, status: previewStatus } } })), probeMedia, mediaUrl: () => '/preview' } as unknown as ApiClient;
   const house = { load: async () => {}, invalidate: () => {} };
   function Harness() {
     const [state, send] = useReducer(appReducer, 0, createInitialState);
@@ -68,11 +68,11 @@ it('loads and acknowledges the current photo after StrictMode effect replay', as
   expect(socket.acks[socket.acks.length - 1]?.status).toBe('applied');
 });
 
-it('waits through processing and mounts a fresh image only after media becomes ready', async () => {
+it.each(['ready', 'pending', 'processing', 'evicted', 'unavailable'] as const)('opens a %s photo through processing and signals only after its image loads', async previewStatus => {
   vi.useFakeTimers();
   try {
     const probe = vi.fn().mockResolvedValueOnce(202).mockResolvedValue(200);
-    const h = harness(false, probe);
+    const h = harness(false, probe, previewStatus);
     h.command(1, 'show');
     await act(async () => { await Promise.resolve(); });
     expect(h.state().viewer.status).toBe('processing');

@@ -97,7 +97,7 @@ func (p *Photos) SetStatus(ctx context.Context, id string, status domain.PhotoSt
 // SetPreviewStatus records the preview state and optional error code.
 func (p *Photos) SetPreviewStatus(ctx context.Context, id string, status domain.PreviewStatus, errCode string, now time.Time) error {
 	res, err := p.ex.ExecContext(ctx,
-		`UPDATE photos SET preview_status = ?, preview_error = ?, updated_at = ? WHERE id = ?`,
+		`UPDATE photos SET preview_status = ?, preview_error = ?, updated_at = ? WHERE id = ? AND `+previewWritable,
 		string(status), nullString(errCode), FormatTime(now), id)
 	if err != nil {
 		return fmt.Errorf("store: set preview status %q: %w", id, err)

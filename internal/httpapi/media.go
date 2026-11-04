@@ -87,9 +87,12 @@ func (a *API) handleMediaGet(w http.ResponseWriter, r *http.Request) {
 // pending states that legitimately have no bytes yet.
 func (a *API) mediaVisible(ctx context.Context, photo *domain.Photo) bool {
 	switch photo.Status {
-	case domain.PhotoRemoved, domain.PhotoExcluded:
+	case domain.PhotoRemoved, domain.PhotoExcluded, domain.PhotoUnsupported:
 		return false
 	default:
+	}
+	if photo.PreviewStatus == domain.PreviewFailed {
+		return false
 	}
 	src, err := a.deps.DB.Sources().Get(ctx, photo.SourceID)
 	if err != nil || src.Status != domain.SourceActive {
@@ -121,8 +124,12 @@ func (a *API) writeMediaPending(w http.ResponseWriter, r *http.Request, photo *d
 		return
 	}
 	if a.deps.Queue != nil {
+		priority := jobs.PriorityBuildPreview
+		if a.deps.Config != nil && a.deps.Config.Media.PreviewMode == "on_demand" {
+			priority = jobs.PriorityDemandPreview
+		}
 		if err := a.deps.Queue.EnqueuePhoto(ctx, domain.JobBuildPreview,
-			photo.ID, photo.SourceID, jobs.PriorityBuildPreview); err != nil {
+			photo.ID, photo.SourceID, priority); err != nil {
 			if log := LoggerFrom(ctx); log != nil {
 				log.Warn("preview rebuild not queued", "component", "media",
 					"event", "rebuild_enqueue_failed", "photo_id", photo.ID)

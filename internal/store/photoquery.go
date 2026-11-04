@@ -11,7 +11,8 @@ import (
 // eligible is the visibility rule for every screen-facing query: the photo is
 // ready and its source is still authorized (design §6.4). Revoking a source
 // hides its photos without touching a single photo row.
-const eligible = `p.status = 'ready' AND s.status = 'active'`
+const eligible = `p.status = 'ready' AND s.status = 'active'
+	AND p.preview_status IN ('ready','pending','processing','evicted','unavailable')`
 
 const listColumns = `p.id, p.source_id, p.rel_path, p.ext, p.size_bytes, p.mtime_unix, p.fingerprint, p.status,
 	p.width, p.height, p.orientation, p.captured_at, p.captured_offset_seconds, p.captured_confidence, p.captured_day,
@@ -95,7 +96,7 @@ func (p *Photos) ListAll(ctx context.Context, cur *AllCursor, limit int) ([]doma
 func (p *Photos) ListEligibleIDs(ctx context.Context, limit int) ([]string, error) {
 	rows, err := p.ex.QueryContext(ctx, `
 		SELECT p.id FROM photos p JOIN data_sources s ON s.id = p.source_id
-		WHERE `+eligible+` AND p.preview_status = 'ready'
+		WHERE `+eligible+`
 		ORDER BY p.id LIMIT ?`, limit)
 	if err != nil {
 		return nil, fmt.Errorf("store: list eligible photo ids: %w", err)
@@ -174,7 +175,6 @@ func (p *Photos) CountCollection(ctx context.Context, collection domain.Collecti
 		where += ` AND p.captured_day = ?`
 		args = append(args, day)
 	case domain.CollectionRandom:
-		where += ` AND p.preview_status = 'ready'`
 	case domain.CollectionAll:
 	default:
 		return 0, fmt.Errorf("store: count photos: unknown collection %q", collection)

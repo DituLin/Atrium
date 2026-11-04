@@ -8,7 +8,7 @@ import type { AppAction, AppState } from '../app/state';
 import { loadMemoriesProgress, saveMemoriesProgress } from '../app/memoriesProgress';
 import { ApiError } from '../core/api';
 import type { ApiClient } from '../core/api';
-import type { HomeResponse, MemoriesResponse } from '../types/api';
+import type { HomeResponse, MemoriesResponse, PreviewStatus } from '../types/api';
 import { decodeImage } from '../ui/decodeImage';
 import { useSlideshow } from './useSlideshow';
 vi.mock('../ui/decodeImage', () => ({ decodeImage: vi.fn() }));
@@ -18,6 +18,11 @@ const page = (ids: string[], currentDay = day, cursor: string | null = null): Me
     width: 100, height: 100, preview: { status: 'ready', width: 100, height: 100 }, urls: { preview: `/image/${id}`, thumb: '' }, resume_cursor: `inclusive:${id}` })),
   next_cursor: cursor, meta: { collection: 'memories', day: currentDay, screen_id: 'tv-a', total: ids.length },
 });
+const coldPage = (ids: string[], status: PreviewStatus = 'evicted'): MemoriesResponse => {
+  const result = page(ids);
+  result.items.forEach(item => { item.preview.status = status; });
+  return result;
+};
 const flush = async () => { await act(async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); }); };
 function setup(initial = page(['a', 'b']), screenID = 'tv-a', home: HomeResponse | null = { home: { timezone: 'UTC' }, widgets: [] } as unknown as HomeResponse, failIdentity = false, strict = false) {
   let setVisibility!: (visible: boolean) => void;
@@ -41,6 +46,88 @@ beforeEach(() => {
 });
 afterEach(() => { vi.useRealTimers(); vi.clearAllMocks(); });
 describe('daily memories driver', () => {
+  it('prepares a cold current photo through 202 before decoding and saving its shown bookmark', async () => {
+    const h = setup(coldPage(['a']));
+    h.probeMedia.mockResolvedValueOnce(202).mockResolvedValue(206);
+    await flush();
+    expect(h.probeMedia).toHaveBeenCalledWith('a', 'preview', expect.any(AbortSignal));
+    expect(decodeImage).not.toHaveBeenCalled();
+    expect(loadMemoriesProgress('tv-a', day)).toBeNull();
+    await act(async () => { vi.advanceTimersByTime(5000); }); await flush();
+    expect(h.result.current.shown?.id).toBe('a');
+    expect(loadMemoriesProgress('tv-a', day)?.resumeCursor).toBe('inclusive:a');
+  });
+  it('warms only the next three metadata items and decodes only current and next', async () => {
+    const h = setup(coldPage(Array.from({ length: 50 }, (_, index) => `p${index}`)));
+    await flush();
+    expect([...new Set(h.probeMedia.mock.calls.map(([id]) => id))].sort()).toEqual(['p0', 'p1', 'p2', 'p3']);
+    expect(vi.mocked(decodeImage).mock.calls.map(([id]) => id).sort()).toEqual(['p0', 'p1']);
+    for (let tick = 1; tick <= 3; tick++) h.send({ type: 'app.tick', nowMs: Date.now() + tick * 1000 });
+    await flush();
+    expect(h.probeMedia).toHaveBeenCalledTimes(4);
+    h.send({ type: 'slideshow.advance' }); await flush();
+    expect([...new Set(h.probeMedia.mock.calls.map(([id]) => id))].sort()).toEqual(['p0', 'p1', 'p2', 'p3', 'p4']);
+    expect(h.probeMedia.mock.calls.filter(([id]) => id === 'p1')).toHaveLength(1);
+    expect(loadMemoriesProgress('tv-a', day)?.resumeCursor).toBe('inclusive:p1');
+  });
+  it('keeps the shown image during cold preparation of the next photo and bounds its retries', async () => {
+    const h = setup(coldPage(['a', 'b', 'c', 'd', ...Array.from({ length: 46 }, (_, index) => `later-${index}`)]));
+    h.probeMedia.mockImplementation(async id => id === 'a' ? 200 : 202);
+    await flush();
+    expect(h.result.current.shown?.id).toBe('a');
+    h.send({ type: 'slideshow.advance' }); await flush();
+    expect(h.result.current.shown?.id).toBe('a');
+    expect(loadMemoriesProgress('tv-a', day)?.resumeCursor).toBe('inclusive:a');
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await act(async () => { vi.advanceTimersByTime(5000); }); await flush();
+    }
+    expect(h.probeMedia.mock.calls.filter(([id]) => id === 'b')).toHaveLength(4);
+    const count = h.probeMedia.mock.calls.length;
+    for (let tick = 1; tick <= 5; tick++) h.send({ type: 'app.tick', nowMs: Date.now() + tick * 1000 });
+    await flush();
+    expect(h.probeMedia).toHaveBeenCalledTimes(count);
+    expect(h.result.current.shown?.id).toBe('a');
+  });
+  it.each(['unmount', 'authorization', 'refresh'] as const)('cancels cold preparation retries and late work on %s', async reason => {
+    let finish!: (status: number) => void;
+    const h = setup(coldPage(['a', 'b', 'c', 'd']));
+    h.probeMedia.mockImplementation(id => id === 'a' ? new Promise(resolve => { finish = resolve; }) : Promise.resolve(202));
+    await flush();
+    if (reason === 'unmount') h.visible(false);
+    if (reason === 'authorization') h.send({ type: 'app.needsPairing' });
+    if (reason === 'refresh') {
+      h.probeMedia.mockResolvedValue(200);
+      h.send({ type: 'slideshow.memoriesLoaded', generation: h.get().slideshow.generation, page: page(['replacement']), replace: true });
+    }
+    await flush();
+    const count = h.probeMedia.mock.calls.length;
+    await act(async () => { finish(200); vi.advanceTimersByTime(20_000); }); await flush();
+    expect(h.probeMedia).toHaveBeenCalledTimes(count);
+    expect(vi.mocked(decodeImage).mock.calls.map(([id]) => id)).not.toContain('a');
+    expect(loadMemoriesProgress('tv-a', day)?.resumeCursor ?? null).toBe(reason === 'refresh' ? 'inclusive:replacement' : null);
+  });
+  it('restarts only the live cold preparation after StrictMode replays a returning dashboard', async () => {
+    const h = setup(coldPage(['a']), 'tv-a', null, false, true);
+    h.probeMedia.mockResolvedValue(202); await flush();
+    h.visible(false); h.visible(true); await flush();
+    const attempts = h.probeMedia.mock.calls.length;
+    h.probeMedia.mockResolvedValue(206);
+    await act(async () => { vi.advanceTimersByTime(5000); }); await flush();
+    expect(h.probeMedia).toHaveBeenCalledTimes(attempts + 1);
+    expect(h.result.current.shown?.id).toBe('a');
+    expect(loadMemoriesProgress('tv-a', day)?.resumeCursor).toBe('inclusive:a');
+  });
+  it('abandons prior-day cold retries when the household day changes', async () => {
+    const h = setup(coldPage(['old', 'old-next']));
+    h.probeMedia.mockResolvedValue(202); await flush();
+    h.listMemories.mockResolvedValue(page(['today'], '2026-11-03'));
+    h.probeMedia.mockResolvedValue(206);
+    vi.setSystemTime(new Date('2026-11-03T00:00:01Z')); h.send({ type: 'app.tick', nowMs: Date.now() }); await flush();
+    const attempts = h.probeMedia.mock.calls.length;
+    await act(async () => { vi.advanceTimersByTime(5000); }); await flush();
+    expect(h.probeMedia).toHaveBeenCalledTimes(attempts);
+    expect(h.result.current.shown?.id).toBe('today');
+  });
   it('resumes the last decoded displayed photo after a reload instead of the preloaded next photo', async () => {
     const first = setup(); await flush();
     expect(first.result.current.shown?.id).toBe('a');

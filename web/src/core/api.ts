@@ -321,11 +321,11 @@ export class ApiClient {
    * `ready`, and both count as a successful authenticated response for the 24 h
    * auth-cache rule (PRD 8.2).
    */
-  async probeMedia(id: string, variant: 'preview' | 'thumb' = 'preview'): Promise<number> {
+  async probeMedia(id: string, variant: 'preview' | 'thumb' = 'preview', signal?: AbortSignal): Promise<number> {
     const generation = this.generation;
     const response = await this.fetchImpl(
       this.mediaUrl(id, variant),
-      this.transport.decorate({ method: 'GET', headers: { Range: 'bytes=0-0' } }),
+      this.transport.decorate({ method: 'GET', headers: { Range: 'bytes=0-0' }, ...(signal ? { signal } : {}) }),
     );
     this.assertCurrent(generation);
     if (response.status === 401) { this.invalidateAuthorization(); this.onUnauthorized?.(); }

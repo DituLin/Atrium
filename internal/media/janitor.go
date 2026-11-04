@@ -153,15 +153,18 @@ func (p *Pipeline) evict(ctx context.Context) (int64, error) {
 			if err := p.opts.Cache.Remove(f.RelPath); err != nil {
 				p.opts.Logger.Warn("cache file not removed", "component", "media",
 					"event", "cache_remove_failed", "photo_id", f.PhotoID, "error", err.Error())
+				return count, err
 			}
 			if err := previews.Delete(ctx, f.PhotoID, f.Variant); err != nil {
 				return count, err
 			}
 			// The index survives eviction: the photo is still authorized, it
 			// simply has no cached bytes right now (PRD §5.2).
-			if err := p.opts.DB.Photos().SetPreviewEvicted(ctx, f.PhotoID, p.now()); err != nil &&
-				!errors.Is(err, domain.ErrNotFound) {
-				return count, err
+			if f.Variant == domain.VariantPreview {
+				if err := p.opts.DB.Photos().SetPreviewEvicted(ctx, f.PhotoID, p.now()); err != nil &&
+					!errors.Is(err, domain.ErrNotFound) {
+					return count, err
+				}
 			}
 			used -= f.Bytes
 			count++
@@ -172,6 +175,12 @@ func (p *Pipeline) evict(ctx context.Context) (int64, error) {
 
 // RunJanitorLoop sweeps the cache periodically until ctx is cancelled.
 func (p *Pipeline) RunJanitorLoop(ctx context.Context, interval time.Duration) {
+	if ctx.Err() != nil {
+		return
+	}
+	// Startup runs this loop in the background. Enforce a reduced quota
+	// immediately without delaying the HTTP listener or waiting for a miss.
+	p.RunJanitor(ctx)
 	if interval <= 0 {
 		interval = JanitorInterval
 	}

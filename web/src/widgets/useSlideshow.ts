@@ -21,14 +21,16 @@ import { clockOptions } from '../app/homeSelect';
 import { clearMemoriesProgress, loadMemoriesProgress, saveMemoriesProgress } from '../app/memoriesProgress';
 import { homeDayKey, serverNow } from '../core/clock';
 import { ApiError } from '../core/api';
-import { MEDIA_MAX_RETRIES, MEDIA_RETRY_MS, classifyMediaStatus } from '../core/media';
 import type { SlideshowStatus } from '../app/slideshow';
 import type { PhotoItem } from '../types/api';
 import { decodeImage } from '../ui/decodeImage';
 import type { DecodedImage } from '../ui/decodeImage';
+import { useMediaPreparation } from '../ui/useMediaPreparation';
 
 /** Fetch the next page while this many photos are still queued. */
 export const SLIDESHOW_PREFETCH_AHEAD = 8;
+/** Only this small disk window is prepared; metadata pages do not generate pixels. */
+export const SLIDESHOW_PREPARE_AHEAD = 3;
 
 /** Must match the crossfade in `styles.css`; the old layer is dropped after. */
 export const CROSSFADE_MS = 800;
@@ -55,6 +57,13 @@ export function useSlideshow(): SlideshowView {
   const blocked = state.authExpired || state.needsPairing;
   const observedDay = state.home ? homeDayKey(serverNow(state.clock, state.nowMs), clockOptions(state.home)) : null;
   const fixed = isFixedDisplay(slideshow);
+  const { prepare, retain } = useMediaPreparation(api, generation, blocked);
+  const prepareIds: string[] = [];
+  for (let position = index + 1; position < slideshow.round.length && prepareIds.length < SLIDESHOW_PREPARE_AHEAD; position++) {
+    const item = slideshow.round[position];
+    if (item && !slideshow.skipped.includes(item.id)) prepareIds.push(item.id);
+  }
+  const prepareKey = JSON.stringify([currentId, ...prepareIds]);
 
   const [bootNonce, setBootNonce] = useState(0);
   const [shown, setShown] = useState<DecodedImage | null>(null);
@@ -194,6 +203,15 @@ export function useSlideshow(): SlideshowView {
     return () => window.clearInterval(handle);
   }, [paused, fixed, intervalMs, dispatch]);
 
+  // Preparing the next three uses one-byte probes, not full images/bitmaps.
+  // Keep settled IDs for the generation so ticks/advances cannot restart retries.
+  useEffect(() => {
+    const ids = JSON.parse(prepareKey) as Array<string | null>;
+    const retained = ids.filter((id): id is string => id !== null);
+    retain(retained);
+    for (const id of retained) void prepare(id);
+  }, [prepareKey, prepare, retain]);
+
   // Media rules for the photo about to be shown (design §7.3).
   useEffect(() => {
     if (currentId === null || blocked) return;
@@ -205,19 +223,16 @@ export function useSlideshow(): SlideshowView {
     }
     const src = api.mediaUrl(id, 'preview');
     let cancelled = false;
-    let timer = 0;
 
     const skip = (): void => {
       dispatch({ type: 'slideshow.mediaUnavailable', id });
       dispatch({ type: 'slideshow.advance' });
     };
 
-    const attempt = (round: number): void => {
-      void api
-        .probeMedia(id)
-        .then(async (status) => {
+    void prepare(id)
+        .then(async (outcome) => {
           if (cancelled) return;
-          switch (classifyMediaStatus(status)) {
+          switch (outcome) {
             case 'ready': {
               const preloaded = preloadRef.current;
               const decoded =
@@ -232,15 +247,11 @@ export function useSlideshow(): SlideshowView {
               return;
             }
             case 'processing':
-              dispatch({ type: 'slideshow.mediaProcessing', id });
-              if (round <= MEDIA_MAX_RETRIES) {
-                timer = window.setTimeout(() => attempt(round + 1), MEDIA_RETRY_MS);
-              } else {
-                dispatch({ type: 'slideshow.advance' });
-              }
-              return;
+              return skip();
             case 'gone':
               dispatch({ type: 'slideshow.mediaGone', id });
+              return;
+            case 'cancelled':
               return;
             default:
               return skip();
@@ -249,27 +260,26 @@ export function useSlideshow(): SlideshowView {
         .catch(() => {
           if (!cancelled) skip();
         });
-    };
-
-    attempt(1);
     return () => {
       cancelled = true;
-      if (timer) window.clearTimeout(timer);
     };
-  }, [currentId, generation, api, dispatch, show, blocked]);
+  }, [currentId, generation, api, dispatch, show, blocked, prepare]);
 
   // Preload exactly one image ahead; the reference is replaced, never grown.
   useEffect(() => {
     if (nextId === null || blocked) { preloadRef.current = null; return; }
     if (preloadRef.current && preloadRef.current.id === nextId) return;
+    preloadRef.current = null;
     let cancelled = false;
-    void decodeImage(nextId, api.mediaUrl(nextId, 'preview')).then((result) => {
-      if (!cancelled && result.ok && latestRef.current.slideshow.generation === generation) preloadRef.current = result.image;
+    void prepare(nextId).then(async outcome => {
+      if (cancelled || outcome !== 'ready') return;
+      const result = await decodeImage(nextId, api.mediaUrl(nextId, 'preview'));
+      if (!cancelled && result.ok && latestRef.current.slideshow.generation === generation && !latestRef.current.authExpired && !latestRef.current.needsPairing) preloadRef.current = result.image;
     });
     return () => {
       cancelled = true;
     };
-  }, [nextId, api, blocked, generation]);
+  }, [nextId, api, blocked, generation, prepare]);
 
   return {
     status: slideshow.status,

@@ -12,7 +12,7 @@ export function memoriesPage(photos: readonly MockPhoto[], day: string, screen: 
     if (!cursor || cursor.screen !== screen || typeof cursor.key !== 'string' || typeof cursor.id !== 'string' || typeof cursor.inclusive !== 'boolean') throw new Error('Invalid memories cursor');
     if (cursor.day !== day) cursor = null;
   }
-  const ordered = photos.filter(item => item.preview_status === 'ready').map(photo => ({ photo, key: orderKey(day, screen, photo.id) }))
+  const ordered = photos.filter(item => item.preview_status !== 'failed').map(photo => ({ photo, key: orderKey(day, screen, photo.id) }))
     .sort((a, b) => a.key.localeCompare(b.key) || a.photo.id.localeCompare(b.photo.id));
   const after = ordered.filter(item => !cursor || item.key > cursor.key || (item.key === cursor.key && (item.photo.id > cursor.id || cursor.inclusive && item.photo.id === cursor.id)));
   const window = after.slice(0, limit);

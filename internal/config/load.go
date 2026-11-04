@@ -36,6 +36,7 @@ func Defaults() *Config {
 			MinFreeBytes:     5368709120,
 		},
 		Media: Media{
+			PreviewMode:     "eager",
 			Workers:         2,
 			DecodeTimeout:   Duration(30e9),
 			PreviewMaxEdge:  2560,

@@ -109,6 +109,13 @@ func (p *Pipeline) loadPhoto(ctx context.Context, job *domain.Job) (*domain.Phot
 	if err != nil {
 		return nil, err
 	}
+	src, err := p.opts.DB.Sources().Get(ctx, photo.SourceID)
+	if errors.Is(err, domain.ErrNotFound) || err == nil && src.Status != domain.SourceActive {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
 	return photo, nil
 }
 

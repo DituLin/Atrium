@@ -24,17 +24,22 @@ func (p *Pipeline) BuildPreview(ctx context.Context, job *domain.Job) error {
 		return err
 	}
 	switch photo.Status {
-	case domain.PhotoExcluded, domain.PhotoRemoved:
+	case domain.PhotoExcluded, domain.PhotoRemoved, domain.PhotoUnsupported:
 		return nil
 	default:
+	}
+	if photo.PreviewStatus == domain.PreviewFailed {
+		return nil
 	}
 	if err := p.previewGuards(ctx); err != nil {
 		return err
 	}
 
 	now := p.now()
-	if err := p.opts.DB.Photos().SetPreviewProcessing(ctx, photo.ID, now); err != nil &&
-		!errors.Is(err, domain.ErrNotFound) {
+	if err := p.opts.DB.Photos().SetPreviewProcessing(ctx, photo.ID, now); err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			return nil
+		}
 		return err
 	}
 

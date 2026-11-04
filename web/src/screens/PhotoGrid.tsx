@@ -5,22 +5,53 @@
  */
 
 import type { ReactElement } from 'react';
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 
+import { useApp } from '../app/context';
 import type { ClockFormatOptions } from '../core/clock';
+import type { PreparationOutcome } from '../core/mediaPreparation';
 import type { PhotoItem } from '../types/api';
 import { Focusable, FocusGroup } from '../ui/focus';
 import type { RemoteKey } from '../ui/keys';
 import { captionText, photoCaption } from '../ui/photoCaption';
+import { useInViewport } from '../ui/useInViewport';
+import { useMediaPreparation } from '../ui/useMediaPreparation';
 import type { GridSection } from './media/libraryLayout';
 
-function Thumb(props: { item: PhotoItem; options: ClockFormatOptions }): ReactElement {
+interface ThumbProps {
+  item: PhotoItem;
+  options: ClockFormatOptions;
+  blocked: boolean;
+  prepare: (id: string) => Promise<PreparationOutcome>;
+  release: (id: string) => void;
+  invalidate: (id: string) => void;
+}
+
+function Thumb(props: ThumbProps): ReactElement {
   const [broken, setBroken] = useState(false);
+  const [prepared, setPrepared] = useState({ version: -1, ready: false });
+  const { ref, visible, version } = useInViewport();
+  const ready = prepared.version === version && prepared.ready;
   const caption = photoCaption(props.item, props.options);
-  const ready = props.item.preview.status === 'ready';
+  const { item, prepare, release, invalidate, blocked } = props;
+  const metadataStatus = useRef(item.preview.status);
+  useEffect(() => {
+    if (metadataStatus.current !== item.preview.status) {
+      metadataStatus.current = item.preview.status;
+      invalidate(item.id);
+    }
+    if (!visible || blocked || item.preview.status === 'failed') return;
+    let cancelled = false;
+    void prepare(item.id).then(outcome => {
+      if (cancelled) return;
+      setPrepared({ version, ready: outcome === 'ready' });
+      if (outcome === 'ready') setBroken(false);
+    });
+    return () => { cancelled = true; release(item.id); };
+  }, [visible, version, blocked, item.id, item.preview.status, prepare, release, invalidate]);
   return (
-    <div className="tile__frame">
-      {ready && !broken ? (
+    <div className="tile__frame" ref={ref}>
+      {ready && !broken && !blocked ? (
         <img
           className="tile__image"
           src={props.item.urls.thumb}
@@ -55,6 +86,9 @@ export interface PhotoGridProps {
 }
 
 export function PhotoGrid(props: PhotoGridProps): ReactElement {
+  const { api, state } = useApp();
+  const blocked = state.authExpired || state.needsPairing;
+  const { prepare, release, invalidate } = useMediaPreparation(api, state.collection.generation, blocked, 'thumb');
   const headerAt = new Map<number, string>();
   for (const section of props.sections) if (section.label !== null) headerAt.set(section.start, section.label);
   return (
@@ -79,7 +113,7 @@ export function PhotoGrid(props: PhotoGridProps): ReactElement {
               label={captionText(item, props.options)}
               onActivate={() => props.onActivate(index)}
             >
-              <Thumb item={item} options={props.options} />
+              <Thumb item={item} options={props.options} blocked={blocked} prepare={prepare} release={release} invalidate={invalidate} />
             </Focusable>
           </Fragment>
         );
