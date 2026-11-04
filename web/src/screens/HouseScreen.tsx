@@ -4,7 +4,7 @@ import { useApp } from '../app/context';
 import { houseAvailability } from '../app/house';
 import type { ConnectionState } from '../app/connection';
 import { serverNow } from '../core/clock';
-import type { FamilyAvailability, HouseResponse } from '../types/api';
+import type { FamilyAvailability, HouseResponse, HouseIoT, IoTCapability, IoTDevice } from '../types/api';
 import { RemoteButton } from '../ui/RemoteButton';
 import { TopNav, focusTopNav } from '../ui/TopNav';
 import { StatusRow } from './info/StatusRow';
@@ -49,6 +49,47 @@ function screenCard(connection: ConnectionState): Card {
     detail: online ? '实时连接已建立' : reconnecting ? '实时连接未建立 · 正在重连' : '实时连接未建立' };
 }
 
+function capabilityValue(capability: IoTCapability): string {
+  const { value, availability, unit } = capability.observation;
+  if (availability === 'unavailable') return '不可用';
+  if (availability === 'unknown' || value === null) return '未知';
+  if (typeof value === 'boolean') return value ? '开启' : '关闭';
+  if (typeof value === 'number') return `${value}${unit ? ` ${unit}` : ''}`;
+  return { off: '关闭', idle: '待机', active: '运行中', paused: '已暂停', error: '异常' }[value];
+}
+
+function IoTRooms({ iot, stale, timezone }: { iot: HouseIoT; stale: boolean; timezone: string }): ReactElement {
+  const availability = stale && iot.availability === 'available' ? 'stale' : iot.availability;
+  const groups = new Map<string, { name: string; devices: Array<{ device: IoTDevice; instance: HouseIoT['instances'][number] }> }>();
+  for (const instance of iot.instances) for (const device of instance.devices) {
+    const key = device.room_id || '';
+    if (!groups.has(key)) groups.set(key, { name: device.room_name || '未分配房间', devices: [] });
+    groups.get(key)!.devices.push({ device, instance });
+  }
+  return <section className="info-iot" aria-label="设备与环境">
+    <h2 className="page__section-title">设备与环境 <span className="info-iot__readonly muted">只读</span></h2>
+    {availability !== 'available' ? <p className="info-house__empty muted">{availability === 'stale' ? '设备状态待更新 · 显示上次观测' : availability === 'loading' ? '设备状态等待读取' : '暂时无法读取设备状态'}</p> : null}
+    {iot.instances.map(instance => <div className="info-iot__source muted" key={instance.id}>
+      <span>Home Assistant · {instance.status === 'connected' ? '已连接' : instance.status === 'connecting' ? '正在连接' : '未连接'}</span>
+      <span>最近同步 <time>{familyTime(instance.last_success_at, timezone, true)}</time></span>
+    </div>)}
+    {[...groups].map(([key, group]) => <section className="info-iot__room" key={key} aria-label={group.name}>
+      <h3 className="info-iot__room-title serif">{group.name}</h3>
+      <div className="info-house__cards">{group.devices.map(({ device, instance }) => {
+        const old = stale || availability === 'stale' || instance.status !== 'connected';
+        return <article className="card info-iot__device" key={`${instance.id}/${device.id}`} aria-label={device.name}>
+          <h4 className="info-iot__device-title">{device.name}</h4>
+          {old ? <p className="info-iot__old muted">上次观测</p> : null}
+          <dl className="info-iot__values">{device.capabilities.map(capability => <div key={capability.id}>
+            <dt className="muted">{capability.name}</dt><dd className="serif">{capabilityValue(capability)}</dd>
+          </div>)}</dl>
+        </article>;
+      })}</div>
+    </section>)}
+    {!groups.size && availability === 'available' ? <p className="info-house__empty muted">没有可展示的设备</p> : null}
+  </section>;
+}
+
 export function HouseScreen() {
   const { state, house } = useApp();
   const details = useRef<HTMLDivElement>(null);
@@ -89,6 +130,7 @@ export function HouseScreen() {
         })}>
           <div className="info-house__cards">{cards.map(card => <HubCard key={card.key} card={card} />)}</div>
           {snapshot && !snapshot.nas.length ? <p className="info-house__empty muted">{failed ? '状态待更新 · 上次没有可展示的照片来源' : '没有可展示的照片来源'}</p> : null}
+          {snapshot?.iot ? <IoTRooms iot={snapshot.iot} stale={failed || state.connection.status !== 'online'} timezone={timezone} /> : null}
         </div>
       </section>
       <aside className="info-house__side">
@@ -99,8 +141,8 @@ export function HouseScreen() {
             : <div className="info-house__profile-title serif">{profile === 'not_connected' ? '房屋资料尚未填写' : profile ? `房屋资料${SOURCE_STATUS[profile] ?? ''}` : '房屋资料等待读取'}</div>}
           <p className="info-house__note">公开房屋资料待提供。这里只显示允许在客厅屏幕出现的内容。</p>
         </div>
-        <StatusRow tone={environment ? availabilityTone(environment) : 'none'} label="环境数据"
-          value={environment === 'available' ? `${snapshot!.environment.items.length} 条有效内容` : environment ? SOURCE_STATUS[environment] ?? '尚未确认' : '等待读取'} />
+        {!snapshot?.iot ? <StatusRow tone={environment ? availabilityTone(environment) : 'none'} label="环境数据"
+          value={environment === 'available' ? `${snapshot!.environment.items.length} 条有效内容` : environment ? SOURCE_STATUS[environment] ?? '尚未确认' : '等待读取'} /> : null}
         <div className="info-actions">
           <RemoteButton className="btn" ref={recheck} onClick={() => { void house.load().catch(() => {}); }} onDirection={key => {
             if (key === 'up' || key === 'left') details.current?.focus();

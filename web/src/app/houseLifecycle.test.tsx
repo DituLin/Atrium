@@ -61,3 +61,27 @@ it('source notifications purge and invalidate before throttling; a delayed throt
   await act(() => vi.advanceTimersByTimeAsync(1000));
   expect(getHouse).toHaveBeenCalledTimes(calls);
 });
+
+it('IoT notifications retain the reading snapshot, supersede pending work, and never refresh other screens', async () => {
+ vi.useFakeTimers(); let state: AppState; let send!: (action: AppAction) => void;
+ let resolveOld!: (snapshot: ReturnType<typeof houseFixture>) => void;
+ const getHouse = vi.fn(async () => houseFixture());
+ const getHome = vi.fn(async () => ({ server_time: houseFixture().generated_at, widgets: [] }));
+ const api = { getHouse, getHome } as unknown as ApiClient;
+ const house = createHouseLoader(api, action => send(action));
+ function Harness() {
+  const [current, dispatch] = useReducer(appReducer, 0, createInitialState); state = current; send = dispatch;
+  useConnection({ api, house, state: current, dispatch, clientVersion: 'test', enabled: true }); return null;
+ }
+ render(<Harness />); act(() => send({ type: 'router.navigate', route: { name: 'house' } }));
+ await act(() => house.load()); const snapshot = state!.house.snapshot;
+ getHouse.mockImplementationOnce(() => new Promise(resolve => { resolveOld = resolve; }));
+ const notify = () => socket.options!.onMessage({ type: 'data.changed', payload: { topics: ['iot'], version: 3 } } as ServerMessage);
+ act(notify); expect(state!.house.snapshot).toBe(snapshot);
+ act(notify); await act(async () => { resolveOld({ ...houseFixture(), nas: [] }); await Promise.resolve(); });
+ expect(state!.house.snapshot).toBe(snapshot);
+ await act(() => vi.advanceTimersByTimeAsync(1000)); expect(getHouse).toHaveBeenCalledTimes(3);
+ expect(state!.house.snapshot?.nas).toHaveLength(1); expect(getHome).not.toHaveBeenCalled();
+ act(() => visibility('hidden')); act(notify); await act(() => vi.advanceTimersByTimeAsync(1000));
+ expect(getHouse).toHaveBeenCalledTimes(3);
+});

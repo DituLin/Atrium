@@ -105,3 +105,16 @@
  .home-menu__card { background:rgba(28,33,31,.62); backdrop-filter:blur(calc(40 * var(--u))); -webkit-backdrop-filter:blur(calc(40 * var(--u))); }
  .home-menu__card:focus { background:rgba(242,244,243,.96); }
 }
+
+/* Read-only IoT observations share the House reading region and TV scale. */
+.info-iot { margin-top: calc(40 * var(--u)); }
+.info-iot__readonly { font-size: calc(24 * var(--u)); margin-left: calc(12 * var(--u)); }
+.info-iot__source { display: flex; flex-wrap: wrap; justify-content: space-between; font-size: calc(24 * var(--u)); line-height: 1.6; }
+.info-iot__room { margin-top: calc(28 * var(--u)); }
+.info-iot__room-title { margin: 0 0 calc(18 * var(--u)); font-size: calc(34 * var(--u)); font-weight: 500; }
+.info-iot__device-title { margin: 0; font-size: calc(28 * var(--u)); font-weight: 500; }
+.info-iot__old { margin: calc(10 * var(--u)) 0 0; font-size: calc(24 * var(--u)); }
+.info-iot__values { margin: calc(16 * var(--u)) 0 0; }
+.info-iot__values > div { display: flex; align-items: baseline; justify-content: space-between; padding-top: calc(10 * var(--u)); }
+.info-iot__values dt { font-size: calc(24 * var(--u)); }
+.info-iot__values dd { margin: 0 0 0 calc(12 * var(--u)); font-size: calc(36 * var(--u)); }

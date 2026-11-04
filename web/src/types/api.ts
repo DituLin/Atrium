@@ -283,7 +283,44 @@ export interface FamilySourceSnapshot<T> {
   items: Array<FamilyItemMeta & T>;
 }
 
+export interface IoTObservation {
+  value: boolean | number | 'off' | 'idle' | 'active' | 'paused' | 'error' | null;
+  unit?: string;
+  availability: 'available' | 'unknown' | 'unavailable';
+  reason?: string;
+  source_updated_at: string | null;
+  sampled_at: string | null;
+  received_at: string | null;
+  confirmed_at: string | null;
+}
+export interface IoTCapability {
+  id: string;
+  name: string;
+  kind: 'power' | 'humidity' | 'temperature' | 'operating_state' | 'battery' | 'filter_life';
+  observation: IoTObservation;
+}
+export interface IoTDevice {
+  id: string;
+  name: string;
+  room_id: string;
+  room_name: string;
+  capabilities: IoTCapability[];
+}
+export interface HouseIoT {
+  availability: 'available' | 'loading' | 'stale' | 'failed';
+  reason: string | null;
+  instances: Array<{
+    id: string;
+    provider: 'home_assistant';
+    status: 'disconnected' | 'connecting' | 'connected';
+    generation: number;
+    last_success_at: string | null;
+    devices: IoTDevice[];
+  }>;
+}
+
 export interface HouseResponse {
+  iot?: HouseIoT;
   schema_version: 1;
   generated_at: string;
   home: { name: string; timezone: string };

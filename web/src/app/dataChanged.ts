@@ -43,6 +43,9 @@ export function refetchTargets(
         if (context.houseActive) targets.add('house');
         if (context.overviewActive) targets.add('overview');
         break;
+      case 'iot':
+        if (context.houseActive) targets.add('house');
+        break;
       case 'photos':
         targets.add('home');
         if (context.activeCollection !== null) targets.add('collection');

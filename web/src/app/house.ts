@@ -27,15 +27,15 @@ export function houseAvailability<T>(source: FamilySourceSnapshot<T>, now: numbe
 }
 export interface HouseLoader {
   load(fresh?: boolean): Promise<void>;
-  /** Called synchronously before throttling source notifications or clearing authorization. */
-  invalidate(): void;
+  /** Cancel pending reads before throttling; retain the snapshot only for ordinary IoT updates. */
+  invalidate(clearSnapshot?: boolean): void;
 }
 export function createHouseLoader(api: Pick<ApiClient, 'getHouse'>, dispatch: (action: AppAction) => void, now = Date.now): HouseLoader {
   let sequence = 0;
   let pending: Promise<void> | null = null;
   let controller: AbortController | null = null;
   return {
-    invalidate() { sequence += 1; controller?.abort(); controller = null; pending = null; dispatch({ type: 'house.reset' }); },
+    invalidate(clearSnapshot = true) { sequence += 1; controller?.abort(); controller = null; pending = null; if (clearSnapshot) dispatch({ type: 'house.reset' }); },
     load(fresh = false) {
       if (pending && !fresh) return pending;
       const request = ++sequence;

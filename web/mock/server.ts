@@ -9,6 +9,7 @@
  * publish a change). Development only; never part of the bundle.
  */
 
+import { iotFixture } from '../src/test/houseFixture.ts';
 import type { HomeResponse, HouseResponse, OverviewResponse, NasStatusResponse } from '../src/types/api.ts';
 import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -52,7 +53,7 @@ function houseSnapshot(): HouseResponse {
   const expires_at = new Date(Date.now() + 60_000).toISOString();
   const meta = { id: 'health', updated_at: null, valid_from: null, valid_until: null };
   const missing = { observed_at: null, expires_at: null, availability: 'not_connected' as const, items: [] };
-  return { schema_version: 1, generated_at, home: (homeSnapshot() as HomeResponse).home,
+  return { schema_version: 1, generated_at, home: (homeSnapshot() as HomeResponse).home, iot: iotFixture(generated_at),
     core: { source_id: 'core', source_label: 'Atrium Core', observed_at: generated_at, expires_at, availability: 'available', reason: null, items: [{ ...meta, id: 'response', responding: true }] },
     nas: (nasStatus() as NasStatusResponse).sources.map(source => ({ source_id: source.id, source_label: source.name,
       observed_at: source.last_check_at, expires_at: source.last_check_at ? new Date(Date.parse(source.last_check_at) + 60_000).toISOString() : null,
@@ -64,9 +65,9 @@ function houseSnapshot(): HouseResponse {
 }
 
 function overviewSnapshot(): OverviewResponse {
-  const { schema_version, generated_at, home, ...sources } = houseSnapshot();
+  const { schema_version, generated_at, home, core, nas, profile, environment } = houseSnapshot();
   const missing = { observed_at: null, expires_at: null, availability: 'not_connected' as const, reason: 'not_configured' as const, items: [] };
-  return { schema_version, generated_at, home, sources: { ...sources,
+  return { schema_version, generated_at, home, sources: { core, nas, profile, environment,
     notice: { ...missing, source_id: 'notice', source_label: '家庭提示' },
     calendar: { ...missing, source_id: 'calendar', source_label: '家庭日历' } }, entries: [] };
 }

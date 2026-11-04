@@ -5,17 +5,17 @@ import { AppProvider } from '../app/AppProvider';
 import { useApp } from '../app/context';
 import type { AppContextValue } from '../app/context';
 import { CurrentScreen } from '../App';
-import { houseFixture } from '../test/houseFixture';
+import { houseFixture, iotFixture } from '../test/houseFixture';
 import { overviewFixture } from '../test/overviewFixture';
 import { saveLastAuthOkAt } from '../core/authExpiry';
 let app: AppContextValue;
 function Harness() { const value = useApp(); useEffect(() => { app = value; }, [value]); return <CurrentScreen />; }
 function key(key: string) { fireEvent.keyDown(document.activeElement!, { key }); }
-async function setup(homeFailed = false) {
+async function setup(homeFailed = false, snapshot = houseFixture()) {
   saveLastAuthOkAt(Date.now());
   vi.stubGlobal('WebSocket', class { send() {} close() {} });
   const fetch = vi.fn(async (path: string) => {
-    if (path.includes('/family/house')) return new Response(JSON.stringify(houseFixture()));
+    if (path.includes('/family/house')) return new Response(JSON.stringify(snapshot));
     if (path.includes('/family/overview')) return new Response(JSON.stringify(overviewFixture()));
     if (path.includes('/home') && homeFailed) return new Response('{}', { status: 500 });
     if (path.includes('/home')) return new Response(JSON.stringify({ schema_version: 1, server_time: new Date().toISOString(), version: 1, home: houseFixture().home, widgets: [] }));
@@ -99,4 +99,35 @@ it('renders first-check, failed, empty and expired observations distinctly, whil
   const stale = houseFixture(); stale.nas[0] = { ...stale.nas[0]!, expires_at: stale.generated_at };
   await replace(stale); act(() => app.dispatch({ type: 'app.tick', nowMs: Date.now() + 1000 }));
   expect(screen.getByText(/上次观测：离线/)).toBeDefined(); expect(screen.getByText('最近可读')).toBeDefined(); expect(document.activeElement).toBe(recheck);
+});
+
+it('shows room groups and read-only values without coercion, marks old observations, and retains reading focus on removal', async () => {
+ const snapshot = { ...houseFixture(), iot: iotFixture() };
+ const fetch = await setup(false, snapshot); const details = await enter();
+ await screen.findByText('示例加湿器');
+ expect(screen.getByText('示例客厅')).toBeDefined(); expect(screen.getByText('未分配房间')).toBeDefined();
+ expect(screen.getByText('关闭')).toBeDefined(); expect(screen.getByText('0 %')).toBeDefined();
+ expect(screen.getByText('未知')).toBeDefined(); expect(screen.getByText('不可用')).toBeDefined();
+ expect(screen.queryByText('未接入')).toBeNull(); expect(screen.queryByText('刚测量')).toBeNull();
+ expect(screen.getAllByText('最近同步').length).toBeGreaterThan(0);
+ expect(screen.getAllByText('上次观测').length).toBeGreaterThan(0);
+ expect(screen.queryByRole('button', { name: '示例加湿器' })).toBeNull();
+ const removed = { ...snapshot, iot: { ...snapshot.iot, instances: [] } };
+ fetch.mockResolvedValueOnce(new Response(JSON.stringify(removed)));
+ await act(() => app.house.load(true));
+ expect(screen.queryByText('示例加湿器')).toBeNull(); expect(document.activeElement).toBe(details);
+});
+
+it('distinguishes IoT first sync, read failure and disconnected history without hiding configured devices', async () => {
+ const fetch = await setup(false, { ...houseFixture(), iot: { ...iotFixture(), availability: 'loading', instances: [] } });
+ await enter(); await screen.findByText('设备状态等待读取');
+ const replace = async (iot: NonNullable<ReturnType<typeof houseFixture>['iot']>) => {
+  fetch.mockResolvedValueOnce(new Response(JSON.stringify({ ...houseFixture(), iot })));
+  await act(() => app.house.load(true));
+ };
+ await replace({ availability: 'failed', reason: 'read_failed', instances: [] });
+ expect(screen.getByText('暂时无法读取设备状态')).toBeDefined();
+ const stale = iotFixture(); await replace({ ...stale, availability: 'stale', instances: stale.instances.map(instance => ({ ...instance, status: 'disconnected' })) });
+ expect(screen.getByText('设备状态待更新 · 显示上次观测')).toBeDefined(); expect(screen.getByText('Home Assistant · 未连接')).toBeDefined();
+ expect(screen.getByText('关闭')).toBeDefined(); expect(screen.getByText('不可用')).toBeDefined();
 });
