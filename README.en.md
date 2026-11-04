@@ -28,8 +28,8 @@ Host and OnePlus development-device verification does not replace real-TV, reboo
 | Home dashboard | Household-zone time and date, media display, Core/NAS/connection state |
 | Photos | Read-only indexing, preview and thumbnail cache, collections, single-photo viewing and slideshow |
 | Videos | Video browsing and playback from read-only media sources; Apple Live Photo markers exclude paired clips from the video list while still photos remain available; availability depends on format and host processing support |
-| Daily briefing | Household information, time and status from configured sources |
-| House | Configured house information and source status |
+| Daily briefing | Deployed almanac and optional weather cards: household timezone, lunar calendar, solar terms and week strip, with honest missing states |
+| House | Deployed fixed navigation and internally scrolling dashboard: an unconfigured illustrative floor plan and separate read-only HA observations |
 | Calendar | Source interface and synchronization status are retained; it is unconfigured by default, not a completed calendar service |
 | Archives | Person/domain/type filters, evidence and original viewing, review state, bounded analysis, measured growth curves and optional WHO references |
 | Screen control | CLI/API `navigate`, `show` and `refresh`, with actual execution receipts |
@@ -39,6 +39,8 @@ The TV can use a browser or the standalone Android host. Home, Media, Today, Arc
 Home [“Memories”](docs/usage/daily-memories.en.md) is implemented: a stable random order for each household-zone day, per-screen resume from the last successfully displayed item, the same order on repeat loops that day, and mixed playback from independent authorized photo sources. Ordinary Media random collections keep their existing behavior. “Memories” is a display name, without AI scoring or automated highlight selection. Service, browser and physical OnePlus validation passed on 2026-11-04; the TCL was offline.
 
 [On-demand previews and a small cache](docs/usage/photo-cache.en.md) are deployed with a 2 GiB media cache budget. Generation can briefly exceed it, and databases and other storage are separate. Derivatives are generated for playback and browsing; cache eviction does not remove photos from the daily random pool.
+
+The [Today and House design alignment](docs/tv-today-house-ui.en.md) `acd18c6` was deployed on November 4, 2026. Final signed-candidate checks, all 707 frontend tests and OnePlus device checks passed; the device was returned to Archives, and the TCL was offline. Today presents an almanac and optional weather; House retains an illustrative floor plan and missing states, with authorized HA readings displayed separately as read-only observations. It does not infer room layouts, history or device categories, or provide simulated controls.
 
 The [dark UI update](docs/ops/evidence/2026-10-20-tv-dark-ui/README.en.md) was deployed on 2026-10-20 with frontend `041b483` and the existing `c06c6a5` backend. Synthetic browser tests, build compatibility checks, and all six pages and remote controls in the official OnePlus app passed. Visual and performance acceptance on a physical TCL TV / Chrome 66 is still pending. Design examples without a data contract, such as household environment charts, are not presented as real data.
 
@@ -134,6 +136,7 @@ The current Android delivery is a development-test APK with debug signing and We
 - [AtriumOS system design](docs/architecture/atriumos-system-design.md)
 - [Integrated archive design](docs/plans/2026-10-03-family-agentos-archives-design.md)
 - [Android TV build and usage](android-tv/README.md)
+- [Updated TV Today and House interfaces](docs/tv-today-house-ui.en.md)
 
 Chinese is the primary documentation language; English is maintained as a complete parallel version. New or substantially rewritten user-facing documentation should have matching Chinese and English versions. Historical documents retain their original language until rewritten. Distinguish design goals, current code and actual acceptance status.
 

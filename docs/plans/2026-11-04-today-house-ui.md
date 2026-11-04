@@ -21,10 +21,10 @@
 
 Owners: `screens/BriefingScreen.tsx`, `screens/info/AlmanacCard.tsx`, new almanac/weather presentation modules and tests, `styles/briefing.css`.
 
-- [ ] Add meaningful failing date-model tests for cross-year weeks, leap-year day ordinals, family midnight and solar-term boundaries.
-- [ ] Build the two cards at the supplied proportions, using actual local-calendar calculations and nullable weather data.
-- [ ] Test missing/stale weather, partial forecasts, negative/constant temperatures and left/right/up/OK remote behavior.
-- [ ] Move the old notice-deadline checks to the Home consumer that still displays notices; do not retain vacuous assertions on the redesigned page.
+- [x] Add meaningful failing date-model tests for cross-year weeks, leap-year day ordinals, family midnight and solar-term boundaries.
+- [x] Build the two cards at the supplied proportions, using actual local-calendar calculations and nullable weather data.
+- [x] Test missing/stale weather, partial forecasts, negative/constant temperatures and left/right/up/OK remote behavior.
+- [x] Move the old notice-deadline checks to the Home consumer that still displays notices; do not retain vacuous assertions on the redesigned page.
 
 Run: `npm test -- src/screens/BriefingScreen.test.tsx src/screens/BriefingAlmanac.test.tsx src/screens/info/` from `web`.
 
@@ -32,10 +32,10 @@ Run: `npm test -- src/screens/BriefingScreen.test.tsx src/screens/BriefingAlmana
 
 Owners: `screens/HouseScreen.tsx`, new `screens/house/` components/models/tests, `styles/house-dashboard.css`, House screen tests.
 
-- [ ] Define read-only view models with nullable observations and timestamps. Unit tests must distinguish missing, stale, unavailable and observed values.
-- [ ] Implement floor-plan selection, room details, genuine sampled chart paths with gaps, aquarium summary and device groups.
-- [ ] Render full unconfigured dashboard geometry using no invented room facts or healthy sensor readings. Integrate existing HA devices with every capability, timestamp and unavailable/stale state, retaining authorization-clear behavior.
-- [ ] Retain Core/NAS diagnostics, source-specific stale states, explicit refresh, focus preservation and scroll traversal.
+- [x] Define read-only view models with nullable observations and timestamps. Unit tests must distinguish missing, stale, unavailable and observed values.
+- [x] Implement floor-plan selection, room details, genuine sampled chart paths with gaps, aquarium summary and device groups.
+- [x] Render full unconfigured dashboard geometry using no invented room facts or healthy sensor readings. Integrate existing HA devices with every capability, timestamp and unavailable/stale state, retaining authorization-clear behavior.
+- [x] Retain Core/NAS diagnostics, source-specific stale states, explicit refresh, focus preservation and scroll traversal.
 
 Run: `npm test -- src/screens/HouseScreen.test.tsx src/screens/house/ src/app/house.test.ts src/app/houseLifecycle.test.tsx`.
 
@@ -43,20 +43,29 @@ Run: `npm test -- src/screens/HouseScreen.test.tsx src/screens/house/ src/app/ho
 
 Owners: `internal/widget/weather.go`, `internal/widget/types.go`, weather tests; root owns `web/src/types/api.ts`, shared refresh lifecycle, CSS imports and OpenAPI.
 
-- [ ] First fail provider tests for nullable current fields, real forecast data, timezone conversion, partial arrays, old caches and retained data after provider failure.
-- [ ] Fetch optional current humidity/wind, hourly temperature, and daily temperatures/weather/sunset through the existing provider and cache. Use bounded arrays and unambiguous timestamps.
-- [ ] Keep these TypeScript additions optional: `humidity_pct`, `wind_speed_kmh`, `wind_direction_deg`, `temperature_min_c`, `temperature_max_c`, `sunset`, `forecast_timezone`, `hourly`, `daily`. Nullable numeric samples preserve missingness.
-- [ ] Refresh Home weather with Today while preserving the independent Overview/House recovery paths and authorization guards.
-- [ ] Synchronize OpenAPI and bilingual public release documentation.
+- [x] First fail provider tests for nullable current fields, real forecast data, timezone conversion, partial arrays, old caches and retained data after provider failure.
+- [x] Fetch optional current humidity/wind, hourly temperature, and daily temperatures/weather/sunset through the existing provider and cache. Use bounded arrays and unambiguous timestamps.
+- [x] Keep these TypeScript additions optional: `humidity_pct`, `wind_speed_kmh`, `wind_direction_deg`, `temperature_min_c`, `temperature_max_c`, `sunset`, `forecast_timezone`, `hourly`, `daily`. Nullable numeric samples preserve missingness.
+- [x] Refresh Home weather with Today while preserving the independent Overview/House recovery paths and authorization guards.
+- [x] Synchronize OpenAPI and bilingual public release documentation.
 
 Run: `go test ./internal/widget ./internal/httpapi`; `npm test -- src/app/refetchers.test.ts src/app/overviewLifecycle.test.tsx src/screens/DashboardScreen.test.tsx`.
 
 ## Task 4: Verification and delivery
 
-- [ ] Review implementation against every visible HTML section, including populated synthetic and unconfigured runtime views.
-- [ ] Run full frontend tests, lint, typecheck/build and Chrome 66 output guard. Run appropriate Go regression/race checks if the weather service changes.
-- [ ] Use synthetic Chromium screenshots at 1920×1080 and 1280×720; verify both pages, remote focus/scroll, stale/error states, and no page errors or unintended overflow.
-- [ ] Obtain independent code/design review and resolve findings.
-- [ ] Merge the already deployed HA branch into the new UI branch, preserving both implementations and unrelated user files. Build a signed candidate over the actual HA backend closure, verify the package manifest and run isolated acceptance before activation. Preserve schema 18, the system service running as the existing ordinary user, source/SQLite/screen identities and the 2 GiB on-demand policy.
-- [ ] Verify online OnePlus navigation/rendering and restore the original tab. Do not claim TCL acceptance while it is offline.
+- [x] Review implementation against every visible HTML section, including populated synthetic and unconfigured runtime views.
+- [x] Run full frontend tests, lint, typecheck/build and Chrome 66 output guard. Run appropriate Go regression/race checks if the weather service changes.
+- [x] Use synthetic Chromium screenshots at 1920×1080 and 1366×768, plus 804×384 and 3840×2160 coverage; verify both pages, remote focus/scroll, stale/error states, and no page errors or unintended overflow.
+- [x] Obtain independent code/design review and resolve findings.
+- [x] Merge the already deployed HA branch into the new UI branch, preserving both implementations and unrelated user files. Build a signed candidate over the actual HA backend closure, verify the package manifest and run isolated acceptance before activation. Preserve schema 18, the system service running as the existing ordinary user, source/SQLite/screen identities and the 2 GiB on-demand policy.
+- [x] Verify online OnePlus navigation/rendering and restore the original tab. Do not claim TCL acceptance while it is offline.
 - [ ] Commit only task files, push main as previously requested, and preserve the unrelated HA plan/navigation edits byte-for-byte. Keep private operational evidence outside the repository.
+
+## Recorded release evidence (2026-11-04)
+
+- Implementation `9ca65ae`, deployed-HA merge `c6f2383`, final visual correction `acd18c6`.
+- Final frontend: 95 files / 707 tests, lint, TypeScript/build and Chrome 66 output guard passed. Independent final targeted checks passed. A reproduced five-character leap lunar date overlapping the week strip now fits at three viewport sizes; populated synthetic room-device rows now fill the selected-room card.
+- Repository Go tests passed; final embedded release source passed `go test -p 1 ./...`. Weather widget race tests and the independent original DST/midnight-cache regression probes passed.
+- Final signed candidate: 8 actual-backend groups and 7 embedded-browser groups passed, without production data access. Test listeners were stopped. Source closure, manifests and private operational evidence are retained outside the repository.
+- Signed runtime `today-house-ui-acd18c6+c06c6a591e9a33c6a93bc0def15d3e29061f9d07` activated successfully. Signature, exact binary version/hash, schema 18, unchanged configuration/service definition, original ordinary-user KeepAlive service, business/source/photo/screen identities and Gateway recovery verified. Both photo sources remain online and bound; 2 GiB on-demand policy retained.
+- Physical OnePlus acceptance passed on client `0.1.0+acd18c6`: both pages, family-zone date, Chinese/missing weather, card navigation and refresh, unconfigured House sections, complete read-only HA capability/timestamp projection, long-section scrolling and fixed navigation. The archive tab was restored and the temporary ADB forward removed. TCL acceptance is not claimed while offline. Main delivery remains pending below.
