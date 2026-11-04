@@ -443,3 +443,33 @@ func TestPermissionDeniedResultClearsAndStops(t *testing.T) {
 		})
 	}
 }
+
+type failingConnectedSink struct{ failure error }
+
+func (s failingConnectedSink) Publish(_ context.Context, u iot.Update) error {
+	if u.Status == iot.Connected {
+		return s.failure
+	}
+	return nil
+}
+func TestSinkFailureIsReturned(t *testing.T) {
+	srv := server(t, func(ctx context.Context, c *websocket.Conn) {
+		handshake(t, ctx, c)
+		v := read(t, ctx, c)
+		write(ctx, c, map[string]any{"id": v["id"], "type": "result", "success": true, "result": []any{state("on", "2026-01-01T00:00:01Z")}})
+		<-ctx.Done()
+	})
+	defer srv.Close()
+	cfg := fixture(t)
+	cfg.URL = srv.URL
+	c, e := New(cfg, WithHTTPClient(srv.Client()))
+	if e != nil {
+		t.Fatal(e)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	defer cancel()
+	failure := errors.New("sink cannot accept updates")
+	if e = c.Run(ctx, failingConnectedSink{failure}); !errors.Is(e, failure) {
+		t.Fatalf("lost sink failure: %v", e)
+	}
+}

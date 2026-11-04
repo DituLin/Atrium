@@ -25,6 +25,8 @@ import (
 var ErrUnauthorized = errors.New("home assistant authentication rejected")
 var errSession = errors.New("home assistant connection interrupted")
 
+type sinkFailure struct{ error }
+
 // Timings permits short deterministic integration tests; zero values use defaults.
 type Timings struct{ Heartbeat, Timeout, Reconcile, RetryMin, RetryMax time.Duration }
 type Option func(*Client)
@@ -203,6 +205,10 @@ func (c *Client) Run(ctx context.Context, sink iot.Sink) error {
 		}
 		started := c.now()
 		e := c.session(ctx, sink, g)
+		var sf sinkFailure
+		if errors.As(e, &sf) {
+			return sf.error
+		}
 		u := iot.Update{InstanceID: c.cfg.ID, Generation: g, Status: iot.Disconnected}
 		if errors.Is(e, ErrUnauthorized) {
 			u.Replace = true
@@ -353,7 +359,10 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 			}
 			obs = filtered
 		}
-		return sink.Publish(ctx, iot.Update{InstanceID: c.cfg.ID, Generation: g, Status: iot.Connected, Replace: replace, Observations: obs})
+		if err := sink.Publish(ctx, iot.Update{InstanceID: c.cfg.ID, Generation: g, Status: iot.Connected, Replace: replace, Observations: obs}); err != nil {
+			return sinkFailure{err}
+		}
+		return nil
 	}
 	for {
 		select {
