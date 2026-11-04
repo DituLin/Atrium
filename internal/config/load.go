@@ -183,6 +183,13 @@ func (c *Config) normalize() error {
 			return err
 		}
 	}
+	for _, p := range []*string{&c.IoT.HomeAssistant.TokenFile, &c.IoT.HomeAssistant.CAFile} {
+		if *p != "" {
+			if *p, err = ExpandPath(*p); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
