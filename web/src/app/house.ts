@@ -11,11 +11,16 @@ export interface HouseState {
 export const initialHouseState: HouseState = { snapshot: null, status: 'loading', refreshing: false, request: null };
 export type HouseAction =
   | { type: 'house.reset' }
+  | { type: 'house.iotCleared' }
   | { type: 'house.loading'; request: number }
   | { type: 'house.loaded'; request: number; snapshot: HouseResponse; receivedAt: number }
   | { type: 'house.failed'; request: number };
 export function houseReducer(state: HouseState, action: HouseAction): HouseState {
   if (action.type === 'house.reset') return initialHouseState;
+  if (action.type === 'house.iotCleared') return {
+    ...state, refreshing: false, request: null,
+    snapshot: state.snapshot ? { ...state.snapshot, iot: { availability: 'loading', reason: 'not_observed', instances: [] } } : null,
+  };
   if (action.type === 'house.loading') return { ...state, status: state.snapshot ? state.status : 'loading', refreshing: true, request: action.request };
   if (action.request !== state.request) return state;
   if (action.type === 'house.loaded') return { snapshot: action.snapshot, status: 'available', refreshing: false, request: null };
@@ -28,14 +33,14 @@ export function houseAvailability<T>(source: FamilySourceSnapshot<T>, now: numbe
 export interface HouseLoader {
   load(fresh?: boolean): Promise<void>;
   /** Cancel pending reads before throttling; retain the snapshot only for ordinary IoT updates. */
-  invalidate(clearSnapshot?: boolean): void;
+  invalidate(clearSnapshot?: boolean | 'iot'): void;
 }
 export function createHouseLoader(api: Pick<ApiClient, 'getHouse'>, dispatch: (action: AppAction) => void, now = Date.now): HouseLoader {
   let sequence = 0;
   let pending: Promise<void> | null = null;
   let controller: AbortController | null = null;
   return {
-    invalidate(clearSnapshot = true) { sequence += 1; controller?.abort(); controller = null; pending = null; if (clearSnapshot) dispatch({ type: 'house.reset' }); },
+    invalidate(clearSnapshot: boolean | 'iot' = true) { sequence += 1; controller?.abort(); controller = null; pending = null; if (clearSnapshot) dispatch({ type: clearSnapshot === 'iot' ? 'house.iotCleared' : 'house.reset' }); },
     load(fresh = false) {
       if (pending && !fresh) return pending;
       const request = ++sequence;

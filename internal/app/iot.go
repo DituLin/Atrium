@@ -53,6 +53,12 @@ func (s *iotService) Run(ctx context.Context) {
 	failed := false
 	publish := iotSinkFunc(func(ctx context.Context, u iot.Update) error {
 		changed, err := s.repo.Apply(ctx, u)
+		// Clearing authorization hides the public cache even when persistence
+		// fails. Tell screens to discard their copies before attempting a read.
+		clearing := u.Replace && u.Status == iot.Disconnected && u.InstanceID == s.cfg.HomeAssistant.ID && u.Generation >= generation
+		if clearing {
+			s.bus.Publish(domain.TopicIoT, domain.TopicIoTClear)
+		}
 		if err != nil {
 			failed = true
 			return err
@@ -60,7 +66,7 @@ func (s *iotService) Run(ctx context.Context) {
 		if u.Generation > generation {
 			generation = u.Generation
 		}
-		if changed {
+		if changed && !clearing {
 			s.bus.Publish(domain.TopicIoT)
 		}
 		return nil

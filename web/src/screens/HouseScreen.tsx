@@ -49,6 +49,8 @@ function screenCard(connection: ConnectionState): Card {
     detail: online ? '实时连接已建立' : reconnecting ? '实时连接未建立 · 正在重连' : '实时连接未建立' };
 }
 
+const CAPABILITY_LABEL: Record<IoTCapability['kind'], string> = { power: '电源', humidity: '湿度', temperature: '温度', operating_state: '运行状态', battery: '电量', filter_life: '滤芯寿命' };
+
 function capabilityValue(capability: IoTCapability): string {
   const { value, availability, unit } = capability.observation;
   if (availability === 'unavailable') return '不可用';
@@ -81,7 +83,7 @@ function IoTRooms({ iot, stale, timezone }: { iot: HouseIoT; stale: boolean; tim
           <h4 className="info-iot__device-title">{device.name}</h4>
           {old ? <p className="info-iot__old muted">上次观测</p> : null}
           <dl className="info-iot__values">{device.capabilities.map(capability => <div key={capability.id}>
-            <dt className="muted">{capability.name}</dt><dd className="serif">{capabilityValue(capability)}</dd>
+            <dt className="muted">{capability.name || `${CAPABILITY_LABEL[capability.kind]} · ${capability.id}`}</dt><dd className="serif">{capabilityValue(capability)}</dd>
           </div>)}</dl>
         </article>;
       })}</div>

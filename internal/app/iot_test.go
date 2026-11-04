@@ -11,6 +11,7 @@ import (
 
 	"github.com/DituLin/Atrium/internal/app/events"
 	"github.com/DituLin/Atrium/internal/config"
+	"github.com/DituLin/Atrium/internal/domain"
 	"github.com/DituLin/Atrium/internal/iot"
 	"github.com/DituLin/Atrium/internal/iot/homeassistant"
 	"github.com/DituLin/Atrium/internal/store"
@@ -124,12 +125,15 @@ func TestIoTSinkFailureStopsWorkerWithoutNotification(t *testing.T) {
 }
 func TestIoTUnauthorizedClearsPreviousSuccess(t *testing.T) {
 	s, _, _ := serviceFixture(t)
+	sub := s.bus.Subscribe("clear", 4)
+	defer sub.Close()
 	_, err := s.repo.Apply(context.Background(), appIoTUpdate())
 	require.NoError(t, err)
 	s.factory = func() (iot.Adapter, error) {
 		return iotAdapterFunc(func(context.Context, iot.Sink) error { return homeassistant.ErrUnauthorized }), nil
 	}
 	s.Run(context.Background())
+	require.Contains(t, (<-sub.C()).Topics, domain.Topic("iot.clear"))
 	snapshot, err := s.repo.Read(context.Background())
 	require.NoError(t, err)
 	require.Nil(t, snapshot.Instances[0].LastSuccessAt)
@@ -138,6 +142,8 @@ func TestIoTUnauthorizedClearsPreviousSuccess(t *testing.T) {
 
 func TestIoTUnauthorizedSinkClearFailureCannotExposeCachedValues(t *testing.T) {
 	s, _, db := serviceFixture(t)
+	sub := s.bus.Subscribe("clear-failure", 4)
+	defer sub.Close()
 	s.factory = func() (iot.Adapter, error) {
 		return iotAdapterFunc(func(ctx context.Context, sink iot.Sink) error {
 			require.NoError(t, sink.Publish(ctx, appIoTUpdate()))
@@ -147,7 +153,9 @@ func TestIoTUnauthorizedSinkClearFailureCannotExposeCachedValues(t *testing.T) {
 		}), nil
 	}
 	s.Run(context.Background())
-	require.Equal(t, int64(1), s.bus.Version(), "failed persistence must not notify")
+	require.Equal(t, int64(2), s.bus.Version(), "authorization cache hiding must notify even when SQL fails")
+	<-sub.C() // Initial synchronization.
+	require.Contains(t, (<-sub.C()).Topics, domain.TopicIoTClear)
 	snapshot, err := s.repo.Read(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, iot.Disconnected, snapshot.Instances[0].Status)

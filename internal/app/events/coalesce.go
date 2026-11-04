@@ -16,6 +16,7 @@ const CoalesceWindow = 250 * time.Millisecond
 var topicOrder = map[domain.Topic]int{
 	domain.TopicArchives: 4,
 	domain.TopicIoT:      5,
+	domain.TopicIoTClear: 6,
 	domain.TopicHome:     0,
 	domain.TopicPhotos:   1,
 	domain.TopicNAS:      2,

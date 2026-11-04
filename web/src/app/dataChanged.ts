@@ -44,6 +44,7 @@ export function refetchTargets(
         if (context.overviewActive) targets.add('overview');
         break;
       case 'iot':
+      case 'iot.clear':
         if (context.houseActive) targets.add('house');
         break;
       case 'photos':

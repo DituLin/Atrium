@@ -21,7 +21,7 @@ Server → client:
 | --- | --- | --- |
 | `session.ready` | `{screen: {id, name}, server_time, home_version, pending_command?: Command}` | first message after auth; `pending_command` is the newest `accepted` command not yet delivered, if still unexpired |
 | `screen.command` | `{command_id, sequence, kind, payload, issued_at, expires_at}` | `kind = navigate \| show \| refresh` |
-| `data.changed` | `{topics: ["home","photos","nas","iot"], version}` | coalesced 250 ms per session; queue-overflow safe (dropped duplicates) |
+| `data.changed` | `{topics: ["home","photos","nas","iot","iot.clear"], version}` | coalesced 250 ms per session; queue-overflow safe (dropped duplicates) |
 | `heartbeat.ack` | `{server_time}` | |
 | `session.revoked` | `{reason}` | followed by close `4002` |
 | `session.superseded` | `{}` | followed by close `4003` |
@@ -102,12 +102,22 @@ shapes; nothing below changes a payload.
 
 `data.changed` 的 `topics` 可包含 `iot`。通知仅表示持久化快照已变化；客户端重新读取
 `GET /api/v1/family/house`，不从通知推断设备值。IoT 使用现有合并机制；断线重连后也应重读。
-此通道和 House API 不提供设备控制命令。
+普通 `iot` 更新可保留现有画面；`iot.clear` 是授权/缓存清除信号，与 `iot` 一起发送，
+即使数据库删除失败但服务已隐藏缓存也会发出。客户端收到后必须立即废弃在途 House 请求、
+清空本地 IoT 观测，再重新读取；不得因刷新失败恢复旧值。清除通知在合并中保留，
+与普通更新同时出现时清除优先。WebSocket 发送队列不得静默丢弃清除通知；满队列关闭连接并要求重连。中枢/NAS 数据可保留。此通道和 House API 不提供设备控制命令。
 
 `data.changed.topics` may include `iot`. A notification means the persisted snapshot changed;
 clients refetch `GET /api/v1/family/house` instead of inferring device values from the event.
 IoT uses the existing coalescing mechanism; refetch after reconnect too. Neither this channel
 nor the House API provides device control commands.
+Ordinary `iot` updates may retain the displayed snapshot. `iot.clear`, sent alongside `iot`,
+is an authorization/cache-clear signal, emitted even if database deletion fails after the
+service has hidden its cache. Clients must immediately invalidate pending House requests,
+clear local IoT observations, then refetch; a failed read must never revive old values.
+Coalescing preserves this signal and clearing takes precedence over ordinary updates.
+The WebSocket send queue must not silently drop clear notifications; overflow closes the session for reconnect.
+Unrelated hub/NAS data may remain visible.
 
 House 的可选 `iot` 字段保持 `schema_version: 1`；禁用时省略。启用时返回
 `{availability, reason, instances}`，每个实例包含 `id/provider/status/generation/last_success_at/devices`。

@@ -81,7 +81,8 @@ export function useConnection(deps: ConnectionDeps): WsHandle {
     const houseVisible = () => selectScreen(getState()) === 'house' && document.visibilityState !== 'hidden';
     const refetch = createTopicRefetcher({ ...handlers, overview: () => { if (overviewVisible()) handlers.overview(); }, house: () => { if (houseVisible()) handlers.house(); } });
     const notifyChanged = (topics: readonly DataChangedTopic[]): void => {
-      if (topics.includes('iot')) house.invalidate(false);
+      if (topics.includes('iot.clear')) house.invalidate('iot');
+      else if (topics.includes('iot')) house.invalidate(false);
       if(topics.includes('archives')) dispatch({type:'archives.invalidate'});
       if (topics.includes('nas') || topics.includes('home')) { house.invalidate(); overview?.invalidate(); }
       refetch.notify(topics, {

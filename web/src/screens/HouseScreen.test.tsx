@@ -131,3 +131,10 @@ it('distinguishes IoT first sync, read failure and disconnected history without 
  expect(screen.getByText('设备状态待更新 · 显示上次观测')).toBeDefined(); expect(screen.getByText('Home Assistant · 未连接')).toBeDefined();
  expect(screen.getByText('关闭')).toBeDefined(); expect(screen.getByText('不可用')).toBeDefined();
 });
+
+it('labels unnamed capabilities by kind and public ID so current and target humidity stay distinct', async () => {
+ const iot = iotFixture(); const device = iot.instances[0]!.devices[0]!;
+ device.capabilities = ['current', 'target'].map(id => ({ id, name: '', kind: 'humidity', observation: { ...device.capabilities[0]!.observation, value: 40, unit: '%' } }));
+ await setup(false, { ...houseFixture(), iot }); await enter();
+ expect(await screen.findByText('湿度 · current')).toBeDefined(); expect(screen.getByText('湿度 · target')).toBeDefined();
+});

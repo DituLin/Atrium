@@ -5,7 +5,7 @@ import type { ApiClient } from '../core/api';
 import type * as WsModule from '../core/ws';
 import type { WsClientOptions } from '../core/ws';
 import type { ServerMessage } from '../types/ws';
-import { houseFixture } from '../test/houseFixture';
+import { houseFixture, iotFixture } from '../test/houseFixture';
 import { createHouseLoader } from './house';
 import { createInitialState, appReducer } from './state';
 import type { AppAction, AppState } from './state';
@@ -84,4 +84,24 @@ it('IoT notifications retain the reading snapshot, supersede pending work, and n
  expect(state!.house.snapshot?.nas).toHaveLength(1); expect(getHome).not.toHaveBeenCalled();
  act(() => visibility('hidden')); act(notify); await act(() => vi.advanceTimersByTimeAsync(1000));
  expect(getHouse).toHaveBeenCalledTimes(3);
+});
+
+it('clears IoT immediately before a failed refresh and rejects late pre-clear reads without erasing hub data', async () => {
+ vi.useFakeTimers(); let state: AppState; let send!: (action: AppAction) => void;
+ const snapshot = { ...houseFixture(), iot: iotFixture() };
+ const getHouse = vi.fn(async () => snapshot); const api = { getHouse } as unknown as ApiClient;
+ const house = createHouseLoader(api, action => send(action));
+ function Harness() {
+  const [current, dispatch] = useReducer(appReducer, 0, createInitialState); state = current; send = dispatch;
+  useConnection({ api, house, state: current, dispatch, clientVersion: 'test', enabled: true }); return null;
+ }
+ render(<Harness />); act(() => send({ type: 'router.navigate', route: { name: 'house' } })); await act(() => house.load());
+ let finish!: (value: typeof snapshot) => void;
+ getHouse.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+ let pending!: Promise<unknown>; act(() => { pending = house.load().catch(error => error); });
+ getHouse.mockRejectedValueOnce(new Error('offline'));
+ act(() => socket.options!.onMessage({ type: 'data.changed', payload: { topics: ['iot', 'iot.clear'], version: 4 } } as ServerMessage));
+ expect(state!.house.snapshot?.iot?.instances).toEqual([]); expect(state!.house.snapshot?.core).toEqual(snapshot.core);
+ await act(async () => { finish(snapshot); await pending; });
+ expect(state!.house.snapshot?.iot?.instances).toEqual([]); expect(state!.house.status).toBe('stale');
 });
