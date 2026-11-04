@@ -1,0 +1,19 @@
+# Synthetic deployment example / 合成部署示例
+# Prepare /srv/ha/config with access limited to the operator before starting.
+# 启动前创建 /srv/ha/config，并限制为运维账号可访问。
+services:
+  homeassistant:
+    container_name: homeassistant
+    # Home Assistant 2026.10.4, verified deployment digest.
+    image: ghcr.io/home-assistant/home-assistant@sha256:23f4dfbb69ce76315dbc4de7915504f1c2dcecd7ca2648113a493a385972e133
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      TZ: Asia/Singapore
+    volumes:
+      - /srv/ha/config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
