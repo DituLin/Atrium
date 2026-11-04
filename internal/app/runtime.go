@@ -187,6 +187,7 @@ func New(ctx context.Context, opts Options) (*Runtime, error) {
 		intake = archive.NewIntake(archiveBlobs, db.ArchiveTasksWithClock(clockFunc(now)))
 	}
 	r.api = httpapi.New(httpapi.Deps{
+		IoT:            r.IoTReader(),
 		Archives:       intake,
 		ArchiveBlobs:   r.archiveBlobs,
 		ArchivePreview: archive.NativeParser{HelperPath: cfg.Archives.NativeHelperPath},

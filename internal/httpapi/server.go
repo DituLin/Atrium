@@ -17,6 +17,7 @@ import (
 	"github.com/DituLin/Atrium/internal/diag"
 	"github.com/DituLin/Atrium/internal/family"
 	"github.com/DituLin/Atrium/internal/indexer"
+	"github.com/DituLin/Atrium/internal/iot"
 	"github.com/DituLin/Atrium/internal/jobs"
 	"github.com/DituLin/Atrium/internal/media"
 	"github.com/DituLin/Atrium/internal/screen"
@@ -29,6 +30,7 @@ import (
 // Deps are the collaborators the HTTP layer needs. Everything is an explicit
 // field so tests can substitute fakes without touching package state.
 type Deps struct {
+	IoT            iot.SnapshotReader
 	Archives       *archive.Intake
 	ArchiveBlobs   *archive.BlobStore
 	ArchivePreview archive.NativeParser
@@ -121,7 +123,7 @@ func New(deps Deps) *API {
 		deps.Logger = slog.Default()
 	}
 	if deps.House == nil && deps.Config != nil && deps.DB != nil && deps.Home != nil {
-		deps.House = family.NewHouseComposer(deps.Config, deps.DB.Sources(), deps.Home)
+		deps.House = family.NewHouseComposer(deps.Config, deps.DB.Sources(), deps.Home).WithIoT(deps.IoT)
 	}
 	if deps.Overview == nil && deps.Config != nil && deps.House != nil {
 		deps.Overview = briefing.NewComposer(deps.Config, deps.House)
