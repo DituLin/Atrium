@@ -6,8 +6,10 @@ import (
 	"time"
 )
 
+// Kind identifies a supported normalized device capability.
 type Kind string
 
+// Supported capability kinds.
 const (
 	Power          Kind = "power"
 	Humidity       Kind = "humidity"
@@ -17,6 +19,7 @@ const (
 	FilterLife     Kind = "filter_life"
 )
 
+// Valid reports whether the capability kind is supported.
 func (k Kind) Valid() bool {
 	switch k {
 	case Power, Humidity, Temperature, OperatingState, Battery, FilterLife:
@@ -25,7 +28,7 @@ func (k Kind) Valid() bool {
 	return false
 }
 
-// Operating states are deliberately bounded; provider-specific states require mappings.
+// ValidOperatingState accepts the bounded public states; providers require mappings.
 func ValidOperatingState(s string) bool {
 	switch s {
 	case "off", "idle", "active", "paused", "error":
@@ -34,16 +37,20 @@ func ValidOperatingState(s string) bool {
 	return false
 }
 
+// Availability distinguishes valid values from unknown and unavailable sources.
 type Availability string
 
+// Supported entity availability states.
 const (
 	Available   Availability = "available"
 	Unknown     Availability = "unknown"
 	Unavailable Availability = "unavailable"
 )
 
+// Reason is a bounded public explanation that excludes provider errors.
 type Reason string
 
+// Public observation failure reasons.
 const (
 	ReasonUnknown      Reason = "source_unknown"
 	ReasonUnavailable  Reason = "source_unavailable"
@@ -52,18 +59,22 @@ const (
 	ReasonDisconnected Reason = "disconnected"
 )
 
+// ConnectionStatus describes the adapter connection independently of entity health.
 type ConnectionStatus string
 
+// Supported adapter connection states.
 const (
 	Disconnected ConnectionStatus = "disconnected"
 	Connecting   ConnectionStatus = "connecting"
 	Connected    ConnectionStatus = "connected"
 )
 
-// Public types intentionally have no provider identifiers, credentials, URLs or raw errors.
+// Snapshot contains public observations without provider identifiers, credentials or URLs.
 type Snapshot struct {
 	Instances []Instance `json:"instances"`
 }
+
+// Instance contains a source connection and its configured public devices.
 type Instance struct {
 	Provider string `json:"provider"`
 	// LastSuccessAt records the most recent completed provider synchronization.
@@ -73,6 +84,8 @@ type Instance struct {
 	Status        ConnectionStatus `json:"status"`
 	Devices       []Device         `json:"devices"`
 }
+
+// Device is a stable public identity with room and capability metadata.
 type Device struct {
 	ID           string       `json:"id"`
 	Name         string       `json:"name"`
@@ -80,12 +93,16 @@ type Device struct {
 	RoomName     string       `json:"room_name"`
 	Capabilities []Capability `json:"capabilities"`
 }
+
+// Capability combines a supported kind with its latest observation.
 type Capability struct {
 	Name        string      `json:"name"`
 	ID          string      `json:"id"`
 	Kind        Kind        `json:"kind"`
 	Observation Observation `json:"observation"`
 }
+
+// Observation holds a normalized value and independently tracked observation times.
 type Observation struct {
 	InstanceID   string       `json:"instance_id"`
 	DeviceID     string       `json:"device_id"`
@@ -113,14 +130,18 @@ type Update struct {
 	Replace      bool
 	Observations []Observation
 }
+
+// SnapshotReader reads the current authorized public observations.
 type SnapshotReader interface {
 	Read(context.Context) (Snapshot, error)
 }
+
+// Sink atomically accepts updates from an adapter connection.
 type Sink interface {
 	Publish(context.Context, Update) error
 }
 
-// Run blocks until cancellation or unrecoverable failure. Implementations reconnect
+// Adapter runs until cancellation or unrecoverable failure. Implementations reconnect
 // internally, publish connection transitions, and never send device commands.
 type Adapter interface {
 	Run(context.Context, Sink) error

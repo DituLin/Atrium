@@ -88,6 +88,8 @@ type HouseIoT struct {
 	Reason       *Reason            `json:"reason"`
 	Instances    []HouseIoTInstance `json:"instances"`
 }
+
+// HouseIoTInstance reports source connection health and allowed devices.
 type HouseIoTInstance struct {
 	ID            string               `json:"id"`
 	Provider      string               `json:"provider"`
@@ -96,6 +98,8 @@ type HouseIoTInstance struct {
 	LastSuccessAt *string              `json:"last_success_at"`
 	Devices       []HouseIoTDevice     `json:"devices"`
 }
+
+// HouseIoTDevice groups public capabilities under a configured room.
 type HouseIoTDevice struct {
 	ID           string               `json:"id"`
 	Name         string               `json:"name"`
@@ -103,12 +107,16 @@ type HouseIoTDevice struct {
 	RoomName     string               `json:"room_name"`
 	Capabilities []HouseIoTCapability `json:"capabilities"`
 }
+
+// HouseIoTCapability carries one normalized, read-only observation.
 type HouseIoTCapability struct {
 	ID          string              `json:"id"`
 	Name        string              `json:"name"`
 	Kind        iot.Kind            `json:"kind"`
 	Observation HouseIoTObservation `json:"observation"`
 }
+
+// HouseIoTObservation distinguishes value availability from synchronization times.
 type HouseIoTObservation struct {
 	Value           any              `json:"value"`
 	Unit            string           `json:"unit,omitempty"`

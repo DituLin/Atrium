@@ -22,6 +22,7 @@ import (
 	"github.com/coder/websocket/wsjson"
 )
 
+// ErrUnauthorized marks terminal authentication or read-permission rejection.
 var ErrUnauthorized = errors.New("home assistant authentication rejected")
 var errSession = errors.New("home assistant connection interrupted")
 
@@ -29,12 +30,20 @@ type sinkFailure struct{ error }
 
 // Timings permits short deterministic integration tests; zero values use defaults.
 type Timings struct{ Heartbeat, Timeout, Reconcile, RetryMin, RetryMax time.Duration }
+
+// Option configures adapter dependencies or synchronization timings.
 type Option func(*Client)
 
-func WithHTTPClient(h *http.Client) Option  { return func(c *Client) { c.http = h } }
-func WithTimings(t Timings) Option          { return func(c *Client) { c.timings = t } }
+// WithHTTPClient supplies a verified TLS client; redirects remain disabled.
+func WithHTTPClient(h *http.Client) Option { return func(c *Client) { c.http = h } }
+
+// WithTimings overrides heartbeat, reconciliation and retry intervals.
+func WithTimings(t Timings) Option { return func(c *Client) { c.timings = t } }
+
+// WithClock supplies the observation clock, primarily for deterministic tests.
 func WithClock(now func() time.Time) Option { return func(c *Client) { c.now = now } }
 
+// Client synchronizes explicitly bound entities over a read-only WebSocket.
 type Client struct {
 	cfg      config.HomeAssistant
 	http     *http.Client
@@ -90,6 +99,7 @@ func denied(m message) bool {
 	return m.Type == "result" && !m.Success && m.Error.Code == "unauthorized"
 }
 
+// New validates bindings and loads private credentials without contacting HA.
 func New(cfg config.HomeAssistant, options ...Option) (*Client, error) {
 	if e := (config.IoT{Enabled: true, HomeAssistant: cfg}).Validate(); e != nil {
 		return nil, errors.New("invalid home assistant configuration")
@@ -103,7 +113,7 @@ func New(cfg config.HomeAssistant, options ...Option) (*Client, error) {
 	if e != nil {
 		return nil, errors.New("cannot read token file")
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	actual, e := f.Stat()
 	if e != nil || !os.SameFile(st, actual) || (actual.Mode().Perm() != 0600 && actual.Mode().Perm() != 0400) {
 		return nil, errors.New("token file requires owner-only read/write permissions")
@@ -117,7 +127,11 @@ func New(cfg config.HomeAssistant, options ...Option) (*Client, error) {
 		o(c)
 	}
 	if c.http == nil {
-		tr := http.DefaultTransport.(*http.Transport).Clone()
+		defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+		if !ok {
+			return nil, errors.New("HTTP client must use a verified transport")
+		}
+		tr := defaultTransport.Clone()
 		tr.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS12}
 		if cfg.CAFile != "" {
 			pem, e := os.ReadFile(cfg.CAFile)
@@ -194,6 +208,8 @@ func (c *Client) observations(states map[string]record, g uint64) []iot.Observat
 	}
 	return out
 }
+
+// Run synchronizes until cancellation, authorization rejection or a sink failure.
 func (c *Client) Run(ctx context.Context, sink iot.Sink) error {
 	delay := c.timings.RetryMin
 	for g := uint64(1); ; g++ {
@@ -226,7 +242,7 @@ func (c *Client) Run(ctx context.Context, sink iot.Sink) error {
 		if c.now().Sub(started) > c.timings.Heartbeat*2 {
 			delay = c.timings.RetryMin
 		}
-		timer := time.NewTimer(time.Duration(float64(delay) * (0.8 + rand.Float64()*0.2)))
+		timer := time.NewTimer(time.Duration(float64(delay) * (0.8 + rand.Float64()*0.2))) //nolint:gosec // Retry jitter is timing variation, not a security secret.
 		select {
 		case <-ctx.Done():
 			timer.Stop()
@@ -243,12 +259,15 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
 	dialCtx, dc := context.WithTimeout(ctx, c.timings.Timeout)
-	conn, _, e := websocket.Dial(dialCtx, c.endpoint, &websocket.DialOptions{HTTPClient: c.http})
+	conn, response, e := websocket.Dial(dialCtx, c.endpoint, &websocket.DialOptions{HTTPClient: c.http})
 	dc()
+	if response != nil && response.Body != nil {
+		_ = response.Body.Close()
+	}
 	if e != nil {
 		return errSession
 	}
-	defer conn.CloseNow()
+	defer func() { _ = conn.CloseNow() }()
 	conn.SetReadLimit(4 << 20)
 	incoming := make(chan message, 256)
 	done := make(chan struct{})
@@ -269,7 +288,7 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 			}
 		}
 	}()
-	defer func() { cancel(); conn.CloseNow(); <-done }()
+	defer func() { cancel(); _ = conn.CloseNow(); <-done }()
 	send := func(v any) error {
 		wctx, wc := context.WithTimeout(ctx, c.timings.Timeout)
 		defer wc()

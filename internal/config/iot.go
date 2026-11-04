@@ -3,16 +3,20 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/DituLin/Atrium/internal/iot"
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/DituLin/Atrium/internal/iot"
 )
 
+// IoT configures the optional read-only device integration.
 type IoT struct {
 	Enabled       bool          `yaml:"enabled"`
 	HomeAssistant HomeAssistant `yaml:"home_assistant"`
 }
+
+// HomeAssistant identifies one source and its explicitly allowed devices.
 type HomeAssistant struct {
 	ID        string      `yaml:"id"`
 	URL       string      `yaml:"url"`
@@ -20,6 +24,8 @@ type HomeAssistant struct {
 	CAFile    string      `yaml:"ca_file,omitempty"`
 	Devices   []IoTDevice `yaml:"devices"`
 }
+
+// IoTDevice gives a source device a stable public identity and room.
 type IoTDevice struct {
 	ID           string          `yaml:"id"`
 	Name         string          `yaml:"name"`
@@ -27,6 +33,8 @@ type IoTDevice struct {
 	RoomName     string          `yaml:"room_name"`
 	Capabilities []IoTCapability `yaml:"capabilities"`
 }
+
+// IoTCapability binds one public capability to a source entity or attribute.
 type IoTCapability struct {
 	Name string `yaml:"name,omitempty"`
 	// Unit overrides provider units for attributes with no unit metadata.

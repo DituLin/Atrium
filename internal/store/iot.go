@@ -29,6 +29,7 @@ type IoTRepository struct {
 
 func iotObservationKey(device, capability string) string { return device + "\x00" + capability }
 
+// NewIoT starts a configuration session and removes revoked persisted bindings.
 func (d *DB) NewIoT(ctx context.Context, cfg config.IoT) (*IoTRepository, error) {
 	d.iotMu.Lock()
 	defer d.iotMu.Unlock()
@@ -56,7 +57,7 @@ func (d *DB) NewIoT(ctx context.Context, cfg config.IoT) (*IoTRepository, error)
 		for rows.Next() {
 			var k key
 			if err = rows.Scan(&k.i, &k.d, &k.c, &k.fingerprint); err != nil {
-				rows.Close()
+				_ = rows.Close()
 				return err
 			}
 			if _, ok := r.allowed[iotObservationKey(k.d, k.c)]; !ok || k.i != owned.HomeAssistant.ID || k.fingerprint != r.fingerprints[iotObservationKey(k.d, k.c)] {
@@ -64,7 +65,7 @@ func (d *DB) NewIoT(ctx context.Context, cfg config.IoT) (*IoTRepository, error)
 			}
 		}
 		err = rows.Err()
-		rows.Close()
+		_ = rows.Close()
 		if err != nil {
 			return err
 		}
@@ -88,7 +89,7 @@ func (r *IoTRepository) load(ctx context.Context, q iotQuerier) (map[string]iot.
 	if err != nil {
 		return nil, nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var last *time.Time
 	for rows.Next() {
 		var d, c, raw, syncAt, fingerprint string

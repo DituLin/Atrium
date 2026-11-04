@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// Normalized is a safe value, canonical unit and bounded availability result.
 type Normalized struct {
 	Value        any
 	Unit         string
