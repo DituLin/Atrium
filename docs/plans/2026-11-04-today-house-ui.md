@@ -59,7 +59,7 @@ Run: `go test ./internal/widget ./internal/httpapi`; `npm test -- src/app/refetc
 - [x] Obtain independent code/design review and resolve findings.
 - [x] Merge the already deployed HA branch into the new UI branch, preserving both implementations and unrelated user files. Build a signed candidate over the actual HA backend closure, verify the package manifest and run isolated acceptance before activation. Preserve schema 18, the system service running as the existing ordinary user, source/SQLite/screen identities and the 2 GiB on-demand policy.
 - [x] Verify online OnePlus navigation/rendering and restore the original tab. Do not claim TCL acceptance while it is offline.
-- [ ] Commit only task files, push main as previously requested, and preserve the unrelated HA plan/navigation edits byte-for-byte. Keep private operational evidence outside the repository.
+- [x] Commit only task files, push main as previously requested, and preserve the unrelated HA plan/navigation edits byte-for-byte. Keep private operational evidence outside the repository.
 
 ## Recorded release evidence (2026-11-04)
 
@@ -68,4 +68,6 @@ Run: `go test ./internal/widget ./internal/httpapi`; `npm test -- src/app/refetc
 - Repository Go tests passed; final embedded release source passed `go test -p 1 ./...`. Weather widget race tests and the independent original DST/midnight-cache regression probes passed.
 - Final signed candidate: 8 actual-backend groups and 7 embedded-browser groups passed, without production data access. Test listeners were stopped. Source closure, manifests and private operational evidence are retained outside the repository.
 - Signed runtime `today-house-ui-acd18c6+c06c6a591e9a33c6a93bc0def15d3e29061f9d07` activated successfully. Signature, exact binary version/hash, schema 18, unchanged configuration/service definition, original ordinary-user KeepAlive service, business/source/photo/screen identities and Gateway recovery verified. Both photo sources remain online and bound; 2 GiB on-demand policy retained.
-- Physical OnePlus acceptance passed on client `0.1.0+acd18c6`: both pages, family-zone date, Chinese/missing weather, card navigation and refresh, unconfigured House sections, complete read-only HA capability/timestamp projection, long-section scrolling and fixed navigation. The archive tab was restored and the temporary ADB forward removed. TCL acceptance is not claimed while offline. Main delivery remains pending below.
+- Physical OnePlus acceptance passed on client `0.1.0+acd18c6`: both pages, family-zone date, Chinese/missing weather, card navigation and refresh, unconfigured House sections, complete read-only HA capability/timestamp projection, long-section scrolling and fixed navigation. The archive tab was restored and the temporary ADB forward removed. TCL acceptance is not claimed while offline. Implementation and bilingual delivery records were fast-forwarded to main and pushed; the unrelated user documents retain their exact original bytes.
+
+- Main delivery verified at `44de8a4`; an initial GitHub server error succeeded on a normal retry without a forced push. This checklist-only follow-up records that completed delivery.
