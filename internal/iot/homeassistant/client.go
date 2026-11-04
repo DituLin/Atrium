@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -60,7 +61,10 @@ type message struct {
 	ID      int             `json:"id"`
 	Success bool            `json:"success"`
 	Result  json.RawMessage `json:"result"`
-	Event   struct {
+	Error   struct {
+		Code string `json:"code"`
+	} `json:"error"`
+	Event struct {
 		Type string `json:"event_type"`
 		Time string `json:"time_fired"`
 		Data struct {
@@ -68,6 +72,20 @@ type message struct {
 			New      *entity `json:"new_state"`
 		} `json:"data"`
 	} `json:"event"`
+}
+
+// Equal timestamps cannot establish an ordering for divergent state payloads.
+func conflicting(a, b record) bool {
+	if !a.updated.Equal(b.updated) {
+		return false
+	}
+	if a.state == nil || b.state == nil {
+		return a.state != b.state
+	}
+	return !reflect.DeepEqual(a.state.State, b.state.State) || !reflect.DeepEqual(a.state.Attributes, b.state.Attributes)
+}
+func denied(m message) bool {
+	return m.Type == "result" && !m.Success && m.Error.Code == "unauthorized"
 }
 
 func New(cfg config.HomeAssistant, options ...Option) (*Client, error) {
@@ -297,6 +315,9 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 		return e
 	}
 	m, e = receive()
+	if e == nil && denied(m) {
+		return ErrUnauthorized
+	}
 	if e != nil || m.Type != "result" || m.ID != 1 || !m.Success {
 		return errSession
 	}
@@ -366,6 +387,9 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 				}
 			}
 		case m := <-incoming:
+			if denied(m) {
+				return ErrUnauthorized
+			}
 			if m.Type == "pong" && m.ID == pingID {
 				pingID = 0
 				pong.Stop()
@@ -386,7 +410,7 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 						t, _ := time.Parse(time.RFC3339Nano, s.Updated)
 						next[s.EntityID] = record{&s, t}
 						if prior, ok := states[s.EntityID]; ok && !prior.updated.IsZero() {
-							if t.IsZero() {
+							if t.IsZero() || conflicting(prior, next[s.EntityID]) {
 								return errSession
 							}
 							if prior.updated.After(t) {
@@ -397,7 +421,7 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 				}
 				for key, r := range buffer {
 					old, ok := next[key]
-					if ok && old.updated.IsZero() {
+					if ok && (old.updated.IsZero() || conflicting(old, r)) {
 						return errSession
 					}
 					if !ok || !r.updated.Before(old.updated) || r.updated.IsZero() {
@@ -432,11 +456,17 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 						return errSession
 					}
 					old, ok := buffer[key]
+					if ok && conflicting(old, r) {
+						return errSession
+					}
 					if !ok || !t.Before(old.updated) || t.IsZero() {
 						buffer[key] = r
 					}
 				} else {
 					old, ok := states[key]
+					if ok && conflicting(old, r) {
+						return errSession
+					}
 					if !ok || !t.Before(old.updated) || t.IsZero() {
 						states[key] = r
 						if e = publish(false, key); e != nil {

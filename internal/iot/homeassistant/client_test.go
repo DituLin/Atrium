@@ -356,3 +356,90 @@ func TestUnknownEventOrderResynchronizes(t *testing.T) {
 		t.Fatalf("unknown event order did not request resynchronization: %v", e)
 	}
 }
+
+func TestEqualTimestampConflictsResynchronize(t *testing.T) {
+	for _, scenario := range []string{"snapshot_cached", "snapshot_event", "event_event", "buffered_events"} {
+		t.Run(scenario, func(t *testing.T) {
+			const ts = "2026-01-01T00:00:03Z"
+			srv := server(t, func(ctx context.Context, c *websocket.Conn) {
+				handshake(t, ctx, c)
+				v := read(t, ctx, c)
+				result := func(s string) {
+					write(ctx, c, map[string]any{"id": v["id"], "type": "result", "success": true, "result": []any{state(s, ts)}})
+				}
+				switch scenario {
+				case "snapshot_cached":
+					result("on")
+					v = read(t, ctx, c)
+					result("off")
+				case "snapshot_event":
+					write(ctx, c, event(state("on", ts), ts))
+					result("off")
+				case "event_event":
+					result("on")
+					write(ctx, c, event(state("off", ts), ts))
+				case "buffered_events":
+					write(ctx, c, event(state("on", ts), ts))
+					write(ctx, c, event(state("off", ts), ts))
+				}
+				<-ctx.Done()
+			})
+			defer srv.Close()
+			cfg := fixture(t)
+			cfg.URL = srv.URL
+			c, e := New(cfg, WithHTTPClient(srv.Client()), WithTimings(Timings{Reconcile: 20 * time.Millisecond}))
+			if e != nil {
+				t.Fatal(e)
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+			defer cancel()
+			if e = c.session(ctx, make(sink, 50), 1); !errors.Is(e, errSession) {
+				t.Fatalf("conflicting equal timestamp must resynchronize, got %v", e)
+			}
+		})
+	}
+}
+func TestPermissionDeniedResultClearsAndStops(t *testing.T) {
+	for _, stage := range []string{"subscribe", "snapshot", "reconcile"} {
+		t.Run(stage, func(t *testing.T) {
+			srv := server(t, func(ctx context.Context, c *websocket.Conn) {
+				var v map[string]any
+				if stage == "subscribe" {
+					write(ctx, c, map[string]any{"type": "auth_required"})
+					read(t, ctx, c)
+					write(ctx, c, map[string]any{"type": "auth_ok"})
+					v = read(t, ctx, c)
+				} else {
+					handshake(t, ctx, c)
+					v = read(t, ctx, c)
+					if stage == "reconcile" {
+						write(ctx, c, map[string]any{"id": v["id"], "type": "result", "success": true, "result": []any{state("on", "2026-01-01T00:00:01Z")}})
+						v = read(t, ctx, c)
+					}
+				}
+				write(ctx, c, map[string]any{"id": v["id"], "type": "result", "success": false, "error": map[string]any{"code": "unauthorized", "message": "synthetic-secret"}})
+				<-ctx.Done()
+			})
+			defer srv.Close()
+			cfg := fixture(t)
+			cfg.URL = srv.URL
+			c, e := New(cfg, WithHTTPClient(srv.Client()), WithTimings(Timings{Reconcile: 20 * time.Millisecond}))
+			if e != nil {
+				t.Fatal(e)
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+			defer cancel()
+			s := make(sink, 50)
+			e = c.Run(ctx, s)
+			if !errors.Is(e, ErrUnauthorized) {
+				t.Fatalf("permission denied must be terminal, got %v", e)
+			}
+			u := await(t, s, func(u iot.Update) bool { return u.Replace && u.Status == iot.Disconnected })
+			for _, o := range u.Observations {
+				if o.Value != nil {
+					t.Fatal("cached value survived permission denial")
+				}
+			}
+		})
+	}
+}
