@@ -2,7 +2,7 @@
 
 [中文](photo-cache.md) | English
 
-Updated: 2026-11-04. Status: implemented with code validation complete; deployment acceptance remains pending for this release.
+Updated: 2026-11-04. Status: implemented and deployed; service, browser and physical OnePlus acceptance passed.
 
 ## Storage behavior
 
@@ -32,3 +32,11 @@ The budget covers photo previews, thumbnails, and video covers when enabled. Dat
 After a controlled configuration change and Core restart, verify unchanged source identities and screen pairings, preserved indexed photos, and background reclamation of excess derivative files. There is no need to reset the library index or reauthorize sources. Removing a thumbnail must not make a retained main preview appear unavailable. Removing the main preview must still allow on-demand regeneration.
 
 A first generation can be slower than a cache hit, particularly for HEIC conversion or a slow NAS. Acceptance should cover a cold-cache first image, preparation of the next image, random order and resume after eviction, source revocation, cache usage and actual TV playback. Original-photo directories remain read-only.
+
+## 2026-11-04 release validation
+
+The feature commit is `f8a13f7`; the signed Core version is `on-demand-cache-f8a13f7+c06c6a591e9a33c6a93bc0def15d3e29061f9d07`. It retains the verified backend baseline and existing patches, with the same 17 database migrations. Deployment changed only the preview mode to `on_demand` and the cache budget to 2 GiB. Business data, source and photo identities, and existing screen pairings were preserved during activation.
+
+All 651 frontend tests, lint, TypeScript builds and the Chrome 66 style check passed. Full Go regression suites passed for both the repository and actual release source, along with relevant race checks. The signed candidate passed eight real-server acceptance groups using two synthetic sources: cold caches, no page-wide preview generation, quota reduction, regeneration after eviction, unchanged random pools and resume, source revocation, and unchanged originals. Browser checks confirmed the current-plus-three preparation window, actual decoding of 16 synthetic thumbnails, automatic photo changes and reload resume, without page errors.
+
+Production background cleanup reclaimed excess derivatives, leaving the actual cache below 2 GiB. The OnePlus loaded the new frontend and verified mixed playback from both sources, generation and display of an evicted photo, automatic photo changes and reload resume. It was returned to Archives afterward. The TCL was offline and did not receive this release's physical-device acceptance. Actual household paths, library counts, authentication materials and private acceptance records are excluded from the repository.

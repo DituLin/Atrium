@@ -2,7 +2,7 @@
 
 [中文](daily-memories.md) | English
 
-Updated: 2026-11-02. Status: implemented and deployed with browser validation; physical TV validation awaits available devices.
+Updated: 2026-11-04. Status: implemented and deployed, with service, browser and physical OnePlus validation passed. Historical November 2 release evidence is retained below.
 
 ## Playback and resume
 
@@ -50,7 +50,7 @@ sources:
       allow_local: false
 ```
 
-Maintainers should verify the mount, directory scope and read permissions, back up the existing configuration, append the independent source and restart Core through the controlled deployment process. Check source identity confirmation, online state, initial scanning and ready previews, then verify mixed playback on the TV. Manage credentials through the operating system's mount mechanism, keeping them out of public configuration examples and documentation. Originals remain read-only; indexes, the database and generated previews remain on the local disk.
+Maintainers should verify the mount, directory scope and read permissions, back up the existing configuration, append the independent source and restart Core through the controlled deployment process. Check source identity confirmation, online state, initial scanning and ready metadata, sample on-demand previews, then verify mixed playback on the TV. Manage credentials through the operating system's mount mechanism, keeping them out of public configuration examples and documentation. Originals remain read-only; indexes, the database and generated previews remain on the local disk.
 
 Adding a source does not automatically expand any integration's source allowlist. Explicitly grant access separately if another integration needs it. Do not reset the existing source's identity, clear the library index or relax mount checks to add an album.
 
@@ -60,7 +60,11 @@ Home uses the screen-authenticated `GET /api/v1/photos/memories` endpoint. The s
 
 This release version, test results, source onboarding and device verification should be recorded separately. This guide does not replace release acceptance or promise that every photo will be played within one day.
 
-## 2026-11-02 release verification
+## 2026-11-04 follow-up validation
+
+The on-demand preview release is deployed. The OnePlus verified mixed playback from both sources, regeneration after eviction, automatic photo changes and reload resume, and was then returned to Archives. The TCL was offline. See the [on-demand release record](photo-cache.en.md#2026-11-04-release-validation) for the version and full validation scope.
+
+## Historical 2026-11-02 release verification
 
 The feature commit is `db99b2c`; the signed Core version is `daily-memories-db99b2c+c06c6a591e9a33c6a93bc0def15d3e29061f9d07`. The database retains its existing 17 migrations. This release uses the verified backend baseline and existing patches, adding only this feature and its matching frontend.
 
