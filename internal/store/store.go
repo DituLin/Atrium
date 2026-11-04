@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	_ "modernc.org/sqlite" // database/sql driver
@@ -21,8 +22,10 @@ var migrationFS embed.FS
 
 // DB wraps the SQLite handle with Atrium-specific helpers.
 type DB struct {
-	sql  *sql.DB
-	path string
+	iotMu      sync.Mutex
+	iotSession *IoTRepository
+	sql        *sql.DB
+	path       string
 }
 
 // Open opens (creating if needed) the SQLite database at path and applies the

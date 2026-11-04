@@ -58,6 +58,7 @@ type Runtime struct {
 	api          *httpapi.API
 	server       *httpapi.Server
 	weather      *widget.WeatherService
+	iot          *iotService
 	archiveBlobs *archive.BlobStore
 
 	// V0.3 and H1 subsystems.
@@ -165,6 +166,9 @@ func New(ctx context.Context, opts Options) (*Runtime, error) {
 	}
 	authenticator := auth.NewAuthenticator(db, auth.NewOriginPolicy(cfg.DefaultAllowedOrigins()), now)
 	r.buildRealtime(authenticator)
+	if err := r.buildIoT(ctx); err != nil {
+		return nil, err
+	}
 	r.buildOps(opts.Errors)
 	ui, err := r.uiHandler()
 	if err != nil {

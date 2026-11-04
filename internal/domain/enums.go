@@ -382,6 +382,7 @@ type Topic string
 
 // Change topics (technical design §9).
 const (
+	TopicIoT      Topic = "iot"
 	TopicArchives Topic = "archives"
 	TopicHome     Topic = "home"
 	TopicPhotos   Topic = "photos"
@@ -392,7 +393,7 @@ const (
 // Valid reports whether the value is a known topic.
 func (t Topic) Valid() bool {
 	switch t {
-	case TopicHome, TopicPhotos, TopicNAS, TopicScreen, TopicArchives:
+	case TopicHome, TopicPhotos, TopicNAS, TopicScreen, TopicArchives, TopicIoT:
 		return true
 	}
 	return false

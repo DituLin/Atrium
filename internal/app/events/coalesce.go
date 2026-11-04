@@ -15,6 +15,7 @@ const CoalesceWindow = 250 * time.Millisecond
 // topicOrder fixes the emitted order so payloads are byte-stable.
 var topicOrder = map[domain.Topic]int{
 	domain.TopicArchives: 4,
+	domain.TopicIoT:      5,
 	domain.TopicHome:     0,
 	domain.TopicPhotos:   1,
 	domain.TopicNAS:      2,

@@ -176,6 +176,9 @@ func (r *Runtime) runBackground(ctx context.Context) {
 			fn(ctx)
 		}()
 	}
+	if r.iot != nil && r.cfg.IoT.Enabled {
+		start("iot", r.iot.Run)
+	}
 	if r.sources != nil {
 		start("source", r.sources.Run)
 	}
