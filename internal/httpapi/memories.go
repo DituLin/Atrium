@@ -147,7 +147,10 @@ func validMemoryAnchor(anchor string) bool {
 		return false
 	}
 	for _, character := range anchor {
-		if !(character >= 'a' && character <= 'z' || character >= 'A' && character <= 'Z' || character >= '0' && character <= '9' || character == '_' || character == '-') {
+		switch {
+		case character >= 'a' && character <= 'z', character >= 'A' && character <= 'Z', character >= '0' && character <= '9', character == '_', character == '-':
+			continue
+		default:
 			return false
 		}
 	}
@@ -180,7 +183,7 @@ func nextMemoryCursor(pool []rankedMemory, end int, position memoryCursor) *stri
 	if end <= 0 || end >= len(pool) {
 		return nil
 	}
-	position.Anchor = pool[end-1].id
+	position.Anchor = pool[end-1].id //nolint:gosec // The guard above proves 0 < end < len(pool).
 	position.Inclusive = false
 	next := encodeMemoryCursor(position)
 	return &next

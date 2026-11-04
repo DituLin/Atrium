@@ -1,7 +1,9 @@
 import type { HomeResponse, WeatherWidgetPayload } from '../../types/api';
+import { weatherConditionInfo } from '../info/weatherPresentation';
 
-/** Display model only. It is deliberately separate from the public House API:
- * that API currently has no rooms, device observations, history or controls. */
+/** Display model for explicitly configured layout/category/history data.
+ * Existing HA capability observations are rendered separately without inferring
+ * device categories, room geometry or historical samples from their names. */
 export type HouseDeviceKind = 'light' | 'ac' | 'aquarium' | 'purifier' | 'humidifier' | 'curtain' | 'robot' | 'lock' | 'heater' | 'other';
 export type HouseObservationState = 'available' | 'stale' | 'unavailable';
 export interface HouseReading { value: number | null; state: HouseObservationState; observedAt?: string | null }
@@ -46,7 +48,8 @@ export function houseDashboardFromHome(home: HomeResponse | null): HouseDashboar
     rooms: [], devices: [], temperature: null, humidity: null, aquarium: null,
     weather: weather ? {
       temperature: typeof weather.temperature_c === 'number' && Number.isFinite(weather.temperature_c) ? weather.temperature_c : null,
-      text: weather.condition_text, updatedAt: weather.fetched_at, stale: weather.stale,
+      text: weatherConditionInfo(weather.condition_code, weather.condition_text).label,
+      updatedAt: weather.fetched_at, stale: weather.stale,
     } : null,
   };
 }

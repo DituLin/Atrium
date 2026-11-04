@@ -63,3 +63,18 @@ it('aborts invalidated source fetches rather than accumulating outstanding trans
   expect(active).toBe(0); expect(peak).toBe(1);
   await Promise.all(tasks);
 });
+
+it('supersedes IoT work while preserving the last authorized snapshot', async () => {
+ const h = harness(); await h.loader.load(); const snapshot = h.get().house.snapshot;
+ const pending = deferred<HouseResponse>(); h.getHouse.mockReturnValueOnce(pending.promise);
+ const old = h.loader.load().catch(error => error); h.loader.invalidate(false);
+ expect(h.get().house.snapshot).toBe(snapshot);
+ h.getHouse.mockResolvedValueOnce({ ...houseFixture(), nas: [] }); await h.loader.load();
+ pending.resolve(houseFixture()); expect(await old).toMatchObject({ name: 'AbortError' });
+ expect(h.get().house.snapshot?.nas).toEqual([]);
+});
+
+it('resync clearing does not invent IoT on legacy House snapshots', async () => {
+ const h = harness(); await h.loader.load(); h.loader.invalidate('iot');
+ expect(h.get().house.snapshot?.iot).toBeUndefined();
+});

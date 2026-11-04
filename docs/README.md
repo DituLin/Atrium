@@ -10,6 +10,8 @@
 
 ## 架构与交付状态 / Architecture and delivery status
 
+- [HA IoT 接入开发方案（中文）](plans/2026-10-30-ha-iot-integration.md) / [HA IoT integration plan (English)](plans/2026-10-30-ha-iot-integration.en.md)：已确认范围，开发中；NAS → Mac → TV 只读闭环及后续控制边界 / scope approved, implementation in progress; NAS → Mac → TV read-only loop and future control boundaries.
+- [HA 部署与接入（中文）](ops/ha-iot-deployment.md) / [HA deployment and integration (English)](ops/ha-iot-deployment.en.md)：已验证环境、凭据与 TLS 准备、验收边界 / verified environment, credential and TLS preparation, acceptance boundaries.
 - [整体系统设计 / System design](architecture/atriumos-system-design.md)
 - [智能家庭档案设计 / Intelligent family archive design](plans/2026-10-03-family-agentos-archives-design.md)
 - [详细开发计划 / Development plan](plans/2026-10-03-atriumos-development-plan.md)

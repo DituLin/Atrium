@@ -2,7 +2,10 @@ package httpapi_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"github.com/DituLin/Atrium/internal/httpapi"
+	"github.com/DituLin/Atrium/internal/iot"
 	"github.com/google/jsonschema-go/jsonschema"
 	"gopkg.in/yaml.v3"
 	"net/http"
@@ -128,7 +131,7 @@ func TestHouseResponseMatchesOpenAPI(t *testing.T) {
 	require.NoError(t, json.Unmarshal(schemaJSON, &schema))
 	resolved, err := schema.Resolve(nil)
 	require.NoError(t, err)
-	h := newHarness(t, houseConfig)
+	h := newHarnessWith(t, func(_ *harness, d *httpapi.Deps) { d.IoT = houseIoTReader{} }, houseConfig)
 	token := h.pairScreen(h.newAdminToken(), "house_tv", "House TV")
 	validate := func() map[string]any {
 		t.Helper()
@@ -139,6 +142,9 @@ func TestHouseResponseMatchesOpenAPI(t *testing.T) {
 		return body
 	}
 	validate() // successful empty source collection
+	h.cfg.IoT = config.IoT{Enabled: true, HomeAssistant: config.HomeAssistant{ID: "ha", Devices: []config.IoTDevice{{ID: "fan", Name: "Fan", RoomID: "living", RoomName: "Living room", Capabilities: []config.IoTCapability{{ID: "power", Kind: iot.Power}}}}}}
+	validate() // enabled, connected instance, false value and null times
+	h.cfg.IoT.Enabled = false
 	_, err = widget.ReconcileSources(t.Context(), h.db, h.cfg, h.clock.Now())
 	require.NoError(t, err)
 	validate() // not observed
@@ -193,4 +199,17 @@ func TestHouseReauthorizationWaitsForNewObservation(t *testing.T) {
 			require.Nil(t, row.ShareTotalBytes)
 		})
 	}
+}
+
+type houseIoTReader struct{}
+
+func (houseIoTReader) Read(context.Context) (iot.Snapshot, error) {
+	return iot.Snapshot{Instances: []iot.Instance{{ID: "ha", Status: iot.Connected, Devices: []iot.Device{{ID: "fan", Capabilities: []iot.Capability{{ID: "power", Observation: iot.Observation{Value: false, Availability: iot.Available}}}}}}}}, nil
+}
+func TestHouseDefaultComposerUsesIoTReader(t *testing.T) {
+	h := newHarnessWith(t, func(h *harness, d *httpapi.Deps) { d.IoT = houseIoTReader{} }, func(c *config.Config) {
+		c.IoT = config.IoT{Enabled: true, HomeAssistant: config.HomeAssistant{ID: "ha", URL: "https://ha.example", TokenFile: "/placeholder/token"}}
+	})
+	body := decode[map[string]any](t, h.request(http.MethodGet, "/api/v1/family/house", "", bearer(h.newAdminToken())))
+	require.Equal(t, "available", body["iot"].(map[string]any)["availability"])
 }

@@ -54,7 +54,7 @@ export interface SessionReadyPayload {
   pending_command?: ScreenCommand;
 }
 
-export type DataChangedTopic = 'home' | 'photos' | 'nas' | 'screen' | 'archives';
+export type DataChangedTopic = 'home' | 'photos' | 'nas' | 'screen' | 'archives' | 'iot' | 'iot.clear';
 
 export interface DataChangedPayload {
   topics: DataChangedTopic[];

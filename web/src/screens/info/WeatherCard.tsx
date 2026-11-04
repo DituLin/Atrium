@@ -4,7 +4,7 @@ import type { ClockFormatOptions } from '../../core/clock';
 import type { WeatherWidgetPayload } from '../../types/api';
 import { RemoteButton } from '../../ui/RemoteButton';
 import { WeatherIcon } from './WeatherIcon';
-import { presentWeather } from './weatherPresentation';
+import { presentWeather, weatherConditionInfo } from './weatherPresentation';
 
 type Props = Omit<ComponentPropsWithoutRef<typeof RemoteButton>, 'children'> & {
   weather: WeatherWidgetPayload | null;
@@ -20,11 +20,12 @@ export const WeatherCard = forwardRef<HTMLButtonElement, Props>(function Weather
   const gradient = `weather-${useId().replace(/:/g, '')}`;
   const location = weather?.location_label?.trim() || '地点未设置';
   const metadata = weather ? `${location}${weather.stale ? ' · 旧数据' : ''}${model.updated ? ` · ${model.updated} 更新` : ' · 更新时间未知'}` : '等待天气更新';
+  const condition = weatherConditionInfo(weather?.condition_code, weather?.condition_text);
   return <RemoteButton {...props} className="today-card today-weather" aria-label="今日天气" title="按确定刷新简报" ref={ref}>
     <span className="today-card__heading"><span className="today-card__eyebrow today-card__eyebrow--weather">今日天气</span><span className="today-weather__updated">{metadata}</span></span>
     <span className="today-weather__current">
       <span className="today-weather__temperature" aria-label="当前温度">{model.temperature}</span>
-      <span className="today-weather__description"><span className="today-weather__condition"><WeatherIcon code={weather?.condition_code} />{weather?.condition_text || (weather ? '天气待确认' : '暂无天气数据')}</span><span className="today-weather__range">{model.range}</span></span>
+      <span className="today-weather__description"><span className="today-weather__condition"><WeatherIcon code={weather?.condition_code} text={weather?.condition_text} />{weather ? condition.label : '暂无天气数据'}</span><span className="today-weather__range">{model.range}</span></span>
     </span>
     <span className="today-weather__stats">{model.stats.map(stat => <span className={`today-weather__stat${stat.label === '风' ? ' today-weather__stat--wind' : ''}`} key={stat.label}><span>{stat.label}</span><span className={stat.accent ? 'is-accent' : ''}>{stat.value}</span></span>)}</span>
     <span className="today-weather__hourly">

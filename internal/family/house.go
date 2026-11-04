@@ -7,6 +7,7 @@ import (
 	"github.com/DituLin/Atrium/internal/clock"
 	"github.com/DituLin/Atrium/internal/config"
 	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/iot"
 )
 
 // ObservationTTL applies independently to Core responses and NAS checks.
@@ -20,6 +21,7 @@ type SourceReader interface {
 
 // HouseComposer builds public House snapshots from persisted source observations.
 type HouseComposer struct {
+	iot     iot.SnapshotReader
 	cfg     *config.Config
 	sources SourceReader
 	home    *clock.Home
@@ -44,6 +46,7 @@ func (c *HouseComposer) Compose(ctx context.Context) *HouseResponse {
 		Profile:     unconnected("profile", "房屋资料", NotProvided),
 		Environment: unconnected("environment", "环境数据", NotSupported),
 	}
+	response.IoT = c.composeIoT(ctx)
 	rows, err := c.sources.List(ctx)
 	if err != nil {
 		for _, configured := range c.cfg.Sources {
@@ -91,7 +94,7 @@ func unconnected(id, label string, reason Reason) SourceSnapshot[struct{}] {
 }
 
 func (c *HouseComposer) formatTime(t *time.Time) *string {
-	if t == nil {
+	if t == nil || t.IsZero() {
 		return nil
 	}
 	formatted := t.In(c.home.Location()).Format(time.RFC3339Nano)

@@ -40,7 +40,7 @@ var ErrQueueFull = errors.New("ws: send queue overflow")
 type outgoing struct {
 	data []byte
 	// droppable marks a message whose loss is harmless because the client
-	// re-fetches anyway: only data.changed qualifies.
+	// re-fetches anyway: ordinary data.changed qualifies, cache clears do not.
 	droppable bool
 }
 
@@ -107,7 +107,16 @@ func (s *Session) Send(msgType string, payload any) error {
 	if err != nil {
 		return err
 	}
-	return s.enqueue(outgoing{data: data, droppable: msgType == TypeDataChanged})
+	droppable := msgType == TypeDataChanged
+	if changed, ok := payload.(DataChanged); ok {
+		for _, topic := range changed.Topics {
+			if topic == string(domain.TopicIoTClear) {
+				droppable = false
+				break
+			}
+		}
+	}
+	return s.enqueue(outgoing{data: data, droppable: droppable})
 }
 
 // close records the close reason once and stops the writer.

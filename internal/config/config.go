@@ -7,6 +7,7 @@ import (
 
 // Config is the whole configuration file (technical design §10).
 type Config struct {
+	IoT           IoT           `yaml:"iot"`
 	Home          Home          `yaml:"home"`
 	Server        Server        `yaml:"server"`
 	Storage       Storage       `yaml:"storage"`

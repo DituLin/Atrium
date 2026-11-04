@@ -184,6 +184,16 @@ func (c *Config) normalize() error {
 			return err
 		}
 	}
+	for _, p := range []*string{&c.IoT.HomeAssistant.TokenFile, &c.IoT.HomeAssistant.CAFile} {
+		if *p != "" {
+			if strings.TrimSpace(*p) == "" {
+				return errors.New("iot: token_file and ca_file must not be whitespace-only")
+			}
+			if *p, err = ExpandPath(*p); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 

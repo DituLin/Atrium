@@ -19,6 +19,9 @@ var growthProfileEntityID = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_-]{0,127}
 // Validate enforces every rule from technical design §10.
 func (c *Config) Validate() error {
 	var errs []error
+	if err := c.IoT.Validate(); err != nil {
+		errs = append(errs, err)
+	}
 	add := func(format string, args ...any) { errs = append(errs, fmt.Errorf(format, args...)) }
 
 	if c.Home.Timezone == "" {

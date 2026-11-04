@@ -1919,11 +1919,87 @@ components:
               maxItems: 0
               items: false
 
+    HouseIoT:
+      type: object
+      additionalProperties: false
+      description: >-
+        只读设备观测；禁用时省略 iot。连接成功为 available（即使部分实体不可用），
+        首次同步为 loading/not_observed，断连且有历史成功为 stale/expired，读取失败为 failed/read_failed 且 instances 为空。
+        Read-only observations; omit iot when disabled. Connected is available even with unavailable entities;
+        first sync is loading/not_observed; disconnected with prior success is stale/expired;
+        read failure is failed/read_failed with empty instances. No device controls.
+      required: [availability, reason, instances]
+      properties:
+        availability: { type: string, enum: [loading, available, stale, failed] }
+        reason: { enum: [null, not_observed, expired, read_failed] }
+        instances:
+          type: array
+          items: { $ref: "#/components/schemas/HouseIoTInstance" }
+    HouseIoTInstance:
+      type: object
+      additionalProperties: false
+      required: [id, provider, status, generation, last_success_at, devices]
+      properties:
+        id: { type: string }
+        provider: { const: home_assistant }
+        status: { enum: [disconnected, connecting, connected] }
+        generation: { type: integer, minimum: 0 }
+        last_success_at: { type: [string, "null"], format: date-time }
+        devices:
+          type: array
+          items: { $ref: "#/components/schemas/HouseIoTDevice" }
+    HouseIoTDevice:
+      type: object
+      additionalProperties: false
+      required: [id, name, room_id, room_name, capabilities]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        room_id: { type: string }
+        room_name: { type: string }
+        capabilities:
+          type: array
+          items: { $ref: "#/components/schemas/HouseIoTCapability" }
+    HouseIoTCapability:
+      type: object
+      additionalProperties: false
+      required: [id, name, kind, observation]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        kind: { enum: [power, humidity, temperature, operating_state, battery, filter_life] }
+        observation: { $ref: "#/components/schemas/HouseIoTObservation" }
+    HouseIoTObservation:
+      type: object
+      additionalProperties: false
+      description: >-
+        仅当前配置允许的设备与能力；未知或不可用值为 null，不能当作关闭或零。
+        来源更新时间、采样时间、接收时间和确认时间相互独立，未知时间为 null，使用家庭时区。
+        Only currently configured devices and capabilities; unknown/unavailable values are null, never false or zero.
+        Source update, sample, receipt and confirmation times are independent; unknown times are null in the home timezone.
+        No provider entity IDs, URLs, credentials or raw errors. 无提供方实体 ID、URL、凭据或原始错误。
+      required: [value, availability, source_updated_at, sampled_at, received_at, confirmed_at]
+      properties:
+        value:
+          oneOf:
+            - { type: boolean }
+            - { type: number }
+            - { type: string, enum: [off, idle, active, paused, error] }
+            - { type: "null" }
+        unit: { enum: ["%", "°C"] }
+        availability: { enum: [available, unknown, unavailable] }
+        reason: { enum: [source_unknown, source_unavailable, missing_value, invalid_value, disconnected] }
+        source_updated_at: { type: [string, "null"], format: date-time }
+        sampled_at: { type: [string, "null"], format: date-time }
+        received_at: { type: [string, "null"], format: date-time }
+        confirmed_at: { type: [string, "null"], format: date-time }
+
     HouseResponse:
       type: object
       additionalProperties: false
       required: [schema_version, generated_at, home, core, nas, profile, environment]
       properties:
+        iot: { $ref: "#/components/schemas/HouseIoT" }
         schema_version: { type: integer, const: 1 }
         generated_at: { type: string, format: date-time }
         home:

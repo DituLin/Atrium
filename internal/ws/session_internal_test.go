@@ -63,3 +63,13 @@ func TestCloseCodesMatchTheProtocol(t *testing.T) {
 	assert.Equal(t, 64*1024, MaxMessageBytes)
 	assert.Equal(t, 64, SendQueueSize)
 }
+
+func TestIoTClearCannotBeSilentlyDropped(t *testing.T) {
+	s := newTestSession()
+	for i := 0; i < SendQueueSize; i++ {
+		require.NoError(t, s.Send(TypeHeartbeatAck, HeartbeatAck{ServerTime: "now"}))
+	}
+	require.ErrorIs(t, s.Send(TypeDataChanged, DataChanged{Topics: []string{"iot", "iot.clear"}}), ErrQueueFull)
+	require.True(t, s.Closed())
+	require.Zero(t, s.Dropped())
+}

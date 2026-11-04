@@ -107,3 +107,8 @@ describe('data.changed: throttling', () => {
     expect(calls).toEqual(['home', 'collection', 'slideshow']);
   });
 });
+
+it('routes IoT only to visible House, never photo, home or overview requests', () => {
+ expect(refetchTargets(['iot'], { ...BROWSING, houseActive: true, overviewActive: true })).toEqual(['house']);
+ expect(refetchTargets(['iot'], BROWSING)).toEqual([]);
+});

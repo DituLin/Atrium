@@ -1,7 +1,10 @@
 // Package family exposes deterministic, public family projections.
 package family
 
-import "github.com/DituLin/Atrium/internal/domain"
+import (
+	"github.com/DituLin/Atrium/internal/domain"
+	"github.com/DituLin/Atrium/internal/iot"
+)
 
 // Availability describes the source snapshot, independently of device health.
 type Availability string
@@ -63,6 +66,7 @@ type NASHealth struct {
 
 // HouseResponse deliberately excludes source paths, capacity and admin details.
 type HouseResponse struct {
+	IoT           *HouseIoT                    `json:"iot,omitempty"`
 	SchemaVersion int                          `json:"schema_version"`
 	GeneratedAt   string                       `json:"generated_at"`
 	Home          HouseHome                    `json:"home"`
@@ -76,4 +80,50 @@ type HouseResponse struct {
 type HouseHome struct {
 	Name     string `json:"name"`
 	Timezone string `json:"timezone"`
+}
+
+// HouseIoT is an independent read-only module; source health is separate from values.
+type HouseIoT struct {
+	Availability Availability       `json:"availability"`
+	Reason       *Reason            `json:"reason"`
+	Instances    []HouseIoTInstance `json:"instances"`
+}
+
+// HouseIoTInstance reports source connection health and allowed devices.
+type HouseIoTInstance struct {
+	ID            string               `json:"id"`
+	Provider      string               `json:"provider"`
+	Status        iot.ConnectionStatus `json:"status"`
+	Generation    uint64               `json:"generation"`
+	LastSuccessAt *string              `json:"last_success_at"`
+	Devices       []HouseIoTDevice     `json:"devices"`
+}
+
+// HouseIoTDevice groups public capabilities under a configured room.
+type HouseIoTDevice struct {
+	ID           string               `json:"id"`
+	Name         string               `json:"name"`
+	RoomID       string               `json:"room_id"`
+	RoomName     string               `json:"room_name"`
+	Capabilities []HouseIoTCapability `json:"capabilities"`
+}
+
+// HouseIoTCapability carries one normalized, read-only observation.
+type HouseIoTCapability struct {
+	ID          string              `json:"id"`
+	Name        string              `json:"name"`
+	Kind        iot.Kind            `json:"kind"`
+	Observation HouseIoTObservation `json:"observation"`
+}
+
+// HouseIoTObservation distinguishes value availability from synchronization times.
+type HouseIoTObservation struct {
+	Value           any              `json:"value"`
+	Unit            string           `json:"unit,omitempty"`
+	Availability    iot.Availability `json:"availability"`
+	Reason          iot.Reason       `json:"reason,omitempty"`
+	SourceUpdatedAt *string          `json:"source_updated_at"`
+	SampledAt       *string          `json:"sampled_at"`
+	ReceivedAt      *string          `json:"received_at"`
+	ConfirmedAt     *string          `json:"confirmed_at"`
 }

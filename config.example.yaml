@@ -97,3 +97,44 @@ backup:
   dir: ""                             # must be outside every source root and outside data_dir
   time: "03:00"
   keep: 7
+
+# 只读 IoT 配置示例；默认关闭。仅保存令牌文件路径，不要填写令牌内容。
+# Read-only IoT configuration example; disabled by default. Store a token file path, never a token.
+# 以下均为合成设备；启用前替换为自己的绑定，并使用有效 HTTPS 证书。
+# All devices below are synthetic; replace bindings and use valid HTTPS certificates before enabling.
+iot:
+  enabled: false
+  home_assistant:
+    id: home
+    url: "https://ha.example.invalid"
+    token_file: "/path/to/secrets/home-assistant-token"
+    ca_file: ""                       # 可选私有 CA / Optional private CA
+    devices:
+      - id: living_room_humidifier
+        name: "示例加湿器 / Example humidifier"
+        room_id: living_room
+        room_name: "客厅 / Living room"
+        capabilities:
+          - {id: power, kind: power, entity_id: humidifier.example}
+          - {id: humidity, name: "当前湿度 / Current humidity", kind: humidity, entity_id: humidifier.example, attribute: current_humidity, unit: "%"}
+          - id: operating_state
+            kind: operating_state
+            entity_id: humidifier.example
+            attribute: action
+            values: {off: off, idle: idle, humidifying: active}
+          - {id: filter_life, kind: filter_life, entity_id: sensor.example_filter_life}
+      - id: living_room_climate
+        name: "示例温湿度计 / Example thermohygrometer"
+        room_id: living_room
+        room_name: "客厅 / Living room"
+        capabilities:
+          - {id: temperature, kind: temperature, entity_id: sensor.example_temperature}
+          - {id: humidity, kind: humidity, entity_id: sensor.example_humidity}
+          - {id: battery, kind: battery, entity_id: sensor.example_battery}
+      - id: aquarium
+        name: "示例鱼缸 / Example aquarium"
+        room_id: living_room
+        room_name: "客厅 / Living room"
+        capabilities:
+          - {id: temperature, kind: temperature, entity_id: sensor.example_water_temperature}
+          - {id: power, kind: power, entity_id: switch.example_aquarium}

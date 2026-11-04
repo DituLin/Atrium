@@ -6,6 +6,39 @@ const HOUR_MS = 3600000;
 const WEEKDAYS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 const DIRECTIONS = ['北', '东北', '东', '东南', '南', '西南', '西', '西北'];
 
+export type WeatherIconKind = 'sun' | 'partly' | 'cloud' | 'fog' | 'rain' | 'snow' | 'storm' | 'unknown';
+const CONDITIONS: Record<string, { label: string; kind: WeatherIconKind }> = {
+  clear: { label: '晴', kind: 'sun' }, mainly_clear: { label: '晴间多云', kind: 'partly' },
+  partly_cloudy: { label: '多云', kind: 'partly' }, overcast: { label: '阴', kind: 'cloud' },
+  fog: { label: '雾', kind: 'fog' }, drizzle: { label: '毛毛雨', kind: 'rain' },
+  freezing_drizzle: { label: '冻毛毛雨', kind: 'rain' }, rain: { label: '雨', kind: 'rain' },
+  freezing_rain: { label: '冻雨', kind: 'rain' }, snow: { label: '雪', kind: 'snow' },
+  rain_showers: { label: '阵雨', kind: 'rain' }, snow_showers: { label: '阵雪', kind: 'snow' },
+  thunderstorm: { label: '雷雨', kind: 'storm' }, thunderstorm_with_hail: { label: '雷雨伴冰雹', kind: 'storm' },
+};
+// The same closed WMO groups as the provider's ConditionText(), localized here
+// so the wire format stays compatible with older clients and cached readings.
+const WMO_CONDITIONS: Record<number, string> = {
+  0: 'clear', 1: 'mainly_clear', 2: 'partly_cloudy', 3: 'overcast', 45: 'fog', 48: 'fog',
+  51: 'drizzle', 53: 'drizzle', 55: 'drizzle', 56: 'freezing_drizzle', 57: 'freezing_drizzle',
+  61: 'rain', 63: 'rain', 65: 'rain', 66: 'freezing_rain', 67: 'freezing_rain',
+  71: 'snow', 73: 'snow', 75: 'snow', 77: 'snow', 80: 'rain_showers', 81: 'rain_showers', 82: 'rain_showers',
+  85: 'snow_showers', 86: 'snow_showers', 95: 'thunderstorm', 96: 'thunderstorm_with_hail', 99: 'thunderstorm_with_hail',
+};
+const ENGLISH_ALIASES: Record<string, string> = { cloudy: 'partly_cloudy', sunny: 'clear', clear_sky: 'clear', showers: 'rain_showers' };
+function conditionKey(value: string): string { const key = value.trim().toLowerCase().replace(/[\s-]+/g, '_'); return ENGLISH_ALIASES[key] ?? key; }
+
+/** Preserve an explicit Chinese description. Otherwise known WMO codes or
+ * legacy English labels produce Chinese; unrecognized input remains unknown. */
+export function weatherConditionInfo(code: number | string | null | undefined, text: string | null | undefined): { label: string; kind: WeatherIconKind } {
+  const numeric = typeof code === 'number' ? code : typeof code === 'string' && /^\d+$/.test(code.trim()) ? Number(code) : -1;
+  const key = WMO_CONDITIONS[numeric];
+  const condition = key ? CONDITIONS[key] : (text ? CONDITIONS[conditionKey(text)] : undefined)
+    ?? (typeof code === 'string' ? CONDITIONS[conditionKey(code)] : undefined);
+  const supplied = text?.trim() ?? '';
+  return { label: /[\u3400-\u9fff]/.test(supplied) ? supplied : condition?.label ?? '天气待确认', kind: condition?.kind ?? 'unknown' };
+}
+
 function finite(value: unknown): value is number { return typeof value === 'number' && Number.isFinite(value); }
 function temperature(value: unknown): string { return finite(value) ? `${Math.round(value)}°` : '—'; }
 function clockTime(value: string | null | undefined, options: ClockFormatOptions | null): string | null {

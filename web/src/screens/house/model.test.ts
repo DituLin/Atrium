@@ -4,6 +4,14 @@ import { buildHouseChart } from './chart';
 import type { HouseSeries } from './model';
 
 const series = (samples: HouseSeries['samples']): HouseSeries => ({ samples, endAt: '2026-11-04T20:00:00Z', maxGapMs: 2 * 3600000, current: { value: 23, state: 'available' } });
+it('localizes the actual provider weather wire in the House outdoor summary', () => {
+  const model = houseDashboardFromHome({ schema_version: 1, server_time: '2026-11-04T20:00:00Z', version: 1,
+    home: { name: 'Synthetic', timezone: 'UTC' }, widgets: [{ type: 'weather', payload: {
+      provider: 'open-meteo', location_label: 'Synthetic', temperature_c: 18, condition_text: 'overcast', condition_code: 3,
+      fetched_at: '2026-11-04T19:59:00Z', stale: false,
+    } }] });
+  expect(model.weather?.text).toBe('阴');
+});
 it('never fills missing room telemetry or device control from the design; uses only current real weather', () => {
   const value = houseDashboardFromHome({ schema_version: 1, server_time: '2026-11-04T20:00:00Z', version: 1, home: { name: 'Synthetic', timezone: 'UTC' }, widgets: [{ type: 'weather', payload: { provider: 'synthetic', location_label: 'Demo', temperature_c: 14, condition_text: '晴', condition_code: 'clear', fetched_at: '2026-11-04T19:59:00Z', stale: true } }] });
   expect(value.rooms).toEqual([]); expect(value.devices).toEqual([]); expect(value.aquarium).toBeNull(); expect(value.temperature).toBeNull();

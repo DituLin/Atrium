@@ -35,3 +35,30 @@ it('marks stale observations and provides a genuine refresh action for remote OK
   fireEvent.keyDown(screen.getByRole('button', { name: '今日天气' }), { key: 'Enter' });
   expect(refresh).toHaveBeenCalledTimes(1);
 });
+
+it.each([
+  [0, 'clear', '晴'], [2, 'partly cloudy', '多云'], [3, 'overcast', '阴'],
+  [45, 'fog', '雾'], [61, 'rain', '雨'], [95, 'thunderstorm', '雷雨'],
+])('displays Chinese for genuine numeric WMO code %s and English provider text', (code, text, expected) => {
+  render(<WeatherCard weather={{ ...payload, condition_code: code, condition_text: text }} options={options} now={now} />);
+  expect(screen.getByText(expected)).toBeDefined(); expect(screen.queryByText(text)).toBeNull();
+});
+
+it.each([
+  [null, 'partly_cloudy', '多云'], ['rain', null, '雨'], [null, 'cloudy', '多云'],
+  [null, 'freezing rain', '冻雨'],
+])('localizes legacy English weather fallback %s / %s', (code, text, expected) => {
+  render(<WeatherCard weather={{ ...payload, condition_code: code, condition_text: text }} options={options} now={now} />);
+  expect(screen.getByText(expected)).toBeDefined();
+});
+
+it('preserves a user-provided Chinese condition description', () => {
+  render(<WeatherCard weather={{ ...payload, condition_code: 2, condition_text: ' 多云转晴 ' }} options={options} now={now} />);
+  expect(screen.getByText('多云转晴')).toBeDefined();
+});
+
+it('does not turn unknown weather into sunshine', () => {
+  render(<WeatherCard weather={{ ...payload, condition_code: 1234, condition_text: 'unknown' }} options={options} now={now} />);
+  expect(screen.getByText('天气待确认')).toBeDefined(); expect(screen.queryByText('晴')).toBeNull();
+  expect(screen.getByRole('button', { name: '今日天气' }).querySelector('.today-weather__condition .today-weather__icon--unknown')).not.toBeNull();
+});

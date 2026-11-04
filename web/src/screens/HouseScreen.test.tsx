@@ -5,9 +5,39 @@ import { AppProvider } from '../app/AppProvider';
 import { useApp } from '../app/context';
 import type { AppContextValue } from '../app/context';
 import { CurrentScreen } from '../App';
-import { houseFixture } from '../test/houseFixture';
+import { houseFixture, iotFixture } from '../test/houseFixture';
 import { overviewFixture } from '../test/overviewFixture';
 import { saveLastAuthOkAt } from '../core/authExpiry';
+
+it('retains deployed HA read-only capabilities and removes withdrawn devices without stealing focus', async () => {
+  const snapshot = { ...houseFixture(), iot: iotFixture() };
+  const fetch = await setup(false, snapshot);
+  await enter(); await screen.findByText('示例加湿器');
+  expect(screen.getByText('示例客厅')).toBeDefined(); expect(screen.getByText('未分配房间')).toBeDefined();
+  expect(screen.getByText('关闭')).toBeDefined(); expect(screen.getByText('0 %')).toBeDefined();
+  expect(screen.getByText('未知')).toBeDefined(); expect(screen.getByText('不可用')).toBeDefined();
+  expect(screen.queryByRole('switch')).toBeNull(); expect(screen.queryByText('刚测量')).toBeNull();
+  const region = screen.getByRole('region', { name: '已接入设备' }); region.focus();
+  fetch.mockResolvedValueOnce(new Response(JSON.stringify({ ...snapshot, iot: { ...snapshot.iot, instances: [] } })));
+  await act(() => app.house.load(true));
+  expect(screen.queryByText('示例加湿器')).toBeNull(); expect(document.activeElement).toBe(region);
+});
+
+it('keeps first sync, failed reads and disconnected history distinct through the deployed House API', async () => {
+  const fetch = await setup(false, { ...houseFixture(), iot: { ...iotFixture(), availability: 'loading', instances: [] } });
+  await enter(); await screen.findByText('设备状态等待读取');
+  const replace = async (iot: NonNullable<ReturnType<typeof houseFixture>['iot']>) => {
+    fetch.mockResolvedValueOnce(new Response(JSON.stringify({ ...houseFixture(), iot })));
+    await act(() => app.house.load(true));
+  };
+  await replace({ availability: 'failed', reason: 'read_failed', instances: [] });
+  expect(screen.getByText('暂时无法读取设备状态')).toBeDefined();
+  const data = iotFixture();
+  await replace({ ...data, availability: 'stale', instances: data.instances.map(instance => ({ ...instance, status: 'disconnected' })) });
+  expect(screen.getByText('设备状态待更新 · 显示上次观测')).toBeDefined();
+  expect(screen.getByText('Home Assistant · 未连接')).toBeDefined();
+  expect(screen.getByText('关闭')).toBeDefined(); expect(screen.getByText('不可用')).toBeDefined();
+});
 let app: AppContextValue;
 function Harness() { const value = useApp(); useEffect(() => { app = value; }, [value]); return <CurrentScreen />; }
 function key(key: string) { fireEvent.keyDown(document.activeElement!, { key }); }

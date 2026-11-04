@@ -1,9 +1,8 @@
 # WebSocket protocol
 
 This document is the contract between the backend and web tracks for the
-realtime channel. It reproduces §9 of
-`docs/tech/2026-09/atrium-home-hub/tech-design.md` verbatim; the design remains
-the authority, and any change must land in both places in the same commit.
+realtime channel. The original V0.3 section reproduces §9 of
+`docs/tech/2026-09/atrium-home-hub/tech-design.md` verbatim. The additive IoT contract below documents the implemented read-only extension.
 
 **Implementation status:** the endpoint itself is built in V0.3 (tasks B-301 to
 B-305). The contract is fixed now so the web track can build against it.
@@ -22,7 +21,7 @@ Server → client:
 | --- | --- | --- |
 | `session.ready` | `{screen: {id, name}, server_time, home_version, pending_command?: Command}` | first message after auth; `pending_command` is the newest `accepted` command not yet delivered, if still unexpired |
 | `screen.command` | `{command_id, sequence, kind, payload, issued_at, expires_at}` | `kind = navigate \| show \| refresh` |
-| `data.changed` | `{topics: ["home","photos","nas"], version}` | coalesced 250 ms per session; queue-overflow safe (dropped duplicates) |
+| `data.changed` | `{topics: ["home","photos","nas","iot","iot.clear"], version}` | coalesced 250 ms per session; queue-overflow safe (dropped duplicates) |
 | `heartbeat.ack` | `{server_time}` | |
 | `session.revoked` | `{reason}` | followed by close `4002` |
 | `session.superseded` | `{}` | followed by close `4003` |
@@ -98,3 +97,43 @@ shapes; nothing below changes a payload.
   type overflowing closes the session with `4004`.
 - **Frame size.** The read path bounds each frame at 64 KiB + 1 byte and closes
   with `4005` itself, rather than letting the library close with `1009`.
+
+## IoT 只读通知 / Read-only IoT notifications
+
+`data.changed` 的 `topics` 可包含 `iot`。通知仅表示持久化快照已变化；客户端重新读取
+`GET /api/v1/family/house`，不从通知推断设备值。IoT 使用现有合并机制；断线重连后也应重读。
+普通 `iot` 更新可保留现有画面；`iot.clear` 是授权/缓存清除信号，与 `iot` 一起发送，
+即使数据库删除失败但服务已隐藏缓存也会发出。客户端收到后必须立即废弃在途 House 请求、
+清空本地 IoT 观测，再重新读取；不得因刷新失败恢复旧值。清除通知在合并中保留，
+与普通更新同时出现时清除优先。WebSocket 发送队列不得静默丢弃清除通知；满队列关闭连接并要求重连。中枢/NAS 数据可保留。此通道和 House API 不提供设备控制命令。
+
+`data.changed.topics` may include `iot`. A notification means the persisted snapshot changed;
+clients refetch `GET /api/v1/family/house` instead of inferring device values from the event.
+IoT uses the existing coalescing mechanism; refetch after reconnect too. Neither this channel
+nor the House API provides device control commands.
+Ordinary `iot` updates may retain the displayed snapshot. `iot.clear`, sent alongside `iot`,
+is an authorization/cache-clear signal, emitted even if database deletion fails after the
+service has hidden its cache. Clients must immediately invalidate pending House requests,
+clear local IoT observations, then refetch; a failed read must never revive old values.
+Coalescing preserves this signal and clearing takes precedence over ordinary updates.
+The WebSocket send queue must not silently drop clear notifications; overflow closes the session for reconnect.
+Unrelated hub/NAS data may remain visible.
+
+House 的可选 `iot` 字段保持 `schema_version: 1`；禁用时省略。启用时返回
+`{availability, reason, instances}`，每个实例包含 `id/provider/status/generation/last_success_at/devices`。
+设备按 `room_id` 分组，能力的 `observation.value` 仅为布尔、数字、白名单状态或 null。
+连接成功即为 `available`，并不代表每个设备可用；首次同步为 `loading/not_observed`，
+断连且有历史成功为 `stale/expired`，读取失败为 `failed/read_failed` 且实例为空。
+授权清除后不返回此前的观测值；NAS 失败不影响 IoT。现有 profile/environment 与 Overview 来源保持不变。
+
+The optional House `iot` field retains `schema_version: 1` and is omitted when disabled.
+When enabled it returns `{availability, reason, instances}`; each instance contains
+`id/provider/status/generation/last_success_at/devices`. Group devices by `room_id`;
+capability `observation.value` is a boolean, number, whitelisted state or null.
+Connected means `available`, independently of device availability. First sync is
+`loading/not_observed`; disconnected with prior success is `stale/expired`; a read failure
+is `failed/read_failed` with empty instances. Cleared authorization never returns prior
+observations; NAS failures do not affect IoT. Existing profile/environment and Overview sources are unchanged.
+
+完整字段、枚举与可空时间见 [OpenAPI](openapi.yaml)。
+See [OpenAPI](openapi.yaml) for all fields, enums and nullable timestamps.

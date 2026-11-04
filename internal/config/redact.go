@@ -9,6 +9,8 @@ import (
 // disclose the NAS layout are replaced with a stable placeholder.
 func (c *Config) Redacted() *Config {
 	cp := *c
+	// Provider bindings and endpoint/secret paths stay private.
+	cp.IoT.HomeAssistant = HomeAssistant{ID: c.IoT.HomeAssistant.ID}
 	// The display projection authorizes profiles per public entity; printable
 	// configuration never carries personal birth dates, sex, or entity bindings.
 	cp.Archives.GrowthProfiles = nil
