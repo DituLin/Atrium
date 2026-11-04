@@ -28,7 +28,7 @@ export const AlmanacCard = forwardRef<HTMLButtonElement, Props>(function Almanac
         {info ? <span className="today-almanac__lunisolar">
           <span className="today-almanac__lunar" aria-label={`农历${info.lunar}`}>
             <span className="today-almanac__seal" aria-hidden="true">农<br />历</span>
-            <span className="today-almanac__lunar-date" aria-hidden="true">{info.lunar}</span>
+            <span className={`today-almanac__lunar-date${info.lunar.length > 4 ? ' today-almanac__lunar-date--long' : ''}`} aria-hidden="true">{info.lunar}</span>
           </span>
           <span className="today-almanac__ganzhi"><span>{info.year}</span> <span>{info.day}</span></span>
         </span> : <span className="today-almanac__range">此日期超出农历推算范围</span>}

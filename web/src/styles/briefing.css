@@ -25,6 +25,7 @@
 .today-almanac__lunar { display:flex; flex-direction:column; align-items:center; }
 .today-almanac__seal { width:calc(52 * var(--u)); height:calc(52 * var(--u)); display:flex; align-items:center; justify-content:center; border:calc(2 * var(--u)) solid #62d8b5; border-radius:calc(12 * var(--u)); color:#85e0c4; font-size:calc(20 * var(--u)); font-weight:700; line-height:1.05; text-align:center; }
 .today-almanac__lunar-date { margin-top:calc(22 * var(--u)); writing-mode:vertical-rl; font-size:calc(86 * var(--u)); font-weight:600; letter-spacing:.16em; line-height:1; white-space:nowrap; }
+.today-almanac__lunar-date--long { font-size:calc(64 * var(--u)); }
 .today-almanac__ganzhi { margin-left:calc(26 * var(--u)); padding-top:calc(74 * var(--u)); writing-mode:vertical-rl; font-size:calc(26 * var(--u)); letter-spacing:.32em; line-height:1.6; color:#a3aaa6; }
 .today-almanac__details { flex:0 0 calc(300 * var(--u)); display:flex; flex-direction:column; }
 .today-almanac__custom { display:flex; flex-direction:column; }

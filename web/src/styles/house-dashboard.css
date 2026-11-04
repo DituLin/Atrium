@@ -112,7 +112,7 @@
 .house-toggle > span { position: absolute; top: calc(4 * var(--u)); left: calc(4 * var(--u)); width: calc(26 * var(--u)); height: calc(26 * var(--u)); border-radius: 50%; background: #f2f4f3; }
 .house-toggle--on { background: var(--device-color); }
 .house-toggle--on > span { left: calc(30 * var(--u)); }
-.house-device--row { flex: 0 0 auto; height: calc(58 * var(--u)); min-height: calc(58 * var(--u)); border-radius: calc(20 * var(--u)); padding: 0 calc(88 * var(--u)) 0 calc(12 * var(--u)); flex-direction: row; align-items: center; background: rgba(255,255,255,.04); }
+.house-device--row { flex: 0 0 auto; width: 100%; height: calc(58 * var(--u)); min-height: calc(58 * var(--u)); border-radius: calc(20 * var(--u)); padding: 0 calc(88 * var(--u)) 0 calc(12 * var(--u)); flex-direction: row; align-items: center; background: rgba(255,255,255,.04); }
 .house-device--row + .house-device--row { margin-top: calc(8 * var(--u)); }
 .house-device--row:focus { background: #2c3230; transform: scale(1.015); box-shadow: 0 0 0 calc(2 * var(--u)) rgba(255,255,255,.25); }
 .house-device--row .house-device__icon { width: calc(40 * var(--u)); height: calc(40 * var(--u)); border-radius: calc(12 * var(--u)); }
