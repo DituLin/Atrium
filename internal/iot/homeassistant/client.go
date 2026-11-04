@@ -251,17 +251,13 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 	defer conn.CloseNow()
 	conn.SetReadLimit(4 << 20)
 	incoming := make(chan message, 256)
-	failure := make(chan struct{}, 1)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
+		defer close(incoming) // Reader termination follows all successfully queued messages.
 		for {
 			var m message
 			if wsjson.Read(ctx, conn, &m) != nil {
-				select {
-				case failure <- struct{}{}:
-				default:
-				}
 				return
 			}
 			select {
@@ -269,10 +265,6 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 			case <-ctx.Done():
 				return
 			default:
-				select {
-				case failure <- struct{}{}:
-				default:
-				}
 				return
 			}
 		}
@@ -290,11 +282,12 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 		timer := time.NewTimer(c.timings.Timeout)
 		defer timer.Stop()
 		select {
-		case m := <-incoming:
+		case m, ok := <-incoming:
+			if !ok {
+				return message{}, errSession
+			}
 			return m, nil
 		case <-timer.C:
-			return message{}, errSession
-		case <-failure:
 			return message{}, errSession
 		case <-ctx.Done():
 			return message{}, ctx.Err()
@@ -368,8 +361,6 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case <-failure:
-			return errSession
 		case <-deadline.C:
 			return errSession
 		case <-pong.C:
@@ -395,7 +386,10 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 					return e
 				}
 			}
-		case m := <-incoming:
+		case m, ok := <-incoming:
+			if !ok {
+				return errSession
+			}
 			if denied(m) {
 				return ErrUnauthorized
 			}

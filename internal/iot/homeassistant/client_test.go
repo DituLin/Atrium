@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -471,5 +472,87 @@ func TestSinkFailureIsReturned(t *testing.T) {
 	failure := errors.New("sink cannot accept updates")
 	if e = c.Run(ctx, failingConnectedSink{failure}); !errors.Is(e, failure) {
 		t.Fatalf("lost sink failure: %v", e)
+	}
+}
+
+func TestRejectionBeforeImmediateCloseIsTerminal(t *testing.T) {
+	previous := runtime.GOMAXPROCS(1)
+	defer runtime.GOMAXPROCS(previous)
+	for _, stage := range []string{"auth", "subscribe", "snapshot"} {
+		t.Run(stage, func(t *testing.T) {
+			srv := server(t, func(ctx context.Context, c *websocket.Conn) {
+				write(ctx, c, map[string]any{"type": "auth_required"})
+				read(t, ctx, c)
+				if stage == "auth" {
+					write(ctx, c, map[string]any{"type": "auth_invalid"})
+					return
+				}
+				write(ctx, c, map[string]any{"type": "auth_ok"})
+				v := read(t, ctx, c)
+				if stage == "snapshot" {
+					write(ctx, c, map[string]any{"id": v["id"], "type": "result", "success": true})
+					v = read(t, ctx, c)
+				}
+				write(ctx, c, map[string]any{"id": v["id"], "type": "result", "success": false, "error": map[string]any{"code": "unauthorized"}})
+			})
+			defer srv.Close()
+			cfg := fixture(t)
+			cfg.URL = srv.URL
+			c, e := New(cfg, WithHTTPClient(srv.Client()))
+			if e != nil {
+				t.Fatal(e)
+			}
+			for i := 0; i < 40; i++ {
+				ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+				s := make(sink, 20)
+				e = c.Run(ctx, s)
+				cancel()
+				if !errors.Is(e, ErrUnauthorized) {
+					t.Fatalf("rejection overtaken by close on attempt %d: %v", i, e)
+				}
+				await(t, s, func(u iot.Update) bool { return u.Replace && u.Status == iot.Disconnected })
+			}
+		})
+	}
+}
+
+type pausedSink struct {
+	sink
+	ready <-chan struct{}
+}
+
+func (s pausedSink) Publish(ctx context.Context, u iot.Update) error {
+	if u.Status == iot.Connected {
+		<-s.ready
+		time.Sleep(20 * time.Millisecond)
+	}
+	return s.sink.Publish(ctx, u)
+}
+func TestQueuedPermissionDenialPrecedesReaderClose(t *testing.T) {
+	for i := 0; i < 20; i++ {
+		closed := make(chan struct{})
+		srv := server(t, func(ctx context.Context, c *websocket.Conn) {
+			handshake(t, ctx, c)
+			v := read(t, ctx, c)
+			write(ctx, c, map[string]any{"id": v["id"], "type": "result", "success": true, "result": []any{state("on", "2026-01-01T00:00:01Z")}})
+			write(ctx, c, map[string]any{"id": v["id"], "type": "result", "success": false, "error": map[string]any{"code": "unauthorized"}})
+			c.CloseNow()
+			close(closed)
+		})
+		cfg := fixture(t)
+		cfg.URL = srv.URL
+		c, e := New(cfg, WithHTTPClient(srv.Client()))
+		if e != nil {
+			t.Fatal(e)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+		s := make(sink, 20)
+		e = c.Run(ctx, pausedSink{s, closed})
+		cancel()
+		srv.Close()
+		if !errors.Is(e, ErrUnauthorized) {
+			t.Fatalf("queued permission denial lost before reader close: %v", e)
+		}
+		await(t, s, func(u iot.Update) bool { return u.Replace && u.Status == iot.Disconnected })
 	}
 }
