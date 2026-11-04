@@ -22,9 +22,12 @@ func (p *Pipeline) ExtractMeta(ctx context.Context, job *domain.Job) error {
 		return err
 	}
 	switch photo.Status {
-	case domain.PhotoExcluded, domain.PhotoRemoved:
+	case domain.PhotoExcluded, domain.PhotoRemoved, domain.PhotoUnsupported:
 		return nil
 	default:
+	}
+	if photo.PreviewStatus == domain.PreviewFailed {
+		return nil
 	}
 
 	f, fsys, err := p.openSource(ctx, photo)
@@ -62,6 +65,7 @@ func (p *Pipeline) ExtractMeta(ctx context.Context, job *domain.Job) error {
 		CapturedConfidence:    captured.Confidence,
 		CapturedDay:           captured.Day,
 		Error:                 captured.Error,
+		PublishWithoutPreview: p.opts.Media.PreviewMode == "on_demand",
 	}
 	if err := p.opts.DB.Photos().SetMeta(ctx, photo.ID, res, now); err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
@@ -72,9 +76,11 @@ func (p *Pipeline) ExtractMeta(ctx context.Context, job *domain.Job) error {
 
 	// Metadata first, pixels second: the chain keeps preview work behind the
 	// cheap read so a slow share cannot starve the index.
-	if err := p.opts.Queue.EnqueuePhoto(ctx, domain.JobBuildPreview,
-		photo.ID, photo.SourceID, jobs.PriorityBuildPreview); err != nil {
-		return err
+	if p.opts.Media.PreviewMode != "on_demand" {
+		if err := p.opts.Queue.EnqueuePhoto(ctx, domain.JobBuildPreview,
+			photo.ID, photo.SourceID, jobs.PriorityBuildPreview); err != nil {
+			return err
+		}
 	}
 	p.publish(domain.TopicPhotos, domain.TopicHome)
 	return nil

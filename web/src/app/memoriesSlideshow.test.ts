@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import type { MemoriesResponse, PhotoItem } from '../types/api';
+import type { MemoriesResponse, PhotoItem, PreviewStatus } from '../types/api';
 import { appReducer, createInitialState } from './state';
 import { currentSlide, initialSlideshowState, slideshowReducer } from './slideshow';
 const item = (id: string) => ({ id, preview: { status: 'ready' }, resume_cursor: `anchor:${id}` }) as PhotoItem & { resume_cursor: string };
 const page = (ids: string[], day = '2026-11-02', next: string | null = null): MemoriesResponse => ({ items: ids.map(item), next_cursor: next, meta: { collection: 'memories', day, screen_id: 'screen-a', total: ids.length } });
 function started() { return slideshowReducer(initialSlideshowState, { type: 'slideshow.memoriesStarted', resumeCursor: 'anchor:b' }); }
 describe('daily slideshow', () => {
+  it('keeps uncached metadata-ready photos in the daily order instead of biasing it toward cached sources', () => {
+    const start = started();
+    const statuses: PreviewStatus[] = ['ready', 'pending', 'processing', 'evicted', 'unavailable', 'failed'];
+    const cold = page(statuses);
+    cold.items.forEach((photo, index) => { photo.preview.status = statuses[index]!; });
+    const loaded = slideshowReducer(start, { type: 'slideshow.memoriesLoaded', generation: start.generation, page: cold });
+    expect(loaded.round.map(photo => photo.id)).toEqual(statuses.slice(0, -1));
+    expect(loaded.displayedCursor).toBeNull();
+  });
   it('accepts an inclusive resumed page and keeps the last actually displayed anchor', () => {
     const start = started();
     const loaded = slideshowReducer(start, { type: 'slideshow.memoriesLoaded', generation: start.generation, page: page(['b', 'c']) });

@@ -137,6 +137,9 @@ func (c *Config) Validate() error {
 		}
 	}
 
+	if c.Media.PreviewMode != "eager" && c.Media.PreviewMode != "on_demand" {
+		add("media.preview_mode %q must be eager or on_demand", c.Media.PreviewMode)
+	}
 	if c.Media.Workers < 1 {
 		add("media.workers must be at least 1")
 	}

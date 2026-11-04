@@ -5,7 +5,8 @@
  *  - the list is one `random` round: a seed produces a shuffle with no repeats,
  *    and when the round's `next_cursor` is null the round is over and the
  *    driver starts a new one with a fresh seed;
- *  - items whose `preview.status` is not `ready` never enter the round;
+ *  - daily rounds include uncached photos; preview bytes are prepared on demand;
+ *    legacy seeded rounds retain their ready-only filtering;
  *  - `202` counts a retry (max 3) and then skips for the round, `503` skips for
  *    the round, `404/410` drops the photo from the list entirely;
  *  - fewer than two playable photos means a fixed display: `advance` is a no-op
@@ -194,7 +195,7 @@ export function slideshowReducer(
       if (state.memories?.screen_id === action.page.meta.screen_id && action.page.meta.day < state.memories.day) return state;
       const changedDay = state.memories !== null && (state.memories.day !== action.page.meta.day || state.memories.screen_id !== action.page.meta.screen_id);
       const replace = action.replace || changedDay || !state.loaded;
-      const ready = action.page.items.filter(isReady);
+      const ready = action.page.items.filter(item => item.preview.status !== 'failed');
       const known = new Set((replace ? [] : state.round).map(item => item.id));
       const round = replace ? ready : [...state.round, ...ready.filter(item => !known.has(item.id))];
       const displayedStillPresent = round.some(item => item.id === state.displayedId);

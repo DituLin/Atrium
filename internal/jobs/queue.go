@@ -17,9 +17,12 @@ import (
 // Job priorities from design §6.2: metadata before previews, so a photo
 // becomes describable before it becomes displayable.
 const (
-	PriorityExtractMeta  = 10
-	PriorityBuildPreview = 5
-	PriorityMaintenance  = 1
+	// A screen-requested preview in on-demand mode must not wait behind a
+	// large metadata import. Eager background previews keep their old priority.
+	PriorityDemandPreview = 20
+	PriorityExtractMeta   = 10
+	PriorityBuildPreview  = 5
+	PriorityMaintenance   = 1
 )
 
 // MaxAttempts is the number of tries before a job is failed permanently.

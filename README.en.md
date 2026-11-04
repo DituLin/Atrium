@@ -38,6 +38,8 @@ The TV can use a browser or the standalone Android host. Home, Media, Today, Arc
 
 Home [“Memories”](docs/usage/daily-memories.en.md) is implemented: a stable random order for each household-zone day, per-screen resume from the last successfully displayed item, the same order on repeat loops that day, and mixed playback from independent authorized photo sources. Ordinary Media random collections keep their existing behavior. “Memories” is a display name, without AI scoring or automated highlight selection. Service deployment and browser validation are complete for this release; physical TV validation awaits available devices.
 
+[On-demand previews and a small cache](docs/usage/photo-cache.en.md) support a media budget of approximately 2 GiB, generating derivatives for playback and browsing. Cache eviction does not remove photos from the daily random pool.
+
 The [dark UI update](docs/ops/evidence/2026-10-20-tv-dark-ui/README.en.md) was deployed on 2026-10-20 with frontend `041b483` and the existing `c06c6a5` backend. Synthetic browser tests, build compatibility checks, and all six pages and remote controls in the official OnePlus app passed. Visual and performance acceptance on a physical TCL TV / Chrome 66 is still pending. Design examples without a data contract, such as household environment charts, are not presented as real data.
 
 The [Live Photo classification fix](docs/ops/evidence/2026-10-20-live-photo/README.en.md) `96b093a` was deployed over the same backend baseline that day. Only a boolean classification from the Apple marker is retained; still photos remain available and companion clips are excluded as standalone videos. Existing entries are automatically rechecked in the background.

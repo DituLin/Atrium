@@ -68,7 +68,7 @@ func TestPhotoReadIndexesUpgradeAndVisibility(t *testing.T) {
 	require.NoError(t, db.Photos().SetPreviewStatus(ctx, photo.ID, domain.PreviewEvicted, "", now))
 	ids, err = db.Photos().ListEligibleIDs(ctx, 100)
 	require.NoError(t, err)
-	require.Empty(t, ids)
+	require.Equal(t, []string{photo.ID}, ids, "cache eviction keeps the indexed photo eligible")
 	require.NoError(t, db.Sources().Revoke(ctx, "mixed", "test", now))
 	count, err = db.Photos().CountUnknownCaptured(ctx)
 	require.NoError(t, err)

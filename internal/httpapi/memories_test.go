@@ -164,7 +164,7 @@ func TestMemoriesNewPhotosDoNotReorderExistingPhotosOrShiftCursor(t *testing.T) 
 	assert.Equal(t, memoryIDs(before)[4:], continuedExisting)
 }
 
-func TestMemoriesMixesActiveSourcesAndImmediatelyExcludesRevokedOrUnreadyPhotos(t *testing.T) {
+func TestMemoriesMixesActiveSourcesAndImmediatelyExcludesRevokedOrUnpublishedPhotos(t *testing.T) {
 	h := newPhotoHarness(t)
 	token := memoryScreen(t, h, "memory_tv")
 	ctx := context.Background()
@@ -179,18 +179,18 @@ func TestMemoriesMixesActiveSourcesAndImmediatelyExcludesRevokedOrUnreadyPhotos(
 	h.seedPhoto(t, seedOptions{RelPath: "pending-photo.jpg", Status: domain.PhotoPending})
 	h.seedPhoto(t, seedOptions{RelPath: "excluded.jpg", Status: domain.PhotoExcluded})
 	before := getMemories(t, h, token, "?limit=100")
-	assert.Equal(t, 8, before.Meta.Total)
-	require.Len(t, before.Items, 8)
+	assert.Equal(t, 9, before.Meta.Total)
+	require.Len(t, before.Items, 9)
 	sources := map[string]int{}
 	for _, item := range before.Items {
 		sources[item.SourceID]++
 	}
-	assert.Equal(t, map[string]int{photoSourceID: 4, "second_album": 4}, sources)
+	assert.Equal(t, map[string]int{photoSourceID: 5, "second_album": 4}, sources)
 	require.NoError(t, h.db.Sources().Revoke(ctx, "second_album", "Synthetic revocation", h.clock.Now()))
 	// A saved cursor never restores access to a source that was revoked.
 	for _, item := range before.Items {
 		resumed := getMemories(t, h, token, "?limit=100&cursor="+url.QueryEscape(item.ResumeCursor))
-		assert.Equal(t, 4, resumed.Meta.Total)
+		assert.Equal(t, 5, resumed.Meta.Total)
 		for _, visible := range resumed.Items {
 			assert.Equal(t, photoSourceID, visible.SourceID)
 		}

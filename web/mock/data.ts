@@ -12,7 +12,9 @@ export const HOME_TIMEZONE = 'Asia/Singapore';
 export const HOME_NAME = 'Demo Home';
 export const HOME_UTC_OFFSET_SECONDS = 8 * 3600;
 
-export type MockPreviewStatus = 'ready' | 'pending' | 'failed';
+import type { PreviewStatus } from '../src/types/api.ts';
+
+export type MockPreviewStatus = PreviewStatus;
 
 export interface MockPhoto {
   id: string;

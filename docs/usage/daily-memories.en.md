@@ -20,7 +20,7 @@ Disabling browser storage, clearing site data, changing the origin (protocol, ho
 
 ## Mixing independent sources
 
-Home mixes independent photo sources that are currently active and authorized for display, selecting photos whose index and preview are ready. Each source retains its own identity, scan state and revocation state. There are no per-source quotas, so a source with more photos may appear more often. Identical content in two sources counts as two photos; cross-source content deduplication is not included.
+Home mixes independent photo sources that are currently active and authorized for display. With the on-demand cache update, metadata-ready indexed photos with regenerable previews participate even after cache eviction; see [on-demand previews and a small cache](photo-cache.en.md). Each source retains its own identity, scan state and revocation state. There are no per-source quotas, so a source with more photos may appear more often. Identical content in two sources counts as two photos; cross-source content deduplication is not included.
 
 Adding or removing photos during the day does not reshuffle the remaining photos. Newly ready photos ranked after the current position can appear later in that day's playback; photos ranked before it may appear in the next loop or on the next day. Initial historical imports can appear on Home and in All Photos, but are treated as a baseline import rather than all being counted as Recently Added.
 

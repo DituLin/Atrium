@@ -105,6 +105,7 @@ type Scan struct {
 
 // Media configures decoding and preview generation.
 type Media struct {
+	PreviewMode     string   `yaml:"preview_mode"` // eager | on_demand
 	Workers         int      `yaml:"workers"`
 	DecodeTimeout   Duration `yaml:"decode_timeout"`
 	PreviewMaxEdge  int      `yaml:"preview_max_edge"`

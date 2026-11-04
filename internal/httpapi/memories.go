@@ -230,7 +230,7 @@ func (a *API) handleMemories(w http.ResponseWriter, r *http.Request) {
 	for _, item := range pool[start:end] {
 		pageIDs = append(pageIDs, item.id)
 	}
-	// ListByIDs repeats the current source/ready visibility filter. A source
+	// ListByIDs repeats the current source/photo visibility filter. A source
 	// revoked after the pool read therefore does not leak into this page.
 	rows, err := a.deps.DB.Photos().ListByIDs(ctx, pageIDs)
 	if err != nil {
@@ -242,9 +242,6 @@ func (a *API) handleMemories(w http.ResponseWriter, r *http.Request) {
 	out.Meta.Collection, out.Meta.Day, out.Meta.ScreenID, out.Meta.Total = "memories", day, screenID, len(pool)
 	position := memoryCursor{Version: 1, Day: day, Screen: screenID, Inclusive: true}
 	for i := range rows {
-		if rows[i].PreviewStatus != domain.PreviewReady {
-			continue
-		}
 		position.Anchor = rows[i].ID
 		out.Items = append(out.Items, memoryDTO{
 			photoDTO:     a.toPhotoDTO(&rows[i], a.deps.Home.Location(), previews),
