@@ -66,3 +66,16 @@ func TestObservationJSONKeepsNullFalseAndClocks(t *testing.T) {
 		t.Fatal(string(b))
 	}
 }
+
+func TestInstancePublicProviderAndLastSuccess(t *testing.T) {
+	now := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	b, err := json.Marshal(Instance{ID: "home", Provider: "home_assistant", LastSuccessAt: &now})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, s := range []string{`"provider":"home_assistant"`, `"last_success_at":"2026-01-01T00:00:00Z"`} {
+		if !strings.Contains(string(b), s) {
+			t.Fatalf("missing %s: %s", s, b)
+		}
+	}
+}

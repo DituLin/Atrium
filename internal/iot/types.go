@@ -65,10 +65,13 @@ type Snapshot struct {
 	Instances []Instance `json:"instances"`
 }
 type Instance struct {
-	ID         string           `json:"id"`
-	Generation uint64           `json:"generation"`
-	Status     ConnectionStatus `json:"status"`
-	Devices    []Device         `json:"devices"`
+	Provider string `json:"provider"`
+	// LastSuccessAt records the most recent completed provider synchronization.
+	LastSuccessAt *time.Time       `json:"last_success_at,omitempty"`
+	ID            string           `json:"id"`
+	Generation    uint64           `json:"generation"`
+	Status        ConnectionStatus `json:"status"`
+	Devices       []Device         `json:"devices"`
 }
 type Device struct {
 	ID           string       `json:"id"`

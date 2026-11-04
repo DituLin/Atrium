@@ -2,6 +2,7 @@ package config
 
 import (
 	"gopkg.in/yaml.v3"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -113,5 +114,27 @@ func TestIoTCapabilityLabelAndUnit(t *testing.T) {
 	c.IoT.HomeAssistant.Devices[0].Capabilities[1].Unit = "°C"
 	if c.Validate() == nil {
 		t.Fatal("incompatible configured unit accepted")
+	}
+}
+
+func TestIoTRejectsWhitespaceSecretPathsBeforeExpansion(t *testing.T) {
+	for _, field := range []string{"token_file", "ca_file"} {
+		t.Run(field, func(t *testing.T) {
+			from := "token_file: ./secrets/ha-token"
+			if field == "ca_file" {
+				from = "ca_file: ./secrets/ca.pem"
+			}
+			raw := []byte(strings.Replace(iotYAML, from, field+": '   '", 1))
+			if _, err := Parse(raw); err == nil {
+				t.Fatal("Parse expanded whitespace path")
+			}
+			path := filepath.Join(t.TempDir(), "config.yaml")
+			if err := os.WriteFile(path, raw, 0600); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := Load(path); err == nil {
+				t.Fatal("Load accepted whitespace path")
+			}
+		})
 	}
 }
