@@ -333,3 +333,26 @@ func TestInjectedClientCannotDisableTLS(t *testing.T) {
 		t.Fatal("accepted TLS verification bypass")
 	}
 }
+
+func TestUnknownEventOrderResynchronizes(t *testing.T) {
+	srv := server(t, func(ctx context.Context, c *websocket.Conn) {
+		handshake(t, ctx, c)
+		v := read(t, ctx, c)
+		write(ctx, c, map[string]any{"id": v["id"], "type": "result", "success": true, "result": []any{state("on", "2026-01-01T00:00:03Z")}})
+		write(ctx, c, event(state("off", "not-a-time"), "not-a-time"))
+		<-ctx.Done()
+	})
+	defer srv.Close()
+	cfg := fixture(t)
+	cfg.URL = srv.URL
+	c, e := New(cfg, WithHTTPClient(srv.Client()))
+	if e != nil {
+		t.Fatal(e)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	s := make(sink, 20)
+	if e = c.session(ctx, s, 1); !errors.Is(e, errSession) {
+		t.Fatalf("unknown event order did not request resynchronization: %v", e)
+	}
+}

@@ -385,13 +385,21 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 					if _, ok := c.bindings[s.EntityID]; ok {
 						t, _ := time.Parse(time.RFC3339Nano, s.Updated)
 						next[s.EntityID] = record{&s, t}
-						if prior, ok := states[s.EntityID]; ok && !prior.updated.IsZero() && !t.IsZero() && prior.updated.After(t) {
-							next[s.EntityID] = prior
+						if prior, ok := states[s.EntityID]; ok && !prior.updated.IsZero() {
+							if t.IsZero() {
+								return errSession
+							}
+							if prior.updated.After(t) {
+								next[s.EntityID] = prior
+							}
 						}
 					}
 				}
 				for key, r := range buffer {
 					old, ok := next[key]
+					if ok && old.updated.IsZero() {
+						return errSession
+					}
 					if !ok || !r.updated.Before(old.updated) || r.updated.IsZero() {
 						next[key] = r
 					}
@@ -413,6 +421,9 @@ func (c *Client) session(parent context.Context, sink iot.Sink, g uint64) error 
 				t, _ := time.Parse(time.RFC3339Nano, m.Event.Time)
 				if s != nil {
 					t, _ = time.Parse(time.RFC3339Nano, s.Updated)
+				}
+				if t.IsZero() {
+					return errSession
 				}
 				r := record{s, t}
 				if pending {
