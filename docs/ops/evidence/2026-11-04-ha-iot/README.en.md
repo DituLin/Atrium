@@ -19,7 +19,7 @@ Candidate `a38fe0f` includes the on-demand cache changes deployed earlier that d
 
 ## Blocker and remaining acceptance
 
-The same signed candidate connects in the foreground, but TCP connections from an isolated launchd agent repeatedly fail with `no route to host`. Atrium does not appear in the system Local Network list. Background code identity and network permission are under investigation; this is not yet a confirmed root cause. Automatic review rejected diagnostic production re-enablement, and that path was not executed. User approval was requested for application identity/network authorization and a guarded retry after isolated validation.
+The same signed candidate connects in the foreground, but TCP connections from an isolated launchd agent repeatedly fail with `no route to host`. A subsequent system Network framework probe returned `nw_path_unsatisfied_reason_local_network_denied` (value 3), confirming the permission rejection. The host runs macOS 15.2. After user approval, an application identity with a usage description was registered, but both background and visible application checks remained denied without an actionable Atrium permission entry. Temporary probes exited and the registered application was restored to the release executable; production startup remains unchanged. A system-service configuration running as the original ordinary user is prepared, pending approval for isolated validation first.
 
 Pending: actual OnePlus rendering, real changes from at least two device classes, ten HA-to-screen latency samples, real disconnect/recovery and HA/host restart acceptance. Static readings, synthetic tests and foreground success do not substitute for these results.
 
