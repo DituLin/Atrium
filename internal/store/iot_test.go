@@ -267,3 +267,43 @@ func TestIoTBindingFingerprintCoversInterpretationAndFiltersEveryRead(t *testing
 		})
 	}
 }
+
+func TestIoTAuthorizationClearFailureHidesCacheUntilSuccessfulFullSync(t *testing.T) {
+	ctx := context.Background()
+	db := testutil.NewDB(t)
+	repo, err := db.NewIoT(ctx, iotConfig())
+	require.NoError(t, err)
+	_, err = repo.Apply(ctx, iotUpdate(1))
+	require.NoError(t, err)
+	_, err = db.SQL().Exec(`CREATE TRIGGER fail_iot_clear BEFORE DELETE ON iot_observations BEGIN SELECT RAISE(ABORT,'synthetic clear failure'); END`)
+	require.NoError(t, err)
+	changed, err := repo.Apply(ctx, iot.Update{InstanceID: "home", Generation: 1, Status: iot.Disconnected, Replace: true})
+	require.Error(t, err)
+	require.False(t, changed)
+	assertHidden := func() {
+		t.Helper()
+		snapshot, err := repo.Read(ctx)
+		require.NoError(t, err)
+		require.Nil(t, snapshot.Instances[0].LastSuccessAt)
+		require.Nil(t, snapshot.Instances[0].Devices[0].Capabilities[0].Observation.Value)
+	}
+	assertHidden()
+	// A failed complete synchronization must not re-expose the rolled-back values.
+	_, err = repo.Apply(ctx, iotUpdate(2))
+	require.Error(t, err)
+	assertHidden()
+	_, err = db.SQL().Exec(`DROP TRIGGER fail_iot_clear`)
+	require.NoError(t, err)
+	_, err = repo.Apply(ctx, iot.Update{InstanceID: "home", Generation: 2, Status: iot.Disconnected})
+	require.NoError(t, err)
+	assertHidden()
+	_, err = repo.Apply(ctx, iot.Update{InstanceID: "home", Generation: 3, Status: iot.Connecting})
+	require.NoError(t, err)
+	assertHidden()
+	_, err = repo.Apply(ctx, iotUpdate(3))
+	require.NoError(t, err)
+	snapshot, err := repo.Read(ctx)
+	require.NoError(t, err)
+	require.Equal(t, true, snapshot.Instances[0].Devices[0].Capabilities[0].Observation.Value)
+	require.NotNil(t, snapshot.Instances[0].LastSuccessAt)
+}

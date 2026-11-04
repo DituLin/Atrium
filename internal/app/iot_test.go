@@ -135,3 +135,22 @@ func TestIoTUnauthorizedClearsPreviousSuccess(t *testing.T) {
 	require.Nil(t, snapshot.Instances[0].LastSuccessAt)
 	require.Nil(t, snapshot.Instances[0].Devices[0].Capabilities[0].Observation.Value)
 }
+
+func TestIoTUnauthorizedSinkClearFailureCannotExposeCachedValues(t *testing.T) {
+	s, _, db := serviceFixture(t)
+	s.factory = func() (iot.Adapter, error) {
+		return iotAdapterFunc(func(ctx context.Context, sink iot.Sink) error {
+			require.NoError(t, sink.Publish(ctx, appIoTUpdate()))
+			_, err := db.SQL().Exec(`CREATE TRIGGER fail_iot_clear BEFORE DELETE ON iot_observations BEGIN SELECT RAISE(ABORT,'synthetic failure'); END`)
+			require.NoError(t, err)
+			return sink.Publish(ctx, iot.Update{InstanceID: "home", Generation: 1, Status: iot.Disconnected, Replace: true})
+		}), nil
+	}
+	s.Run(context.Background())
+	require.Equal(t, int64(1), s.bus.Version(), "failed persistence must not notify")
+	snapshot, err := s.repo.Read(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, iot.Disconnected, snapshot.Instances[0].Status)
+	require.Nil(t, snapshot.Instances[0].LastSuccessAt)
+	require.Nil(t, snapshot.Instances[0].Devices[0].Capabilities[0].Observation.Value)
+}

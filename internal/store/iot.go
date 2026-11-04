@@ -24,6 +24,7 @@ type IoTRepository struct {
 	fingerprints map[string]string
 	generation   uint64
 	status       iot.ConnectionStatus
+	cacheHidden  bool
 }
 
 func iotObservationKey(device, capability string) string { return device + "\x00" + capability }
@@ -119,9 +120,14 @@ func (r *IoTRepository) Read(ctx context.Context) (iot.Snapshot, error) {
 	if !r.cfg.Enabled || r.db.iotSession != r {
 		return iot.Snapshot{Instances: []iot.Instance{}}, nil
 	}
-	obs, last, err := r.load(ctx, r.db.sql)
-	if err != nil {
-		return iot.Snapshot{}, err
+	obs := map[string]iot.Observation{}
+	var last *time.Time
+	if !r.cacheHidden {
+		var err error
+		obs, last, err = r.load(ctx, r.db.sql)
+		if err != nil {
+			return iot.Snapshot{}, err
+		}
 	}
 	inst := iot.Instance{ID: r.cfg.HomeAssistant.ID, Provider: "home_assistant", Generation: r.generation, Status: r.status, LastSuccessAt: last, Devices: []iot.Device{}}
 	for _, d := range r.cfg.HomeAssistant.Devices {
@@ -166,6 +172,11 @@ func (r *IoTRepository) Apply(ctx context.Context, u iot.Update) (changed bool, 
 	}()
 	if u.Status == iot.Connected && !u.Replace && (r.status != iot.Connected || u.Generation != r.generation) {
 		return false, errors.New("iot full synchronization required")
+	}
+	// Authorization revocation must hide prior readings even if SQL cannot
+	// delete them. Only a committed full synchronization restores visibility.
+	if u.Replace && u.Status == iot.Disconnected {
+		r.cacheHidden = true
 	}
 	err = r.db.InTx(ctx, func(tx *sql.Tx) error {
 		old, last, e := r.load(ctx, tx)
@@ -235,6 +246,9 @@ func (r *IoTRepository) Apply(ctx context.Context, u iot.Update) (changed bool, 
 	})
 	if err != nil {
 		return false, err
+	}
+	if u.Replace && u.Status == iot.Connected {
+		r.cacheHidden = false
 	}
 	r.generation = u.Generation
 	r.status = u.Status
