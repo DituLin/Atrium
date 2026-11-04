@@ -15,6 +15,7 @@ import type { HouseLoader } from './house';
 import type { ApiClient } from '../core/api';
 import type { WsClient } from '../core/ws';
 import { WS_PATH, createWsClient, wsUrl } from '../core/ws';
+import { WS_CLOSE } from '../types/ws';
 import type { CommandAckPayload, DataChangedTopic, RouteState } from '../types/ws';
 import { createTopicRefetcher } from './dataChanged';
 import { createRefetchers, toRefetchHandlers } from './refetchers';
@@ -109,12 +110,18 @@ export function useConnection(deps: ConnectionDeps): WsHandle {
       getRoute: () => toRouteStateOf(getState()),
       getAppliedSequence: () => getState().router.appliedSequence,
       preflight: () => syncSnapshot({ api, dispatch, getState }),
-      onMessage: session.handleMessage,
+      onMessage: message => {
+        // A disconnected screen may have missed an authorization-clear event.
+        // No old IoT values may survive into a newly authenticated session.
+        if (message.type === 'session.ready') house.invalidate('iot');
+        session.handleMessage(message);
+      },
       onPreflightError: (_error, status) => {
         if (status === 401) dispatch({ type: 'app.needsPairing' });
         else dispatch({ type: 'connection.attemptFailed' });
       },
       onClosed: (code, action) => {
+        if (code === WS_CLOSE.queueOverflow) house.invalidate('iot');
         dispatch({ type: 'connection.closed', code, action });
         if (action === 'pair' || action === 'clear-and-pair') {
           dispatch({ type: 'app.needsPairing' });

@@ -19,7 +19,7 @@ export function houseReducer(state: HouseState, action: HouseAction): HouseState
   if (action.type === 'house.reset') return initialHouseState;
   if (action.type === 'house.iotCleared') return {
     ...state, refreshing: false, request: null,
-    snapshot: state.snapshot ? { ...state.snapshot, iot: { availability: 'loading', reason: 'not_observed', instances: [] } } : null,
+    snapshot: state.snapshot?.iot ? { ...state.snapshot, iot: { availability: 'loading', reason: 'not_observed', instances: [] } } : state.snapshot,
   };
   if (action.type === 'house.loading') return { ...state, status: state.snapshot ? state.status : 'loading', refreshing: true, request: action.request };
   if (action.request !== state.request) return state;

@@ -105,3 +105,27 @@ it('clears IoT immediately before a failed refresh and rejects late pre-clear re
  await act(async () => { finish(snapshot); await pending; });
  expect(state!.house.snapshot?.iot?.instances).toEqual([]); expect(state!.house.status).toBe('stale');
 });
+
+it.each([4004, 1006])('resynchronizes IoT after close %s without retaining possibly revoked readings when House fails', async code => {
+ let state: AppState; let send!: (action: AppAction) => void;
+ const snapshot = { ...houseFixture(), iot: iotFixture() };
+ const getHouse = vi.fn(async () => snapshot); const api = { getHouse } as unknown as ApiClient;
+ const house = createHouseLoader(api, action => send(action));
+ function Harness() {
+  const [current, dispatch] = useReducer(appReducer, 0, createInitialState); state = current; send = dispatch;
+  useConnection({ api, house, state: current, dispatch, clientVersion: 'test', enabled: true });
+  useHouseLifecycle(house, current.router.route.name === 'house', current.connection.status);
+  return null;
+ }
+ render(<Harness />);
+ await act(async () => { send({ type: 'router.navigate', route: { name: 'house' } }); });
+ expect(state!.house.snapshot?.iot?.instances).toHaveLength(1);
+ getHouse.mockRejectedValue(new Error('unreachable'));
+ await act(async () => { socket.options!.onClosed!(code, 'reconnect'); });
+ if (code === 4004) expect(state!.house.snapshot?.iot?.instances).toEqual([]);
+ else expect(state!.house.snapshot?.iot?.instances).toHaveLength(1);
+ await act(async () => { socket.options!.onMessage({ type: 'session.ready', payload: { screen: { id: 'test', name: 'Test' }, server_time: snapshot.generated_at, home_version: 1 } } as ServerMessage); });
+ expect(state!.house.snapshot?.iot?.instances).toEqual([]);
+ expect(state!.house.snapshot?.core).toEqual(snapshot.core);
+ expect(state!.house.status).toBe('stale');
+});
