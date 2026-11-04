@@ -10,6 +10,7 @@
 
 import type { VideoRefresh } from './videoRefresh';
 import type { OverviewLoader } from './overview';
+import { refreshHomeSnapshot } from './homeRefresh';
 
 
 import type { HouseLoader } from './house';
@@ -50,10 +51,7 @@ export function createRefetchers(ports: RefetchPorts): Refetchers {
     return ports.house.load();
   };
 
-  const home = async (): Promise<void> => {
-    const snapshot = await api.getHome();
-    dispatch({ type: 'app.homeLoaded', home: snapshot, receivedAt: Date.now() });
-  };
+  const home = (): Promise<void> => refreshHomeSnapshot({ api, dispatch });
 
   const collection = async (): Promise<void> => {
     const list = getState().collection;
@@ -128,8 +126,13 @@ export function createRefetchers(ports: RefetchPorts): Refetchers {
       if (!ports.videos) throw new Error('Video refresh unavailable');
       await ports.videos.load(target); return;
     }
-    if (target.name === 'briefing') { await overview(); return; }
-    if (target.name === 'house') { await house(); return; }
+    if (target.name === 'briefing') {
+      // Weather is optional: its failure must not prevent Overview recovery.
+      await Promise.all([overview(), home().catch(() => undefined)]); return;
+    }
+    if (target.name === 'house') {
+      await Promise.all([house(), home().catch(() => undefined)]); return;
+    }
     const jobs: Array<Promise<void>> = [home()];
     switch (target.name) {
  case 'family': if(!ports.archives)throw new Error('Archive reader unavailable');jobs.push(ports.archives.load(target));break;

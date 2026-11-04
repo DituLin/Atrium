@@ -14,6 +14,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import { createHouseLoader } from './house';
+import { refreshHomeSnapshot } from './homeRefresh';
 import { useHouseLifecycle } from './useHouseLifecycle';
 import { authTransport } from '../core/auth';
 import { clearLastAuthOkAt, createAuthExpiryWatcher } from '../core/authExpiry';
@@ -52,6 +53,10 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
+  const refreshWeather = useCallback(() => refreshHomeSnapshot({ api, dispatch }), [api, dispatch]);
+  const refreshBriefing = useCallback(async () => {
+    await Promise.all([overview.load(), refreshWeather().catch(() => undefined)]);
+  }, [overview, refreshWeather]);
 
   useEffect(() => () => { api.invalidateAuthorization(); house.invalidate(); overview.invalidate(); }, [api, house, overview]);
 
@@ -101,8 +106,9 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
 
   // Home shows the first family notice, so the overview also polls there.
   const overviewScreen = selectScreen(state);
-  useOverviewLifecycle(overview, overviewScreen === 'briefing' || overviewScreen === 'dashboard', state.connection.status);
-  useHouseLifecycle(house, selectScreen(state) === 'house', state.connection.status);
+  useOverviewLifecycle(overview, overviewScreen === 'briefing' || overviewScreen === 'dashboard', state.connection.status,
+    overviewScreen === 'briefing' ? refreshWeather : undefined);
+  useHouseLifecycle(house, selectScreen(state) === 'house', state.connection.status, refreshWeather);
 
   // Report route changes immediately (design §6.5).
   const lastRoute = useRef(state.router.route);
@@ -120,8 +126,8 @@ export function AppProvider(props: { children: ReactNode }): ReactElement {
   }, [state.needsPairing]);
 
   const value = useMemo<AppContextValue>(
-    () => ({ state, dispatch, api, house, overview, videos, archives, clientVersion: CLIENT_VERSION, goBack }),
-    [state, api, house, overview, videos, archives, goBack, dispatch],
+    () => ({ state, dispatch, api, house, overview, videos, archives, refreshBriefing, clientVersion: CLIENT_VERSION, goBack }),
+    [state, api, house, overview, videos, archives, refreshBriefing, goBack, dispatch],
   );
 
   return <AppContext.Provider value={value}>{props.children}</AppContext.Provider>;

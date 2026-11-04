@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApp } from '../app/context';
 import { nasWidget, photoWidget } from '../app/homeSelect';
+import { refreshHomeSnapshot } from '../app/homeRefresh';
 import type { ScreenSelfResponse } from '../types/api';
 import { RemoteButton } from '../ui/RemoteButton';
 import { TopNav, focusTopNav } from '../ui/TopNav';
@@ -24,9 +25,10 @@ export function SettingsScreen() {
   const check = useCallback(async () => {
     const request = ++currentRequest.current;
     try {
-      const [home, screen] = await Promise.all([api.getHome(), api.getScreenSelf()]);
+      const [, screen] = await Promise.all([
+        refreshHomeSnapshot({ api, dispatch, isCurrent: () => request === currentRequest.current }), api.getScreenSelf(),
+      ]);
       if (request !== currentRequest.current) return;
-      dispatch({ type: 'app.homeLoaded', home, receivedAt: Date.now() });
       setSelf(screen); setNotice('已更新状态');
     } catch {
       if (request === currentRequest.current) setNotice('暂时无法更新 · 显示上次数据');

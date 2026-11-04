@@ -13,6 +13,7 @@ import type { ApiClient } from '../core/api';
 import type { PhotoAvailability } from './routeSync';
 import { isColdStart, photoToRevalidate, routeAfterReconnect } from './routeSync';
 import { routesEqual } from './router';
+import { refreshHomeSnapshot } from './homeRefresh';
 import type { AppAction, AppState } from './state';
 
 export interface SnapshotSyncPorts {
@@ -43,8 +44,7 @@ export async function syncSnapshot(ports: SnapshotSyncPorts): Promise<void> {
     appliedSequence: before.router.appliedSequence,
   });
 
-  const home = await ports.api.getHome();
-  ports.dispatch({ type: 'app.homeLoaded', home, receivedAt: now() });
+  await refreshHomeSnapshot({ api: ports.api, dispatch: ports.dispatch, now });
   ports.dispatch({ type: 'connection.snapshotOk' });
 
   // A cold start has nothing to restore, so nothing is re-validated: the boot

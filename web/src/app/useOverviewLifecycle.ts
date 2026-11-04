@@ -2,11 +2,14 @@ import { useEffect } from 'react';
 import type { OverviewLoader } from './overview';
 
 /** Only the visible Overview owns a polling timer; manual recovery may load independently. */
-export function useOverviewLifecycle(overview: OverviewLoader, active: boolean, connection: string): void {
+export function useOverviewLifecycle(overview: OverviewLoader, active: boolean, connection: string, refreshWeather?: () => Promise<void>): void {
   useEffect(() => {
     if (!active) return;
     let timer: ReturnType<typeof setInterval> | undefined;
-    const refresh = () => { void overview.load().catch(() => {}); };
+    const refresh = () => {
+      void overview.load().catch(() => {});
+      void refreshWeather?.().catch(() => {});
+    };
     const visibility = () => {
       clearInterval(timer); timer = undefined;
       if (document.visibilityState === 'hidden') return;
@@ -15,5 +18,5 @@ export function useOverviewLifecycle(overview: OverviewLoader, active: boolean, 
     visibility();
     document.addEventListener('visibilitychange', visibility);
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange', visibility); };
-  }, [overview, active, connection]);
+  }, [overview, active, connection, refreshWeather]);
 }

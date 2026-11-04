@@ -1,17 +1,20 @@
 import type { ReactElement, ReactNode } from 'react';
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useApp } from '../app/context';
 import { houseAvailability } from '../app/house';
 import type { ConnectionState } from '../app/connection';
 import { serverNow } from '../core/clock';
 import type { FamilyAvailability, HouseResponse } from '../types/api';
 import { RemoteButton } from '../ui/RemoteButton';
-import { TopNav, focusTopNav } from '../ui/TopNav';
-import { StatusRow } from './info/StatusRow';
+import { TopNav } from '../ui/TopNav';
 import type { Tone } from './info/familyDate';
 import { availabilityTone, familyClockTime, familyTime } from './info/familyDate';
 import { HEALTH } from './info/homeRows';
-import { onReadingKey, restoreReturnFocus } from './info/readingRegion';
+import { onReadingKey } from './info/readingRegion';
+import { HouseDashboard } from './house/HouseDashboard';
+import type { HouseDashboardHandle } from './house/HouseDashboard';
+import { houseDashboardFromHome } from './house/model';
+import { IoTObservations } from './house/IoTObservations';
 
 const SOURCE_STATUS: Partial<Record<FamilyAvailability, string>> = {
   loading: '尚未完成首次检查', failed: '暂时无法读取来源状态', stale: '状态待更新', not_connected: '未接入',
@@ -53,7 +56,7 @@ export function HouseScreen() {
   const { state, house } = useApp();
   const details = useRef<HTMLDivElement>(null);
   const recheck = useRef<HTMLButtonElement>(null);
-  useEffect(() => { restoreReturnFocus(state.router.restoreFocus, details.current); }, [state.router.restoreFocus]);
+  const dashboard = useRef<HouseDashboardHandle>(null);
   const { snapshot, status: loadStatus, refreshing } = state.house;
   const now = serverNow(state.clock, state.nowMs);
   const failed = loadStatus === 'stale';
@@ -72,45 +75,27 @@ export function HouseScreen() {
   const attention = cards.filter(card => card.tone === 'warn').length;
   const headline = !snapshot ? (loadStatus === 'failed' ? '暂时无法读取中枢状态' : '正在读取中枢状态…')
     : attention ? `${attention} 项需要留意` : cards.every(card => card.tone === 'ok') ? '中枢与照片来源运行正常' : '暂无需要留意的项目';
-  const profile = snapshot ? houseAvailability(snapshot.profile, now, failed) : null;
-  const environment = snapshot ? houseAvailability(snapshot.environment, now, failed) : null;
   const updated = snapshot ? familyClockTime(snapshot.generated_at, timezone, true) : null;
-  return <div className="page info-house">
-    <TopNav onDown={() => details.current?.focus()} />
-    <div className="page__heading">
-      <h1 className="page__title">房屋</h1>
-      <span className="info-house__headline muted">{headline}</span>
-    </div>
-    <main className="page__body info-house__grid">
-      <section className="info-house__hub">
-        <h2 className="page__section-title">中枢</h2>
-        <div className="info-house__reading" role="region" aria-label="中枢与来源" tabIndex={0} ref={details} onKeyDown={event => onReadingKey(event, {
-          right: () => recheck.current?.focus(), top: () => focusTopNav(), bottom: () => recheck.current?.focus(),
+  return <div className="page house-page">
+    <TopNav onDown={() => dashboard.current?.focusFirstRoom()} />
+    <HouseDashboard ref={dashboard} model={houseDashboardFromHome(state.home)} timezone={timezone} restoreFocus={state.router.restoreFocus} deviceAvailability={snapshot?.iot?.availability} unmappedDevices={snapshot?.iot?.instances.some(instance => instance.devices.length > 0)} deviceObservations={snapshot?.iot ? <IoTObservations iot={snapshot.iot} stale={failed || state.connection.status !== 'online'} timezone={timezone} onLeave={(element, direction) => {
+      if (direction === 'up' || direction === 'left') dashboard.current?.focusBefore(element);
+      else dashboard.current?.focusAfter(element);
+    }} /> : null} sourceStatus={
+      <section className="house-sources" aria-label="中枢与照片来源">
+        <div className="house-sources__heading"><h2>中枢与照片来源</h2><span>{headline}</span>
+          <RemoteButton className="btn" ref={recheck} data-house-focus="refresh" onClick={() => { void house.load().catch(() => {}); }} onDirection={key => {
+            if (key === 'up' || key === 'left' || key === 'down') details.current?.focus();
+          }}>重新检查</RemoteButton>
+        </div>
+        <div className="info-house__reading house-sources__reading" role="region" aria-label="中枢与来源" tabIndex={0} data-house-focus="sources" ref={details} onKeyDown={event => onReadingKey(event, {
+          right: () => recheck.current?.focus(), top: () => dashboard.current?.focusBefore(details.current), bottom: () => recheck.current?.focus(),
         })}>
           <div className="info-house__cards">{cards.map(card => <HubCard key={card.key} card={card} />)}</div>
           {snapshot && !snapshot.nas.length ? <p className="info-house__empty muted">{failed ? '状态待更新 · 上次没有可展示的照片来源' : '没有可展示的照片来源'}</p> : null}
         </div>
+        <footer className="house-sources__footer"><span>方向键 移动 · 返回 回到首页</span><span role="status">{feedback}{updated ? ` · 更新于 ${updated}` : ''}</span></footer>
       </section>
-      <aside className="info-house__side">
-        <h2 className="page__section-title">房间与资料</h2>
-        <div className="info-house__profile">
-          <svg className="info-house__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-6h4v6" /></svg>
-          {profile === 'available' ? <div className="info-house__profile-title serif">房屋资料已接入 · {snapshot!.profile.items.length} 条有效内容</div>
-            : <div className="info-house__profile-title serif">{profile === 'not_connected' ? '房屋资料尚未填写' : profile ? `房屋资料${SOURCE_STATUS[profile] ?? ''}` : '房屋资料等待读取'}</div>}
-          <p className="info-house__note">公开房屋资料待提供。这里只显示允许在客厅屏幕出现的内容。</p>
-        </div>
-        <StatusRow tone={environment ? availabilityTone(environment) : 'none'} label="环境数据"
-          value={environment === 'available' ? `${snapshot!.environment.items.length} 条有效内容` : environment ? SOURCE_STATUS[environment] ?? '尚未确认' : '等待读取'} />
-        <div className="info-actions">
-          <RemoteButton className="btn" ref={recheck} onClick={() => { void house.load().catch(() => {}); }} onDirection={key => {
-            if (key === 'up' || key === 'left') details.current?.focus();
-          }}>重新检查</RemoteButton>
-        </div>
-      </aside>
-    </main>
-    <footer className="hints">
-      <span>方向键 移动</span><span>↑↓ 滚动详情</span><span>返回 回到首页</span>
-      <span className="hints__end"><span role="status">{feedback}</span>{updated ? <span> · 更新于 {updated}</span> : null}</span>
-    </footer>
+    } />
   </div>;
 }

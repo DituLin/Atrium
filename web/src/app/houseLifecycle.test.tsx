@@ -18,6 +18,19 @@ vi.mock('../core/ws', async original => ({ ...await original<typeof WsModule>(),
 } }));
 afterEach(() => { vi.useRealTimers(); Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' }); });
 function visibility(value: string) { Object.defineProperty(document, 'visibilityState', { configurable: true, value }); document.dispatchEvent(new Event('visibilitychange')); }
+it('keeps House recovery independent while optionally refreshing weather', async () => {
+  vi.useFakeTimers();
+  const house = { load: vi.fn(async () => {}), invalidate() {} };
+  const weather = vi.fn(async () => { throw new Error('optional weather failure'); });
+  const hook = renderHook(() => useHouseLifecycle(house, true, 'online', weather));
+  expect(house.load).toHaveBeenCalledTimes(1);
+  expect(weather).toHaveBeenCalledTimes(1);
+  await act(() => vi.advanceTimersByTimeAsync(30_000));
+  expect(house.load).toHaveBeenCalledTimes(2);
+  expect(weather).toHaveBeenCalledTimes(2);
+  hook.unmount();
+  expect(vi.getTimerCount()).toBe(0);
+});
 it('polls at 30s only on visible House, refreshes immediately on foreground, entry and reconnect, and cleans timers', async () => {
   vi.useFakeTimers();
   const house = { load: vi.fn(async () => {}), invalidate: vi.fn() };

@@ -151,10 +151,22 @@ export interface WeatherWidgetPayload {
   provider: string;
   location_label: string;
   temperature_c: number | null;
-  condition_code: string | null;
+  condition_code: number | string | null;
   condition_text: string | null;
   fetched_at: string | null;
   stale: boolean;
+  humidity_pct?: number | null;
+  wind_speed_kmh?: number | null;
+  wind_direction_deg?: number | null;
+  temperature_min_c?: number | null;
+  temperature_max_c?: number | null;
+  sunset?: string | null;
+  /** Location timezone used for forecast-day boundaries; timestamps carry offsets. */
+  forecast_timezone?: string;
+  hourly?: Array<{ time: string; temperature_c: number | null }>;
+  daily?: Array<{ date: string; min_c: number | null; max_c: number | null; condition_code: number | null; sunset?: string | null }>;
+  /** Reserved for an explicitly connected air-quality source; weather codes are not AQI. */
+  air_quality?: { aqi: number; label?: string } | null;
 }
 
 export interface NoticeWidgetPayload {
@@ -283,7 +295,44 @@ export interface FamilySourceSnapshot<T> {
   items: Array<FamilyItemMeta & T>;
 }
 
+export interface IoTObservation {
+  value: boolean | number | 'off' | 'idle' | 'active' | 'paused' | 'error' | null;
+  unit?: string;
+  availability: 'available' | 'unknown' | 'unavailable';
+  reason?: string;
+  source_updated_at: string | null;
+  sampled_at: string | null;
+  received_at: string | null;
+  confirmed_at: string | null;
+}
+export interface IoTCapability {
+  id: string;
+  name: string;
+  kind: 'power' | 'humidity' | 'temperature' | 'operating_state' | 'battery' | 'filter_life';
+  observation: IoTObservation;
+}
+export interface IoTDevice {
+  id: string;
+  name: string;
+  room_id: string;
+  room_name: string;
+  capabilities: IoTCapability[];
+}
+export interface HouseIoT {
+  availability: 'available' | 'loading' | 'stale' | 'failed';
+  reason: string | null;
+  instances: Array<{
+    id: string;
+    provider: 'home_assistant';
+    status: 'disconnected' | 'connecting' | 'connected';
+    generation: number;
+    last_success_at: string | null;
+    devices: IoTDevice[];
+  }>;
+}
+
 export interface HouseResponse {
+  iot?: HouseIoT;
   schema_version: 1;
   generated_at: string;
   home: { name: string; timezone: string };

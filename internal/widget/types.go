@@ -92,13 +92,37 @@ type NASSource struct {
 
 // Weather is the optional P1 widget.
 type Weather struct {
-	Provider      string  `json:"provider"`
-	LocationLabel string  `json:"location_label"`
-	TemperatureC  float64 `json:"temperature_c"`
-	ConditionCode int     `json:"condition_code"`
-	ConditionText string  `json:"condition_text"`
-	FetchedAt     string  `json:"fetched_at"`
-	Stale         bool    `json:"stale"`
+	Provider         string        `json:"provider"`
+	LocationLabel    string        `json:"location_label"`
+	TemperatureC     float64       `json:"temperature_c"`
+	ConditionCode    int           `json:"condition_code"`
+	ConditionText    string        `json:"condition_text"`
+	HumidityPct      *float64      `json:"humidity_pct,omitempty"`
+	WindSpeedKMH     *float64      `json:"wind_speed_kmh,omitempty"`
+	WindDirectionDeg *float64      `json:"wind_direction_deg,omitempty"`
+	TemperatureMinC  *float64      `json:"temperature_min_c,omitempty"`
+	TemperatureMaxC  *float64      `json:"temperature_max_c,omitempty"`
+	Sunset           string        `json:"sunset,omitempty"`
+	ForecastTimezone string        `json:"forecast_timezone,omitempty"`
+	Hourly           []WeatherHour `json:"hourly,omitempty"`
+	Daily            []WeatherDay  `json:"daily,omitempty"`
+	FetchedAt        string        `json:"fetched_at"`
+	Stale            bool          `json:"stale"`
+}
+
+// WeatherHour is an hourly forecast. A missing temperature remains null.
+type WeatherHour struct {
+	Time         string   `json:"time"`
+	TemperatureC *float64 `json:"temperature_c"`
+}
+
+// WeatherDay uses the forecast location's calendar date, not the server date.
+type WeatherDay struct {
+	Date          string   `json:"date"`
+	MinC          *float64 `json:"min_c"`
+	MaxC          *float64 `json:"max_c"`
+	ConditionCode *int     `json:"condition_code"`
+	Sunset        string   `json:"sunset,omitempty"`
 }
 
 // Notice is a static operator message.

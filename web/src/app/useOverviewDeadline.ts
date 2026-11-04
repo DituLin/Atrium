@@ -5,9 +5,12 @@ import type { AppAction } from './state';
 /** The second tick is not precise enough for sub-second authorization of content. */
 export function useOverviewDeadline(snapshot: OverviewResponse | null, now: number, offsetMs: number, dispatch: (action: AppAction) => void): void {
   useEffect(() => {
-    if (!snapshot) return;
+    // Home tolerates an absent/partial optional overview. Never let a malformed
+    // notice source take down the ambient photo screen during recovery.
+    if (!snapshot?.sources?.notice || !Array.isArray(snapshot.sources.nas)) return;
     const times: number[] = [];
     for (const source of [snapshot.sources.notice, ...snapshot.sources.nas]) {
+      if (!source || !Array.isArray(source.items)) continue;
       if (source.expires_at) times.push(Date.parse(source.expires_at));
       for (const item of source.items) {
         if (item.valid_from) times.push(Date.parse(item.valid_from));

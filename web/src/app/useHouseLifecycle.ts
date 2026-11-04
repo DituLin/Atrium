@@ -2,11 +2,14 @@ import { useEffect } from 'react';
 import type { HouseLoader } from './house';
 
 /** Only the visible House owns a polling timer; manual recovery may load independently. */
-export function useHouseLifecycle(house: HouseLoader, active: boolean, connection: string): void {
+export function useHouseLifecycle(house: HouseLoader, active: boolean, connection: string, refreshWeather?: () => Promise<void>): void {
   useEffect(() => {
     if (!active) return;
     let timer: ReturnType<typeof setInterval> | undefined;
-    const refresh = () => { void house.load().catch(() => {}); };
+    const refresh = () => {
+      void house.load().catch(() => {});
+      void refreshWeather?.().catch(() => {});
+    };
     const visibility = () => {
       clearInterval(timer); timer = undefined;
       if (document.visibilityState === 'hidden') return;
@@ -15,5 +18,5 @@ export function useHouseLifecycle(house: HouseLoader, active: boolean, connectio
     visibility();
     document.addEventListener('visibilitychange', visibility);
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange', visibility); };
-  }, [house, active, connection]);
+  }, [house, active, connection, refreshWeather]);
 }

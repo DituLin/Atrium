@@ -4,6 +4,7 @@ import type { PhotoItem } from '../types/api';
 import { createRefetchers } from './refetchers';
 import { appReducer, createInitialState } from './state';
 import type { AppAction } from './state';
+import { syncSnapshot } from './snapshotSync';
 
 const photos = Array.from({ length: 120 }, (_, i) => ({ id: `p${i}`, preview: { status: 'ready' } }) as PhotoItem);
 function setup(items = photos) {
@@ -88,7 +89,7 @@ it('awaits House independently of failing home and preserves route, history and 
   const getHome = vi.fn(async () => { throw new Error('photo query failure'); });
   const refetch = createRefetchers({ api: { getHome } as unknown as ApiClient, house, dispatch, getState: () => state });
   let settled = false; const task = refetch.route({ name: 'house' }).then(() => { settled = true; });
-  await Promise.resolve(); expect(settled).toBe(false); expect(getHome).not.toHaveBeenCalled();
+  await Promise.resolve(); expect(settled).toBe(false); expect(getHome).toHaveBeenCalledTimes(1);
   finish(); await task; expect(state.router).toBe(router);
 });
 
@@ -102,8 +103,48 @@ it('awaits Overview independently of failing home and preserves route, history a
   const getHome = vi.fn(async () => { throw new Error('photo query failure'); });
   const refetch = createRefetchers({ api: { getHome } as unknown as ApiClient, overview, dispatch, getState: () => state });
   let settled = false; const task = refetch.route({ name: 'briefing' }).then(() => { settled = true; });
-  await Promise.resolve(); expect(settled).toBe(false); expect(getHome).not.toHaveBeenCalled();
+  await Promise.resolve(); expect(settled).toBe(false); expect(getHome).toHaveBeenCalledTimes(1);
   finish(); await task; expect(state.router).toBe(router);
+});
+
+it('awaits optional Today weather and keeps a newer Home refresh when replies arrive out of order', async () => {
+  const older = { schema_version: 1 as const, version: 1, server_time: '2026-11-04T08:00:00Z', home: { name: 'Synthetic home', timezone: 'UTC' }, widgets: [] };
+  const newer = { ...older, version: 2, server_time: '2026-11-04T08:00:01Z' };
+  let state = createInitialState(0);
+  let first!: (value: typeof older) => void;
+  let second!: (value: typeof older) => void;
+  const getHome = vi.fn().mockImplementationOnce(() => new Promise(resolve => { first = resolve; }))
+    .mockImplementationOnce(() => new Promise(resolve => { second = resolve; }));
+  const refetch = createRefetchers({ api: { getHome } as unknown as ApiClient, overview: { load: async () => {}, invalidate() {} },
+    dispatch: action => { state = appReducer(state, action); }, getState: () => state });
+  let settled = false;
+  const route = refetch.route({ name: 'briefing' }).then(() => { settled = true; });
+  await Promise.resolve(); expect(settled).toBe(false);
+  const recent = refetch.home();
+  expect(getHome).toHaveBeenCalledTimes(2);
+  second(newer); await recent;
+  first(older); await route;
+  expect(state.home?.version).toBe(2);
+});
+
+it.each([false, true])('does not let another refresh owner or socket preflight replace newer weather (preflight=%s)', async preflight => {
+  const older = { schema_version: 1 as const, version: 1, server_time: '2026-11-04T08:00:00Z', home: { name: 'Synthetic home', timezone: 'UTC' }, widgets: [] };
+  const newer = { ...older, version: 2, server_time: '2026-11-04T08:00:01Z' };
+  let state = createInitialState(0);
+  let first!: (value: typeof older) => void;
+  let second!: (value: typeof older) => void;
+  const getHome = vi.fn().mockImplementationOnce(() => new Promise(resolve => { first = resolve; }))
+    .mockImplementationOnce(() => new Promise(resolve => { second = resolve; }));
+  const api = { getHome } as unknown as ApiClient;
+  const ports = { api, dispatch: (action: AppAction) => { state = appReducer(state, action); }, getState: () => state };
+  const firstOwner = createRefetchers(ports), secondOwner = createRefetchers(ports);
+  const pending = preflight ? syncSnapshot(ports) : firstOwner.home();
+  const recent = secondOwner.home();
+  second(newer); await recent;
+  const clock = state.clock;
+  first(older); await pending;
+  expect(state.home?.version).toBe(2);
+  expect(state.clock).toBe(clock);
 });
 
 it('refreshes daily memories inclusively around the visible photo and drops stale refreshes after movement', async () => {

@@ -19,15 +19,16 @@ function briefing(iso: string, nowMs = Date.parse(iso)) {
   return <AppContext.Provider value={{ state, dispatch: vi.fn(), overview: loader, house: loader, api: new ApiClient(), clientVersion: 'test', goBack() {} }}><BriefingScreen /></AppContext.Provider>;
 }
 
-function card() { return within(screen.getByRole('region', { name: '万年历' })); }
+function card() { return within(screen.getByRole('button', { name: '万年历' })); }
 
 it('shows the Gregorian and lunar date of the family day', () => {
   vi.useFakeTimers(); vi.setSystemTime(Date.parse('2026-09-26T04:00:00Z'));
   render(briefing('2026-09-26T04:00:00Z'));
-  expect(screen.getByText('9月26日 · 星期六')).toBeDefined();
-  expect(card().getByText('26')).toBeDefined();
-  expect(card().getByText('农历八月十六')).toBeDefined();
-  expect(card().getByText('丙午马年 · 癸卯日')).toBeDefined();
+  expect(screen.getByText('万年历 · 天气')).toBeDefined();
+  expect(card().getByTestId('almanac-date').textContent).toBe('26');
+  expect(card().getByLabelText('农历八月十六')).toBeDefined();
+  expect(card().getByText('丙午马年 · 第 39 周 · 第 269 天')).toBeDefined();
+  expect(card().getByText('癸卯日')).toBeDefined();
   expect(card().getByText('距寒露还有 12 天')).toBeDefined();
   expect(card().queryByRole('list', { name: '今日节日与节气' })).toBeNull();
 });
@@ -37,11 +38,12 @@ it('rolls the almanac over at family midnight, not UTC midnight', () => {
   // 23:59:59 in Singapore is still 26 September for the family.
   vi.setSystemTime(Date.parse('2026-09-26T15:59:59Z'));
   const { rerender } = render(briefing('2026-09-26T15:59:59Z'));
-  expect(card().getByText('农历八月十六')).toBeDefined();
+  expect(card().getByLabelText('农历八月十六')).toBeDefined();
   vi.setSystemTime(Date.parse('2026-09-26T16:00:01Z'));
   rerender(briefing('2026-09-26T16:00:01Z'));
-  expect(card().getByText('农历八月十七')).toBeDefined();
-  expect(screen.getByText('9月27日 · 星期日')).toBeDefined();
+  expect(card().getByLabelText('农历八月十七')).toBeDefined();
+  expect(card().getByTestId('almanac-date').textContent).toBe('27');
+  expect(card().getByText('星期日')).toBeDefined();
 });
 
 it('marks festivals of the day as chips', () => {
@@ -49,7 +51,7 @@ it('marks festivals of the day as chips', () => {
   render(briefing('2026-09-25T02:00:00Z'));
   const chips = card().getByRole('list', { name: '今日节日与节气' });
   expect(within(chips).getByText('中秋节')).toBeDefined();
-  expect(card().getByText('农历八月十五')).toBeDefined();
+  expect(card().getByLabelText('农历八月十五')).toBeDefined();
 });
 
 it('does not invent a family date before any timezone is known', () => {
@@ -59,4 +61,27 @@ it('does not invent a family date before any timezone is known', () => {
   render(element);
   expect(card().getByText('等待家庭时间')).toBeDefined();
   expect(screen.queryByText(/农历/)).toBeNull();
+});
+
+it('shows the current Monday-to-Sunday week across a year boundary', () => {
+  vi.useFakeTimers(); vi.setSystemTime(Date.parse('2027-01-01T04:00:00Z'));
+  render(briefing('2027-01-01T04:00:00Z'));
+  expect(card().getByText('丙午马年 · 第 53 周 · 第 1 天')).toBeDefined();
+  const week = within(card().getByRole('list', { name: '本周日历' }));
+  expect(week.getAllByRole('listitem').map(item => item.getAttribute('data-date')))
+    .toEqual(['2026-12-28', '2026-12-29', '2026-12-30', '2026-12-31', '2027-01-01', '2027-01-02', '2027-01-03']);
+  expect(week.getAllByRole('listitem').filter(item => item.getAttribute('aria-current') === 'date')).toHaveLength(1);
+});
+
+it('keeps the two customary columns honest when no daily almanac source exists', () => {
+  vi.useFakeTimers(); vi.setSystemTime(Date.parse('2026-10-20T04:00:00Z'));
+  render(briefing('2026-10-20T04:00:00Z'));
+  expect(card().getByLabelText('宜').textContent).toContain('暂无资料');
+  expect(card().getByLabelText('忌').textContent).toContain('暂无资料');
+  expect(card().queryByText('祭祀')).toBeNull();
+  const progress = card().getByRole('progressbar', { name: '节气进度' });
+  expect(progress.getAttribute('aria-valuenow')).toBe('12');
+  expect(progress.getAttribute('aria-valuemax')).toBe('15');
+  expect(card().getByText('寒露 10/8')).toBeDefined();
+  expect(card().getByText('霜降 10/23')).toBeDefined();
 });

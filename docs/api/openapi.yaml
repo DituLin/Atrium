@@ -1756,6 +1756,36 @@ components:
         stale:
           type: boolean
           description: True once the payload is older than `widgets.weather.stale_after`.
+        humidity_pct: { type: [number, "null"], minimum: 0, maximum: 100 }
+        wind_speed_kmh: { type: [number, "null"], minimum: 0 }
+        wind_direction_deg: { type: [number, "null"], minimum: 0, maximum: 360 }
+        temperature_min_c: { type: [number, "null"] }
+        temperature_max_c: { type: [number, "null"] }
+        sunset: { type: [string, "null"], format: date-time }
+        forecast_timezone:
+          type: string
+          description: Provider location timezone defining daily forecast dates. Hourly and sunset timestamps include an explicit offset.
+        hourly:
+          type: array
+          maxItems: 25
+          items:
+            type: object
+            required: [time, temperature_c]
+            properties:
+              time: { type: string, format: date-time }
+              temperature_c: { type: [number, "null"] }
+        daily:
+          type: array
+          maxItems: 5
+          items:
+            type: object
+            required: [date, min_c, max_c, condition_code]
+            properties:
+              date: { type: string, format: date }
+              min_c: { type: [number, "null"] }
+              max_c: { type: [number, "null"] }
+              condition_code: { type: [integer, "null"] }
+              sunset: { type: [string, "null"], format: date-time }
 
     NoticeWidget:
       type: object

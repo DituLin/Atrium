@@ -1,0 +1,97 @@
+/* 今日 design: 1920×1080 canvas. Keep Chrome 66 margins and hex colors. */
+.today-page { padding-bottom:calc(56 * var(--u)); background:#0c0e0d; color:#f2f4f3; }
+.today-page__heading { align-items:flex-end; }
+.today-page__heading .page__subtitle { padding-bottom:calc(4 * var(--u)); }
+.today-page__status { display:flex; align-items:center; padding-bottom:calc(6 * var(--u)); }
+.today-page__status > * + * { margin-left:calc(12 * var(--u)); }
+.today-page__cards { display:flex; align-items:stretch; }
+.today-page__cards > :first-child { flex:1 1 auto; min-width:0; }
+.today-page__cards > :last-child { flex:0 0 calc(500 * var(--u)); width:calc(500 * var(--u)); margin-left:calc(28 * var(--u)); }
+.today-card { appearance:none; display:flex; flex-direction:column; align-items:stretch; min-height:0; min-width:0; border:0; border-radius:calc(32 * var(--u)); font:inherit; text-align:left; color:#f2f4f3; background:#171a19; cursor:pointer; outline:none; transition:transform .2s ease,background-color .2s ease,box-shadow .2s ease; }
+.today-card:focus { background:#262b29; transform:scale(1.02); box-shadow:0 calc(28 * var(--u)) calc(60 * var(--u)) rgba(0,0,0,.6); }
+.today-card__heading { display:flex; align-items:center; justify-content:space-between; flex:0 0 auto; }
+.today-card__eyebrow { flex:0 0 auto; font-size:calc(22 * var(--u)); font-weight:600; letter-spacing:.12em; color:#62d8b5; }
+.today-card__eyebrow--weather { letter-spacing:.08em; color:#edb563; }
+
+.today-almanac { padding:calc(40 * var(--u)) calc(52 * var(--u)) calc(34 * var(--u)); }
+.today-almanac__ordinal { font-size:calc(22 * var(--u)); color:#7d8480; letter-spacing:.04em; white-space:nowrap; }
+.today-almanac__body { display:flex; align-items:stretch; flex:1 1 auto; min-height:0; margin-top:calc(18 * var(--u)); }
+.today-almanac__gregorian { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; }
+.today-almanac__month { font-size:calc(40 * var(--u)); font-weight:600; letter-spacing:.06em; color:#c3c9c6; white-space:nowrap; }
+.today-almanac__date { font-size:calc(360 * var(--u)); font-weight:700; line-height:.82; letter-spacing:-.06em; margin:calc(22 * var(--u)) 0 0 calc(-14 * var(--u)); }
+.today-almanac__weekday { font-size:calc(46 * var(--u)); font-weight:600; letter-spacing:.04em; margin-top:calc(26 * var(--u)); }
+.today-almanac__divider { flex:0 0 1px; background:rgba(255,255,255,.08); margin:calc(10 * var(--u)) calc(48 * var(--u)); }
+.today-almanac__lunisolar { flex:0 0 auto; display:flex; align-items:flex-start; padding-top:calc(6 * var(--u)); }
+.today-almanac__lunar { display:flex; flex-direction:column; align-items:center; }
+.today-almanac__seal { width:calc(52 * var(--u)); height:calc(52 * var(--u)); display:flex; align-items:center; justify-content:center; border:calc(2 * var(--u)) solid #62d8b5; border-radius:calc(12 * var(--u)); color:#85e0c4; font-size:calc(20 * var(--u)); font-weight:700; line-height:1.05; text-align:center; }
+.today-almanac__lunar-date { margin-top:calc(22 * var(--u)); writing-mode:vertical-rl; font-size:calc(86 * var(--u)); font-weight:600; letter-spacing:.16em; line-height:1; white-space:nowrap; }
+.today-almanac__ganzhi { margin-left:calc(26 * var(--u)); padding-top:calc(74 * var(--u)); writing-mode:vertical-rl; font-size:calc(26 * var(--u)); letter-spacing:.32em; line-height:1.6; color:#a3aaa6; }
+.today-almanac__details { flex:0 0 calc(300 * var(--u)); display:flex; flex-direction:column; }
+.today-almanac__custom { display:flex; flex-direction:column; }
+.today-almanac__custom--avoid { margin-top:calc(28 * var(--u)); }
+.today-almanac__custom-label { display:flex; align-items:center; justify-content:center; align-self:flex-start; width:calc(52 * var(--u)); height:calc(52 * var(--u)); border-radius:calc(14 * var(--u)); background:rgba(98,216,181,.18); color:#85e0c4; font-size:calc(28 * var(--u)); font-weight:700; }
+.today-almanac__custom--avoid .today-almanac__custom-label { background:rgba(230,147,134,.18); color:#eaa699; }
+.today-almanac__unavailable { margin-top:calc(14 * var(--u)); font-size:calc(30 * var(--u)); font-weight:500; letter-spacing:.12em; color:#a3aaa6; }
+.today-almanac__festivals { display:flex; flex-wrap:wrap; margin-top:calc(20 * var(--u)); color:#62d8b5; font-size:calc(23 * var(--u)); }
+.today-almanac__festivals > * { margin-right:calc(16 * var(--u)); }
+.today-almanac__term { display:flex; flex-direction:column; margin-top:auto; padding-top:calc(20 * var(--u)); }
+.today-almanac__term-heading { display:flex; align-items:baseline; justify-content:space-between; font-size:calc(25 * var(--u)); font-weight:600; }
+.today-almanac__term-heading > :last-child { font-size:calc(20 * var(--u)); color:#7d8480; font-weight:400; }
+.today-almanac__progress { position:relative; height:calc(10 * var(--u)); border-radius:calc(999 * var(--u)); background:rgba(255,255,255,.1); margin-top:calc(12 * var(--u)); overflow:hidden; }
+.today-almanac__progress > span { position:absolute; left:0; top:0; bottom:0; border-radius:calc(999 * var(--u)); background:linear-gradient(90deg,rgba(98,216,181,.55),#62d8b5); }
+.today-almanac__term-dates { display:flex; justify-content:space-between; margin-top:calc(10 * var(--u)); font-size:calc(19 * var(--u)); color:#7d8480; }
+.today-almanac__week { display:flex; flex:0 0 auto; margin-top:calc(28 * var(--u)); padding-top:calc(22 * var(--u)); border-top:1px solid rgba(255,255,255,.08); }
+.today-almanac__week-day { display:flex; flex-direction:column; align-items:center; flex:1 1 0; min-width:0; padding:calc(10 * var(--u)) 0 calc(12 * var(--u)); border-radius:calc(20 * var(--u)); }
+.today-almanac__week-day + .today-almanac__week-day { margin-left:calc(8 * var(--u)); }
+.today-almanac__week-name { font-size:calc(19 * var(--u)); font-weight:600; color:#7d8480; }
+.today-almanac__week-date { font-size:calc(34 * var(--u)); font-weight:500; line-height:1.15; margin-top:calc(4 * var(--u)); }
+.today-almanac__week-lunar { font-size:calc(17 * var(--u)); color:#7d8480; margin-top:calc(4 * var(--u)); white-space:nowrap; }
+.today-almanac__week-day.is-weekend .today-almanac__week-date { color:#a3aaa6; }
+.today-almanac__week-day.is-special .today-almanac__week-lunar { color:#62d8b5; }
+.today-almanac__week-day[aria-current='date'] { background:#f2f4f3; }
+.today-almanac__week-day[aria-current='date'] .today-almanac__week-date { color:#0c0e0d; font-weight:700; }
+.today-almanac__week-day[aria-current='date'] .today-almanac__week-name,
+.today-almanac__week-day[aria-current='date'] .today-almanac__week-lunar { color:#3a403d; }
+.today-almanac__waiting, .today-almanac__range { display:flex; align-items:center; justify-content:center; flex:1; color:#a3aaa6; font-size:calc(28 * var(--u)); }
+.today-almanac__range { flex:0 1 calc(150 * var(--u)); }
+
+.today-weather { padding:calc(28 * var(--u)) calc(32 * var(--u)) calc(24 * var(--u)); }
+.today-weather__updated { font-size:calc(21 * var(--u)); color:#7d8480; white-space:nowrap; margin-left:calc(12 * var(--u)); overflow:hidden; text-overflow:ellipsis; }
+.today-weather__current { display:flex; align-items:center; flex:0 0 auto; margin-top:calc(10 * var(--u)); }
+.today-weather__temperature { font-size:calc(116 * var(--u)); font-weight:600; line-height:1; letter-spacing:-.04em; }
+.today-weather__description { display:flex; flex-direction:column; margin-left:calc(22 * var(--u)); min-width:0; }
+.today-weather__condition { display:flex; align-items:center; font-size:calc(30 * var(--u)); font-weight:600; white-space:nowrap; }
+.today-weather__condition .today-weather__icon { width:calc(40 * var(--u)); height:calc(40 * var(--u)); margin-right:calc(10 * var(--u)); }
+.today-weather__range { font-size:calc(24 * var(--u)); color:#a3aaa6; white-space:nowrap; margin-top:calc(6 * var(--u)); }
+.today-weather__stats { display:flex; flex:0 0 auto; margin-top:calc(18 * var(--u)); }
+.today-weather__stat { display:flex; flex-direction:column; flex:1 1 0; min-width:0; padding:calc(10 * var(--u)) calc(12 * var(--u)); border-radius:calc(14 * var(--u)); background:rgba(255,255,255,.05); }
+.today-weather__stat + .today-weather__stat { margin-left:calc(8 * var(--u)); }
+.today-weather__stat > :first-child { font-size:calc(17 * var(--u)); color:#7d8480; }
+.today-weather__stat > :last-child { margin-top:calc(4 * var(--u)); font-size:calc(22 * var(--u)); font-weight:600; white-space:nowrap; }
+.today-weather__stat--wind > :last-child { font-size:calc(18 * var(--u)); line-height:1.2; white-space:normal; }
+.today-weather__stat .is-accent { color:#62d8b5; }
+.today-weather__hourly { display:flex; flex-direction:column; flex:0 0 calc(134 * var(--u)); margin-top:calc(20 * var(--u)); min-height:0; }
+.today-weather__chart { display:block; width:100%; height:calc(104 * var(--u)); overflow:visible; }
+.today-weather__chart text { fill:#a3aaa6; font-size:17px; font-weight:600; }
+.today-weather__chart text.is-current { fill:#f2f4f3; }
+.today-weather__chart circle { fill:#edb563; stroke:#171a19; stroke-width:3; }
+.today-weather:focus .today-weather__chart circle { stroke:#262b29; }
+.today-weather__hours { display:block; position:relative; height:calc(24 * var(--u)); margin-top:calc(6 * var(--u)); }
+.today-weather__hours > span { position:absolute; transform:translateX(-50%); color:#7d8480; font-size:calc(17 * var(--u)); white-space:nowrap; }
+.today-weather__days { display:flex; flex-direction:column; margin-top:calc(14 * var(--u)); }
+.today-weather__day { display:flex; align-items:center; height:calc(46 * var(--u)); flex:0 0 auto; border-top:1px solid rgba(255,255,255,.07); }
+.today-weather__day > * + * { margin-left:calc(14 * var(--u)); }
+.today-weather__day-name { flex:0 0 calc(64 * var(--u)); font-size:calc(23 * var(--u)); font-weight:500; }
+.today-weather__day.is-today .today-weather__day-name { font-weight:600; }
+.today-weather__icon { flex:0 0 auto; width:calc(30 * var(--u)); height:calc(30 * var(--u)); color:#c3c9c6; }
+.today-weather__icon--sun { color:#edb563; }
+.today-weather__icon--rain, .today-weather__icon--snow, .today-weather__icon--storm { color:#9abce0; }
+.today-weather__low, .today-weather__high { flex:0 0 calc(40 * var(--u)); font-size:calc(22 * var(--u)); }
+.today-weather__low { text-align:right; color:#7d8480; }
+.today-weather__high { font-weight:600; }
+.today-weather__bar { position:relative; flex:1 1 auto; height:calc(8 * var(--u)); border-radius:calc(999 * var(--u)); background:rgba(255,255,255,.1); }
+.today-weather__bar > :first-child { position:absolute; top:0; bottom:0; min-width:calc(2 * var(--u)); border-radius:calc(999 * var(--u)); background:linear-gradient(90deg,#69b6df,#efba60); }
+.today-weather__bar > .today-weather__now { position:absolute; top:50%; width:calc(14 * var(--u)); height:calc(14 * var(--u)); margin:calc(-7 * var(--u)) 0 0 calc(-7 * var(--u)); border-radius:50%; border:calc(3 * var(--u)) solid #171a19; background:#f2f4f3; }
+.today-weather:focus .today-weather__now { border-color:#262b29; }
+.today-weather__forecast-empty { display:flex; align-items:center; justify-content:center; flex:1 1 auto; min-height:calc(80 * var(--u)); border-top:1px solid rgba(255,255,255,.07); color:#7d8480; font-size:calc(22 * var(--u)); }
+.today-weather__days > .today-weather__forecast-empty { min-height:calc(230 * var(--u)); }

@@ -19,6 +19,8 @@ export interface AppContextValue {
  archives?: VideoRefresh;
   house: HouseLoader;
   overview: OverviewLoader;
+  /** Refresh the Today overview and optional weather independently. */
+  refreshBriefing?: () => Promise<void>;
   clientVersion: string;
   /** Remote/back handling lives in the provider so every screen shares it. */
   goBack: () => void;

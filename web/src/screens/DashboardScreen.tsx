@@ -6,13 +6,15 @@
  */
 
 import type { ReactElement } from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 import { showsReconnectingBanner } from '../app/connection';
 import { useApp } from '../app/context';
 import { clockOptions, nasWidget, photoWidget } from '../app/homeSelect';
 import { DEFAULT_COLLECTION } from '../app/router';
 import { useRemoteKeys } from '../app/useTick';
+import { useOverviewDeadline } from '../app/useOverviewDeadline';
 import type { AppRoute } from '../app/router';
 import { formatClock, isTimeUnverified, serverNow } from '../core/clock';
 import { WidgetBoundary } from '../ui/ErrorBoundary';
@@ -25,6 +27,14 @@ export const HINT_VISIBLE_MS = 10_000;
 
 export function DashboardScreen(): ReactElement {
   const { state, dispatch } = useApp();
+  const [entryNow, setEntryNow] = useState(Date.now);
+  useLayoutEffect(() => {
+    const foreground = () => {
+      if (document.visibilityState !== 'hidden') flushSync(() => setEntryNow(Date.now()));
+    };
+    document.addEventListener('visibilitychange', foreground);
+    return () => document.removeEventListener('visibilitychange', foreground);
+  }, []);
   // Coming back from a page opened through the menu reopens it on that card.
   // Home remounts on every return, so the router's restore target is read once.
   const [menu, setMenu] = useState<{ open: boolean; index: number }>(() => {
@@ -62,7 +72,8 @@ export function DashboardScreen(): ReactElement {
   }, [hint, menu.open]);
 
   const options = clockOptions(state.home);
-  const now = serverNow(state.clock, state.nowMs);
+  const now = serverNow(state.clock, Math.max(state.nowMs, entryNow));
+  useOverviewDeadline(state.overview.snapshot, now, state.clock.offsetMs, dispatch);
   const clock = formatClock(now, options);
   const photo = photoWidget(state.home);
   const status = homeStatus(state.connection.status, nasWidget(state.home)?.sources ?? []);

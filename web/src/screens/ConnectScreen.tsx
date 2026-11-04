@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { RemoteButton } from '../ui/RemoteButton';
 import { useApp } from '../app/context';
 import { clockOptions, clockWidget } from '../app/homeSelect';
+import { refreshHomeSnapshot } from '../app/homeRefresh';
 import { formatClock, serverNow } from '../core/clock';
 
 export interface ConnectScreenProps {
@@ -47,9 +48,8 @@ export function ConnectScreen(props: ConnectScreenProps): ReactElement {
       dispatch({ type: 'connection.retry' });
       // The expired-cache rule stops the socket. A manual authenticated check
       // can restart it; cached photos remain hidden until this succeeds.
-      if (authExpired) void api.getHome().then(home => {
-        dispatch({ type: 'app.homeLoaded', home, receivedAt: Date.now() });
-      }).catch(() => { /* Keep the truthful connect/pair state on failure. */ });
+      if (authExpired) void refreshHomeSnapshot({ api, dispatch })
+        .catch(() => { /* Keep the truthful connect/pair state on failure. */ });
     }
   }, [dispatch, onRetry, authExpired, api]);
 
