@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useEffect } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { AppProvider } from '../app/AppProvider';
@@ -20,13 +20,13 @@ function Harness() {
   useEffect(() => { dispatch = app.dispatch; currentState = app.state; }, [app.dispatch, app.state]);
   return <CurrentScreen />;
 }
-async function setup() {
+async function setup(extraWidgets: unknown[] = []) {
   saveLastAuthOkAt(Date.now());
   vi.stubGlobal('WebSocket', Socket);
   vi.stubGlobal('fetch', vi.fn((path: string) => Promise.resolve(new Response(JSON.stringify(
     path.includes('/screens/me') ? { id: 'test-screen', name: '客厅屏幕', status: 'active' }
       : path.includes('/family/overview') ? overviewFixture()
-      : path.includes('/photos?') ? { items: [], next_cursor: null } : HOME), { status: 200 }))));
+      : path.includes('/photos?') ? { items: [], next_cursor: null } : { ...HOME, widgets: [...HOME.widgets, ...extraWidgets] }), { status: 200 }))));
   render(<AppProvider><Harness /></AppProvider>);
   await waitFor(() => expect(currentState.home).not.toBeNull());
 }
@@ -119,6 +119,40 @@ it('lets the remote enter and scroll long status details from the persistent rec
   expect(details.scrollTop).toBeGreaterThan(0);
   key('ArrowLeft');
   expect(document.activeElement).toBe(screen.getByRole('tab', { name: '连接状态' }));
+});
+
+it('offers one visible source entry and lets the remote expand, read and close complete source details', async () => {
+  const statement = '示例许可声明：' + '完整文字。'.repeat(60);
+  await setup([{ type: 'weather', payload: { provider: 'qweather', location_label: '示例城区', temperature_c: 18,
+    condition_code: 2, condition_text: '多云', fetched_at: new Date().toISOString(), stale: false,
+    attributions: [statement, 'https://example.test/weather-license'] } }]);
+  await openSettings();
+  const sources = screen.getByRole('button', { name: '数据来源' });
+  expect(sources.getAttribute('aria-expanded')).toBe('false');
+  expect(screen.queryByRole('region', { name: '数据来源详情' })).toBeNull();
+  key('ArrowRight'); expect(document.activeElement).toBe(screen.getByRole('button', { name: '重新检查' }));
+  key('ArrowRight'); expect(document.activeElement).toBe(sources);
+  key('Enter'); expect(document.activeElement).toBe(sources);
+  expect(sources.getAttribute('aria-expanded')).toBe('true');
+  const sourceDetails = screen.getByRole('region', { name: '数据来源详情' });
+  expect(within(sourceDetails).getByText('锦鲤万年历（KOI）')).toBeDefined();
+  expect(within(sourceDetails).getByRole('link', { name: '和风天气 · QWeather' }).getAttribute('href')).toBe('https://www.qweather.com');
+  expect(within(sourceDetails).getByText(statement)).toBeDefined();
+  key('ArrowUp'); const details = screen.getByRole('region', { name: '状态详情' }); expect(document.activeElement).toBe(details);
+  Object.defineProperties(details, { clientHeight: { value: 100 }, scrollHeight: { value: 1200 } });
+  key('ArrowDown'); expect(details.scrollTop).toBeGreaterThan(0);
+  key('ArrowLeft'); expect(document.activeElement).toBe(screen.getByRole('tab', { name: '连接状态' }));
+  key('ArrowRight'); key('ArrowRight'); key('Enter');
+  expect(sources.getAttribute('aria-expanded')).toBe('false');
+  expect(screen.queryByRole('region', { name: '数据来源详情' })).toBeNull();
+  expect(document.activeElement).toBe(sources);
+});
+
+it('does not infer that weather is disabled when the snapshot omits its provider', async () => {
+  await setup(); await openSettings();
+  fireEvent.click(screen.getByRole('button', { name: '数据来源' }));
+  expect(screen.getByText('天气来源尚未取得')).toBeDefined();
+  expect(screen.queryByText('天气尚未接入')).toBeNull();
 });
 
 it('falls back to the selected collection when its old status entry disappears during settings', async () => {

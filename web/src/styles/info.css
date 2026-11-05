@@ -123,6 +123,14 @@
 .info-settings__body .row { min-height: calc(120 * var(--u)); padding:calc(26 * var(--u)) 0; font-size:calc(28 * var(--u)); }
 .info-settings__body .row__value { font-size:calc(28 * var(--u)); }
 .info-settings__motto { margin: 0; padding: calc(12 * var(--u)) calc(24 * var(--u)); font-size: calc(40 * var(--u)); color: var(--celadon); }
+.settings-data-sources { padding:calc(28 * var(--u)) 0; border-top:1px solid rgba(255,255,255,.1); font-size:calc(26 * var(--u)); line-height:1.6; }
+.settings-data-sources h3 { margin:0 0 calc(24 * var(--u)); font-size:calc(32 * var(--u)); font-weight:600; }
+.settings-data-sources h4 { margin:0 0 calc(8 * var(--u)); font-size:calc(28 * var(--u)); font-weight:600; }
+.settings-data-sources p { margin:calc(6 * var(--u)) 0; }
+.settings-data-sources__item + .settings-data-sources__item { margin-top:calc(32 * var(--u)); }
+.settings-data-sources__note { color:var(--muted); font-size:calc(24 * var(--u)); }
+.settings-data-sources a { color:var(--text); text-decoration:underline; }
+.settings-data-sources .weather-attribution { max-height:none; overflow:visible; text-align:left; font-size:calc(26 * var(--u)); line-height:1.6; }
 
 /* ------------------------------------------------------------ 配对 */
 

@@ -113,3 +113,34 @@ it('inserts a full-row growth curve immediately below milk and composition, ahea
  const day=screen.getByRole('button',{name:'日'});day.focus();fireEvent.keyDown(day,{key:'ArrowDown'});const curve=within(screen.getByRole('article',{name:'生长曲线'}));expect(document.activeElement).toBe(curve.getByRole('button',{name:'身高'}));
  fireEvent.keyDown(curve.getByRole('button',{name:'体重'}),{key:'ArrowUp'});expect(document.activeElement).toBe(day);
 });
+
+it('replaces the selected person name in milk titles with completed calendar age from their exact profile', () => {
+    const { rerender } = render(<ArchiveDashboard {...props({
+        personID: 'synthetic-child', personName: '合成宝宝', scopeName: '合成宝宝',
+        currentDay: { year: 2026, month: 10, day: 15 },
+        overview: { ...overview, growth_profiles: [
+            { entity_id: 'another-person', birth_date: '2020-01-01', sex: 'male' },
+            { entity_id: 'synthetic-child', birth_date: '2025-08-15', sex: 'female' },
+        ] },
+        milk: { dates: ['2026-10-15'], generation: '1:2', complete: true, totals: [{ metric: 'volume', unit: 'ml', value: '120' }], groups: [{ metric: 'volume', unit: 'ml', value: '120', date: '2026-10-15T08:00:00+08:00' }] },
+    })}/>);
+    expect(screen.getByRole('heading', { name: '奶量 - 1岁2个月' })).toBeTruthy();
+    expect(screen.getByRole('img', { name: /奶量 - 1岁2个月，每次记录/ })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: '奶量 · 合成宝宝' })).toBeNull();
+    rerender(<ArchiveDashboard {...props({ personID: 'synthetic-child', personName: '合成宝宝', currentDay: { year: 2026, month: 10, day: 15 }, overview: { ...overview, growth_profiles: [{ entity_id: 'another-person', birth_date: '2020-01-01', sex: 'male' }] } })}/>);
+    expect(screen.getByRole('heading', { name: '奶量' }).textContent).not.toContain('合成宝宝');
+});
+
+it('keeps non-person scope titles and omits person names when birth date or family time is unavailable', () => {
+    const profile = { entity_id: 'synthetic-child', birth_date: '2025-08-15', sex: 'female' as const };
+    const { rerender } = render(<ArchiveDashboard {...props({ overview: { ...overview, growth_profiles: [profile] }, currentDay: { year: 2026, month: 10, day: 15 } })}/>);
+    expect(screen.getByRole('heading', { name: '奶量 · 全家' })).toBeTruthy();
+    for (const birth_date of ['2026-10-16', '2025-02-30']) {
+        rerender(<ArchiveDashboard {...props({ personID: profile.entity_id, personName: '合成宝宝', currentDay: { year: 2026, month: 10, day: 15 }, overview: { ...overview, growth_profiles: [{ ...profile, birth_date }] } })}/>);
+        expect(screen.getByRole('heading', { name: '奶量' }).textContent).not.toContain('合成宝宝');
+    }
+    rerender(<ArchiveDashboard {...props({ personID: profile.entity_id, personName: '合成宝宝', currentDay: null, overview: { ...overview, growth_profiles: [profile] } })}/>);
+    expect(screen.getByRole('heading', { name: '奶量' }).textContent).not.toContain('合成宝宝');
+    rerender(<ArchiveDashboard {...props({ scopeName: '测试屋', currentDay: { year: 2026, month: 10, day: 15 }, overview: { ...overview, growth_profiles: [{ ...profile, entity_id: 'house' }] } })}/>);
+    expect(screen.getByRole('heading', { name: '奶量 · 测试屋' })).toBeTruthy();
+});

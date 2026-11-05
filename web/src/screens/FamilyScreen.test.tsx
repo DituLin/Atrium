@@ -9,11 +9,11 @@ import {ApiError, type ApiClient} from '../core/api';
 import type {ArchiveItem,ArchivePage} from '../types/archives';
 import {FamilyScreen} from './FamilyScreen';
 const item=(id:string,domain:string):ArchiveItem=>({document_id:id,document_revision:2,domain,document_type:'record',ownership:'household',parse_status:'parsed',entity_ids:[],dates:['2026-10'],evidence:[{field_name:'title',excerpt:`合成${id}`,confirmed:true,locator:{},start:0,end:3}],metadata_only:false,truncated:false,review_required:false});
-function setup(){
+function setup(initial:Partial<AppState>={}){
  const page:ArchivePage={items:['health','education','finance','property'].map(d=>item(d,d)),generation:'1:1',coverage:{complete:true},index_status:'ready'};
  const api={getArchives:vi.fn(async()=>({...page,items:[...page.items]})),getArchiveOverview:vi.fn(async()=>({generation:'1:1',total:128,confirmed:124,pending:4,domains:[{domain:'health',count:56},{domain:'finance',count:34},{domain:'education',count:22},{domain:'property',count:16}],entities:[{id:'house',count:14}],ownership:{household:19,unassigned:5,waiting:3},coverage:{complete:true}})),getArchiveEntities:vi.fn(async()=>({items:[{id:'house',kind:'property',names:['测试屋'],aliases:[]}],coverage:{complete:true}})),analyzeArchives:vi.fn(async()=>({data_epoch:1,generation:1,groups:[{metric:'documents',value:'4'}],coverage:{complete:true},algorithm_version:'archive-analysis/5'})),getArchivePreview:vi.fn(async()=>({blob:new Blob(["png"],{type:"image/png"}),pages:2})),getArchiveDocument:vi.fn(async(id:string)=>({item:item(id,'health'),original_saved:true,nas_status:'pending',processing:'ready',preview:'structured',generation:'1:1',coverage:{complete:true}}))} as unknown as ApiClient;
  let send!:(a:AppAction)=>void;let latest!:AppState;
- function Harness(){const [state,dispatch]=useReducer(appReducer,0,createInitialState);send=dispatch;latest=state;return <AppContext.Provider value={{api,state,dispatch,house:{load:async()=>{},invalidate(){}},overview:{load:async()=>{},invalidate(){}},clientVersion:'test',goBack(){}}}><FamilyScreen/></AppContext.Provider>;}
+ function Harness(){const [state,dispatch]=useReducer(appReducer,0,now=>({...createInitialState(now),...initial}));send=dispatch;latest=state;return <AppContext.Provider value={{api,state,dispatch,house:{load:async()=>{},invalidate(){}},overview:{load:async()=>{},invalidate(){}},clientVersion:'test',goBack(){}}}><FamilyScreen/></AppContext.Provider>;}
  const view=render(<Harness/>);return {api,view,state:()=>latest,dispatch:(a:AppAction)=>act(()=>send(a))};
 }
 it('starts with the whole family and four domains without registered people',async()=>{
@@ -126,4 +126,46 @@ it('reaches the domain pills with the remote and enters analysis controls withou
  expect(document.activeElement).toBe(screen.getByRole('button',{name:'日'}));
  fireEvent.keyDown(document.activeElement!,{key:'ArrowUp'});
  expect(document.activeElement).toBe(screen.getByRole('button',{name:'全部领域'}));
+});
+
+const ageHome=(timezone:string, server_time:string):NonNullable<AppState['home']>=>({schema_version:1,version:1,server_time,home:{name:'合成家庭',timezone},widgets:[]});
+function ageProfiles(h:ReturnType<typeof setup>,birth_date='2025-08-16'){
+ vi.mocked(h.api.getArchiveEntities).mockResolvedValue({items:[{id:'synthetic-child',kind:'person',names:['合成宝宝'],aliases:[]},{id:'house',kind:'property',names:['测试屋'],aliases:[]}],coverage:{complete:true}});
+ vi.mocked(h.api.getArchiveOverview).mockResolvedValue({generation:'1:1',total:4,confirmed:4,pending:0,domains:[],entities:[],ownership:{household:4,unassigned:0,waiting:0},growth_profiles:[{entity_id:'another-person',birth_date:'2020-01-01',sex:'male'},{entity_id:'house',birth_date:'2020-01-01',sex:'female'},{entity_id:'synthetic-child',birth_date,sex:'female'}],coverage:{complete:true}});
+}
+
+it('uses server time and the family day for person milk age, updating at local midnight without reloading profiles',async()=>{
+ vi.useFakeTimers({toFake:['Date']});
+ const clientNow=Date.parse('2020-01-01T00:00:00Z'),serverTime='2026-10-15T15:59:59Z';
+ vi.setSystemTime(clientNow);
+ const h=setup({nowMs:clientNow,clock:{offsetMs:Date.parse(serverTime)-clientNow,lastSyncAt:clientNow},home:ageHome('Asia/Singapore',serverTime)});ageProfiles(h);
+ fireEvent.click(await screen.findByRole('button',{name:'合成宝宝'}));
+ await screen.findByRole('heading',{name:'奶量 - 1岁1个月'});
+ const calls=vi.mocked(h.api.getArchiveOverview).mock.calls.length;
+ h.dispatch({type:'app.tick',nowMs:clientNow+1000});
+ expect(screen.getByRole('heading',{name:'奶量 - 1岁2个月'})).toBeTruthy();
+ expect(vi.mocked(h.api.getArchiveOverview).mock.calls.length).toBe(calls);
+ fireEvent.click(screen.getByRole('button',{name:'房屋 · 测试屋'}));
+ await screen.findByRole('heading',{name:'奶量 · 测试屋'});
+});
+
+it('refreshes an infant residual day immediately on foreground after family midnight',async()=>{
+ vi.useFakeTimers({toFake:['Date']});
+ const clientNow=Date.parse('2020-01-01T00:00:00Z'),serverTime='2026-10-15T15:59:59Z';
+ vi.setSystemTime(clientNow);
+ const h=setup({nowMs:clientNow,clock:{offsetMs:Date.parse(serverTime)-clientNow,lastSyncAt:clientNow},home:ageHome('Asia/Singapore',serverTime)});ageProfiles(h,'2026-02-10');
+ fireEvent.click(await screen.findByRole('button',{name:'合成宝宝'}));
+ await screen.findByRole('heading',{name:'奶量 - 8个月5天'});
+ vi.setSystemTime(clientNow+1000);
+ fireEvent(document,new Event('visibilitychange'));
+ await screen.findByRole('heading',{name:'奶量 - 8个月6天'});
+});
+
+it.each(['missing-clock','missing-timezone','stale-clock'])('omits the person name when age lacks a valid %s',async(reason)=>{
+ const now=Date.parse('2026-10-15T12:00:00Z');
+ const h=setup({nowMs:now,clock:{offsetMs:0,lastSyncAt:reason==='missing-clock'?null:reason==='stale-clock'?now-6*60*60*1000-1:now},home:reason==='missing-timezone'?null:ageHome('Asia/Singapore',new Date(now).toISOString())});ageProfiles(h);
+ fireEvent.click(await screen.findByRole('button',{name:'合成宝宝'}));
+ const title=await screen.findByRole('heading',{name:'奶量'});
+ expect(title.textContent).not.toContain('合成宝宝');
+ expect(screen.queryByRole('heading',{name:/^奶量 - /})).toBeNull();
 });

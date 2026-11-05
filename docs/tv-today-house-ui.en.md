@@ -14,6 +14,8 @@ The November 4, 2026 deployment uses optional Open-Meteo weather. See [Today dat
 
 When supplied, the weather card shows current, maximum and minimum temperatures, humidity, wind, sunset, an hourly temperature curve and up to five forecast days. Known WMO codes and English condition descriptions are presented in Chinese; unknown codes or descriptions remain unconfirmed. Air quality requires explicit AQI data and is not inferred from weather codes. Missing fields, an unconfigured provider, stale data and partial forecasts have corresponding placeholders or labels, without invented zeros or example curves. Older cached weather data remains readable when newer fields are absent.
 
+The almanac heading omits supplier branding and rule versions. Weather source statements are centralized under Data Sources in Settings, keeping attribution text off Today and House.
+
 Direction keys move between the almanac, weather and top navigation. Pressing OK on either card refreshes the briefing and weather, reports the outcome and retains the current focus.
 
 ## House: fixed navigation and read-only observations

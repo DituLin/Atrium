@@ -1,6 +1,5 @@
 /* 今日 design: 1920×1080 canvas. Keep Chrome 66 margins and hex colors. */
 .today-page { position:relative; padding-bottom:calc(56 * var(--u)); background:#0c0e0d; color:#f2f4f3; }
-.today-page__weather-attribution { position:absolute; right:calc(96 * var(--u)); left:calc(96 * var(--u)); bottom:calc(8 * var(--u)); max-height:calc(40 * var(--u)); line-height:calc(20 * var(--u)); }
 .today-page__heading { align-items:flex-end; }
 .today-page__heading .page__subtitle { padding-bottom:calc(4 * var(--u)); }
 .today-page__status { display:flex; align-items:center; padding-bottom:calc(6 * var(--u)); }
@@ -15,8 +14,6 @@
 .today-card__eyebrow--weather { letter-spacing:.08em; color:#edb563; }
 
 .today-almanac { padding:calc(40 * var(--u)) calc(52 * var(--u)) calc(34 * var(--u)); }
-.today-almanac__heading-title { display:flex; align-items:baseline; min-width:0; }
-.today-almanac__source { margin-left:calc(18 * var(--u)); font-size:calc(17 * var(--u)); color:#a3aaa6; white-space:nowrap; }
 .today-almanac__ordinal { font-size:calc(22 * var(--u)); color:#7d8480; letter-spacing:.04em; white-space:nowrap; }
 .today-almanac__body { display:flex; align-items:stretch; flex:1 1 auto; min-height:0; margin-top:calc(18 * var(--u)); }
 .today-almanac__gregorian { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; }

@@ -4,6 +4,8 @@
 
 Select a person on the TV **Archives** page. A full-width growth curve appears below milk and archive composition, with height/weight controls. The existing height, weight and finance cards remain below it. Statistics cover that person's authorized measurement history independently of recent-archive pagination.
 
+For a selected person, the milk heading uses their existing birth date to show current calendar age: “奶量 - 6个月9天” below one year, and “奶量 - 1岁2个月” from one year onward, retaining “0个月” at an exact year. Age uses the server-synchronized household date. Month anniversaries clamp the original birth day to the corresponding month’s end; residual days below one year start at the most recent anniversary. The label updates at household midnight and foreground return. Missing birth date, identity or trusted time leaves the heading as “奶量”; household, property and other non-person scopes retain their scope labels.
+
 Submit measurements with explicit dates, values and units through the existing IM or archive intake. Attributed, TV-visible `height`, 身高, 身长, `weight` and 体重 observations update with archive verification. Units, currencies and samples remain separate. Original values retain their precision; missing days are not zero-filled or predicted. The curve connects measured points. Latest values and changes come from records; “recorded growth over the last three months” compares available observations within three calendar months ending at the latest reading and displays the actual dates.
 
 ## WHO reference

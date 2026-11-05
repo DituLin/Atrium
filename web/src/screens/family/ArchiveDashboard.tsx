@@ -5,6 +5,8 @@ import type { RemoteKey } from '../../ui/keys';
 import { factLabel } from './archiveLabels';
 import { DashboardPlot } from './DashboardPlot';
 import { GrowthCurve } from './GrowthCurve';
+import { calendarAgeLabel } from './calendarAge';
+import type { CalendarDay } from './calendarAge';
 import { summarizeFinance, summarizeGrowth, summarizeMilk } from './dashboardStats';
 import type { DashboardSeries } from './dashboardStats';
 import type { MilkPeriod, MilkTrendData } from './feedingTrend';
@@ -25,6 +27,7 @@ export interface ArchiveDashboardProps {
     ownership?: string;
     busy: boolean;
     timezone: string;
+    currentDay?: CalendarDay | null;
     onMilkPeriod: (period: MilkPeriod) => void;
     onLeft: () => void;
     onUp: () => void;
@@ -44,8 +47,11 @@ function shortDate(value: string | undefined, timezone: string, monthOnly = fals
     return new Intl.DateTimeFormat('zh-CN', { timeZone: literal ? 'UTC' : timezone, month: 'numeric', ...(monthOnly ? {} : { day: 'numeric' }) }).format(time);
 }
 
-export function ArchiveDashboard({ overview, milk, milkPeriod, growth, finance, personName, personID, scopeName, domain, ownership, busy, timezone, onMilkPeriod, onLeft, onUp, onDown, onRead }: ArchiveDashboardProps) {
+export function ArchiveDashboard({ overview, milk, milkPeriod, growth, finance, personName, personID, scopeName, domain, ownership, busy, timezone, currentDay, onMilkPeriod, onLeft, onUp, onDown, onRead }: ArchiveDashboardProps) {
     const milkName = scopeName ?? personName ?? '全家';
+    const personProfile = personID ? overview?.growth_profiles?.find(profile => profile.entity_id === personID) ?? null : null;
+    const milkAge = personProfile && !ownership ? calendarAgeLabel(personProfile.birth_date, currentDay) : null;
+    const milkTitle = milkAge ? `奶量 - ${milkAge}` : personID ? '奶量' : `奶量 · ${milkName}`;
     const periodButtons = useRef<(HTMLButtonElement | null)[]>([]);
     const dashboard = useRef<HTMLElement>(null);
     const focusGrowth = () => dashboard.current?.querySelector<HTMLButtonElement>('.growth-curve__switch button[aria-pressed="true"]')?.focus();
@@ -82,7 +88,7 @@ export function ArchiveDashboard({ overview, milk, milkPeriod, growth, finance, 
     return <section ref={dashboard} className="archive-dashboard" aria-label="公开档案分析">
         <div className="archive-dashboard__grid">
             <article className="archive-dashboard__card archive-dashboard__milk" aria-label="奶量趋势与时间范围">
-                <div className="archive-dashboard__card-heading"><h3><span className="archive-dashboard__dot"/>奶量 · {milkName}</h3><div className="milk-period archive-dashboard__period" aria-label="奶量时间范围">{periods.map((p, i) => <RemoteButton ref={el => { periodButtons.current[i] = el; }} key={p.id} className="btn" aria-pressed={milkPeriod === p.id} onClick={() => onMilkPeriod(p.id)} onDirection={key => {
+                <div className="archive-dashboard__card-heading"><h3><span className="archive-dashboard__dot"/>{milkTitle}</h3><div className="milk-period archive-dashboard__period" aria-label="奶量时间范围">{periods.map((p, i) => <RemoteButton ref={el => { periodButtons.current[i] = el; }} key={p.id} className="btn" aria-pressed={milkPeriod === p.id} onClick={() => onMilkPeriod(p.id)} onDirection={key => {
                     if (key === 'left') { if (i) periodButtons.current[i - 1]?.focus(); else onLeft(); }
                     if (key === 'right') { if (i < 2) periodButtons.current[i + 1]?.focus(); else cards.current[0]?.focus(); }
                     if (key === 'up') onUp(); if (key === 'down') focusGrowth();
@@ -91,7 +97,7 @@ export function ArchiveDashboard({ overview, milk, milkPeriod, growth, finance, 
                     {milkSeries.length > 1 || group.sample ? <p className="archive-dashboard__series-label">{[milkSeries.length > 1 ? factLabel(group.metric) : null, group.sample].filter(Boolean).join(' · ')}</p> : null}
                     <div className="archive-dashboard__number archive-dashboard__number--large"><strong>{decimal(group.headline)}</strong><span>{group.unit}</span>{milkPeriod === 'day' ? <span className="archive-dashboard__badge">{group.count} 次</span> : group.changePercent !== null ? <span className="archive-dashboard__badge">{percent(group.changePercent)}</span> : null}</div>
                     <p className="archive-dashboard__caption">{milkPeriod === 'day' ? '今天合计 · 每次喂奶' : `近 ${milkPeriod === 'week' ? '7' : '30'} 天 · 有记录日均`}{milkPeriod === 'day' && group.latestDate && group.latestValue ? ` · 最新 ${group.latestDate.includes('T') ? new Intl.DateTimeFormat('zh-CN', { timeZone: timezone, hour: '2-digit', minute: '2-digit', hour12: false }).format(Date.parse(group.latestDate)) : shortDate(group.latestDate, timezone)} · ${group.latestValue} ${group.unit}` : milkPeriod !== 'day' ? ` · ${group.recorded}/${group.expected} 天有记录` : ''}</p>
-                    <div className="archive-dashboard__milk-chart"><DashboardPlot points={group.points} label={`奶量 · ${milkName}，${milkPeriod === 'day' ? '每次记录' : '每日总量'}，${group.count} 条记录`} unit={group.unit} timezone={timezone} period={milkPeriod} dates={milk?.dates} zero/></div>
+                    <div className="archive-dashboard__milk-chart"><DashboardPlot points={group.points} label={`${milkTitle}，${milkPeriod === 'day' ? '每次记录' : '每日总量'}，${group.count} 条记录`} unit={group.unit} timezone={timezone} period={milkPeriod} dates={milk?.dates} zero/></div>
                     {!group.complete ? <p className="archive-dashboard__coverage">部分资料待确认，当前统计尚不完整</p> : null}
                 </div>)}
             </article>
@@ -105,7 +111,7 @@ export function ArchiveDashboard({ overview, milk, milkPeriod, growth, finance, 
                 {inconsistentComposition ? <p className="archive-dashboard__coverage">领域数量尚待核验，暂不展示占比</p> : null}
                 {overview && !overview.coverage.complete ? <p className="archive-dashboard__coverage">档案统计尚未完整核验</p> : null}
             </RemoteButton>
-            <GrowthCurve key={personID??'household'} data={growth} personName={personName} profile={overview?.growth_profiles?.find(profile=>profile.entity_id===personID)??null} timezone={timezone} busy={busy} ownership={ownership} onUp={()=>periodButtons.current[milkPeriod==='day'?0:milkPeriod==='week'?1:2]?.focus()} onDown={()=>cards.current[1]?.focus()} onLeft={onLeft} onRead={onRead}/>
+            <GrowthCurve key={personID??'household'} data={growth} personName={personName} profile={personProfile} timezone={timezone} busy={busy} ownership={ownership} onUp={()=>periodButtons.current[milkPeriod==='day'?0:milkPeriod==='week'?1:2]?.focus()} onDown={()=>cards.current[1]?.focus()} onLeft={onLeft} onRead={onRead}/>
             {mini('height', '身高', height, 1)}
             {mini('weight', '体重', weight, 2)}
             {mini('finance', '财务金额', financeSeries, 3)}

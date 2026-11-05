@@ -14,7 +14,7 @@ export const AlmanacCard = forwardRef<HTMLButtonElement, Props>(function Almanac
   const info = model?.info;
   return <RemoteButton {...props} className="today-card today-almanac" aria-label="万年历" title="按确定刷新简报" ref={ref}>
     <span className="today-card__heading">
-      <span className="today-almanac__heading-title"><span className="today-card__eyebrow">万年历</span>{info ? <span className="today-almanac__source">KOI 黄历 · {info.ruleVersion}</span> : null}</span>
+      <span className="today-card__eyebrow">万年历</span>
       {model ? <span className="today-almanac__ordinal">第 {model.weekNumber} 周 · 第 {model.dayOfYear} 天</span> : null}
     </span>
     {day && model ? <>
@@ -31,7 +31,7 @@ export const AlmanacCard = forwardRef<HTMLButtonElement, Props>(function Almanac
             <span className={`today-almanac__lunar-date${info.lunar.length > 4 ? ' today-almanac__lunar-date--long' : ''}`} aria-hidden="true">{info.lunar}</span>
           </span>
           <span className="today-almanac__ganzhi" aria-label="干支，立春换年、节令换月"><span>{info.year}</span><span>{info.month}</span><span>{info.day}</span></span>
-        </span> : <span className="today-almanac__range">KOI 支持 1901—2099</span>}
+        </span> : <span className="today-almanac__range">支持 1901—2099</span>}
         <span className="today-almanac__divider" aria-hidden="true" />
         <span className="today-almanac__details">
           <span className="today-almanac__custom"><span className="today-almanac__custom-label" aria-hidden="true">宜</span>{info

@@ -1,10 +1,12 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { clockOptions } from '../app/homeSelect';
+import { isTimeUnverified, serverNow } from '../core/clock';
 import { useApp } from '../app/context';
 import { RemoteButton } from '../ui/RemoteButton';
 import { TopNav, focusTopNav } from '../ui/TopNav';
 import { mapRemoteKey } from '../ui/keys';
 import { onReadingKey } from './info/readingRegion';
+import { familyClockOptions, familyDay } from './info/familyDate';
 import { ArchiveAnalysisPanel } from './family/ArchiveAnalysisPanel';
 import { ArchiveDashboard } from './family/ArchiveDashboard';
 import { ArchiveReader } from './family/archiveReader';
@@ -16,6 +18,9 @@ const archiveFocus=new WeakMap<ApiClient,{id:string;index:number;scroll:number}>
 export function FamilyScreen() {
     const { api, state, dispatch, archives } = useApp();
     const timezone = state.home?.home.timezone ?? 'Asia/Singapore';
+    const currentServerTime = serverNow(state.clock, state.nowMs);
+    const currentDay = !isTimeUnverified(state.clock, state.nowMs) && Number.isFinite(currentServerTime)
+        ? familyDay(currentServerTime, familyClockOptions(state.home, state.overview.snapshot?.home.timezone)) : null;
     const reader = useMemo(() => new ArchiveReader(api, timezone), [api, timezone]);
     const [period, setPeriod] = useState(reader.period);
     const [now, setNow] = useState(() => performance.now());
@@ -45,8 +50,9 @@ export function FamilyScreen() {
         setVerifiedGeneration(state.archiveGeneration);
         void reader.load();
     } }, [reader, state.archiveGeneration]);
-    useEffect(() => { const resume = () => { reader.invalidate(); if (document.visibilityState !== 'hidden')
-        void reader.load(); }; document.addEventListener('visibilitychange', resume); return () => document.removeEventListener('visibilitychange', resume); }, [reader]);
+    useEffect(() => { const resume = () => { reader.invalidate(); if (document.visibilityState !== 'hidden') {
+        dispatch({ type: 'app.tick', nowMs: Date.now() });
+        void reader.load(); } }; document.addEventListener('visibilitychange', resume); return () => document.removeEventListener('visibilitychange', resume); }, [reader, dispatch]);
     const route = state.router.route;
     const viewID = route.name === 'family' ? route.archiveViewId : undefined;
     const commandID = route.name === 'family' ? route.commandId : undefined;
@@ -137,7 +143,7 @@ export function FamilyScreen() {
       const i = domainStart + offset;
       return <RemoteButton key={choice.label} ref={el => { controls.current[i] = el; }} className="family-category" aria-pressed={!viewID && choice.active} onClick={() => choose(choice.next)} onDirection={key => sideDirection(i, key)}>{choice.label}</RemoteButton>;
    })}</nav></div>
-   {!viewID && !documentID ? <ArchiveDashboard overview={snapshot?.overview??null} milk={snapshot?.milk??null} milkPeriod={period} growth={snapshot?.growth??null} finance={snapshot?.finance??null} personName={person?.names[0]??null} personID={filter.entity_id} scopeName={scopeName} domain={filter.domain} ownership={filter.ownership} busy={value.busy} timezone={timezone} onMilkPeriod={next=>{void reader.selectPeriod(next);}} onLeft={()=>controls.current[0]?.focus()} onUp={()=>controls.current[domainStart]?.focus()} onDown={()=>content.current?.focus()} onRead={()=>content.current?.focus()}/> : null}
+   {!viewID && !documentID ? <ArchiveDashboard overview={snapshot?.overview??null} milk={snapshot?.milk??null} milkPeriod={period} growth={snapshot?.growth??null} finance={snapshot?.finance??null} personName={person?.names[0]??null} personID={person?.id} scopeName={scopeName} domain={filter.domain} ownership={filter.ownership} busy={value.busy} timezone={timezone} currentDay={currentDay} onMilkPeriod={next=>{void reader.selectPeriod(next);}} onLeft={()=>controls.current[0]?.focus()} onUp={()=>controls.current[domainStart]?.focus()} onDown={()=>content.current?.focus()} onRead={()=>content.current?.focus()}/> : null}
    {!snapshot ? <div className="family-empty"><h2 className="serif">{value.failed ? '等待重新核验' : '正在读取家庭档案'}</h2><p>未核验超过 30 秒的内容会自动隐藏。</p></div> : documentID ? current ? <>
     <RemoteButton ref={back} className="btn" onClick={close} onDirection={key => { if (key === 'down')
             content.current?.focus(); if (key === 'left')

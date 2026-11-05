@@ -7,7 +7,6 @@ import type { WeatherWidgetPayload } from '../types/api';
 import { TopNav, focusTopNav } from '../ui/TopNav';
 import { AlmanacCard } from './info/AlmanacCard';
 import { WeatherCard } from './info/WeatherCard';
-import { WeatherAttribution } from './info/WeatherAttribution';
 import { familyClockOptions, familyClockTime, familyDay } from './info/familyDate';
 import { restoreReturnFocus } from './info/readingRegion';
 
@@ -25,7 +24,6 @@ export function BriefingScreen() {
   }, []);
   const calendar = useRef<HTMLButtonElement>(null);
   const weatherCard = useRef<HTMLButtonElement>(null);
-  const weatherAttribution = useRef<HTMLDivElement>(null);
   const lastCard = useRef<'calendar' | 'weather'>('calendar');
   useEffect(() => { restoreReturnFocus(state.router.restoreFocus, calendar.current); }, [state.router.restoreFocus]);
   const request = useRef(0), mounted = useRef(true), pending = useRef(false);
@@ -73,10 +71,7 @@ export function BriefingScreen() {
       <WeatherCard weather={weather} options={options} now={now} ref={weatherCard} data-return-focus="briefing-weather" aria-busy={busy} onClick={refresh} onFocus={() => { lastCard.current = 'weather'; }} onDirection={key => {
         if (key === 'up') focusTopNav();
         if (key === 'left') calendar.current?.focus();
-        if (key === 'down' && weatherAttribution.current && weatherAttribution.current.scrollHeight > weatherAttribution.current.clientHeight + 2) weatherAttribution.current.focus();
       }} />
     </main>
-    <WeatherAttribution provider={weather?.provider} attributions={weather?.attributions} className="today-page__weather-attribution" ref={weatherAttribution}
-      onTop={() => weatherCard.current?.focus()} onLeft={() => calendar.current?.focus()} />
   </div>;
 }

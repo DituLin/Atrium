@@ -83,7 +83,7 @@ it('fills the customary columns from the pinned KOI rules and retains the actual
   const activities = (name: string) => within(card().getByRole('list', { name })).getAllByRole('listitem').map(item => item.textContent);
   expect(activities('宜')).toEqual(['交易', '修造', '嫁娶', '捕捉', '立券', '纳畜']);
   expect(activities('忌')).toEqual(['开市', '搬家']);
-  expect(card().getByText('KOI 黄历 · koi-almanac/1.0')).toBeDefined();
+  expect(card().queryByText(/KOI|koi-almanac/)).toBeNull();
   expect(card().queryByText('暂无资料')).toBeNull();
   const progress = card().getByRole('progressbar', { name: '节气进度' });
   expect(progress.getAttribute('aria-valuenow')).toBe('12');

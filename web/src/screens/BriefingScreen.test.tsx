@@ -92,24 +92,18 @@ it('purges the screen on HTTP revoke and does not render a pending pre-revocatio
   expect(screen.queryByRole('button', { name: '今日天气' })).toBeNull();
 });
 
-it('keeps attribution independent of the two refresh cards and lets a remote read long statements', async () => {
+it('keeps the two cards free of supplier branding and preserves their remote navigation', async () => {
   const fetch = await setup(false, { provider: 'qweather', attributions: ['示例机构声明：' + '数据来源声明。'.repeat(60)] });
   await enter(); key('ArrowRight');
   const weather = screen.getByRole('button', { name: '今日天气' });
-  const source = await screen.findByRole('region', { name: '天气数据来源' });
-  expect(source.closest('button')).toBeNull();
+  await screen.findByText('18°');
+  expect(screen.queryByRole('region', { name: '天气数据来源' })).toBeNull();
+  expect(screen.queryByRole('link', { name: '和风天气 · QWeather' })).toBeNull();
+  expect(screen.queryByText(/KOI|koi-almanac|示例机构声明/)).toBeNull();
   key('ArrowDown'); expect(document.activeElement).toBe(weather);
-  // Font ink and integer rounding can extend a one-line footer by two pixels.
-  Object.defineProperties(source, { scrollHeight: { configurable: true, value: 22 }, clientHeight: { configurable: true, value: 20 } });
-  fireEvent(window, new Event('resize'));
+  key('ArrowUp'); expect(document.activeElement).toBe(nav('今日'));
   key('ArrowDown'); expect(document.activeElement).toBe(weather);
-  Object.defineProperties(source, { scrollHeight: { configurable: true, value: 400 }, clientHeight: { configurable: true, value: 40 } });
-  fireEvent(window, new Event('resize'));
-  key('ArrowDown'); expect(document.activeElement).toBe(source);
-  key('ArrowDown'); expect(source.scrollTop).toBeGreaterThan(0);
-  key('ArrowUp'); key('ArrowUp'); expect(document.activeElement).toBe(weather);
-  const requests = fetch.mock.calls.length;
-  fireEvent.click(screen.getByRole('link', { name: '和风天气 · QWeather' }));
-  expect(fetch.mock.calls).toHaveLength(requests);
+  const requests = fetch.mock.calls.length; key('Enter');
+  await waitFor(() => expect(fetch.mock.calls.length).toBeGreaterThan(requests));
   expect(document.activeElement).toBe(weather);
 });

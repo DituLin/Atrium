@@ -11,6 +11,8 @@ interface Props {
   onBottom?: () => void;
   /** Include overflowing statements in the House spatial remote navigation. */
   houseFocus?: boolean;
+  /** Settings owns one reading region for complete source and license text. */
+  readingMode?: 'self' | 'parent';
 }
 
 const OFFICIAL_URL = 'https://www.qweather.com';
@@ -24,7 +26,7 @@ function attributionLink(value: string): string | null {
 
 /** Source links are separate from refresh controls. Long legal statements are
  * readable with the remote without adding every external link to its sequence. */
-export const WeatherAttribution = forwardRef<HTMLDivElement, Props>(function WeatherAttribution({ provider, attributions, className = '', onTop, onLeft, onBottom, houseFocus }, ref) {
+export const WeatherAttribution = forwardRef<HTMLDivElement, Props>(function WeatherAttribution({ provider, attributions, className = '', onTop, onLeft, onBottom, houseFocus, readingMode = 'self' }, ref) {
   const element = useRef<HTMLDivElement | null>(null);
   const focused = useRef(false), returnFocus = useRef(onTop);
   returnFocus.current = onTop;
@@ -52,10 +54,10 @@ export const WeatherAttribution = forwardRef<HTMLDivElement, Props>(function Wea
     if (seen.has(key)) continue;
     seen.add(key); statements.push({ text, href });
   }
-  return <div className={`weather-attribution ${className}`} ref={assignRef} role="region" aria-label="天气数据来源" tabIndex={-1}
+  return <div className={`weather-attribution ${className}`} ref={assignRef} role="region" aria-label="天气数据来源" tabIndex={readingMode === 'self' ? -1 : undefined}
     data-house-focus={houseFocus && overflow ? 'weather-attribution' : undefined}
     onFocusCapture={() => { focused.current = true; }} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) focused.current = false; }}
-    onKeyDown={event => onReadingKey(event, { top: onTop, left: onLeft, bottom: onBottom })}>
+    onKeyDown={readingMode === 'self' ? event => onReadingKey(event, { top: onTop, left: onLeft, bottom: onBottom }) : undefined}>
     <span className="weather-attribution__content"><span>天气数据：</span><a href={OFFICIAL_URL} target="_blank" rel="noopener noreferrer" tabIndex={-1} onMouseDown={event => event.preventDefault()}>和风天气 · QWeather</a>
       {statements.map(statement => <span className="weather-attribution__statement" key={statement.href ?? statement.text}><span aria-hidden="true"> · </span>{statement.href
         ? <a href={statement.href} target="_blank" rel="noopener noreferrer" tabIndex={-1} onMouseDown={event => event.preventDefault()}>{statement.text}</a> : statement.text}</span>)}

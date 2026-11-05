@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useApp } from '../app/context';
 import { nasWidget, photoWidget } from '../app/homeSelect';
 import { refreshHomeSnapshot } from '../app/homeRefresh';
-import type { ScreenSelfResponse } from '../types/api';
+import type { ScreenSelfResponse, WeatherWidgetPayload } from '../types/api';
 import { RemoteButton } from '../ui/RemoteButton';
 import { TopNav, focusTopNav } from '../ui/TopNav';
 import { indexProgressText, nasStatusText, relativeTime, shareFreeText } from '../ui/statusText';
 import { StatusRow } from './info/StatusRow';
 import { onReadingKey } from './info/readingRegion';
+import { DataSourcesDetails } from './info/DataSourcesDetails';
 
 const TABS = ['连接状态', '照片来源', '关于 Atrium'] as const;
 const NAS_TONE = { online: 'ok', degraded: 'warn', offline: 'warn', unknown: 'none' } as const;
@@ -20,7 +21,16 @@ export function SettingsScreen() {
   const [notice, setNotice] = useState('正在检查…');
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const action = useRef<HTMLButtonElement>(null);
+  const sourcesAction = useRef<HTMLButtonElement>(null);
+  const sourceDetails = useRef<HTMLDivElement>(null);
+  const [sourcesExpanded, setSourcesExpanded] = useState(false);
   const details = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const body = details.current, source = sourceDetails.current;
+    if (!body) return;
+    if (!sourcesExpanded) { body.scrollTop = 0; return; }
+    if (source) body.scrollTop += source.getBoundingClientRect().top - body.getBoundingClientRect().top - 16;
+  }, [sourcesExpanded]);
   const currentRequest = useRef(0);
   const check = useCallback(async () => {
     const request = ++currentRequest.current;
@@ -47,6 +57,7 @@ export function SettingsScreen() {
   const photo = photoWidget(state.home);
   const online = state.connection.status === 'online';
   const indexing = indexProgressText(photo);
+  const weather = state.home?.widgets.find(widget => widget.type === 'weather')?.payload as WeatherWidgetPayload | undefined;
   return <div className="page info-settings">
     <TopNav onDown={() => tabs.current[selected]?.focus()} />
     <div className="page__heading"><h1 className="page__title">设置</h1><span className="page__subtitle">状态与信息</span></div>
@@ -54,7 +65,7 @@ export function SettingsScreen() {
       <div className="info-settings__tabs" role="tablist" aria-label="设置分类" aria-orientation="vertical">
         {TABS.map((label, index) => <RemoteButton key={label} role="tab" id={`settings-tab-${index}`} className="info-settings__tab"
           aria-selected={selected === index} aria-controls="settings-panel" ref={element => { tabs.current[index] = element; }}
-          onClick={() => setSelected(index)} onDirection={key => {
+          onClick={() => { setSelected(index); setSourcesExpanded(false); if (details.current) details.current.scrollTop = 0; }} onDirection={key => {
             if (key === 'up') { if (index > 0) tabs.current[index - 1]?.focus(); else focusTopNav(); }
             if (key === 'down' && index < TABS.length - 1) tabs.current[index + 1]?.focus();
             if (key === 'right') action.current?.focus();
@@ -88,10 +99,15 @@ export function SettingsScreen() {
             <StatusRow tone="ok" label="客户端版本" value={clientVersion} />
             <StatusRow label="遥控器" help="方向键移动，确认打开，返回上一级" value="" />
           </div>}
+          {sourcesExpanded ? <div id="settings-source-details" ref={sourceDetails} role="region" aria-label="数据来源详情"><DataSourcesDetails weather={weather ?? null} /></div> : null}
         </div>
         <div className="info-actions">
           <RemoteButton className="btn" ref={action} onClick={() => { setNotice('正在检查…'); void check(); dispatch({ type: 'connection.retry' }); }}
-            onDirection={key => { if (key === 'left') tabs.current[selected]?.focus(); if (key === 'up') details.current?.focus(); }}>重新检查</RemoteButton>
+            onDirection={key => { if (key === 'left') tabs.current[selected]?.focus(); if (key === 'right') sourcesAction.current?.focus(); if (key === 'up') details.current?.focus(); }}>重新检查</RemoteButton>
+          <RemoteButton className="btn" ref={sourcesAction} aria-expanded={sourcesExpanded} aria-controls="settings-source-details"
+            onClick={() => setSourcesExpanded(expanded => !expanded)} onDirection={key => {
+              if (key === 'left') action.current?.focus(); if (key === 'up') details.current?.focus();
+            }}>数据来源</RemoteButton>
         </div>
       </section>
     </main>

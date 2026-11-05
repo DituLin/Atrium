@@ -5,7 +5,6 @@ import { mapRemoteKey } from '../../ui/keys';
 import { focusTopNav } from '../../ui/TopNav';
 import { restoreReturnFocus } from '../info/readingRegion';
 import { familyClockTime } from '../info/familyDate';
-import { WeatherAttribution } from '../info/WeatherAttribution';
 import { buildHouseChart } from './chart';
 import type { HouseDashboardModel, HouseDevice, HouseDeviceKind, HouseReading, HouseRoom, HouseSeries } from './model';
 import { FLOORPLAN_PLACEHOLDERS } from './model';
@@ -177,7 +176,6 @@ export const HouseDashboard = forwardRef<HouseDashboardHandle, HouseDashboardPro
       <span className="house-chip"><i />{model.temperature || model.humidity ? `室内 ${reading(model.temperature?.current ?? unknown, 1)}° · ${reading(model.humidity?.current ?? unknown, 0)}%` : waitingForDevices ? '室内环境待确认' : unmappedDevices ? '室内环境待配置' : '室内环境未接入'}</span>
       <span className="house-chip house-chip--attention"><i />{moduleStatus ?? (model.devices.length ? `${model.devices.filter(device => device.observation !== 'available').length} 项状态待确认` : unmappedDevices ? '展示映射待配置' : '设备待配置')}</span>
     </div><div className="house-dashboard__weather"><span>{model.weather?.temperature !== null && model.weather?.temperature !== undefined ? `室外 ${model.weather.temperature.toFixed(0)}°${model.weather.text ? ` · ${model.weather.text}` : ''}${model.weather.stale ? ' · 上次观测' : ''}${weatherObserved ? ` · 观测于 ${weatherObserved}` : ''}${weatherUpdated ? ` · ${weatherObserved ? '刷新于' : '更新于'} ${weatherUpdated}` : ''}` : '室外天气未接入'}</span>
-      <WeatherAttribution provider={model.weather?.provider} attributions={model.weather?.attributions} houseFocus onTop={() => focusTopNav()} onLeft={() => first()?.focus()} onBottom={() => first()?.focus()} />
     </div></div>
     <section className="house-overview">
       <div className="house-floorplan" role="region" aria-label="房屋平面图">{rooms.map((room, index) => <RoomButton key={room.id} room={room} index={index} selected={room.id === selected.id} placeholder={!model.rooms.length} devices={model.devices} onSelect={() => setSelectedId(room.id)} />)}{!model.rooms.length ? <span className="house-floorplan__notice">户型示意 · 房间尚未配置</span> : null}</div>

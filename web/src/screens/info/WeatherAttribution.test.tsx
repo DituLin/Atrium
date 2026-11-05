@@ -54,3 +54,11 @@ it('returns the remote focus when a refreshed snapshot removes its attribution r
   view.rerender(contents('open-meteo'));
   expect(document.activeElement).toBe(button.current);
 });
+
+it('lets a parent reading region scroll complete source text without trapping the remote', () => {
+  const parent = vi.fn();
+  render(<div onKeyDown={parent}><WeatherAttribution provider="qweather" readingMode="parent" attributions={['示例声明']} /></div>);
+  const region = screen.getByRole('region', { name: '天气数据来源' });
+  fireEvent.keyDown(region, { key: 'ArrowDown' });
+  expect(parent).toHaveBeenCalledTimes(1);
+});
