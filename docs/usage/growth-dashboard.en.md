@@ -32,3 +32,7 @@ Reference parameters ship offline with the frontend; viewing the chart sends no 
 ## Remote control
 
 Move down from milk period controls to the growth indicator controls. Use left/right and confirm to switch height/weight. Up returns to milk. Down or the right boundary enters the reading region, where up/down scroll through the chart. Right enters a currently visible control; left returns to the person list. Returning from a detail restores the original archive-card position. Person changes, revocation, verification failures and expiry clear prior measurements and reference information.
+
+## Age heading release status (2026-11-05)
+
+The age heading is deployed with frontend `86fb0b7` and verified on OnePlus. The displayed age matches the selected person's existing date of birth and the server household date; the milk heading no longer includes the person's name. The day, week and month controls retain their layout beside the heading. Birthday, month-end, leap-year, midnight and foreground-resume behavior is tested, with 9,675 synthetic dates checked against an independent calendar algorithm. Headings below and above one year also passed layout checks at widths of 1920 and 804.
