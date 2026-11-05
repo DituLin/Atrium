@@ -2,7 +2,7 @@
 
 [中文](tv-today-house-ui.md) | English
 
-Updated: 2026-11-05. Today now uses KOI almanac data and is deployed, with OnePlus acceptance passed. QWeather code is implemented but real configuration is pending; see [Today data sources and release verification](usage/today-data.en.md). The delivery table below retains the November 4 interface release’s historical acceptance record. This update has not completed TCL physical-device acceptance.
+Updated: 2026-11-05. Today now uses KOI almanac data and is deployed, with OnePlus acceptance passed. QWeather is configured for production and has passed live API and OnePlus display acceptance; see [Today data sources and release verification](usage/today-data.en.md). The delivery table below retains the November 4 interface release’s historical acceptance record. This update has not completed TCL physical-device acceptance.
 
 ## Today: almanac and weather
 
@@ -10,7 +10,7 @@ Today follows the supplied HTML design with two main cards: a wide almanac and w
 
 The November 4 initial release retained missing activity states. The November 5 version supplies complete activity lists from the simplified traditional `koi-almanac/1.0` rules and adds the month pillar and source label. See the data-source guide above for year/month boundaries and coverage. This page does not provide external event synchronization.
 
-The November 4, 2026 deployment uses optional Open-Meteo weather. See [Today data sources and QWeather configuration](usage/today-data.en.md) for the QWeather adapter added on November 5 and its pending real configuration. Maintainers must enable the selected provider in `widgets.weather` and configure the actual location; see the [configuration example](../config.example.yaml). Updating the interface does not select a city or populate credentials automatically.
+The November 4, 2026 deployment uses optional Open-Meteo weather. See [Today data sources and QWeather configuration](usage/today-data.en.md) for the QWeather adapter added on November 5, its production configuration and live verification. Maintainers must enable the selected provider in `widgets.weather` and configure the actual location; see the [configuration example](../config.example.yaml). Updating the interface does not select a city or populate credentials automatically.
 
 When supplied, the weather card shows current, maximum and minimum temperatures, humidity, wind, sunset, an hourly temperature curve and up to five forecast days. Known WMO codes and English condition descriptions are presented in Chinese; unknown codes or descriptions remain unconfirmed. Air quality requires explicit AQI data and is not inferred from weather codes. Missing fields, an unconfigured provider, stale data and partial forecasts have corresponding placeholders or labels, without invented zeros or example curves. Older cached weather data remains readable when newer fields are absent.
 

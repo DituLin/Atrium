@@ -2,7 +2,7 @@
 
 [中文](today-data.md) | English
 
-This document describes the data behind Today’s almanac and weather. KOI calendar data is integrated. The server-side QWeather adapter and its UI are implemented; the real account and location still require configuration. See the verification status below and the [Today and House interface record](../tv-today-house-ui.en.md) for the previous interface release.
+This document describes the data behind Today’s almanac and weather. KOI calendar data and QWeather are integrated and configured for production. See the verification status below and the [Today and House interface record](../tv-today-house-ui.en.md) for the previous interface release.
 
 ## Almanac
 
@@ -44,10 +44,20 @@ The page displays QWeather attribution and the provider's source statements. Fet
 
 Actual activation requires a dedicated host, valid credential files and a confirmed weather location. Implemented endpoints and passing synthetic tests do not establish account authorization, quota or real-location acceptance. The adapter follows the current official [current weather](https://dev.qweather.com/en/docs/api/weather/weather-current/), [hourly](https://dev.qweather.com/en/docs/api/weather/weather-hourly-forecast/) and [daily](https://dev.qweather.com/en/docs/api/weather/weather-daily-forecast/) contracts.
 
-## Release verification — 2026-11-05
+## Code-release acceptance — 2026-11-05, before production weather configuration
 
 The KOI implementation commit is `3f9e24c`. Signed Core `koi-almanac-3f9e24c+c06c6a591e9a33c6a93bc0def15d3e29061f9d07` is deployed. OnePlus loaded `0.1.0+3f9e24c`; complete activity lists, year/month/day pillars and source version matched KOI’s original reference. Remote navigation, OK refresh, House read-only observations and diagnostics passed, and the device was returned to Archives. This update has not completed TCL physical-device acceptance.
 
 All 1,135 frontend tests across 98 files passed, along with lint, type checking, build and Chrome 66 output checks. Full Go regression passed on the actual candidate source, with weather/configuration race checks also passing. Independent checks covered 72,684 dates and 4,776 solar terms. Twelve representative dates received long-text, leap-month and range-boundary checks at widths 1920 and 804. The signed candidate additionally passed eight backend and eight actual embedded-page acceptance groups.
 
-Activation preserved schema 18, existing configuration and service identity, business records, NAS source and photo identities, screen pairings and the 2 GiB on-demand preview policy. This acceptance does not establish activation of a real QWeather account: its dedicated host, credential files and location remain unconfigured, and the existing weather configuration is unchanged.
+Activation preserved schema 18, existing configuration and service identity, business records, NAS source and photo identities, screen pairings and the 2 GiB on-demand preview policy. That code-release acceptance preceded real QWeather account activation. The subsequent production configuration and live checks are recorded below.
+
+## Production QWeather configuration and live API checks — 2026-11-05
+
+JWT authentication is enabled with a dedicated API host and a local Ed25519 private key. Core generates short-lived JWTs automatically; the PKCS8 PEM key is owned by the service user with mode `0600`. QWeather GeoAPI supplied an exact match for the requested administrative district, including its coordinates and timezone. District coordinates do not represent a household GPS location.
+
+GeoAPI, current weather, 24-hour and five-day forecasts each returned successful responses. The current Go adapter also passed real requests, correctly parsing current temperature, humidity, wind, minimum/maximum temperatures, sunset, 24 hourly entries, five daily entries and source attribution. The refresh interval is 30 minutes; data older than two hours is marked stale.
+
+This activation changed only the production weather configuration and normally restarted the existing service. The binary, service definition, schema 18, business records, source/photo identities, screen pairings and on-demand preview budget were preserved.
+
+OnePlus physical-device acceptance passed: Today’s temperature, high/low range, humidity, wind, sunset, hourly curve and five-day forecast matched the real API, with complete QWeather attribution visible. House’s outdoor summary and attribution also matched. Remote navigation and OK refresh worked without focus loss. The device was returned to Archives and the temporary debugging forward was removed. When the current endpoint supplies no explicit observation timestamp, only refresh time is displayed; refresh time does not populate observation time. This activation added no TCL physical-device acceptance.
