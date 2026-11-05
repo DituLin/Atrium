@@ -1750,9 +1750,19 @@ components:
         provider: { type: string, example: open-meteo }
         location_label: { type: string }
         temperature_c: { type: number }
-        condition_code: { type: integer }
+        condition_code:
+          type: integer
+          description: WMO-normalized weather code, including for QWeather; 999 means an unknown condition.
         condition_text: { type: string }
         fetched_at: { type: string, format: date-time }
+        observed_at:
+          type: string
+          format: date-time
+          description: Provider-supplied observation time, when explicitly available. Fetch time is never substituted for a missing observation time.
+        attributions:
+          type: array
+          description: Provider attribution statements or HTTPS URLs displayed alongside the weather. Credentials and private API hosts are never included.
+          items: { type: string }
         stale:
           type: boolean
           description: True once the payload is older than `widgets.weather.stale_after`.

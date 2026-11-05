@@ -19,10 +19,12 @@ export const WeatherCard = forwardRef<HTMLButtonElement, Props>(function Weather
     [weather, minute, timezone, offset, supported]);
   const gradient = `weather-${useId().replace(/:/g, '')}`;
   const location = weather?.location_label?.trim() || '地点未设置';
-  const metadata = weather ? `${location}${weather.stale ? ' · 旧数据' : ''}${model.updated ? ` · ${model.updated} 更新` : ' · 更新时间未知'}` : '等待天气更新';
+  const timing = model.observed ? ` · 观测 ${model.observed}${model.updated ? ` · 刷新 ${model.updated}` : ' · 刷新时间未知'}`
+    : model.updated ? ` · ${model.updated} 更新` : ' · 更新时间未知';
+  const metadata = weather ? `${location}${weather.stale ? ' · 旧数据' : ''}${timing}` : '等待天气更新';
   const condition = weatherConditionInfo(weather?.condition_code, weather?.condition_text);
   return <RemoteButton {...props} className="today-card today-weather" aria-label="今日天气" title="按确定刷新简报" ref={ref}>
-    <span className="today-card__heading"><span className="today-card__eyebrow today-card__eyebrow--weather">今日天气</span><span className="today-weather__updated">{metadata}</span></span>
+    <span className={`today-card__heading${model.observed ? ' today-weather__heading--observed' : ''}`}><span className="today-card__eyebrow today-card__eyebrow--weather">今日天气</span><span className="today-weather__updated">{metadata}</span></span>
     <span className="today-weather__current">
       <span className="today-weather__temperature" aria-label="当前温度">{model.temperature}</span>
       <span className="today-weather__description"><span className="today-weather__condition"><WeatherIcon code={weather?.condition_code} text={weather?.condition_text} />{weather ? condition.label : '暂无天气数据'}</span><span className="today-weather__range">{model.range}</span></span>

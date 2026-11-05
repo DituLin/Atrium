@@ -154,6 +154,10 @@ export interface WeatherWidgetPayload {
   condition_code: number | string | null;
   condition_text: string | null;
   fetched_at: string | null;
+  /** Provider observation instant, distinct from the Core's fetch instant. */
+  observed_at?: string | null;
+  /** Provider-required source statements or source/license HTTPS URLs. */
+  attributions?: string[];
   stale: boolean;
   humidity_pct?: number | null;
   wind_speed_kmh?: number | null;

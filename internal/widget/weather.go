@@ -2,6 +2,7 @@ package widget
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"net/url"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -32,6 +34,8 @@ type Reading struct {
 	ForecastTimezone string        `json:"forecast_timezone,omitempty"`
 	Hourly           []WeatherHour `json:"hourly,omitempty"`
 	Daily            []WeatherDay  `json:"daily,omitempty"`
+	ObservedAt       string        `json:"observed_at,omitempty"`
+	Attributions     []string      `json:"attributions,omitempty"`
 	// Retained only in the internal widget cache when no usable IANA zone is
 	// available. It is not part of the screen's weather payload.
 	forecastUTCOffsetSeconds *int
@@ -350,13 +354,18 @@ func NewWeatherService(cfg config.Weather, db *store.DB, provider Provider) *Wea
 		return nil
 	}
 	if provider == nil {
-		provider = &OpenMeteo{BaseURL: cfg.BaseURL}
+		if cfg.Provider == "qweather" {
+			provider = &QWeather{Config: cfg.QWeather}
+		} else {
+			provider = &OpenMeteo{BaseURL: cfg.BaseURL}
+		}
 	}
 	return &WeatherService{cfg: cfg, db: db, provider: provider}
 }
 
 // cachedPayload is what the service stores in widget_cache.
 type cachedPayload struct {
+	Identity         string  `json:"identity,omitempty"`
 	Reading          Reading `json:"reading"`
 	FetchedAt        string  `json:"fetched_at"`
 	UTCOffsetSeconds *int    `json:"utc_offset_seconds,omitempty"`
@@ -368,14 +377,35 @@ func (s *WeatherService) Current(ctx context.Context, now time.Time) (*Weather, 
 	if s == nil {
 		return nil, nil
 	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	cached, err := s.db.WidgetCache().Get(ctx, domain.WidgetWeather)
 	if err != nil && !errors.Is(err, domain.ErrNotFound) {
 		return nil, err
 	}
-	due := cached == nil || !now.Before(cached.ExpiresAt)
+	legacy := false
+	if cached != nil {
+		var payload cachedPayload
+		if json.Unmarshal([]byte(cached.Payload), &payload) != nil {
+			cached = nil
+		} else if payload.Identity == "" {
+			// Before identities existed only Open-Meteo could write this cache.
+			// Always try to replace it first, and never relabel it QWeather.
+			legacy = s.provider.Name() == "open-meteo" && (s.cfg.Provider == "open-meteo" || s.cfg.Provider == "")
+			if !legacy {
+				cached = nil
+			}
+		} else if payload.Identity != s.cacheIdentity() {
+			cached = nil
+		}
+	}
+	due := cached == nil || legacy || !now.Before(cached.ExpiresAt)
 	if due {
-		if fresh, ferr := s.refresh(ctx, now); ferr == nil {
+		if fresh, ferr := s.refresh(ctx, now, false); ferr == nil {
 			cached = fresh
+		} else if ctx.Err() != nil {
+			return nil, ctx.Err()
 		} else if cached == nil {
 			// Never fetched successfully: the widget stays hidden.
 			return nil, nil
@@ -399,6 +429,10 @@ func (s *WeatherService) Current(ctx context.Context, now time.Time) (*Weather, 
 		// summary without another provider request or replaying yesterday's data.
 		payload.Reading.projectDailySummary(now.In(loc).Format(time.DateOnly))
 	}
+	stale := now.Sub(cached.FetchedAt) > s.cfg.StaleAfter.D()
+	if observed, err := time.Parse(time.RFC3339, payload.Reading.ObservedAt); err == nil && now.Sub(observed) > s.cfg.StaleAfter.D() {
+		stale = true
+	}
 	return &Weather{
 		Provider: s.provider.Name(), LocationLabel: s.cfg.LocationLabel,
 		TemperatureC: payload.Reading.TemperatureC, ConditionCode: payload.Reading.ConditionCode,
@@ -408,8 +442,9 @@ func (s *WeatherService) Current(ctx context.Context, now time.Time) (*Weather, 
 		TemperatureMinC:  payload.Reading.TemperatureMinC, TemperatureMaxC: payload.Reading.TemperatureMaxC,
 		Sunset: payload.Reading.Sunset, ForecastTimezone: payload.Reading.ForecastTimezone,
 		Hourly: payload.Reading.Hourly, Daily: payload.Reading.Daily,
+		ObservedAt: payload.Reading.ObservedAt, Attributions: payload.Reading.Attributions,
 		FetchedAt: cached.FetchedAt.UTC().Format(time.RFC3339),
-		Stale:     now.Sub(cached.FetchedAt) > s.cfg.StaleAfter.D(),
+		Stale:     stale,
 	}, nil
 }
 
@@ -418,19 +453,34 @@ func (s *WeatherService) Refresh(ctx context.Context, now time.Time) error {
 	if s == nil {
 		return nil
 	}
-	_, err := s.refresh(ctx, now)
+	_, err := s.refresh(ctx, now, true)
 	return err
 }
 
-func (s *WeatherService) refresh(ctx context.Context, now time.Time) (*store.CachedWidget, error) {
+func (s *WeatherService) refresh(ctx context.Context, now time.Time, force bool) (*store.CachedWidget, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if !force {
+		// Another Home request may have refreshed while this one waited.
+		if cached, err := s.db.WidgetCache().Get(ctx, domain.WidgetWeather); err == nil && now.Before(cached.ExpiresAt) {
+			var payload cachedPayload
+			if json.Unmarshal([]byte(cached.Payload), &payload) == nil && payload.Identity == s.cacheIdentity() {
+				return cached, nil
+			}
+		}
+	}
 	reading, err := s.provider.Fetch(ctx, s.cfg.Latitude, s.cfg.Longitude)
 	if err != nil {
 		_ = s.db.WidgetCache().SetError(ctx, domain.WidgetWeather, "provider_unreachable")
 		return nil, err
 	}
-	blob, err := json.Marshal(cachedPayload{Reading: *reading, FetchedAt: now.UTC().Format(time.RFC3339), UTCOffsetSeconds: reading.forecastUTCOffsetSeconds})
+	if reading == nil {
+		return nil, errors.New("weather: empty provider reading")
+	}
+	blob, err := json.Marshal(cachedPayload{Identity: s.cacheIdentity(), Reading: *reading, FetchedAt: now.UTC().Format(time.RFC3339), UTCOffsetSeconds: reading.forecastUTCOffsetSeconds})
 	if err != nil {
 		return nil, fmt.Errorf("weather: encode payload: %w", err)
 	}
@@ -444,6 +494,20 @@ func (s *WeatherService) refresh(ctx context.Context, now time.Time) (*store.Cac
 		return nil, err
 	}
 	return &entry, nil
+}
+
+// Only the actual request's effective coordinate precision participates in the
+// identity. This hash contains no credentials and is never exposed to screens.
+func (s *WeatherService) cacheIdentity() string {
+	precision := 4
+	host, timezone := s.cfg.BaseURL, ""
+	if s.provider.Name() == "qweather" {
+		precision = 2
+		host, timezone = strings.ToLower(s.cfg.QWeather.APIHost), s.cfg.QWeather.Timezone
+	}
+	parts := []string{s.provider.Name(), strconv.FormatFloat(s.cfg.Latitude, 'f', precision, 64), strconv.FormatFloat(s.cfg.Longitude, 'f', precision, 64), host, timezone}
+	raw, _ := json.Marshal(parts)
+	return fmt.Sprintf("%x", sha256.Sum256(raw))
 }
 
 // RefreshInterval exposes the configured cadence for the background refresher.

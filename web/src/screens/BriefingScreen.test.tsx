@@ -8,23 +8,24 @@ import { CurrentScreen } from '../App';
 import { overviewFixture } from '../test/overviewFixture';
 import { houseFixture } from '../test/houseFixture';
 import { saveLastAuthOkAt } from '../core/authExpiry';
+import type { WeatherWidgetPayload } from '../types/api';
 
 let app: AppContextValue;
 function Harness() { const value = useApp(); useEffect(() => { app = value; }, [value]); return <CurrentScreen />; }
 function key(key: string) { fireEvent.keyDown(document.activeElement!, { key }); }
 function nav(label: string) { return screen.getByRole('button', { name: label }); }
-function home() {
+function home(weather: Partial<WeatherWidgetPayload> = {}) {
   return { schema_version: 1, server_time: new Date().toISOString(), version: 1, home: houseFixture().home,
     widgets: [{ type: 'weather', payload: { provider: 'open-meteo', location_label: '示例城区', temperature_c: 18,
-      condition_code: 2, condition_text: '多云', fetched_at: new Date().toISOString(), stale: false } }] };
+      condition_code: 2, condition_text: '多云', fetched_at: new Date().toISOString(), stale: false, ...weather } }] };
 }
-async function setup(homeFailed = false) {
+async function setup(homeFailed = false, weather: Partial<WeatherWidgetPayload> = {}) {
   saveLastAuthOkAt(Date.now()); vi.stubGlobal('WebSocket', class { send() {} close() {} });
   const fetch = vi.fn(async (path: string) => {
     if (path.includes('/family/overview')) return new Response(JSON.stringify(overviewFixture()));
     if (path.includes('/family/house')) return new Response(JSON.stringify(houseFixture()));
     if (path.includes('/home') && homeFailed) return new Response('{}', { status: 500 });
-    if (path.includes('/home')) return new Response(JSON.stringify(home()));
+    if (path.includes('/home')) return new Response(JSON.stringify(home(weather)));
     return new Response(JSON.stringify({ items: [], next_cursor: null }));
   });
   vi.stubGlobal('fetch', fetch); render(<AppProvider><Harness /></AppProvider>);
@@ -89,4 +90,26 @@ it('purges the screen on HTTP revoke and does not render a pending pre-revocatio
   await act(async () => { resolveHome(new Response(JSON.stringify(home()))); });
   expect(app.state.home).toBeNull(); expect(app.state.overview.snapshot).toBeNull();
   expect(screen.queryByRole('button', { name: '今日天气' })).toBeNull();
+});
+
+it('keeps attribution independent of the two refresh cards and lets a remote read long statements', async () => {
+  const fetch = await setup(false, { provider: 'qweather', attributions: ['示例机构声明：' + '数据来源声明。'.repeat(60)] });
+  await enter(); key('ArrowRight');
+  const weather = screen.getByRole('button', { name: '今日天气' });
+  const source = await screen.findByRole('region', { name: '天气数据来源' });
+  expect(source.closest('button')).toBeNull();
+  key('ArrowDown'); expect(document.activeElement).toBe(weather);
+  // Font ink and integer rounding can extend a one-line footer by two pixels.
+  Object.defineProperties(source, { scrollHeight: { configurable: true, value: 22 }, clientHeight: { configurable: true, value: 20 } });
+  fireEvent(window, new Event('resize'));
+  key('ArrowDown'); expect(document.activeElement).toBe(weather);
+  Object.defineProperties(source, { scrollHeight: { configurable: true, value: 400 }, clientHeight: { configurable: true, value: 40 } });
+  fireEvent(window, new Event('resize'));
+  key('ArrowDown'); expect(document.activeElement).toBe(source);
+  key('ArrowDown'); expect(source.scrollTop).toBeGreaterThan(0);
+  key('ArrowUp'); key('ArrowUp'); expect(document.activeElement).toBe(weather);
+  const requests = fetch.mock.calls.length;
+  fireEvent.click(screen.getByRole('link', { name: '和风天气 · QWeather' }));
+  expect(fetch.mock.calls).toHaveLength(requests);
+  expect(document.activeElement).toBe(weather);
 });

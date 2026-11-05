@@ -62,3 +62,14 @@ it('does not turn unknown weather into sunshine', () => {
   expect(screen.getByText('天气待确认')).toBeDefined(); expect(screen.queryByText('晴')).toBeNull();
   expect(screen.getByRole('button', { name: '今日天气' }).querySelector('.today-weather__condition .today-weather__icon--unknown')).not.toBeNull();
 });
+
+it('distinguishes the actual observation from the service refresh time', () => {
+  render(<WeatherCard weather={{ ...payload, provider: 'qweather', observed_at: '2026-10-20T11:35:00Z' }} options={options} now={now} />);
+  expect(screen.getByText('示例城区 · 观测 19:35 · 刷新 20:00')).toBeDefined();
+  expect(screen.queryByRole('link')).toBeNull();
+});
+
+it('does not invent an observation timestamp from an invalid provider timestamp', () => {
+  render(<WeatherCard weather={{ ...payload, provider: 'qweather', observed_at: 'invalid' }} options={options} now={now} />);
+  expect(screen.getByText('示例城区 · 20:00 更新')).toBeDefined();
+});

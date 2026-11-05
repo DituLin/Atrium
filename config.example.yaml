@@ -76,6 +76,19 @@ widgets:
     location_label: ""
     refresh_interval: "30m"
     stale_after: "2h"
+    # 和风天气：provider 改为 qweather，并填写真实位置及专属 API Host。
+    # QWeather: select provider: qweather and configure the actual location and dedicated API host.
+    qweather:
+      api_host: ""                    # 仅主机名 / Hostname only, e.g. example.qweatherapi.com
+      timezone: ""                    # 留空沿用家庭时区 / Empty uses home.timezone
+      api_key_file: ""                # 自己拥有的 0600 密钥文件 / Owned 0600 API-key file
+      # API Key 和 JWT 只能选一种。使用 JWT 时保持 api_key_file 为空。
+      # Choose one of API key or JWT. Keep api_key_file empty for JWT.
+      jwt:
+        developer_id: ""
+        project_id: ""
+        credential_id: ""
+        private_key_file: ""          # 自己拥有的 0600 Ed25519 PKCS8 PEM / Owned 0600 Ed25519 PKCS8 PEM
   notice:
     # Optional RFC 3339 timestamps with offsets. Omit or leave empty when unknown.
     # updated_at is the actual content modification time, not the config load time.

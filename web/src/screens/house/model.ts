@@ -33,7 +33,10 @@ export interface HouseAquarium {
   light: string | null; filtration: string | null; nextFeeding: string | null;
   filterRemainingPercent: number | null;
 }
-export interface HouseWeather { temperature: number | null; text: string | null; updatedAt: string | null; stale: boolean }
+export interface HouseWeather {
+  temperature: number | null; text: string | null; updatedAt: string | null; stale: boolean;
+  observedAt?: string | null; provider?: string; attributions?: string[];
+}
 export interface HouseDashboardModel {
   /** Empty means no configured floor plan; geometric slots are only placeholders. */
   rooms: HouseRoom[]; devices: HouseDevice[];
@@ -50,6 +53,7 @@ export function houseDashboardFromHome(home: HomeResponse | null): HouseDashboar
       temperature: typeof weather.temperature_c === 'number' && Number.isFinite(weather.temperature_c) ? weather.temperature_c : null,
       text: weatherConditionInfo(weather.condition_code, weather.condition_text).label,
       updatedAt: weather.fetched_at, stale: weather.stale,
+      observedAt: weather.observed_at, provider: weather.provider, attributions: weather.attributions,
     } : null,
   };
 }

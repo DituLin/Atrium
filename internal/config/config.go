@@ -146,8 +146,26 @@ type Weather struct {
 	LocationLabel   string   `yaml:"location_label"`
 	RefreshInterval Duration `yaml:"refresh_interval"`
 	StaleAfter      Duration `yaml:"stale_after"`
+	QWeather        QWeather `yaml:"qweather"`
 	// BaseURL overrides the provider endpoint; used by tests only.
 	BaseURL string `yaml:"base_url"`
+}
+
+// QWeather keeps account endpoints and credential file references on Core.
+// Timezone may be omitted to use the household timezone at runtime.
+type QWeather struct {
+	APIHost    string      `yaml:"api_host"`
+	Timezone   string      `yaml:"timezone"`
+	APIKeyFile string      `yaml:"api_key_file"`
+	JWT        QWeatherJWT `yaml:"jwt"`
+}
+
+// QWeatherJWT describes the Ed25519 credential used to issue short-lived JWTs.
+type QWeatherJWT struct {
+	DeveloperID    string `yaml:"developer_id"`
+	ProjectID      string `yaml:"project_id"`
+	CredentialID   string `yaml:"credential_id"`
+	PrivateKeyFile string `yaml:"private_key_file"`
 }
 
 // Notice is a static operator message.

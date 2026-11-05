@@ -16,6 +16,7 @@
 .house-chip--attention { color: #e9ba8c; background: rgba(229,174,112,.14); }
 .house-chip--attention i { background: #e5ae70; }
 .house-dashboard__weather { margin-left: auto; padding: 0 0 calc(6 * var(--u)) calc(20 * var(--u)); font-size: calc(24 * var(--u)); color: #7d8480; text-align: right; line-height: 1.5; max-width: calc(400 * var(--u)); }
+.house-dashboard__weather .weather-attribution { margin-top:calc(4 * var(--u)); font-size:calc(16 * var(--u)); line-height:calc(20 * var(--u)); max-height:calc(40 * var(--u)); }
 .house-overview { display: flex; margin-top: calc(28 * var(--u)); }
 .house-floorplan { position: relative; flex: 0 0 calc(1120 * var(--u)); height: calc(640 * var(--u)); border-radius: calc(30 * var(--u)); background: #2a2f2d; }
 .house-room { position: absolute; appearance: none; border: 0; padding: 0; overflow: hidden; color: #f2f4f3; background: #121514; outline: none; text-align: left; font: inherit; cursor: pointer; transition: box-shadow .2s ease, background .3s ease; }

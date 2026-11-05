@@ -10,7 +10,7 @@ Today follows the supplied HTML design with two main cards: a wide almanac and w
 
 The auspicious and inauspicious activity fields currently have no data source and display “暂无资料” (“No information”). They do not copy the design's example content. This page does not establish an external calendar or event synchronization service.
 
-Weather uses the existing optional Open-Meteo integration. Maintainers must enable `widgets.weather` and configure the actual location in the existing configuration; see the [configuration example](../config.example.yaml). Updating the interface does not enable weather, select a city or change location settings automatically.
+The November 4, 2026 deployment uses optional Open-Meteo weather. See [Today data sources and QWeather configuration](usage/today-data.en.md) for the QWeather adapter added on November 5 and its pending real configuration. Maintainers must enable the selected provider in `widgets.weather` and configure the actual location; see the [configuration example](../config.example.yaml). Updating the interface does not select a city or populate credentials automatically.
 
 When supplied, the weather card shows current, maximum and minimum temperatures, humidity, wind, sunset, an hourly temperature curve and up to five forecast days. Known WMO codes and English condition descriptions are presented in Chinese; unknown codes or descriptions remain unconfirmed. Air quality requires explicit AQI data and is not inferred from weather codes. Missing fields, an unconfigured provider, stale data and partial forecasts have corresponding placeholders or labels, without invented zeros or example curves. Older cached weather data remains readable when newer fields are absent.
 

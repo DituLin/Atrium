@@ -74,3 +74,13 @@ it('does not label a retained stale current reading as a new observation now', (
   expect(result.hourly.every(point => !point.current)).toBe(true);
   expect(result.days.every(day => day.current === null)).toBe(true);
 });
+
+it('uses a genuine observation instant for the current chart point rather than relabelling it as now', () => {
+  const result = presentWeather(weather({ provider: 'qweather', observed_at: '2026-10-20T11:35:00Z', hourly: [
+    { time: '2026-10-20T15:00:00Z', temperature_c: 16 }, { time: '2026-10-20T18:00:00Z', temperature_c: 15 },
+  ] }), zone, now);
+  expect(result.observed).toBe('19:35');
+  expect(result.updated).toBe('20:00');
+  expect(result.hourly[0]).toMatchObject({ timestamp: Date.parse('2026-10-20T11:35:00Z'), time: '实况', current: true });
+  expect(result.hourly.some(point => point.time === '现在')).toBe(false);
+});

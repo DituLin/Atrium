@@ -137,6 +137,7 @@ The current Android delivery is a development-test APK with debug signing and We
 - [Integrated archive design](docs/plans/2026-10-03-family-agentos-archives-design.md)
 - [Android TV build and usage](android-tv/README.md)
 - [Updated TV Today and House interfaces](docs/tv-today-house-ui.en.md)
+- [Today data sources and QWeather configuration](docs/usage/today-data.en.md)
 
 Chinese is the primary documentation language; English is maintained as a complete parallel version. New or substantially rewritten user-facing documentation should have matching Chinese and English versions. Historical documents retain their original language until rewritten. Distinguish design goals, current code and actual acceptance status.
 

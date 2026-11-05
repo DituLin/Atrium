@@ -1,5 +1,6 @@
 /* 今日 design: 1920×1080 canvas. Keep Chrome 66 margins and hex colors. */
-.today-page { padding-bottom:calc(56 * var(--u)); background:#0c0e0d; color:#f2f4f3; }
+.today-page { position:relative; padding-bottom:calc(56 * var(--u)); background:#0c0e0d; color:#f2f4f3; }
+.today-page__weather-attribution { position:absolute; right:calc(96 * var(--u)); left:calc(96 * var(--u)); bottom:calc(8 * var(--u)); max-height:calc(40 * var(--u)); line-height:calc(20 * var(--u)); }
 .today-page__heading { align-items:flex-end; }
 .today-page__heading .page__subtitle { padding-bottom:calc(4 * var(--u)); }
 .today-page__status { display:flex; align-items:center; padding-bottom:calc(6 * var(--u)); }
@@ -58,6 +59,8 @@
 
 .today-weather { padding:calc(28 * var(--u)) calc(32 * var(--u)) calc(24 * var(--u)); }
 .today-weather__updated { font-size:calc(21 * var(--u)); color:#7d8480; white-space:nowrap; margin-left:calc(12 * var(--u)); overflow:hidden; text-overflow:ellipsis; }
+.today-weather__heading--observed { flex-direction:column; align-items:flex-start; }
+.today-weather__heading--observed .today-weather__updated { margin:calc(6 * var(--u)) 0 0; width:100%; font-size:calc(18 * var(--u)); }
 .today-weather__current { display:flex; align-items:center; flex:0 0 auto; margin-top:calc(10 * var(--u)); }
 .today-weather__temperature { font-size:calc(116 * var(--u)); font-weight:600; line-height:1; letter-spacing:-.04em; }
 .today-weather__description { display:flex; flex-direction:column; margin-left:calc(22 * var(--u)); min-width:0; }

@@ -160,7 +160,11 @@ func New(ctx context.Context, opts Options) (*Runtime, error) {
 		return nil, err
 	}
 
-	r.weather = widget.NewWeatherService(cfg.Widgets.Weather, db, nil)
+	weatherCfg := cfg.Widgets.Weather
+	if weatherCfg.Provider == "qweather" && weatherCfg.QWeather.Timezone == "" {
+		weatherCfg.QWeather.Timezone = cfg.Home.Timezone
+	}
+	r.weather = widget.NewWeatherService(weatherCfg, db, nil)
 	if err := r.buildPipeline(ctx, home); err != nil {
 		return nil, err
 	}

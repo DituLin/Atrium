@@ -1,0 +1,4 @@
+.weather-attribution { max-height:calc(44 * var(--u)); overflow-y:auto; overflow-x:hidden; color:#a3aaa6; font-size:calc(18 * var(--u)); line-height:calc(22 * var(--u)); text-align:right; outline:none; }
+.weather-attribution:focus { border-radius:calc(4 * var(--u)); box-shadow:0 0 0 calc(2 * var(--u)) #edb563; }
+.weather-attribution a { color:#c3c9c6; text-decoration:underline; }
+.weather-attribution__content { word-break:break-word; overflow-wrap:break-word; }

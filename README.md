@@ -137,6 +137,7 @@ make web-sync
 - [综合档案设计](docs/plans/2026-10-03-family-agentos-archives-design.md)
 - [Android TV 构建与使用](android-tv/README.md)
 - [TV 今日与房屋新版界面](docs/tv-today-house-ui.md)
+- [今日数据源与和风天气配置](docs/usage/today-data.md)
 
 中文是主文档，英文作为并行完整版本维护。新增或实质改写的面向用户文档应提供中文与英文对应稿；历史文档保留原语言，直到重写时再补齐双语。设计中的规划目标、当前代码与实际验收状态应分别说明。
 

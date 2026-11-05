@@ -152,8 +152,10 @@ func TestWeatherCurrentOnlyAndOldCacheRemainCompatible(t *testing.T) {
 	svc := widget.NewWeatherService(weatherConfig(), db, &widget.OpenMeteo{BaseURL: srv.URL, Client: srv.Client()})
 	old, err := svc.Current(context.Background(), now)
 	require.NoError(t, err)
-	require.Equal(t, 12.5, old.TemperatureC)
-	require.EqualValues(t, 0, calls.Load())
+	// An unbound legacy cache is replaced before it can be shown for a newly
+	// configured place. Its current-only shape remains accepted as fallback.
+	require.Equal(t, 0.0, old.TemperatureC)
+	require.EqualValues(t, 1, calls.Load())
 	for _, value := range []any{old} {
 		for _, field := range []string{"humidity_pct", "wind_speed_kmh", "temperature_min_c", "sunset", "hourly", "daily"} {
 			require.NotContains(t, weatherJSON(t, value), field)
@@ -163,7 +165,7 @@ func TestWeatherCurrentOnlyAndOldCacheRemainCompatible(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 0.0, fresh.TemperatureC)
 	require.Equal(t, 0, fresh.ConditionCode)
-	require.EqualValues(t, 1, calls.Load())
+	require.EqualValues(t, 2, calls.Load())
 	require.NotContains(t, weatherJSON(t, fresh), "daily")
 }
 

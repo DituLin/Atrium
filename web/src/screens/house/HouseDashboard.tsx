@@ -5,6 +5,7 @@ import { mapRemoteKey } from '../../ui/keys';
 import { focusTopNav } from '../../ui/TopNav';
 import { restoreReturnFocus } from '../info/readingRegion';
 import { familyClockTime } from '../info/familyDate';
+import { WeatherAttribution } from '../info/WeatherAttribution';
 import { buildHouseChart } from './chart';
 import type { HouseDashboardModel, HouseDevice, HouseDeviceKind, HouseReading, HouseRoom, HouseSeries } from './model';
 import { FLOORPLAN_PLACEHOLDERS } from './model';
@@ -133,6 +134,8 @@ export const HouseDashboard = forwardRef<HouseDashboardHandle, HouseDashboardPro
   const moduleStatus = deviceAvailability === 'loading' ? '正在读取设备' : deviceAvailability === 'failed' ? '设备读取失败' : deviceAvailability === 'stale' ? '设备状态待更新' : null;
   const lights = model.devices.filter(device => device.kind === 'light'), acs = model.devices.filter(device => device.kind === 'ac');
   const lightsOn = lights.filter(isOn).length, acsOn = acs.filter(isOn).length;
+  const weatherObserved = familyClockTime(model.weather?.observedAt ?? null, timezone, false);
+  const weatherUpdated = familyClockTime(model.weather?.updatedAt ?? null, timezone, false);
   const groups = [
     { title: '灯光', kinds: ['light'], sub: lights.length ? `${lightsOn} / ${lights.length} 盏亮着` : unmappedDevices ? '设备分类待配置' : '设备尚未接入' },
     { title: '空调与空气', kinds: ['ac', 'purifier', 'humidifier', 'heater'], sub: unmappedDevices ? '设备分类待配置' : '只读设备观测' },
@@ -173,7 +176,9 @@ export const HouseDashboard = forwardRef<HouseDashboardHandle, HouseDashboardPro
       <span className="house-chip house-chip--climate"><i />{acs.length ? `${acsOn} 台空调运行` : waitingForDevices ? '空调状态待确认' : unmappedDevices ? '空调待配置' : '空调未接入'}</span>
       <span className="house-chip"><i />{model.temperature || model.humidity ? `室内 ${reading(model.temperature?.current ?? unknown, 1)}° · ${reading(model.humidity?.current ?? unknown, 0)}%` : waitingForDevices ? '室内环境待确认' : unmappedDevices ? '室内环境待配置' : '室内环境未接入'}</span>
       <span className="house-chip house-chip--attention"><i />{moduleStatus ?? (model.devices.length ? `${model.devices.filter(device => device.observation !== 'available').length} 项状态待确认` : unmappedDevices ? '展示映射待配置' : '设备待配置')}</span>
-    </div><span className="house-dashboard__weather">{model.weather?.temperature !== null && model.weather?.temperature !== undefined ? `室外 ${model.weather.temperature.toFixed(0)}°${model.weather.text ? ` · ${model.weather.text}` : ''}${model.weather.stale ? ' · 上次观测' : ''}${model.weather.updatedAt ? ` · 更新于 ${familyClockTime(model.weather.updatedAt, timezone, false)}` : ''}` : '室外天气未接入'}</span></div>
+    </div><div className="house-dashboard__weather"><span>{model.weather?.temperature !== null && model.weather?.temperature !== undefined ? `室外 ${model.weather.temperature.toFixed(0)}°${model.weather.text ? ` · ${model.weather.text}` : ''}${model.weather.stale ? ' · 上次观测' : ''}${weatherObserved ? ` · 观测于 ${weatherObserved}` : ''}${weatherUpdated ? ` · ${weatherObserved ? '刷新于' : '更新于'} ${weatherUpdated}` : ''}` : '室外天气未接入'}</span>
+      <WeatherAttribution provider={model.weather?.provider} attributions={model.weather?.attributions} houseFocus onTop={() => focusTopNav()} onLeft={() => first()?.focus()} onBottom={() => first()?.focus()} />
+    </div></div>
     <section className="house-overview">
       <div className="house-floorplan" role="region" aria-label="房屋平面图">{rooms.map((room, index) => <RoomButton key={room.id} room={room} index={index} selected={room.id === selected.id} placeholder={!model.rooms.length} devices={model.devices} onSelect={() => setSelectedId(room.id)} />)}{!model.rooms.length ? <span className="house-floorplan__notice">户型示意 · 房间尚未配置</span> : null}</div>
       <aside className="house-selected" aria-label="选中房间"><div className="house-selected__heading"><strong>{selected.name}</strong><span>{model.rooms.length ? `${selectedDevices.length} 台设备${selectedDevices.some(device => device.kind === 'light' && isOn(device)) ? ` · ${selectedDevices.filter(device => device.kind === 'light' && isOn(device)).length} 盏灯亮着` : ''}` : '待配置分区'}</span></div>

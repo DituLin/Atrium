@@ -106,6 +106,8 @@ type Weather struct {
 	ForecastTimezone string        `json:"forecast_timezone,omitempty"`
 	Hourly           []WeatherHour `json:"hourly,omitempty"`
 	Daily            []WeatherDay  `json:"daily,omitempty"`
+	ObservedAt       string        `json:"observed_at,omitempty"`
+	Attributions     []string      `json:"attributions,omitempty"`
 	FetchedAt        string        `json:"fetched_at"`
 	Stale            bool          `json:"stale"`
 }

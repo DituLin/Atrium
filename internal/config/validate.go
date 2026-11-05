@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net"
 	"net/url"
 	"path/filepath"
@@ -184,13 +185,13 @@ func (c *Config) Validate() error {
 	}
 
 	if c.Widgets.Weather.Enabled {
-		if c.Widgets.Weather.Provider != "open-meteo" {
+		if c.Widgets.Weather.Provider != "open-meteo" && c.Widgets.Weather.Provider != "qweather" {
 			add("widgets.weather.provider %q is not supported", c.Widgets.Weather.Provider)
 		}
-		if c.Widgets.Weather.Latitude < -90 || c.Widgets.Weather.Latitude > 90 {
+		if math.IsNaN(c.Widgets.Weather.Latitude) || math.IsInf(c.Widgets.Weather.Latitude, 0) || c.Widgets.Weather.Latitude < -90 || c.Widgets.Weather.Latitude > 90 {
 			add("widgets.weather.latitude out of range")
 		}
-		if c.Widgets.Weather.Longitude < -180 || c.Widgets.Weather.Longitude > 180 {
+		if math.IsNaN(c.Widgets.Weather.Longitude) || math.IsInf(c.Widgets.Weather.Longitude, 0) || c.Widgets.Weather.Longitude < -180 || c.Widgets.Weather.Longitude > 180 {
 			add("widgets.weather.longitude out of range")
 		}
 		if c.Widgets.Weather.RefreshInterval <= 0 {
@@ -198,6 +199,30 @@ func (c *Config) Validate() error {
 		}
 		if c.Widgets.Weather.StaleAfter <= 0 {
 			add("widgets.weather.stale_after must be positive")
+		}
+		if c.Widgets.Weather.Provider == "qweather" {
+			q := c.Widgets.Weather.QWeather
+			if !regexp.MustCompile(`^[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.qweatherapi\.com$`).MatchString(q.APIHost) {
+				add("widgets.weather.qweather.api_host must be a dedicated QWeather hostname")
+			}
+			if q.Timezone != "" {
+				if _, err := time.LoadLocation(q.Timezone); err != nil {
+					add("widgets.weather.qweather.timezone must be a known IANA timezone")
+				}
+			}
+			hasJWT := q.JWT != (QWeatherJWT{})
+			if (q.APIKeyFile != "") == hasJWT {
+				add("widgets.weather.qweather requires exactly one of api_key_file or jwt")
+			}
+			if q.APIKeyFile != "" && (!filepath.IsAbs(q.APIKeyFile) || strings.TrimSpace(q.APIKeyFile) != q.APIKeyFile) {
+				add("widgets.weather.qweather.api_key_file must be an absolute path")
+			}
+			if hasJWT {
+				id := regexp.MustCompile(`^[A-Za-z0-9_-]{1,128}$`)
+				if !id.MatchString(q.JWT.DeveloperID) || !id.MatchString(q.JWT.ProjectID) || !id.MatchString(q.JWT.CredentialID) || !filepath.IsAbs(q.JWT.PrivateKeyFile) || strings.TrimSpace(q.JWT.PrivateKeyFile) != q.JWT.PrivateKeyFile {
+					add("widgets.weather.qweather.jwt requires bounded developer_id, project_id, credential_id and an absolute private_key_file")
+				}
+			}
 		}
 	}
 

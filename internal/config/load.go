@@ -194,6 +194,16 @@ func (c *Config) normalize() error {
 			}
 		}
 	}
+	for _, p := range []*string{&c.Widgets.Weather.QWeather.APIKeyFile, &c.Widgets.Weather.QWeather.JWT.PrivateKeyFile} {
+		if *p != "" {
+			if strings.TrimSpace(*p) != *p {
+				return errors.New("weather: credential file paths must not contain surrounding whitespace")
+			}
+			if *p, err = ExpandPath(*p); err != nil {
+				return errors.New("weather: invalid credential file path")
+			}
+		}
+	}
 	return nil
 }
 

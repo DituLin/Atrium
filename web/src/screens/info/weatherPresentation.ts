@@ -78,6 +78,7 @@ export interface WeatherPresentation {
   temperature: string;
   range: string;
   updated: string | null;
+  observed: string | null;
   stats: Array<{ label: string; value: string; accent?: boolean }>;
   hourly: HourlyPoint[];
   line: string;
@@ -111,6 +112,8 @@ function path(points: HourlyPoint[]): string {
 /** The forecast date belongs to the provider's reported timezone. Actual
  * instants (hourly/update/sunset) are formatted in the family's home timezone. */
 export function presentWeather(weather: WeatherWidgetPayload | null, options: ClockFormatOptions | null, now: number): WeatherPresentation {
+  const observed = clockTime(weather?.observed_at, options);
+  const observationTime = observed ? Date.parse(weather!.observed_at!) : now;
   const humidity = weather?.humidity_pct;
   const speed = weather?.wind_speed_kmh, direction = weather?.wind_direction_deg;
   const wind = finite(speed) && speed >= 0
@@ -122,7 +125,7 @@ export function presentWeather(weather: WeatherWidgetPayload | null, options: Cl
     { label: '风', value: wind }, { label: '日落', value: clockTime(weather?.sunset, options) ?? '—' }];
 
   const observations: Array<{ timestamp: number; temperature: number; current: boolean }> = [];
-  if (weather && !weather.stale && finite(weather.temperature_c)) observations.push({ timestamp: now, temperature: weather.temperature_c, current: true });
+  if (weather && !weather.stale && finite(weather.temperature_c)) observations.push({ timestamp: observationTime, temperature: weather.temperature_c, current: true });
   const seen = new Set<number>();
   const candidates = (weather?.hourly ?? []).filter(item => finite(item.temperature_c) && Number.isFinite(Date.parse(item.time)))
     .map(item => ({ timestamp: Date.parse(item.time), temperature: item.temperature_c as number, current: false }))
@@ -139,7 +142,7 @@ export function presentWeather(weather: WeatherWidgetPayload | null, options: Cl
     const high = Math.max(...observations.map(point => point.temperature)) + 1;
     const start = observations[0]!.timestamp, duration = observations[observations.length - 1]!.timestamp - start;
     for (const item of observations) {
-      hourly.push({ ...item, time: item.current ? '现在' : `${String(wallClockParts(item.timestamp, options).hour).padStart(2, '0')}时`,
+      hourly.push({ ...item, time: item.current ? observed ? '实况' : '现在' : `${String(wallClockParts(item.timestamp, options).hour).padStart(2, '0')}时`,
         x: 22 + (item.timestamp - start) / duration * 392, y: 30 + (1 - (item.temperature - low) / (high - low)) * 64 });
     }
   }
@@ -166,5 +169,5 @@ export function presentWeather(weather: WeatherWidgetPayload | null, options: Cl
     left: ((day.min_c as number) - lower) / span * 100, width: ((day.max_c as number) - (day.min_c as number)) / span * 100,
     current: day.date === today && !weather?.stale && finite(current) ? Math.max(0, Math.min(100, (current - lower) / span * 100)) : null }));
   return { temperature: temperature(weather?.temperature_c), range: `最高 ${temperature(weather?.temperature_max_c)} · 最低 ${temperature(weather?.temperature_min_c)}`,
-    updated: clockTime(weather?.fetched_at, options), stats, hourly, line, area, days };
+    updated: clockTime(weather?.fetched_at, options), observed, stats, hourly, line, area, days };
 }

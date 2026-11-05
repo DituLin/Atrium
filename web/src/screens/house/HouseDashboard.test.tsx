@@ -56,3 +56,12 @@ it('reports IoT loading/failure/stale honestly in the title instead of presentin
   expect(screen.getByText('展示映射待配置')).toBeDefined(); expect(screen.getByText('灯光待配置')).toBeDefined();
   expect(screen.getByText('鱼缸展示待配置')).toBeDefined(); expect(screen.queryByText('鱼缸尚未接入')).toBeNull();
 });
+
+it('attributes outdoor QWeather readings and distinguishes observation time from refresh time', () => {
+  const model = { ...fixture(), weather: { temperature: 18, text: '阴', stale: false, provider: 'qweather',
+    observedAt: '2026-11-04T19:35:00Z', updatedAt: '2026-11-04T19:59:00Z', attributions: ['示例气象机构'] } };
+  render(<HouseDashboard model={model} timezone="UTC" />);
+  expect(screen.getByText('室外 18° · 阴 · 观测于 19:35 · 刷新于 19:59')).toBeDefined();
+  expect(screen.getByRole('link', { name: '和风天气 · QWeather' })).toBeDefined();
+  expect(screen.getByText('示例气象机构')).toBeDefined();
+});
