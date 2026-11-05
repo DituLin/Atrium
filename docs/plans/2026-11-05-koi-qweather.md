@@ -38,15 +38,15 @@ Root integration: `internal/app/runtime.go` supplies the household timezone only
 
 - [x] Run complete frontend tests, lint, typecheck/build and appropriate Go tests. Obtain independent review.
 - [x] Update bilingual public usage/deployment documentation with implemented capabilities and actual verification status.
-- [ ] Build a signed candidate against the current deployed source closure. Verify in isolation, back up before activation, preserve schema, source/screen/archive identities and the 2 GiB on-demand media policy.
-- [ ] Verify the actual OnePlus UI and restore its original route. Commit/push only task changes, retain unrelated documents byte-for-byte, and clean only this task's temporary build caches.
+- [x] Build a signed candidate against the current deployed source closure. Verify in isolation, back up before activation, preserve schema, source/screen/archive identities and the 2 GiB on-demand media policy.
+- [x] Verify the actual OnePlus UI and restore its original route. Commit/push only task changes, retain unrelated documents byte-for-byte, and clean only this task's temporary build caches.
 
-## Verified code status (2026-11-05)
+## QWeather implementation checkpoint before KOI integration (2026-11-05)
 
 - QWeather adapter and UI are implemented. Full frontend regression: 96 files / 718 tests passed; lint and TypeScript/build passed. Full Go regression and widget/config race tests passed. An independent review retained its original timeout/null/attribution probes and verified cache isolation, bounded retries and concurrent refresh deduplication.
 - Synthetic browser checks passed at 1920×1080, 1366×768 and 804×384, including long attribution remote scrolling, safe links that do not trigger refresh, complete card layout and House attribution. All task-owned synthetic listeners were stopped.
-- The user supplied the actual KOI GitHub source on November 5. Calendar implementation is proceeding from the pinned repository. KOI weather is a placeholder and contains no reusable QWeather credentials. A dedicated QWeather host, credentials and a confirmed weather location are still unavailable; production weather configuration remains unchanged.
-- Signed calendar production activation and physical-device validation are pending the calendar implementation checks. QWeather production acceptance remains pending its real configuration; prior release verification is not evidence of that acceptance.
+- The user supplied the actual KOI GitHub source on November 5. Calendar implementation is now complete from the pinned repository; the final verification is recorded below. KOI weather is a placeholder and contains no reusable QWeather credentials. A dedicated QWeather host, credentials and a confirmed weather location are still unavailable; production weather configuration remains unchanged.
+- Signed calendar production activation and OnePlus physical-device validation passed for `3f9e24c`. QWeather production acceptance remains pending its real configuration; calendar acceptance is not evidence of real weather-account acceptance.
 
 ## KOI implementation verification (2026-11-05)
 
@@ -55,4 +55,4 @@ Root integration: `internal/app/runtime.go` supplies the household timezone only
 - The exact current deployed Go source closure plus the allowlisted QWeather changes passed all Go tests and widget/config race checks. No unrelated backend implementation is being replaced.
 - Browser checks cover 12 dates at 1920×1080 and 804×384, with a different browser timezone, long activity lists, leap months, range edges and removed flat/flatMap support. No overlap or page errors.
 - Independent original-reference comparison covers all 72,684 supported civil days and all 4,776 term entries; sxtwl lunar comparison also matches. Upstream sxtwl month-pillar getter differs from KOI’s bundled whole-day term convention on two historical dates; preserve the explicitly versioned KOI contract.
-- Deployment and OnePlus verification remain pending at this implementation checkpoint. Weather activation still requires actual account/location configuration.
+- Signed deployment and OnePlus verification passed for `3f9e24c`: 8 backend and 8 embedded browser groups, exact original-reference calendar projection on OnePlus, retained archive/IoT behavior, original Archives route restored and temporary forward removed. Schema, config, service definition, ordinary-user identity, existing business/source/photo/screen identities and on-demand cache policy were preserved. Weather activation still requires actual account/location configuration.

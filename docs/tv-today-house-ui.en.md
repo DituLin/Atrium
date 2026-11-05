@@ -2,13 +2,13 @@
 
 [中文](tv-today-house-ui.md) | English
 
-Updated: 2026-11-04. Status: implemented and deployed, with final signed-candidate and OnePlus device acceptance passed. The TCL was offline and has not received this release's physical-device acceptance.
+Updated: 2026-11-05. Today now uses KOI almanac data and is deployed, with OnePlus acceptance passed. QWeather code is implemented but real configuration is pending; see [Today data sources and release verification](usage/today-data.en.md). The delivery table below retains the November 4 interface release’s historical acceptance record. This update has not completed TCL physical-device acceptance.
 
 ## Today: almanac and weather
 
-Today follows the supplied HTML design with two main cards: a wide almanac and weather. The almanac uses the household timezone, `home.timezone`, for the Gregorian date, lunar date, sexagenary calendar labels, week number, day of year, solar-term progress and seven-day week strip. The date changes at household midnight and is checked again on page entry and foreground return after sleep. Lunar dates and solar terms use the existing local calendar calculations; dates outside the supported range show an explanation.
+Today follows the supplied HTML design with two main cards: a wide almanac and weather. The almanac uses the household timezone, `home.timezone`, for the Gregorian date, lunar date, sexagenary calendar labels, week number, day of year, solar-term progress and seven-day week strip. The date changes at household midnight and is checked again on page entry and foreground return after sleep. Lunar dates, pillars, solar terms and the week strip now consistently use KOI’s offline tables and rules. Dates outside the supported 1901–2099 range show an explanation.
 
-The auspicious and inauspicious activity fields currently have no data source and display “暂无资料” (“No information”). They do not copy the design's example content. This page does not establish an external calendar or event synchronization service.
+The November 4 initial release retained missing activity states. The November 5 version supplies complete activity lists from the simplified traditional `koi-almanac/1.0` rules and adds the month pillar and source label. See the data-source guide above for year/month boundaries and coverage. This page does not provide external event synchronization.
 
 The November 4, 2026 deployment uses optional Open-Meteo weather. See [Today data sources and QWeather configuration](usage/today-data.en.md) for the QWeather adapter added on November 5 and its pending real configuration. Maintainers must enable the selected provider in `widgets.weather` and configure the actual location; see the [configuration example](../config.example.yaml). Updating the interface does not select a city or populate credentials automatically.
 
@@ -30,11 +30,11 @@ Device cards do not send hardware commands or depict a click as a successful ope
 
 This interface update builds on the merged HA support. It preserves schema 18, existing configuration, the system service running as the original ordinary user, source and screen identities, and the [on-demand preview policy with a 2 GiB cache budget](usage/photo-cache.en.md). It does not grant additional home-control permissions or complete room mappings, real historical data or all dynamic IoT recovery acceptance.
 
-The interface implementation commit is `9ca65ae`, with HA merged in `c6f2383` and the final CSS correction in `acd18c6`. The deployed signed Core version is `today-house-ui-acd18c6+c06c6a591e9a33c6a93bc0def15d3e29061f9d07`. Activation preserved schema 18, configuration, the system service definition and ordinary-user identity, business data, source and photo identities, and screen pairings. The existing KeepAlive mechanism restarted the service normally without changes to its definition.
+The interface implementation commit is `9ca65ae`, with HA merged in `c6f2383` and the final CSS correction in `acd18c6`. The signed Core deployed on November 4 was `today-house-ui-acd18c6+c06c6a591e9a33c6a93bc0def15d3e29061f9d07`. Activation preserved schema 18, configuration, the system service definition and ordinary-user identity, business data, source and photo identities, and screen pairings. The existing KeepAlive mechanism restarted the service normally without changes to its definition.
 
-The recorded validation scope is:
+The historical validation scope for the November 4 interface release is:
 
-| Check | Current result |
+| Check | Historical result |
 | --- | --- |
 | Frontend regression, lint, TypeScript and compatibility | Final `acd18c6` passed all 707 tests across 95 files and 11 targeted checks; lint, TypeScript builds and the Chrome 66 style check passed |
 | Go regression | Full repository tests passed; full final candidate-source tests, including the embedded frontend, passed with `-p 1`; weather-component race checks passed |
