@@ -2,11 +2,17 @@
 
 [中文](today-data.md) | English
 
-This document describes the integration implemented in code. The November 5, 2026 KOI calendar enrichment and QWeather integration have not completed production configuration or acceptance. See the [Today and House interface record](../tv-today-house-ui.en.md) for the previous release.
+This document describes the data behind Today’s almanac and weather. KOI calendar data is integrated. The server-side QWeather adapter and its UI are implemented; the real account and location still require configuration. See the verification status below and the [Today and House interface record](../tv-today-house-ui.en.md) for the previous interface release.
 
 ## Almanac
 
-The existing Gregorian/lunar dates, year/day sexagenary labels, solar terms and week strip use the household timezone. Auspicious/inauspicious activities and the month label require a verified almanac source, rather than values copied from a UI example. Until the actual KOI implementation is available, the page retains its missing states. A project specification is not a calendar database. Before reuse, verify its dependencies, license, year boundary, solar-term month changes and day-boundary convention, then document which data is reused.
+Today uses the generic lunar table, solar-term table and almanac rules from [KOI](https://github.com/DituLin/Koi), pinned to commit `f973da1b07a8bc3a387c202fd1a134f24924a3fc`. A pure TypeScript module computes lunar dates, year/month/day pillars, solar terms, the week strip and complete auspicious/inauspicious activity lists offline. It makes no external almanac requests and reads no KOI personal records. The page labels its source `KOI 黄历 · koi-almanac/1.0`.
+
+The supported Gregorian range is **1901-01-01 through 2099-12-31**. The household timezone supplies the civil date; day-number arithmetic prevents the browser timezone or daylight saving from shifting it. Lunar years change at Chinese New Year. Almanac year pillars and zodiac change on the **civil date of Lichun**, and month pillars change on the civil dates of the twelve Jie terms, rather than at their exact transition times. Solar-term timestamps use KOI’s original UTC+8 table with minute precision; the progress bar uses civil days.
+
+Activities follow KOI’s versioned, simplified traditional rules, including day-officer and deity rules, with prohibitions taking precedence in conflicts. They are not a publisher’s individually verified daily almanac. When a range boundary lacks a preceding or following term, the page retains an explicit missing state instead of mixing in approximate terms. Outside the range, Gregorian information remains visible with KOI’s supported range.
+
+Original tables, rules and fixtures retain the source commit and SHA-256 hashes. The port is checked against KOI’s existing fixtures. Fixture conformance establishes agreement with KOI’s algorithm, rather than independent authoritative validation of every activity.
 
 ## QWeather
 

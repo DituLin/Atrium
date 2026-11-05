@@ -1,0 +1,7503 @@
+{
+ "version": "1.0.0",
+ "source": "almanac_ref (koi-almanac/1.0) + published spot checks",
+ "count": 74,
+ "cases": [
+  {
+   "input": {
+    "solar": "1901-02-03"
+   },
+   "expected": {
+    "yearPillar": "庚子",
+    "monthPillar": "己丑",
+    "dayPillar": "壬子",
+    "zodiac": "鼠",
+    "nayin": "桑柘木",
+    "jianchu": "闭",
+    "zhishen": "天刑",
+    "zhishenLucky": false,
+    "chong": "马",
+    "sha": "南",
+    "auspiciousDeities": [
+     "六合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "交易",
+     "储蓄",
+     "嫁娶",
+     "安葬",
+     "立券",
+     "筑堤"
+    ],
+    "ji": [
+     "出行",
+     "开市",
+     "手术"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "朱雀",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库碓外东北",
+    "pengzu": [
+     "壬不汲水更难提防",
+     "子不问卜自惹祸殃"
+    ],
+    "xiu": "虚"
+   }
+  },
+  {
+   "input": {
+    "solar": "1901-02-04"
+   },
+   "expected": {
+    "yearPillar": "辛丑",
+    "monthPillar": "庚寅",
+    "dayPillar": "癸丑",
+    "zodiac": "牛",
+    "nayin": "桑柘木",
+    "jianchu": "闭",
+    "zhishen": "明堂",
+    "zhishenLucky": true,
+    "chong": "羊",
+    "sha": "东",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "储蓄",
+     "安葬",
+     "筑堤"
+    ],
+    "ji": [
+     "出行",
+     "开市",
+     "手术"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "明堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "房床厕外东北",
+    "pengzu": [
+     "癸不词讼理弱敌强",
+     "丑不冠带主不还乡"
+    ],
+    "xiu": "危"
+   }
+  },
+  {
+   "input": {
+    "solar": "1904-04-18"
+   },
+   "expected": {
+    "yearPillar": "甲辰",
+    "monthPillar": "戊辰",
+    "dayPillar": "壬午",
+    "zodiac": "龙",
+    "nayin": "杨柳木",
+    "jianchu": "满",
+    "zhishen": "天刑",
+    "zhishenLucky": false,
+    "chong": "鼠",
+    "sha": "北",
+    "auspiciousDeities": [
+     "月德",
+     "天德"
+    ],
+    "inauspiciousDeities": [
+     "灾煞"
+    ],
+    "yi": [
+     "修造",
+     "出行",
+     "嫁娶",
+     "祈福",
+     "祭祀",
+     "纳财"
+    ],
+    "ji": [
+     "动土",
+     "安床",
+     "安葬"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "朱雀",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库碓外西北",
+    "pengzu": [
+     "壬不汲水更难提防",
+     "午不苫盖屋主更张"
+    ],
+    "xiu": "心"
+   }
+  },
+  {
+   "input": {
+    "solar": "1908-05-10"
+   },
+   "expected": {
+    "yearPillar": "戊申",
+    "monthPillar": "丁巳",
+    "dayPillar": "乙丑",
+    "zodiac": "猴",
+    "nayin": "海中金",
+    "jianchu": "成",
+    "zhishen": "玉堂",
+    "zhishenLucky": true,
+    "chong": "羊",
+    "sha": "东",
+    "auspiciousDeities": [
+     "月德合",
+     "三合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "入学",
+     "入宅",
+     "嫁娶",
+     "开市",
+     "竣工",
+     "订盟"
+    ],
+    "ji": [
+     "诉讼"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "明堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "碓磨厕外东南",
+    "pengzu": [
+     "乙不栽植千株不长",
+     "丑不冠带主不还乡"
+    ],
+    "xiu": "房"
+   }
+  },
+  {
+   "input": {
+    "solar": "1909-11-27"
+   },
+   "expected": {
+    "yearPillar": "己酉",
+    "monthPillar": "乙亥",
+    "dayPillar": "辛卯",
+    "zodiac": "鸡",
+    "nayin": "松柏木",
+    "jianchu": "定",
+    "zhishen": "玄武",
+    "zhishenLucky": false,
+    "chong": "鸡",
+    "sha": "西",
+    "auspiciousDeities": [
+     "三合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "嫁娶",
+     "安床",
+     "开市",
+     "纳畜",
+     "订盟"
+    ],
+    "ji": [
+     "出行",
+     "诉讼"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玄武",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "厨灶门外正北",
+    "pengzu": [
+     "辛不合酱主人不尝",
+     "卯不穿井水泉不香"
+    ],
+    "xiu": "女"
+   }
+  },
+  {
+   "input": {
+    "solar": "1913-01-11"
+   },
+   "expected": {
+    "yearPillar": "壬子",
+    "monthPillar": "癸丑",
+    "dayPillar": "壬辰",
+    "zodiac": "鼠",
+    "nayin": "长流水",
+    "jianchu": "平",
+    "zhishen": "白虎",
+    "zhishenLucky": false,
+    "chong": "狗",
+    "sha": "南",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "修造",
+     "平整道路"
+    ],
+    "ji": [
+     "安床",
+     "祈福"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玉堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库栖外正北",
+    "pengzu": [
+     "壬不汲水更难提防",
+     "辰不哭泣必主重丧"
+    ],
+    "xiu": "氐"
+   }
+  },
+  {
+   "input": {
+    "solar": "1915-10-11"
+   },
+   "expected": {
+    "yearPillar": "乙卯",
+    "monthPillar": "丙戌",
+    "dayPillar": "乙亥",
+    "zodiac": "兔",
+    "nayin": "山头火",
+    "jianchu": "除",
+    "zhishen": "玉堂",
+    "zhishenLucky": true,
+    "chong": "蛇",
+    "sha": "西",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [
+     "劫煞"
+    ],
+    "yi": [
+     "扫舍",
+     "沐浴",
+     "治病",
+     "除旧布新"
+    ],
+    "ji": [
+     "出行",
+     "嫁娶",
+     "纳财"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "碓磨床外西南",
+    "pengzu": [
+     "乙不栽植千株不长",
+     "亥不嫁娶不利新郎"
+    ],
+    "xiu": "张"
+   }
+  },
+  {
+   "input": {
+    "solar": "1917-08-31"
+   },
+   "expected": {
+    "yearPillar": "丁巳",
+    "monthPillar": "戊申",
+    "dayPillar": "乙巳",
+    "zodiac": "蛇",
+    "nayin": "覆灯火",
+    "jianchu": "收",
+    "zhishen": "宝光",
+    "zhishenLucky": true,
+    "chong": "猪",
+    "sha": "东",
+    "auspiciousDeities": [
+     "六合"
+    ],
+    "inauspiciousDeities": [
+     "劫煞"
+    ],
+    "yi": [
+     "交易",
+     "嫁娶",
+     "收纳",
+     "立券"
+    ],
+    "ji": [
+     "出行",
+     "安葬",
+     "开市",
+     "纳财"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "碓磨床房内东",
+    "pengzu": [
+     "乙不栽植千株不长",
+     "巳不远行财物伏藏"
+    ],
+    "xiu": "娄"
+   }
+  },
+  {
+   "input": {
+    "solar": "1918-05-05"
+   },
+   "expected": {
+    "yearPillar": "戊午",
+    "monthPillar": "丙辰",
+    "dayPillar": "壬子",
+    "zodiac": "马",
+    "nayin": "桑柘木",
+    "jianchu": "成",
+    "zhishen": "天牢",
+    "zhishenLucky": false,
+    "chong": "马",
+    "sha": "南",
+    "auspiciousDeities": [
+     "月德",
+     "天德",
+     "三合",
+     "母仓"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "修造",
+     "入学",
+     "入宅",
+     "出行",
+     "嫁娶",
+     "开市",
+     "栽种",
+     "祈福",
+     "祭祀",
+     "竣工",
+     "纳畜"
+    ],
+    "ji": [
+     "诉讼"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "朱雀",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库碓外东北",
+    "pengzu": [
+     "壬不汲水更难提防",
+     "子不问卜自惹祸殃"
+    ],
+    "xiu": "虚"
+   }
+  },
+  {
+   "input": {
+    "solar": "1924-09-04"
+   },
+   "expected": {
+    "yearPillar": "甲子",
+    "monthPillar": "壬申",
+    "dayPillar": "丙戌",
+    "zodiac": "鼠",
+    "nayin": "屋上土",
+    "jianchu": "满",
+    "zhishen": "司命",
+    "zhishenLucky": true,
+    "chong": "龙",
+    "sha": "北",
+    "auspiciousDeities": [
+     "母仓"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "栽种",
+     "祈福",
+     "祭祀",
+     "纳畜",
+     "纳财"
+    ],
+    "ji": [
+     "动土",
+     "安葬"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玉堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "厨灶栖外西北",
+    "pengzu": [
+     "丙不修灶必见灾殃",
+     "戌不吃犬作怪上床"
+    ],
+    "xiu": "角"
+   }
+  },
+  {
+   "input": {
+    "solar": "1930-02-18"
+   },
+   "expected": {
+    "yearPillar": "庚午",
+    "monthPillar": "戊寅",
+    "dayPillar": "己亥",
+    "zodiac": "马",
+    "nayin": "平地木",
+    "jianchu": "收",
+    "zhishen": "勾陈",
+    "zhishenLucky": false,
+    "chong": "蛇",
+    "sha": "西",
+    "auspiciousDeities": [
+     "六合",
+     "母仓"
+    ],
+    "inauspiciousDeities": [
+     "劫煞"
+    ],
+    "yi": [
+     "交易",
+     "嫁娶",
+     "收纳",
+     "栽种",
+     "立券",
+     "纳畜"
+    ],
+    "ji": [
+     "出行",
+     "安葬",
+     "开市",
+     "纳财"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占门床房内中",
+    "pengzu": [
+     "己不破券二比并亡",
+     "亥不嫁娶不利新郎"
+    ],
+    "xiu": "尾"
+   }
+  },
+  {
+   "input": {
+    "solar": "1932-05-27"
+   },
+   "expected": {
+    "yearPillar": "壬申",
+    "monthPillar": "乙巳",
+    "dayPillar": "戊子",
+    "zodiac": "猴",
+    "nayin": "霹雳火",
+    "jianchu": "危",
+    "zhishen": "白虎",
+    "zhishenLucky": false,
+    "chong": "马",
+    "sha": "南",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "安床",
+     "祭祀"
+    ],
+    "ji": [
+     "冒险",
+     "登高",
+     "行船"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "朱雀",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "房床碓外正北",
+    "pengzu": [
+     "戊不受田田主不祥",
+     "子不问卜自惹祸殃"
+    ],
+    "xiu": "鬼"
+   }
+  },
+  {
+   "input": {
+    "solar": "1933-10-05"
+   },
+   "expected": {
+    "yearPillar": "癸酉",
+    "monthPillar": "辛酉",
+    "dayPillar": "甲辰",
+    "zodiac": "鸡",
+    "nayin": "覆灯火",
+    "jianchu": "危",
+    "zhishen": "天刑",
+    "zhishenLucky": false,
+    "chong": "狗",
+    "sha": "南",
+    "auspiciousDeities": [
+     "六合",
+     "母仓"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "交易",
+     "嫁娶",
+     "安床",
+     "栽种",
+     "祭祀",
+     "立券",
+     "纳畜"
+    ],
+    "ji": [
+     "冒险",
+     "登高",
+     "行船"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玉堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "门鸡栖房内东",
+    "pengzu": [
+     "甲不开仓财物耗散",
+     "辰不哭泣必主重丧"
+    ],
+    "xiu": "奎"
+   }
+  },
+  {
+   "input": {
+    "solar": "1934-01-31"
+   },
+   "expected": {
+    "yearPillar": "癸酉",
+    "monthPillar": "乙丑",
+    "dayPillar": "壬寅",
+    "zodiac": "鸡",
+    "nayin": "金箔金",
+    "jianchu": "除",
+    "zhishen": "金匮",
+    "zhishenLucky": true,
+    "chong": "猴",
+    "sha": "北",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [
+     "劫煞"
+    ],
+    "yi": [
+     "扫舍",
+     "沐浴",
+     "治病",
+     "除旧布新"
+    ],
+    "ji": [
+     "出行",
+     "嫁娶",
+     "纳财"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "勾陈",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库炉房内南",
+    "pengzu": [
+     "壬不汲水更难提防",
+     "寅不祭祀神鬼不尝"
+    ],
+    "xiu": "参"
+   }
+  },
+  {
+   "input": {
+    "solar": "1935-07-07"
+   },
+   "expected": {
+    "yearPillar": "乙亥",
+    "monthPillar": "壬午",
+    "dayPillar": "甲申",
+    "zodiac": "猪",
+    "nayin": "泉中水",
+    "jianchu": "满",
+    "zhishen": "青龙",
+    "zhishenLucky": true,
+    "chong": "虎",
+    "sha": "南",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "祈福",
+     "祭祀",
+     "纳财"
+    ],
+    "ji": [
+     "动土",
+     "安葬"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "勾陈",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占门炉外西北",
+    "pengzu": [
+     "甲不开仓财物耗散",
+     "申不安床鬼祟入房"
+    ],
+    "xiu": "虚"
+   }
+  },
+  {
+   "input": {
+    "solar": "1939-11-13"
+   },
+   "expected": {
+    "yearPillar": "己卯",
+    "monthPillar": "乙亥",
+    "dayPillar": "甲寅",
+    "zodiac": "兔",
+    "nayin": "大溪水",
+    "jianchu": "平",
+    "zhishen": "天牢",
+    "zhishenLucky": false,
+    "chong": "猴",
+    "sha": "北",
+    "auspiciousDeities": [
+     "月德",
+     "六合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "交易",
+     "会亲友",
+     "修造",
+     "出行",
+     "嫁娶",
+     "平整道路",
+     "立券"
+    ],
+    "ji": [
+     "安床",
+     "祈福"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "勾陈",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占门炉外东北",
+    "pengzu": [
+     "甲不开仓财物耗散",
+     "寅不祭祀神鬼不尝"
+    ],
+    "xiu": "心"
+   }
+  },
+  {
+   "input": {
+    "solar": "1944-10-17"
+   },
+   "expected": {
+    "yearPillar": "甲申",
+    "monthPillar": "甲戌",
+    "dayPillar": "甲寅",
+    "zodiac": "猴",
+    "nayin": "大溪水",
+    "jianchu": "定",
+    "zhishen": "司命",
+    "zhishenLucky": true,
+    "chong": "猴",
+    "sha": "北",
+    "auspiciousDeities": [
+     "三合"
+    ],
+    "inauspiciousDeities": [
+     "四废"
+    ],
+    "yi": [
+     "会亲友",
+     "安床",
+     "纳畜",
+     "订盟"
+    ],
+    "ji": [
+     "出行",
+     "动土",
+     "嫁娶",
+     "开市",
+     "诉讼"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "勾陈",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占门炉外东北",
+    "pengzu": [
+     "甲不开仓财物耗散",
+     "寅不祭祀神鬼不尝"
+    ],
+    "xiu": "室"
+   }
+  },
+  {
+   "input": {
+    "solar": "1947-01-07"
+   },
+   "expected": {
+    "yearPillar": "丙戌",
+    "monthPillar": "辛丑",
+    "dayPillar": "丙戌",
+    "zodiac": "狗",
+    "nayin": "屋上土",
+    "jianchu": "收",
+    "zhishen": "青龙",
+    "zhishenLucky": true,
+    "chong": "龙",
+    "sha": "北",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "收纳",
+     "立券",
+     "纳财"
+    ],
+    "ji": [
+     "安葬",
+     "开市"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玉堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "厨灶栖外西北",
+    "pengzu": [
+     "丙不修灶必见灾殃",
+     "戌不吃犬作怪上床"
+    ],
+    "xiu": "室"
+   }
+  },
+  {
+   "input": {
+    "solar": "1947-11-17"
+   },
+   "expected": {
+    "yearPillar": "丁亥",
+    "monthPillar": "辛亥",
+    "dayPillar": "庚子",
+    "zodiac": "猪",
+    "nayin": "壁上土",
+    "jianchu": "除",
+    "zhishen": "白虎",
+    "zhishenLucky": false,
+    "chong": "马",
+    "sha": "南",
+    "auspiciousDeities": [
+     "天德合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "扫舍",
+     "沐浴",
+     "治病",
+     "祈福",
+     "除旧布新"
+    ],
+    "ji": [
+     "出行",
+     "嫁娶"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "朱雀",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占碓磨房内南",
+    "pengzu": [
+     "庚不经络织机虚张",
+     "子不问卜自惹祸殃"
+    ],
+    "xiu": "毕"
+   }
+  },
+  {
+   "input": {
+    "solar": "1950-02-03"
+   },
+   "expected": {
+    "yearPillar": "己丑",
+    "monthPillar": "丁丑",
+    "dayPillar": "己巳",
+    "zodiac": "牛",
+    "nayin": "大林木",
+    "jianchu": "定",
+    "zhishen": "玉堂",
+    "zhishenLucky": true,
+    "chong": "猪",
+    "sha": "东",
+    "auspiciousDeities": [
+     "三合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "嫁娶",
+     "安床",
+     "开市",
+     "纳畜",
+     "订盟"
+    ],
+    "ji": [
+     "出行",
+     "诉讼"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占门床外正南",
+    "pengzu": [
+     "己不破券二比并亡",
+     "巳不远行财物伏藏"
+    ],
+    "xiu": "娄"
+   }
+  },
+  {
+   "input": {
+    "solar": "1950-02-04"
+   },
+   "expected": {
+    "yearPillar": "庚寅",
+    "monthPillar": "戊寅",
+    "dayPillar": "庚午",
+    "zodiac": "虎",
+    "nayin": "路旁土",
+    "jianchu": "定",
+    "zhishen": "白虎",
+    "zhishenLucky": false,
+    "chong": "鼠",
+    "sha": "北",
+    "auspiciousDeities": [
+     "三合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "嫁娶",
+     "安床",
+     "开市",
+     "纳畜",
+     "订盟"
+    ],
+    "ji": [
+     "出行",
+     "诉讼"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "朱雀",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占碓磨外正南",
+    "pengzu": [
+     "庚不经络织机虚张",
+     "午不苫盖屋主更张"
+    ],
+    "xiu": "胃"
+   }
+  },
+  {
+   "input": {
+    "solar": "1954-06-18"
+   },
+   "expected": {
+    "yearPillar": "甲午",
+    "monthPillar": "庚午",
+    "dayPillar": "乙巳",
+    "zodiac": "马",
+    "nayin": "覆灯火",
+    "jianchu": "闭",
+    "zhishen": "玄武",
+    "zhishenLucky": false,
+    "chong": "猪",
+    "sha": "东",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "储蓄",
+     "安葬",
+     "筑堤"
+    ],
+    "ji": [
+     "出行",
+     "开市",
+     "手术"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "碓磨床房内东",
+    "pengzu": [
+     "乙不栽植千株不长",
+     "巳不远行财物伏藏"
+    ],
+    "xiu": "娄"
+   }
+  },
+  {
+   "input": {
+    "solar": "1954-09-03"
+   },
+   "expected": {
+    "yearPillar": "甲午",
+    "monthPillar": "壬申",
+    "dayPillar": "壬戌",
+    "zodiac": "马",
+    "nayin": "大海水",
+    "jianchu": "满",
+    "zhishen": "司命",
+    "zhishenLucky": true,
+    "chong": "龙",
+    "sha": "北",
+    "auspiciousDeities": [
+     "月德",
+     "母仓"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "修造",
+     "出行",
+     "栽种",
+     "祈福",
+     "祭祀",
+     "纳畜",
+     "纳财"
+    ],
+    "ji": [
+     "动土",
+     "安葬"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玉堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库栖外东南",
+    "pengzu": [
+     "壬不汲水更难提防",
+     "戌不吃犬作怪上床"
+    ],
+    "xiu": "牛"
+   }
+  },
+  {
+   "input": {
+    "solar": "1956-04-12"
+   },
+   "expected": {
+    "yearPillar": "丙申",
+    "monthPillar": "壬辰",
+    "dayPillar": "己酉",
+    "zodiac": "猴",
+    "nayin": "大驿土",
+    "jianchu": "执",
+    "zhishen": "宝光",
+    "zhishenLucky": true,
+    "chong": "兔",
+    "sha": "东",
+    "auspiciousDeities": [
+     "六合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "交易",
+     "修造",
+     "嫁娶",
+     "捕捉",
+     "立券",
+     "纳畜"
+    ],
+    "ji": [
+     "开市",
+     "搬家"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玄武",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占大门外东北",
+    "pengzu": [
+     "己不破券二比并亡",
+     "酉不宴客醉坐颠狂"
+    ],
+    "xiu": "斗"
+   }
+  },
+  {
+   "input": {
+    "solar": "1956-04-25"
+   },
+   "expected": {
+    "yearPillar": "丙申",
+    "monthPillar": "壬辰",
+    "dayPillar": "壬戌",
+    "zodiac": "猴",
+    "nayin": "大海水",
+    "jianchu": "破",
+    "zhishen": "白虎",
+    "zhishenLucky": false,
+    "chong": "龙",
+    "sha": "北",
+    "auspiciousDeities": [
+     "月德",
+     "天德"
+    ],
+    "inauspiciousDeities": [
+     "月破"
+    ],
+    "yi": [
+     "拆卸",
+     "治病",
+     "祭祀"
+    ],
+    "ji": [
+     "诸事不宜"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玉堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库栖外东南",
+    "pengzu": [
+     "壬不汲水更难提防",
+     "戌不吃犬作怪上床"
+    ],
+    "xiu": "参"
+   }
+  },
+  {
+   "input": {
+    "solar": "1960-11-06"
+   },
+   "expected": {
+    "yearPillar": "庚子",
+    "monthPillar": "丙戌",
+    "dayPillar": "戊戌",
+    "zodiac": "鼠",
+    "nayin": "平地木",
+    "jianchu": "建",
+    "zhishen": "白虎",
+    "zhishenLucky": false,
+    "chong": "龙",
+    "sha": "北",
+    "auspiciousDeities": [
+     "母仓"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "上任",
+     "会亲友",
+     "出行",
+     "栽种",
+     "纳畜"
+    ],
+    "ji": [
+     "动土",
+     "开仓"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玉堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "房床栖房内中",
+    "pengzu": [
+     "戊不受田田主不祥",
+     "戌不吃犬作怪上床"
+    ],
+    "xiu": "星"
+   }
+  },
+  {
+   "input": {
+    "solar": "1961-07-18"
+   },
+   "expected": {
+    "yearPillar": "辛丑",
+    "monthPillar": "乙未",
+    "dayPillar": "壬子",
+    "zodiac": "牛",
+    "nayin": "桑柘木",
+    "jianchu": "执",
+    "zhishen": "天刑",
+    "zhishenLucky": false,
+    "chong": "马",
+    "sha": "南",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [
+     "月害",
+     "四废"
+    ],
+    "yi": [
+     "修造",
+     "捕捉",
+     "纳畜"
+    ],
+    "ji": [
+     "动土",
+     "嫁娶",
+     "开市",
+     "搬家",
+     "订盟"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "朱雀",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库碓外东北",
+    "pengzu": [
+     "壬不汲水更难提防",
+     "子不问卜自惹祸殃"
+    ],
+    "xiu": "翼"
+   }
+  },
+  {
+   "input": {
+    "solar": "1963-10-17"
+   },
+   "expected": {
+    "yearPillar": "癸卯",
+    "monthPillar": "壬戌",
+    "dayPillar": "癸巳",
+    "zodiac": "兔",
+    "nayin": "长流水",
+    "jianchu": "危",
+    "zhishen": "明堂",
+    "zhishenLucky": true,
+    "chong": "猪",
+    "sha": "东",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "安床",
+     "祭祀"
+    ],
+    "ji": [
+     "冒险",
+     "登高",
+     "行船"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占房床房内北",
+    "pengzu": [
+     "癸不词讼理弱敌强",
+     "巳不远行财物伏藏"
+    ],
+    "xiu": "斗"
+   }
+  },
+  {
+   "input": {
+    "solar": "1967-07-22"
+   },
+   "expected": {
+    "yearPillar": "丁未",
+    "monthPillar": "丁未",
+    "dayPillar": "丁亥",
+    "zodiac": "羊",
+    "nayin": "屋上土",
+    "jianchu": "定",
+    "zhishen": "明堂",
+    "zhishenLucky": true,
+    "chong": "蛇",
+    "sha": "西",
+    "auspiciousDeities": [
+     "三合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "嫁娶",
+     "安床",
+     "开市",
+     "纳畜",
+     "订盟"
+    ],
+    "ji": [
+     "出行",
+     "诉讼"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库床外西北",
+    "pengzu": [
+     "丁不剃头头必生疮",
+     "亥不嫁娶不利新郎"
+    ],
+    "xiu": "女"
+   }
+  },
+  {
+   "input": {
+    "solar": "1971-04-02"
+   },
+   "expected": {
+    "yearPillar": "辛亥",
+    "monthPillar": "辛卯",
+    "dayPillar": "丁巳",
+    "zodiac": "猪",
+    "nayin": "沙中土",
+    "jianchu": "满",
+    "zhishen": "朱雀",
+    "zhishenLucky": false,
+    "chong": "猪",
+    "sha": "东",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "祈福",
+     "祭祀",
+     "纳财"
+    ],
+    "ji": [
+     "动土",
+     "安葬"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库床外正东",
+    "pengzu": [
+     "丁不剃头头必生疮",
+     "巳不远行财物伏藏"
+    ],
+    "xiu": "娄"
+   }
+  },
+  {
+   "input": {
+    "solar": "1974-02-19"
+   },
+   "expected": {
+    "yearPillar": "甲寅",
+    "monthPillar": "丙寅",
+    "dayPillar": "辛卯",
+    "zodiac": "虎",
+    "nayin": "松柏木",
+    "jianchu": "除",
+    "zhishen": "朱雀",
+    "zhishenLucky": false,
+    "chong": "鸡",
+    "sha": "西",
+    "auspiciousDeities": [
+     "月德合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "扫舍",
+     "沐浴",
+     "治病",
+     "订盟",
+     "除旧布新"
+    ],
+    "ji": [
+     "出行",
+     "嫁娶"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玄武",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "厨灶门外正北",
+    "pengzu": [
+     "辛不合酱主人不尝",
+     "卯不穿井水泉不香"
+    ],
+    "xiu": "尾"
+   }
+  },
+  {
+   "input": {
+    "solar": "1979-07-31"
+   },
+   "expected": {
+    "yearPillar": "己未",
+    "monthPillar": "辛未",
+    "dayPillar": "己亥",
+    "zodiac": "羊",
+    "nayin": "平地木",
+    "jianchu": "定",
+    "zhishen": "明堂",
+    "zhishenLucky": true,
+    "chong": "蛇",
+    "sha": "西",
+    "auspiciousDeities": [
+     "月德合",
+     "天德合",
+     "三合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "嫁娶",
+     "安床",
+     "开市",
+     "祈福",
+     "纳畜",
+     "订盟"
+    ],
+    "ji": [
+     "出行",
+     "诉讼"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占门床房内中",
+    "pengzu": [
+     "己不破券二比并亡",
+     "亥不嫁娶不利新郎"
+    ],
+    "xiu": "尾"
+   }
+  },
+  {
+   "input": {
+    "solar": "1980-11-02"
+   },
+   "expected": {
+    "yearPillar": "庚申",
+    "monthPillar": "丙戌",
+    "dayPillar": "己卯",
+    "zodiac": "猴",
+    "nayin": "城头土",
+    "jianchu": "执",
+    "zhishen": "勾陈",
+    "zhishenLucky": false,
+    "chong": "鸡",
+    "sha": "西",
+    "auspiciousDeities": [
+     "六合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "交易",
+     "修造",
+     "嫁娶",
+     "捕捉",
+     "立券",
+     "纳畜"
+    ],
+    "ji": [
+     "开市",
+     "搬家"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玄武",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占大门外正西",
+    "pengzu": [
+     "己不破券二比并亡",
+     "卯不穿井水泉不香"
+    ],
+    "xiu": "昴"
+   }
+  },
+  {
+   "input": {
+    "solar": "1983-05-31"
+   },
+   "expected": {
+    "yearPillar": "癸亥",
+    "monthPillar": "丁巳",
+    "dayPillar": "己未",
+    "zodiac": "猪",
+    "nayin": "天上火",
+    "jianchu": "满",
+    "zhishen": "明堂",
+    "zhishenLucky": true,
+    "chong": "牛",
+    "sha": "西",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "祈福",
+     "祭祀",
+     "纳财"
+    ],
+    "ji": [
+     "动土",
+     "安葬"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "明堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占门厕外正东",
+    "pengzu": [
+     "己不破券二比并亡",
+     "未不服药毒气入肠"
+    ],
+    "xiu": "尾"
+   }
+  },
+  {
+   "input": {
+    "solar": "1986-12-03"
+   },
+   "expected": {
+    "yearPillar": "丙寅",
+    "monthPillar": "己亥",
+    "dayPillar": "辛巳",
+    "zodiac": "虎",
+    "nayin": "白蜡金",
+    "jianchu": "破",
+    "zhishen": "勾陈",
+    "zhishenLucky": false,
+    "chong": "猪",
+    "sha": "东",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [
+     "月破"
+    ],
+    "yi": [
+     "拆卸",
+     "治病"
+    ],
+    "ji": [
+     "诸事不宜"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "厨灶床外正西",
+    "pengzu": [
+     "辛不合酱主人不尝",
+     "巳不远行财物伏藏"
+    ],
+    "xiu": "轸"
+   }
+  },
+  {
+   "input": {
+    "solar": "1987-11-25"
+   },
+   "expected": {
+    "yearPillar": "丁卯",
+    "monthPillar": "辛亥",
+    "dayPillar": "戊寅",
+    "zodiac": "兔",
+    "nayin": "城头土",
+    "jianchu": "平",
+    "zhishen": "天牢",
+    "zhishenLucky": false,
+    "chong": "猴",
+    "sha": "北",
+    "auspiciousDeities": [
+     "六合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "交易",
+     "会亲友",
+     "修造",
+     "嫁娶",
+     "平整道路",
+     "立券"
+    ],
+    "ji": [
+     "安床",
+     "祈福"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "勾陈",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "房床炉外正西",
+    "pengzu": [
+     "戊不受田田主不祥",
+     "寅不祭祀神鬼不尝"
+    ],
+    "xiu": "参"
+   }
+  },
+  {
+   "input": {
+    "solar": "1992-12-17"
+   },
+   "expected": {
+    "yearPillar": "壬申",
+    "monthPillar": "壬子",
+    "dayPillar": "丁卯",
+    "zodiac": "猴",
+    "nayin": "炉中火",
+    "jianchu": "平",
+    "zhishen": "玉堂",
+    "zhishenLucky": true,
+    "chong": "鸡",
+    "sha": "西",
+    "auspiciousDeities": [
+     "月德合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "修造",
+     "平整道路",
+     "订盟"
+    ],
+    "ji": [
+     "安床",
+     "祈福"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玄武",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库门外正南",
+    "pengzu": [
+     "丁不剃头头必生疮",
+     "卯不穿井水泉不香"
+    ],
+    "xiu": "井"
+   }
+  },
+  {
+   "input": {
+    "solar": "1996-04-27"
+   },
+   "expected": {
+    "yearPillar": "丙子",
+    "monthPillar": "壬辰",
+    "dayPillar": "甲午",
+    "zodiac": "鼠",
+    "nayin": "沙中金",
+    "jianchu": "满",
+    "zhishen": "天刑",
+    "zhishenLucky": false,
+    "chong": "鼠",
+    "sha": "北",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [
+     "灾煞"
+    ],
+    "yi": [
+     "祈福",
+     "祭祀",
+     "纳财"
+    ],
+    "ji": [
+     "动土",
+     "安床",
+     "安葬"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "朱雀",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占门碓房内北",
+    "pengzu": [
+     "甲不开仓财物耗散",
+     "午不苫盖屋主更张"
+    ],
+    "xiu": "胃"
+   }
+  },
+  {
+   "input": {
+    "solar": "1999-06-29"
+   },
+   "expected": {
+    "yearPillar": "己卯",
+    "monthPillar": "庚午",
+    "dayPillar": "壬子",
+    "zodiac": "兔",
+    "nayin": "桑柘木",
+    "jianchu": "破",
+    "zhishen": "金匮",
+    "zhishenLucky": true,
+    "chong": "马",
+    "sha": "南",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [
+     "月破",
+     "灾煞",
+     "四废"
+    ],
+    "yi": [
+     "拆卸",
+     "治病"
+    ],
+    "ji": [
+     "动土",
+     "嫁娶",
+     "安床",
+     "开市",
+     "诸事不宜"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "朱雀",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库碓外东北",
+    "pengzu": [
+     "壬不汲水更难提防",
+     "子不问卜自惹祸殃"
+    ],
+    "xiu": "翼"
+   }
+  },
+  {
+   "input": {
+    "solar": "2000-02-03"
+   },
+   "expected": {
+    "yearPillar": "己卯",
+    "monthPillar": "丁丑",
+    "dayPillar": "辛卯",
+    "zodiac": "兔",
+    "nayin": "松柏木",
+    "jianchu": "满",
+    "zhishen": "宝光",
+    "zhishenLucky": true,
+    "chong": "鸡",
+    "sha": "西",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [
+     "灾煞"
+    ],
+    "yi": [
+     "祈福",
+     "祭祀",
+     "纳财"
+    ],
+    "ji": [
+     "动土",
+     "安床",
+     "安葬"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玄武",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "厨灶门外正北",
+    "pengzu": [
+     "辛不合酱主人不尝",
+     "卯不穿井水泉不香"
+    ],
+    "xiu": "井"
+   }
+  },
+  {
+   "input": {
+    "solar": "2000-02-04"
+   },
+   "expected": {
+    "yearPillar": "庚辰",
+    "monthPillar": "戊寅",
+    "dayPillar": "壬辰",
+    "zodiac": "龙",
+    "nayin": "长流水",
+    "jianchu": "满",
+    "zhishen": "金匮",
+    "zhishenLucky": true,
+    "chong": "狗",
+    "sha": "南",
+    "auspiciousDeities": [
+     "天德合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "嫁娶",
+     "祈福",
+     "祭祀",
+     "纳财"
+    ],
+    "ji": [
+     "动土",
+     "安葬"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玉堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库栖外正北",
+    "pengzu": [
+     "壬不汲水更难提防",
+     "辰不哭泣必主重丧"
+    ],
+    "xiu": "鬼"
+   }
+  },
+  {
+   "input": {
+    "solar": "2002-09-16"
+   },
+   "expected": {
+    "yearPillar": "壬午",
+    "monthPillar": "己酉",
+    "dayPillar": "丁亥",
+    "zodiac": "马",
+    "nayin": "屋上土",
+    "jianchu": "满",
+    "zhishen": "玄武",
+    "zhishenLucky": false,
+    "chong": "蛇",
+    "sha": "西",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "祈福",
+     "祭祀",
+     "纳财"
+    ],
+    "ji": [
+     "动土",
+     "安葬"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库床外西北",
+    "pengzu": [
+     "丁不剃头头必生疮",
+     "亥不嫁娶不利新郎"
+    ],
+    "xiu": "张"
+   }
+  },
+  {
+   "input": {
+    "solar": "2006-09-08"
+   },
+   "expected": {
+    "yearPillar": "丙戌",
+    "monthPillar": "丁酉",
+    "dayPillar": "庚子",
+    "zodiac": "狗",
+    "nayin": "壁上土",
+    "jianchu": "平",
+    "zhishen": "司命",
+    "zhishenLucky": true,
+    "chong": "马",
+    "sha": "南",
+    "auspiciousDeities": [
+     "月德"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "修造",
+     "出行",
+     "平整道路"
+    ],
+    "ji": [
+     "安床",
+     "祈福"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "朱雀",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占碓磨房内南",
+    "pengzu": [
+     "庚不经络织机虚张",
+     "子不问卜自惹祸殃"
+    ],
+    "xiu": "鬼"
+   }
+  },
+  {
+   "input": {
+    "solar": "2009-04-30"
+   },
+   "expected": {
+    "yearPillar": "己丑",
+    "monthPillar": "戊辰",
+    "dayPillar": "乙巳",
+    "zodiac": "牛",
+    "nayin": "覆灯火",
+    "jianchu": "除",
+    "zhishen": "明堂",
+    "zhishenLucky": true,
+    "chong": "猪",
+    "sha": "东",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [
+     "劫煞"
+    ],
+    "yi": [
+     "扫舍",
+     "沐浴",
+     "治病",
+     "除旧布新"
+    ],
+    "ji": [
+     "出行",
+     "嫁娶",
+     "纳财"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "碓磨床房内东",
+    "pengzu": [
+     "乙不栽植千株不长",
+     "巳不远行财物伏藏"
+    ],
+    "xiu": "斗"
+   }
+  },
+  {
+   "input": {
+    "solar": "2010-11-11"
+   },
+   "expected": {
+    "yearPillar": "庚寅",
+    "monthPillar": "丁亥",
+    "dayPillar": "乙丑",
+    "zodiac": "虎",
+    "nayin": "海中金",
+    "jianchu": "满",
+    "zhishen": "玉堂",
+    "zhishenLucky": true,
+    "chong": "羊",
+    "sha": "东",
+    "auspiciousDeities": [
+     "天德"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "嫁娶",
+     "祈福",
+     "祭祀",
+     "纳财"
+    ],
+    "ji": [
+     "动土",
+     "安葬"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "明堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "碓磨厕外东南",
+    "pengzu": [
+     "乙不栽植千株不长",
+     "丑不冠带主不还乡"
+    ],
+    "xiu": "斗"
+   }
+  },
+  {
+   "input": {
+    "solar": "2011-06-17"
+   },
+   "expected": {
+    "yearPillar": "辛卯",
+    "monthPillar": "甲午",
+    "dayPillar": "癸卯",
+    "zodiac": "兔",
+    "nayin": "金箔金",
+    "jianchu": "收",
+    "zhishen": "玉堂",
+    "zhishenLucky": true,
+    "chong": "鸡",
+    "sha": "西",
+    "auspiciousDeities": [
+     "母仓"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "收纳",
+     "栽种",
+     "立券",
+     "纳畜",
+     "纳财"
+    ],
+    "ji": [
+     "安葬",
+     "开市"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玄武",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "房床门房内西",
+    "pengzu": [
+     "癸不词讼理弱敌强",
+     "卯不穿井水泉不香"
+    ],
+    "xiu": "亢"
+   }
+  },
+  {
+   "input": {
+    "solar": "2014-02-21"
+   },
+   "expected": {
+    "yearPillar": "甲午",
+    "monthPillar": "丙寅",
+    "dayPillar": "癸亥",
+    "zodiac": "马",
+    "nayin": "大海水",
+    "jianchu": "收",
+    "zhishen": "勾陈",
+    "zhishenLucky": false,
+    "chong": "蛇",
+    "sha": "西",
+    "auspiciousDeities": [
+     "六合",
+     "母仓"
+    ],
+    "inauspiciousDeities": [
+     "劫煞"
+    ],
+    "yi": [
+     "交易",
+     "嫁娶",
+     "收纳",
+     "栽种",
+     "立券",
+     "纳畜"
+    ],
+    "ji": [
+     "出行",
+     "安葬",
+     "开市",
+     "纳财"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占房床外东南",
+    "pengzu": [
+     "癸不词讼理弱敌强",
+     "亥不嫁娶不利新郎"
+    ],
+    "xiu": "亢"
+   }
+  },
+  {
+   "input": {
+    "solar": "2015-04-07"
+   },
+   "expected": {
+    "yearPillar": "乙未",
+    "monthPillar": "庚辰",
+    "dayPillar": "癸丑",
+    "zodiac": "羊",
+    "nayin": "桑柘木",
+    "jianchu": "收",
+    "zhishen": "玄武",
+    "zhishenLucky": false,
+    "chong": "羊",
+    "sha": "东",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "收纳",
+     "立券",
+     "纳财"
+    ],
+    "ji": [
+     "安葬",
+     "开市"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "明堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "房床厕外东北",
+    "pengzu": [
+     "癸不词讼理弱敌强",
+     "丑不冠带主不还乡"
+    ],
+    "xiu": "觜"
+   }
+  },
+  {
+   "input": {
+    "solar": "2020-04-30"
+   },
+   "expected": {
+    "yearPillar": "庚子",
+    "monthPillar": "庚辰",
+    "dayPillar": "癸卯",
+    "zodiac": "鼠",
+    "nayin": "金箔金",
+    "jianchu": "闭",
+    "zhishen": "勾陈",
+    "zhishenLucky": false,
+    "chong": "鸡",
+    "sha": "西",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [
+     "月害"
+    ],
+    "yi": [
+     "储蓄",
+     "安葬",
+     "筑堤"
+    ],
+    "ji": [
+     "出行",
+     "嫁娶",
+     "开市",
+     "手术",
+     "订盟"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玄武",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "房床门房内西",
+    "pengzu": [
+     "癸不词讼理弱敌强",
+     "卯不穿井水泉不香"
+    ],
+    "xiu": "井"
+   }
+  },
+  {
+   "input": {
+    "solar": "2020-12-09"
+   },
+   "expected": {
+    "yearPillar": "庚子",
+    "monthPillar": "戊子",
+    "dayPillar": "丙戌",
+    "zodiac": "鼠",
+    "nayin": "屋上土",
+    "jianchu": "开",
+    "zhishen": "天刑",
+    "zhishenLucky": false,
+    "chong": "龙",
+    "sha": "北",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "入学",
+     "开市",
+     "祈福"
+    ],
+    "ji": [
+     "动土",
+     "安葬"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玉堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "厨灶栖外西北",
+    "pengzu": [
+     "丙不修灶必见灾殃",
+     "戌不吃犬作怪上床"
+    ],
+    "xiu": "参"
+   }
+  },
+  {
+   "input": {
+    "solar": "2022-02-01"
+   },
+   "expected": {
+    "yearPillar": "辛丑",
+    "monthPillar": "辛丑",
+    "dayPillar": "乙酉",
+    "zodiac": "牛",
+    "nayin": "泉中水",
+    "jianchu": "成",
+    "zhishen": "勾陈",
+    "zhishenLucky": false,
+    "chong": "兔",
+    "sha": "东",
+    "auspiciousDeities": [
+     "月德合",
+     "天德合",
+     "三合",
+     "母仓"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "入学",
+     "入宅",
+     "嫁娶",
+     "开市",
+     "栽种",
+     "祈福",
+     "竣工",
+     "纳畜",
+     "订盟"
+    ],
+    "ji": [
+     "诉讼"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玄武",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "碓磨门外西北",
+    "pengzu": [
+     "乙不栽植千株不长",
+     "酉不宴客醉坐颠狂"
+    ],
+    "xiu": "觜"
+   }
+  },
+  {
+   "input": {
+    "solar": "2025-06-01"
+   },
+   "expected": {
+    "yearPillar": "乙巳",
+    "monthPillar": "辛巳",
+    "dayPillar": "辛丑",
+    "zodiac": "蛇",
+    "nayin": "壁上土",
+    "jianchu": "成",
+    "zhishen": "玉堂",
+    "zhishenLucky": true,
+    "chong": "羊",
+    "sha": "东",
+    "auspiciousDeities": [
+     "天德",
+     "三合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "入学",
+     "入宅",
+     "嫁娶",
+     "开市",
+     "祈福",
+     "祭祀",
+     "竣工"
+    ],
+    "ji": [
+     "诉讼"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "明堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "厨灶厕房内南",
+    "pengzu": [
+     "辛不合酱主人不尝",
+     "丑不冠带主不还乡"
+    ],
+    "xiu": "房"
+   }
+  },
+  {
+   "input": {
+    "solar": "2026-01-01"
+   },
+   "expected": {
+    "yearPillar": "乙巳",
+    "monthPillar": "戊子",
+    "dayPillar": "乙亥",
+    "zodiac": "蛇",
+    "nayin": "山头火",
+    "jianchu": "闭",
+    "zhishen": "朱雀",
+    "zhishenLucky": false,
+    "chong": "蛇",
+    "sha": "西",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "储蓄",
+     "安葬",
+     "筑堤"
+    ],
+    "ji": [
+     "出行",
+     "开市",
+     "手术"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "碓磨床外西南",
+    "pengzu": [
+     "乙不栽植千株不长",
+     "亥不嫁娶不利新郎"
+    ],
+    "xiu": "井"
+   }
+  },
+  {
+   "input": {
+    "solar": "2026-01-15"
+   },
+   "expected": {
+    "yearPillar": "乙巳",
+    "monthPillar": "己丑",
+    "dayPillar": "己丑",
+    "zodiac": "蛇",
+    "nayin": "霹雳火",
+    "jianchu": "建",
+    "zhishen": "朱雀",
+    "zhishenLucky": false,
+    "chong": "羊",
+    "sha": "东",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "上任",
+     "会亲友",
+     "出行"
+    ],
+    "ji": [
+     "动土",
+     "开仓"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "明堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占门厕外正北",
+    "pengzu": [
+     "己不破券二比并亡",
+     "丑不冠带主不还乡"
+    ],
+    "xiu": "斗"
+   }
+  },
+  {
+   "input": {
+    "solar": "2026-02-03"
+   },
+   "expected": {
+    "yearPillar": "乙巳",
+    "monthPillar": "己丑",
+    "dayPillar": "戊申",
+    "zodiac": "蛇",
+    "nayin": "大驿土",
+    "jianchu": "危",
+    "zhishen": "司命",
+    "zhishenLucky": true,
+    "chong": "虎",
+    "sha": "南",
+    "auspiciousDeities": [
+     "母仓"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "安床",
+     "栽种",
+     "祭祀",
+     "纳畜"
+    ],
+    "ji": [
+     "冒险",
+     "登高",
+     "行船"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "勾陈",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "房床炉房内中",
+    "pengzu": [
+     "戊不受田田主不祥",
+     "申不安床鬼祟入房"
+    ],
+    "xiu": "翼"
+   }
+  },
+  {
+   "input": {
+    "solar": "2026-02-04"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "庚寅",
+    "dayPillar": "己酉",
+    "zodiac": "马",
+    "nayin": "大驿土",
+    "jianchu": "危",
+    "zhishen": "玄武",
+    "zhishenLucky": false,
+    "chong": "兔",
+    "sha": "东",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "安床",
+     "祭祀"
+    ],
+    "ji": [
+     "冒险",
+     "登高",
+     "行船"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玄武",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占大门外东北",
+    "pengzu": [
+     "己不破券二比并亡",
+     "酉不宴客醉坐颠狂"
+    ],
+    "xiu": "轸"
+   }
+  },
+  {
+   "input": {
+    "solar": "2026-08-02"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "乙未",
+    "dayPillar": "戊申",
+    "zodiac": "马",
+    "nayin": "大驿土",
+    "jianchu": "除",
+    "zhishen": "司命",
+    "zhishenLucky": true,
+    "chong": "虎",
+    "sha": "南",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [
+     "劫煞"
+    ],
+    "yi": [
+     "扫舍",
+     "沐浴",
+     "治病",
+     "除旧布新"
+    ],
+    "ji": [
+     "出行",
+     "嫁娶",
+     "纳财"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "勾陈",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "房床炉房内中",
+    "pengzu": [
+     "戊不受田田主不祥",
+     "申不安床鬼祟入房"
+    ],
+    "xiu": "虚"
+   }
+  },
+  {
+   "input": {
+    "solar": "2032-09-07"
+   },
+   "expected": {
+    "yearPillar": "壬子",
+    "monthPillar": "己酉",
+    "dayPillar": "丙辰",
+    "zodiac": "鼠",
+    "nayin": "沙中土",
+    "jianchu": "危",
+    "zhishen": "天刑",
+    "zhishenLucky": false,
+    "chong": "狗",
+    "sha": "南",
+    "auspiciousDeities": [
+     "六合",
+     "母仓"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "交易",
+     "嫁娶",
+     "安床",
+     "栽种",
+     "祭祀",
+     "立券",
+     "纳畜"
+    ],
+    "ji": [
+     "冒险",
+     "登高",
+     "行船"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玉堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "厨灶栖外正东",
+    "pengzu": [
+     "丙不修灶必见灾殃",
+     "辰不哭泣必主重丧"
+    ],
+    "xiu": "翼"
+   }
+  },
+  {
+   "input": {
+    "solar": "2036-01-31"
+   },
+   "expected": {
+    "yearPillar": "乙卯",
+    "monthPillar": "己丑",
+    "dayPillar": "丁酉",
+    "zodiac": "兔",
+    "nayin": "山下火",
+    "jianchu": "成",
+    "zhishen": "勾陈",
+    "zhishenLucky": false,
+    "chong": "兔",
+    "sha": "东",
+    "auspiciousDeities": [
+     "三合",
+     "母仓"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "入学",
+     "入宅",
+     "嫁娶",
+     "开市",
+     "栽种",
+     "竣工",
+     "纳畜"
+    ],
+    "ji": [
+     "诉讼"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玄武",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库门房内北",
+    "pengzu": [
+     "丁不剃头头必生疮",
+     "酉不宴客醉坐颠狂"
+    ],
+    "xiu": "斗"
+   }
+  },
+  {
+   "input": {
+    "solar": "2040-05-04"
+   },
+   "expected": {
+    "yearPillar": "庚申",
+    "monthPillar": "庚辰",
+    "dayPillar": "壬辰",
+    "zodiac": "猴",
+    "nayin": "长流水",
+    "jianchu": "建",
+    "zhishen": "青龙",
+    "zhishenLucky": true,
+    "chong": "狗",
+    "sha": "南",
+    "auspiciousDeities": [
+     "月德",
+     "天德"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "上任",
+     "会亲友",
+     "修造",
+     "出行",
+     "嫁娶",
+     "祈福",
+     "祭祀"
+    ],
+    "ji": [
+     "动土",
+     "开仓"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玉堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库栖外正北",
+    "pengzu": [
+     "壬不汲水更难提防",
+     "辰不哭泣必主重丧"
+    ],
+    "xiu": "鬼"
+   }
+  },
+  {
+   "input": {
+    "solar": "2040-09-02"
+   },
+   "expected": {
+    "yearPillar": "庚申",
+    "monthPillar": "甲申",
+    "dayPillar": "癸巳",
+    "zodiac": "猴",
+    "nayin": "长流水",
+    "jianchu": "收",
+    "zhishen": "宝光",
+    "zhishenLucky": true,
+    "chong": "猪",
+    "sha": "东",
+    "auspiciousDeities": [
+     "天德",
+     "六合"
+    ],
+    "inauspiciousDeities": [
+     "劫煞"
+    ],
+    "yi": [
+     "交易",
+     "嫁娶",
+     "收纳",
+     "祈福",
+     "祭祀",
+     "立券"
+    ],
+    "ji": [
+     "出行",
+     "安葬",
+     "开市",
+     "纳财"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占房床房内北",
+    "pengzu": [
+     "癸不词讼理弱敌强",
+     "巳不远行财物伏藏"
+    ],
+    "xiu": "房"
+   }
+  },
+  {
+   "input": {
+    "solar": "2040-11-03"
+   },
+   "expected": {
+    "yearPillar": "庚申",
+    "monthPillar": "丙戌",
+    "dayPillar": "乙未",
+    "zodiac": "猴",
+    "nayin": "沙中金",
+    "jianchu": "收",
+    "zhishen": "朱雀",
+    "zhishenLucky": false,
+    "chong": "牛",
+    "sha": "西",
+    "auspiciousDeities": [
+     "母仓"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "收纳",
+     "栽种",
+     "立券",
+     "纳畜",
+     "纳财"
+    ],
+    "ji": [
+     "安葬",
+     "开市"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "明堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "碓磨厕房内北",
+    "pengzu": [
+     "乙不栽植千株不长",
+     "未不服药毒气入肠"
+    ],
+    "xiu": "女"
+   }
+  },
+  {
+   "input": {
+    "solar": "2040-12-05"
+   },
+   "expected": {
+    "yearPillar": "庚申",
+    "monthPillar": "丁亥",
+    "dayPillar": "丁卯",
+    "zodiac": "猴",
+    "nayin": "炉中火",
+    "jianchu": "定",
+    "zhishen": "玄武",
+    "zhishenLucky": false,
+    "chong": "鸡",
+    "sha": "西",
+    "auspiciousDeities": [
+     "三合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "嫁娶",
+     "安床",
+     "开市",
+     "纳畜",
+     "订盟"
+    ],
+    "ji": [
+     "出行",
+     "诉讼"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玄武",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库门外正南",
+    "pengzu": [
+     "丁不剃头头必生疮",
+     "卯不穿井水泉不香"
+    ],
+    "xiu": "壁"
+   }
+  },
+  {
+   "input": {
+    "solar": "2049-01-07"
+   },
+   "expected": {
+    "yearPillar": "戊辰",
+    "monthPillar": "乙丑",
+    "dayPillar": "壬午",
+    "zodiac": "龙",
+    "nayin": "杨柳木",
+    "jianchu": "执",
+    "zhishen": "天牢",
+    "zhishenLucky": false,
+    "chong": "鼠",
+    "sha": "北",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [
+     "月害"
+    ],
+    "yi": [
+     "修造",
+     "捕捉",
+     "纳畜"
+    ],
+    "ji": [
+     "嫁娶",
+     "开市",
+     "搬家",
+     "订盟"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "朱雀",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库碓外西北",
+    "pengzu": [
+     "壬不汲水更难提防",
+     "午不苫盖屋主更张"
+    ],
+    "xiu": "角"
+   }
+  },
+  {
+   "input": {
+    "solar": "2068-08-31"
+   },
+   "expected": {
+    "yearPillar": "戊子",
+    "monthPillar": "庚申",
+    "dayPillar": "戊午",
+    "zodiac": "鼠",
+    "nayin": "天上火",
+    "jianchu": "开",
+    "zhishen": "白虎",
+    "zhishenLucky": false,
+    "chong": "鼠",
+    "sha": "北",
+    "auspiciousDeities": [
+     "天德合"
+    ],
+    "inauspiciousDeities": [
+     "灾煞"
+    ],
+    "yi": [
+     "会亲友",
+     "入学",
+     "嫁娶",
+     "开市",
+     "祈福"
+    ],
+    "ji": [
+     "动土",
+     "安床",
+     "安葬"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "朱雀",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "房床碓外正东",
+    "pengzu": [
+     "戊不受田田主不祥",
+     "午不苫盖屋主更张"
+    ],
+    "xiu": "牛"
+   }
+  },
+  {
+   "input": {
+    "solar": "2074-07-06"
+   },
+   "expected": {
+    "yearPillar": "甲午",
+    "monthPillar": "庚午",
+    "dayPillar": "癸巳",
+    "zodiac": "马",
+    "nayin": "长流水",
+    "jianchu": "闭",
+    "zhishen": "玄武",
+    "zhishenLucky": false,
+    "chong": "猪",
+    "sha": "东",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "储蓄",
+     "安葬",
+     "筑堤"
+    ],
+    "ji": [
+     "出行",
+     "开市",
+     "手术"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占房床房内北",
+    "pengzu": [
+     "癸不词讼理弱敌强",
+     "巳不远行财物伏藏"
+    ],
+    "xiu": "娄"
+   }
+  },
+  {
+   "input": {
+    "solar": "2078-03-16"
+   },
+   "expected": {
+    "yearPillar": "戊戌",
+    "monthPillar": "乙卯",
+    "dayPillar": "壬戌",
+    "zodiac": "狗",
+    "nayin": "大海水",
+    "jianchu": "危",
+    "zhishen": "天牢",
+    "zhishenLucky": false,
+    "chong": "龙",
+    "sha": "北",
+    "auspiciousDeities": [
+     "六合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "交易",
+     "嫁娶",
+     "安床",
+     "祭祀",
+     "立券"
+    ],
+    "ji": [
+     "冒险",
+     "登高",
+     "行船"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玉堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "仓库栖外东南",
+    "pengzu": [
+     "壬不汲水更难提防",
+     "戌不吃犬作怪上床"
+    ],
+    "xiu": "参"
+   }
+  },
+  {
+   "input": {
+    "solar": "2080-07-06"
+   },
+   "expected": {
+    "yearPillar": "庚子",
+    "monthPillar": "癸未",
+    "dayPillar": "乙丑",
+    "zodiac": "鼠",
+    "nayin": "海中金",
+    "jianchu": "破",
+    "zhishen": "朱雀",
+    "zhishenLucky": false,
+    "chong": "羊",
+    "sha": "东",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [
+     "月破"
+    ],
+    "yi": [
+     "拆卸",
+     "治病"
+    ],
+    "ji": [
+     "诸事不宜"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "明堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "碓磨厕外东南",
+    "pengzu": [
+     "乙不栽植千株不长",
+     "丑不冠带主不还乡"
+    ],
+    "xiu": "柳"
+   }
+  },
+  {
+   "input": {
+    "solar": "2084-11-16"
+   },
+   "expected": {
+    "yearPillar": "甲辰",
+    "monthPillar": "乙亥",
+    "dayPillar": "己亥",
+    "zodiac": "龙",
+    "nayin": "平地木",
+    "jianchu": "建",
+    "zhishen": "宝光",
+    "zhishenLucky": true,
+    "chong": "蛇",
+    "sha": "西",
+    "auspiciousDeities": [
+     "月德合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "上任",
+     "会亲友",
+     "出行",
+     "订盟"
+    ],
+    "ji": [
+     "动土",
+     "开仓"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占门床房内中",
+    "pengzu": [
+     "己不破券二比并亡",
+     "亥不嫁娶不利新郎"
+    ],
+    "xiu": "井"
+   }
+  },
+  {
+   "input": {
+    "solar": "2089-07-09"
+   },
+   "expected": {
+    "yearPillar": "己酉",
+    "monthPillar": "辛未",
+    "dayPillar": "乙卯",
+    "zodiac": "鸡",
+    "nayin": "大溪水",
+    "jianchu": "成",
+    "zhishen": "宝光",
+    "zhishenLucky": true,
+    "chong": "鸡",
+    "sha": "西",
+    "auspiciousDeities": [
+     "三合",
+     "母仓"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "入学",
+     "入宅",
+     "嫁娶",
+     "开市",
+     "栽种",
+     "竣工",
+     "纳畜"
+    ],
+    "ji": [
+     "诉讼"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "玄武",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "碓磨门外正东",
+    "pengzu": [
+     "乙不栽植千株不长",
+     "卯不穿井水泉不香"
+    ],
+    "xiu": "女"
+   }
+  },
+  {
+   "input": {
+    "solar": "2096-09-26"
+   },
+   "expected": {
+    "yearPillar": "丙辰",
+    "monthPillar": "丁酉",
+    "dayPillar": "辛亥",
+    "zodiac": "龙",
+    "nayin": "钗钏金",
+    "jianchu": "满",
+    "zhishen": "玄武",
+    "zhishenLucky": false,
+    "chong": "蛇",
+    "sha": "西",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "祈福",
+     "祭祀",
+     "纳财"
+    ],
+    "ji": [
+     "动土",
+     "安葬"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "辰",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "巳",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "申",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "酉",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "宝光",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "厨灶床外东北",
+    "pengzu": [
+     "辛不合酱主人不尝",
+     "亥不嫁娶不利新郎"
+    ],
+    "xiu": "壁"
+   }
+  },
+  {
+   "input": {
+    "solar": "2097-04-01"
+   },
+   "expected": {
+    "yearPillar": "丁巳",
+    "monthPillar": "癸卯",
+    "dayPillar": "戊午",
+    "zodiac": "蛇",
+    "nayin": "天上火",
+    "jianchu": "平",
+    "zhishen": "金匮",
+    "zhishenLucky": true,
+    "chong": "鼠",
+    "sha": "北",
+    "auspiciousDeities": [],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "修造",
+     "平整道路"
+    ],
+    "ji": [
+     "安床",
+     "祈福"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "朱雀",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "房床碓外正东",
+    "pengzu": [
+     "戊不受田田主不祥",
+     "午不苫盖屋主更张"
+    ],
+    "xiu": "心"
+   }
+  },
+  {
+   "input": {
+    "solar": "2099-02-02"
+   },
+   "expected": {
+    "yearPillar": "戊午",
+    "monthPillar": "乙丑",
+    "dayPillar": "庚午",
+    "zodiac": "马",
+    "nayin": "路旁土",
+    "jianchu": "执",
+    "zhishen": "天牢",
+    "zhishenLucky": false,
+    "chong": "鼠",
+    "sha": "北",
+    "auspiciousDeities": [
+     "月德",
+     "天德"
+    ],
+    "inauspiciousDeities": [
+     "月害"
+    ],
+    "yi": [
+     "修造",
+     "出行",
+     "捕捉",
+     "祈福",
+     "祭祀",
+     "纳畜"
+    ],
+    "ji": [
+     "嫁娶",
+     "开市",
+     "搬家",
+     "订盟"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "丑",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "寅",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "卯",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "午",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "未",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "明堂",
+      "lucky": true
+     },
+     {
+      "zhi": "戌",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "亥",
+      "officer": "朱雀",
+      "lucky": false
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "占碓磨外正南",
+    "pengzu": [
+     "庚不经络织机虚张",
+     "午不苫盖屋主更张"
+    ],
+    "xiu": "心"
+   }
+  },
+  {
+   "input": {
+    "solar": "2099-02-03"
+   },
+   "expected": {
+    "yearPillar": "己未",
+    "monthPillar": "丙寅",
+    "dayPillar": "辛未",
+    "zodiac": "羊",
+    "nayin": "路旁土",
+    "jianchu": "执",
+    "zhishen": "玉堂",
+    "zhishenLucky": true,
+    "chong": "牛",
+    "sha": "西",
+    "auspiciousDeities": [
+     "月德合"
+    ],
+    "inauspiciousDeities": [],
+    "yi": [
+     "会亲友",
+     "修造",
+     "捕捉",
+     "纳畜",
+     "订盟"
+    ],
+    "ji": [
+     "开市",
+     "搬家"
+    ],
+    "hours": [
+     {
+      "zhi": "子",
+      "officer": "天刑",
+      "lucky": false
+     },
+     {
+      "zhi": "丑",
+      "officer": "朱雀",
+      "lucky": false
+     },
+     {
+      "zhi": "寅",
+      "officer": "金匮",
+      "lucky": true
+     },
+     {
+      "zhi": "卯",
+      "officer": "宝光",
+      "lucky": true
+     },
+     {
+      "zhi": "辰",
+      "officer": "白虎",
+      "lucky": false
+     },
+     {
+      "zhi": "巳",
+      "officer": "玉堂",
+      "lucky": true
+     },
+     {
+      "zhi": "午",
+      "officer": "天牢",
+      "lucky": false
+     },
+     {
+      "zhi": "未",
+      "officer": "玄武",
+      "lucky": false
+     },
+     {
+      "zhi": "申",
+      "officer": "司命",
+      "lucky": true
+     },
+     {
+      "zhi": "酉",
+      "officer": "勾陈",
+      "lucky": false
+     },
+     {
+      "zhi": "戌",
+      "officer": "青龙",
+      "lucky": true
+     },
+     {
+      "zhi": "亥",
+      "officer": "明堂",
+      "lucky": true
+     }
+    ],
+    "ruleVersion": "koi-almanac/1.0",
+    "taishen": "厨灶厕外西南",
+    "pengzu": [
+     "辛不合酱主人不尝",
+     "未不服药毒气入肠"
+    ],
+    "xiu": "尾"
+   }
+  }
+ ]
+}

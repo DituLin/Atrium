@@ -1,0 +1,1415 @@
+{
+ "version": "1.0.0",
+ "source": "sxtwl + ALMANAC_SPEC rules",
+ "count": 124,
+ "cases": [
+  {
+   "input": {
+    "solar": "1949-10-01"
+   },
+   "expected": {
+    "yearPillar": "己丑",
+    "monthPillar": "癸酉",
+    "dayPillar": "甲子",
+    "zodiac": "牛"
+   },
+   "note": "day pillar anchor 甲子"
+  },
+  {
+   "input": {
+    "solar": "1901-02-03"
+   },
+   "expected": {
+    "yearPillar": "庚子",
+    "monthPillar": "己丑",
+    "dayPillar": "壬子",
+    "zodiac": "鼠"
+   },
+   "note": "立春1901 前日，交节 19:39"
+  },
+  {
+   "input": {
+    "solar": "1901-02-04"
+   },
+   "expected": {
+    "yearPillar": "辛丑",
+    "monthPillar": "庚寅",
+    "dayPillar": "癸丑",
+    "zodiac": "牛"
+   },
+   "note": "立春1901 当日(切换)，交节 19:39"
+  },
+  {
+   "input": {
+    "solar": "1901-02-05"
+   },
+   "expected": {
+    "yearPillar": "辛丑",
+    "monthPillar": "庚寅",
+    "dayPillar": "甲寅",
+    "zodiac": "牛"
+   },
+   "note": "立春1901 次日，交节 19:39"
+  },
+  {
+   "input": {
+    "solar": "1950-02-03"
+   },
+   "expected": {
+    "yearPillar": "己丑",
+    "monthPillar": "丁丑",
+    "dayPillar": "己巳",
+    "zodiac": "牛"
+   },
+   "note": "立春1950 前日，交节 17:20"
+  },
+  {
+   "input": {
+    "solar": "1950-02-04"
+   },
+   "expected": {
+    "yearPillar": "庚寅",
+    "monthPillar": "戊寅",
+    "dayPillar": "庚午",
+    "zodiac": "虎"
+   },
+   "note": "立春1950 当日(切换)，交节 17:20"
+  },
+  {
+   "input": {
+    "solar": "1950-02-05"
+   },
+   "expected": {
+    "yearPillar": "庚寅",
+    "monthPillar": "戊寅",
+    "dayPillar": "辛未",
+    "zodiac": "虎"
+   },
+   "note": "立春1950 次日，交节 17:20"
+  },
+  {
+   "input": {
+    "solar": "1984-02-03"
+   },
+   "expected": {
+    "yearPillar": "癸亥",
+    "monthPillar": "乙丑",
+    "dayPillar": "丁卯",
+    "zodiac": "猪"
+   },
+   "note": "立春1984 前日，交节 23:18"
+  },
+  {
+   "input": {
+    "solar": "1984-02-04"
+   },
+   "expected": {
+    "yearPillar": "甲子",
+    "monthPillar": "丙寅",
+    "dayPillar": "戊辰",
+    "zodiac": "鼠"
+   },
+   "note": "立春1984 当日(切换)，交节 23:18"
+  },
+  {
+   "input": {
+    "solar": "1984-02-05"
+   },
+   "expected": {
+    "yearPillar": "甲子",
+    "monthPillar": "丙寅",
+    "dayPillar": "己巳",
+    "zodiac": "鼠"
+   },
+   "note": "立春1984 次日，交节 23:18"
+  },
+  {
+   "input": {
+    "solar": "2000-02-03"
+   },
+   "expected": {
+    "yearPillar": "己卯",
+    "monthPillar": "丁丑",
+    "dayPillar": "辛卯",
+    "zodiac": "兔"
+   },
+   "note": "立春2000 前日，交节 20:40"
+  },
+  {
+   "input": {
+    "solar": "2000-02-04"
+   },
+   "expected": {
+    "yearPillar": "庚辰",
+    "monthPillar": "戊寅",
+    "dayPillar": "壬辰",
+    "zodiac": "龙"
+   },
+   "note": "立春2000 当日(切换)，交节 20:40"
+  },
+  {
+   "input": {
+    "solar": "2000-02-05"
+   },
+   "expected": {
+    "yearPillar": "庚辰",
+    "monthPillar": "戊寅",
+    "dayPillar": "癸巳",
+    "zodiac": "龙"
+   },
+   "note": "立春2000 次日，交节 20:40"
+  },
+  {
+   "input": {
+    "solar": "2026-02-03"
+   },
+   "expected": {
+    "yearPillar": "乙巳",
+    "monthPillar": "己丑",
+    "dayPillar": "戊申",
+    "zodiac": "蛇"
+   },
+   "note": "立春2026 前日，交节 04:01"
+  },
+  {
+   "input": {
+    "solar": "2026-02-04"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "庚寅",
+    "dayPillar": "己酉",
+    "zodiac": "马"
+   },
+   "note": "立春2026 当日(切换)，交节 04:01"
+  },
+  {
+   "input": {
+    "solar": "2026-02-05"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "庚寅",
+    "dayPillar": "庚戌",
+    "zodiac": "马"
+   },
+   "note": "立春2026 次日，交节 04:01"
+  },
+  {
+   "input": {
+    "solar": "2033-02-02"
+   },
+   "expected": {
+    "yearPillar": "壬子",
+    "monthPillar": "癸丑",
+    "dayPillar": "甲申",
+    "zodiac": "鼠"
+   },
+   "note": "立春2033 前日，交节 20:41"
+  },
+  {
+   "input": {
+    "solar": "2033-02-03"
+   },
+   "expected": {
+    "yearPillar": "癸丑",
+    "monthPillar": "甲寅",
+    "dayPillar": "乙酉",
+    "zodiac": "牛"
+   },
+   "note": "立春2033 当日(切换)，交节 20:41"
+  },
+  {
+   "input": {
+    "solar": "2033-02-04"
+   },
+   "expected": {
+    "yearPillar": "癸丑",
+    "monthPillar": "甲寅",
+    "dayPillar": "丙戌",
+    "zodiac": "牛"
+   },
+   "note": "立春2033 次日，交节 20:41"
+  },
+  {
+   "input": {
+    "solar": "2099-02-02"
+   },
+   "expected": {
+    "yearPillar": "戊午",
+    "monthPillar": "乙丑",
+    "dayPillar": "庚午",
+    "zodiac": "马"
+   },
+   "note": "立春2099 前日，交节 21:08"
+  },
+  {
+   "input": {
+    "solar": "2099-02-03"
+   },
+   "expected": {
+    "yearPillar": "己未",
+    "monthPillar": "丙寅",
+    "dayPillar": "辛未",
+    "zodiac": "羊"
+   },
+   "note": "立春2099 当日(切换)，交节 21:08"
+  },
+  {
+   "input": {
+    "solar": "2099-02-04"
+   },
+   "expected": {
+    "yearPillar": "己未",
+    "monthPillar": "丙寅",
+    "dayPillar": "壬申",
+    "zodiac": "羊"
+   },
+   "note": "立春2099 次日，交节 21:08"
+  },
+  {
+   "input": {
+    "solar": "2026-01-04"
+   },
+   "expected": {
+    "yearPillar": "乙巳",
+    "monthPillar": "戊子",
+    "dayPillar": "戊寅",
+    "zodiac": "蛇"
+   },
+   "note": "小寒 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-01-05"
+   },
+   "expected": {
+    "yearPillar": "乙巳",
+    "monthPillar": "己丑",
+    "dayPillar": "己卯",
+    "zodiac": "蛇"
+   },
+   "note": "小寒 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-03-04"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "庚寅",
+    "dayPillar": "丁丑",
+    "zodiac": "马"
+   },
+   "note": "惊蛰 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-03-05"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "辛卯",
+    "dayPillar": "戊寅",
+    "zodiac": "马"
+   },
+   "note": "惊蛰 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-04-04"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "辛卯",
+    "dayPillar": "戊申",
+    "zodiac": "马"
+   },
+   "note": "清明 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-04-05"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "壬辰",
+    "dayPillar": "己酉",
+    "zodiac": "马"
+   },
+   "note": "清明 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-05-04"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "壬辰",
+    "dayPillar": "戊寅",
+    "zodiac": "马"
+   },
+   "note": "立夏 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-05-05"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "癸巳",
+    "dayPillar": "己卯",
+    "zodiac": "马"
+   },
+   "note": "立夏 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-06-04"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "癸巳",
+    "dayPillar": "己酉",
+    "zodiac": "马"
+   },
+   "note": "芒种 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-06-05"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "甲午",
+    "dayPillar": "庚戌",
+    "zodiac": "马"
+   },
+   "note": "芒种 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-07-06"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "甲午",
+    "dayPillar": "辛巳",
+    "zodiac": "马"
+   },
+   "note": "小暑 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-07-07"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "乙未",
+    "dayPillar": "壬午",
+    "zodiac": "马"
+   },
+   "note": "小暑 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-08-06"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "乙未",
+    "dayPillar": "壬子",
+    "zodiac": "马"
+   },
+   "note": "立秋 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-08-07"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "丙申",
+    "dayPillar": "癸丑",
+    "zodiac": "马"
+   },
+   "note": "立秋 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-09-06"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "丙申",
+    "dayPillar": "癸未",
+    "zodiac": "马"
+   },
+   "note": "白露 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-09-07"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "丁酉",
+    "dayPillar": "甲申",
+    "zodiac": "马"
+   },
+   "note": "白露 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-10-07"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "丁酉",
+    "dayPillar": "甲寅",
+    "zodiac": "马"
+   },
+   "note": "寒露 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-10-08"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "戊戌",
+    "dayPillar": "乙卯",
+    "zodiac": "马"
+   },
+   "note": "寒露 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-11-06"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "戊戌",
+    "dayPillar": "甲申",
+    "zodiac": "马"
+   },
+   "note": "立冬 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-11-07"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "己亥",
+    "dayPillar": "乙酉",
+    "zodiac": "马"
+   },
+   "note": "立冬 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-12-06"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "己亥",
+    "dayPillar": "甲寅",
+    "zodiac": "马"
+   },
+   "note": "大雪 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "2026-12-07"
+   },
+   "expected": {
+    "yearPillar": "丙午",
+    "monthPillar": "庚子",
+    "dayPillar": "乙卯",
+    "zodiac": "马"
+   },
+   "note": "大雪 月柱边界"
+  },
+  {
+   "input": {
+    "solar": "1920-03-20"
+   },
+   "expected": {
+    "yearPillar": "庚申",
+    "monthPillar": "己卯",
+    "dayPillar": "丁丑",
+    "zodiac": "猴"
+   }
+  },
+  {
+   "input": {
+    "solar": "1958-02-22"
+   },
+   "expected": {
+    "yearPillar": "戊戌",
+    "monthPillar": "甲寅",
+    "dayPillar": "庚午",
+    "zodiac": "狗"
+   }
+  },
+  {
+   "input": {
+    "solar": "2003-08-08"
+   },
+   "expected": {
+    "yearPillar": "癸未",
+    "monthPillar": "庚申",
+    "dayPillar": "癸丑",
+    "zodiac": "羊"
+   }
+  },
+  {
+   "input": {
+    "solar": "1907-10-03"
+   },
+   "expected": {
+    "yearPillar": "丁未",
+    "monthPillar": "己酉",
+    "dayPillar": "乙酉",
+    "zodiac": "羊"
+   }
+  },
+  {
+   "input": {
+    "solar": "1920-08-20"
+   },
+   "expected": {
+    "yearPillar": "庚申",
+    "monthPillar": "甲申",
+    "dayPillar": "庚戌",
+    "zodiac": "猴"
+   }
+  },
+  {
+   "input": {
+    "solar": "1910-10-18"
+   },
+   "expected": {
+    "yearPillar": "庚戌",
+    "monthPillar": "丙戌",
+    "dayPillar": "丙辰",
+    "zodiac": "狗"
+   }
+  },
+  {
+   "input": {
+    "solar": "1925-06-07"
+   },
+   "expected": {
+    "yearPillar": "乙丑",
+    "monthPillar": "壬午",
+    "dayPillar": "壬戌",
+    "zodiac": "牛"
+   }
+  },
+  {
+   "input": {
+    "solar": "2022-07-25"
+   },
+   "expected": {
+    "yearPillar": "壬寅",
+    "monthPillar": "丁未",
+    "dayPillar": "己卯",
+    "zodiac": "虎"
+   }
+  },
+  {
+   "input": {
+    "solar": "2020-01-14"
+   },
+   "expected": {
+    "yearPillar": "己亥",
+    "monthPillar": "丁丑",
+    "dayPillar": "丙辰",
+    "zodiac": "猪"
+   }
+  },
+  {
+   "input": {
+    "solar": "2043-09-06"
+   },
+   "expected": {
+    "yearPillar": "癸亥",
+    "monthPillar": "庚申",
+    "dayPillar": "壬子",
+    "zodiac": "猪"
+   }
+  },
+  {
+   "input": {
+    "solar": "1959-12-03"
+   },
+   "expected": {
+    "yearPillar": "己亥",
+    "monthPillar": "乙亥",
+    "dayPillar": "己未",
+    "zodiac": "猪"
+   }
+  },
+  {
+   "input": {
+    "solar": "2020-03-11"
+   },
+   "expected": {
+    "yearPillar": "庚子",
+    "monthPillar": "己卯",
+    "dayPillar": "癸丑",
+    "zodiac": "鼠"
+   }
+  },
+  {
+   "input": {
+    "solar": "1916-12-30"
+   },
+   "expected": {
+    "yearPillar": "丙辰",
+    "monthPillar": "庚子",
+    "dayPillar": "辛丑",
+    "zodiac": "龙"
+   }
+  },
+  {
+   "input": {
+    "solar": "1971-01-21"
+   },
+   "expected": {
+    "yearPillar": "庚戌",
+    "monthPillar": "己丑",
+    "dayPillar": "丙午",
+    "zodiac": "狗"
+   }
+  },
+  {
+   "input": {
+    "solar": "2065-07-16"
+   },
+   "expected": {
+    "yearPillar": "乙酉",
+    "monthPillar": "癸未",
+    "dayPillar": "丙辰",
+    "zodiac": "鸡"
+   }
+  },
+  {
+   "input": {
+    "solar": "1904-12-04"
+   },
+   "expected": {
+    "yearPillar": "甲辰",
+    "monthPillar": "乙亥",
+    "dayPillar": "壬申",
+    "zodiac": "龙"
+   }
+  },
+  {
+   "input": {
+    "solar": "1908-08-05"
+   },
+   "expected": {
+    "yearPillar": "戊申",
+    "monthPillar": "己未",
+    "dayPillar": "壬辰",
+    "zodiac": "猴"
+   }
+  },
+  {
+   "input": {
+    "solar": "2025-10-29"
+   },
+   "expected": {
+    "yearPillar": "乙巳",
+    "monthPillar": "丙戌",
+    "dayPillar": "辛未",
+    "zodiac": "蛇"
+   }
+  },
+  {
+   "input": {
+    "solar": "1902-08-09"
+   },
+   "expected": {
+    "yearPillar": "壬寅",
+    "monthPillar": "戊申",
+    "dayPillar": "甲子",
+    "zodiac": "虎"
+   }
+  },
+  {
+   "input": {
+    "solar": "1943-09-07"
+   },
+   "expected": {
+    "yearPillar": "癸未",
+    "monthPillar": "庚申",
+    "dayPillar": "戊辰",
+    "zodiac": "羊"
+   }
+  },
+  {
+   "input": {
+    "solar": "1933-09-05"
+   },
+   "expected": {
+    "yearPillar": "癸酉",
+    "monthPillar": "庚申",
+    "dayPillar": "甲戌",
+    "zodiac": "鸡"
+   }
+  },
+  {
+   "input": {
+    "solar": "2062-06-17"
+   },
+   "expected": {
+    "yearPillar": "壬午",
+    "monthPillar": "丙午",
+    "dayPillar": "辛未",
+    "zodiac": "马"
+   }
+  },
+  {
+   "input": {
+    "solar": "1939-08-04"
+   },
+   "expected": {
+    "yearPillar": "己卯",
+    "monthPillar": "辛未",
+    "dayPillar": "癸酉",
+    "zodiac": "兔"
+   }
+  },
+  {
+   "input": {
+    "solar": "2097-11-01"
+   },
+   "expected": {
+    "yearPillar": "丁巳",
+    "monthPillar": "庚戌",
+    "dayPillar": "壬辰",
+    "zodiac": "蛇"
+   }
+  },
+  {
+   "input": {
+    "solar": "1964-09-30"
+   },
+   "expected": {
+    "yearPillar": "甲辰",
+    "monthPillar": "癸酉",
+    "dayPillar": "壬午",
+    "zodiac": "龙"
+   }
+  },
+  {
+   "input": {
+    "solar": "2059-08-07"
+   },
+   "expected": {
+    "yearPillar": "己卯",
+    "monthPillar": "壬申",
+    "dayPillar": "丙午",
+    "zodiac": "兔"
+   }
+  },
+  {
+   "input": {
+    "solar": "1951-12-31"
+   },
+   "expected": {
+    "yearPillar": "辛卯",
+    "monthPillar": "庚子",
+    "dayPillar": "乙巳",
+    "zodiac": "兔"
+   }
+  },
+  {
+   "input": {
+    "solar": "1968-02-25"
+   },
+   "expected": {
+    "yearPillar": "戊申",
+    "monthPillar": "甲寅",
+    "dayPillar": "乙丑",
+    "zodiac": "猴"
+   }
+  },
+  {
+   "input": {
+    "solar": "2036-12-29"
+   },
+   "expected": {
+    "yearPillar": "丙辰",
+    "monthPillar": "庚子",
+    "dayPillar": "庚午",
+    "zodiac": "龙"
+   }
+  },
+  {
+   "input": {
+    "solar": "2098-06-04"
+   },
+   "expected": {
+    "yearPillar": "戊午",
+    "monthPillar": "丁巳",
+    "dayPillar": "丁卯",
+    "zodiac": "马"
+   }
+  },
+  {
+   "input": {
+    "solar": "1926-05-19"
+   },
+   "expected": {
+    "yearPillar": "丙寅",
+    "monthPillar": "癸巳",
+    "dayPillar": "戊申",
+    "zodiac": "虎"
+   }
+  },
+  {
+   "input": {
+    "solar": "2024-07-02"
+   },
+   "expected": {
+    "yearPillar": "甲辰",
+    "monthPillar": "庚午",
+    "dayPillar": "丁卯",
+    "zodiac": "龙"
+   }
+  },
+  {
+   "input": {
+    "solar": "1953-01-06"
+   },
+   "expected": {
+    "yearPillar": "壬辰",
+    "monthPillar": "癸丑",
+    "dayPillar": "丁巳",
+    "zodiac": "龙"
+   }
+  },
+  {
+   "input": {
+    "solar": "1998-11-02"
+   },
+   "expected": {
+    "yearPillar": "戊寅",
+    "monthPillar": "壬戌",
+    "dayPillar": "癸丑",
+    "zodiac": "虎"
+   }
+  },
+  {
+   "input": {
+    "solar": "2055-05-12"
+   },
+   "expected": {
+    "yearPillar": "乙亥",
+    "monthPillar": "辛巳",
+    "dayPillar": "戊午",
+    "zodiac": "猪"
+   }
+  },
+  {
+   "input": {
+    "solar": "1912-07-06"
+   },
+   "expected": {
+    "yearPillar": "壬子",
+    "monthPillar": "丙午",
+    "dayPillar": "癸未",
+    "zodiac": "鼠"
+   }
+  },
+  {
+   "input": {
+    "solar": "1979-08-12"
+   },
+   "expected": {
+    "yearPillar": "己未",
+    "monthPillar": "壬申",
+    "dayPillar": "辛亥",
+    "zodiac": "羊"
+   }
+  },
+  {
+   "input": {
+    "solar": "1903-09-14"
+   },
+   "expected": {
+    "yearPillar": "癸卯",
+    "monthPillar": "辛酉",
+    "dayPillar": "乙巳",
+    "zodiac": "兔"
+   }
+  },
+  {
+   "input": {
+    "solar": "1923-10-11"
+   },
+   "expected": {
+    "yearPillar": "癸亥",
+    "monthPillar": "壬戌",
+    "dayPillar": "丁巳",
+    "zodiac": "猪"
+   }
+  },
+  {
+   "input": {
+    "solar": "1988-09-28"
+   },
+   "expected": {
+    "yearPillar": "戊辰",
+    "monthPillar": "辛酉",
+    "dayPillar": "丙戌",
+    "zodiac": "龙"
+   }
+  },
+  {
+   "input": {
+    "solar": "1956-07-28"
+   },
+   "expected": {
+    "yearPillar": "丙申",
+    "monthPillar": "乙未",
+    "dayPillar": "丙申",
+    "zodiac": "猴"
+   }
+  },
+  {
+   "input": {
+    "solar": "1978-06-17"
+   },
+   "expected": {
+    "yearPillar": "戊午",
+    "monthPillar": "戊午",
+    "dayPillar": "庚戌",
+    "zodiac": "马"
+   }
+  },
+  {
+   "input": {
+    "solar": "1960-10-06"
+   },
+   "expected": {
+    "yearPillar": "庚子",
+    "monthPillar": "乙酉",
+    "dayPillar": "丁卯",
+    "zodiac": "鼠"
+   }
+  },
+  {
+   "input": {
+    "solar": "1986-05-20"
+   },
+   "expected": {
+    "yearPillar": "丙寅",
+    "monthPillar": "癸巳",
+    "dayPillar": "甲子",
+    "zodiac": "虎"
+   }
+  },
+  {
+   "input": {
+    "solar": "1930-07-22"
+   },
+   "expected": {
+    "yearPillar": "庚午",
+    "monthPillar": "癸未",
+    "dayPillar": "癸酉",
+    "zodiac": "马"
+   }
+  },
+  {
+   "input": {
+    "solar": "1968-01-01"
+   },
+   "expected": {
+    "yearPillar": "丁未",
+    "monthPillar": "壬子",
+    "dayPillar": "庚午",
+    "zodiac": "羊"
+   }
+  },
+  {
+   "input": {
+    "solar": "2020-07-11"
+   },
+   "expected": {
+    "yearPillar": "庚子",
+    "monthPillar": "癸未",
+    "dayPillar": "乙卯",
+    "zodiac": "鼠"
+   }
+  },
+  {
+   "input": {
+    "solar": "2076-11-03"
+   },
+   "expected": {
+    "yearPillar": "丙申",
+    "monthPillar": "戊戌",
+    "dayPillar": "甲辰",
+    "zodiac": "猴"
+   }
+  },
+  {
+   "input": {
+    "solar": "1935-09-01"
+   },
+   "expected": {
+    "yearPillar": "乙亥",
+    "monthPillar": "甲申",
+    "dayPillar": "庚辰",
+    "zodiac": "猪"
+   }
+  },
+  {
+   "input": {
+    "solar": "1996-04-11"
+   },
+   "expected": {
+    "yearPillar": "丙子",
+    "monthPillar": "壬辰",
+    "dayPillar": "戊寅",
+    "zodiac": "鼠"
+   }
+  },
+  {
+   "input": {
+    "solar": "2098-05-13"
+   },
+   "expected": {
+    "yearPillar": "戊午",
+    "monthPillar": "丁巳",
+    "dayPillar": "乙巳",
+    "zodiac": "马"
+   }
+  },
+  {
+   "input": {
+    "solar": "2034-10-03"
+   },
+   "expected": {
+    "yearPillar": "甲寅",
+    "monthPillar": "癸酉",
+    "dayPillar": "壬辰",
+    "zodiac": "虎"
+   }
+  },
+  {
+   "input": {
+    "solar": "2055-08-29"
+   },
+   "expected": {
+    "yearPillar": "乙亥",
+    "monthPillar": "甲申",
+    "dayPillar": "丁未",
+    "zodiac": "猪"
+   }
+  },
+  {
+   "input": {
+    "solar": "1989-06-02"
+   },
+   "expected": {
+    "yearPillar": "己巳",
+    "monthPillar": "己巳",
+    "dayPillar": "癸巳",
+    "zodiac": "蛇"
+   }
+  },
+  {
+   "input": {
+    "solar": "1974-05-18"
+   },
+   "expected": {
+    "yearPillar": "甲寅",
+    "monthPillar": "己巳",
+    "dayPillar": "己未",
+    "zodiac": "虎"
+   }
+  },
+  {
+   "input": {
+    "solar": "2012-11-13"
+   },
+   "expected": {
+    "yearPillar": "壬辰",
+    "monthPillar": "辛亥",
+    "dayPillar": "戊寅",
+    "zodiac": "龙"
+   }
+  },
+  {
+   "input": {
+    "solar": "2006-07-26"
+   },
+   "expected": {
+    "yearPillar": "丙戌",
+    "monthPillar": "乙未",
+    "dayPillar": "丙辰",
+    "zodiac": "狗"
+   }
+  },
+  {
+   "input": {
+    "solar": "1983-03-05"
+   },
+   "expected": {
+    "yearPillar": "癸亥",
+    "monthPillar": "甲寅",
+    "dayPillar": "壬辰",
+    "zodiac": "猪"
+   }
+  },
+  {
+   "input": {
+    "solar": "2029-05-07"
+   },
+   "expected": {
+    "yearPillar": "己酉",
+    "monthPillar": "己巳",
+    "dayPillar": "丁酉",
+    "zodiac": "鸡"
+   }
+  },
+  {
+   "input": {
+    "solar": "1936-01-26"
+   },
+   "expected": {
+    "yearPillar": "乙亥",
+    "monthPillar": "己丑",
+    "dayPillar": "丁未",
+    "zodiac": "猪"
+   }
+  },
+  {
+   "input": {
+    "solar": "2038-08-29"
+   },
+   "expected": {
+    "yearPillar": "戊午",
+    "monthPillar": "庚申",
+    "dayPillar": "戊寅",
+    "zodiac": "马"
+   }
+  },
+  {
+   "input": {
+    "solar": "2077-12-31"
+   },
+   "expected": {
+    "yearPillar": "丁酉",
+    "monthPillar": "壬子",
+    "dayPillar": "丁未",
+    "zodiac": "鸡"
+   }
+  },
+  {
+   "input": {
+    "solar": "2099-10-26"
+   },
+   "expected": {
+    "yearPillar": "己未",
+    "monthPillar": "甲戌",
+    "dayPillar": "丙申",
+    "zodiac": "羊"
+   }
+  },
+  {
+   "input": {
+    "solar": "2050-02-16"
+   },
+   "expected": {
+    "yearPillar": "庚午",
+    "monthPillar": "戊寅",
+    "dayPillar": "丁卯",
+    "zodiac": "马"
+   }
+  },
+  {
+   "input": {
+    "solar": "2070-03-31"
+   },
+   "expected": {
+    "yearPillar": "庚寅",
+    "monthPillar": "己卯",
+    "dayPillar": "乙未",
+    "zodiac": "虎"
+   }
+  },
+  {
+   "input": {
+    "solar": "1971-10-02"
+   },
+   "expected": {
+    "yearPillar": "辛亥",
+    "monthPillar": "丁酉",
+    "dayPillar": "庚申",
+    "zodiac": "猪"
+   }
+  },
+  {
+   "input": {
+    "solar": "2051-01-22"
+   },
+   "expected": {
+    "yearPillar": "庚午",
+    "monthPillar": "己丑",
+    "dayPillar": "丁未",
+    "zodiac": "马"
+   }
+  },
+  {
+   "input": {
+    "solar": "2019-09-12"
+   },
+   "expected": {
+    "yearPillar": "己亥",
+    "monthPillar": "癸酉",
+    "dayPillar": "壬子",
+    "zodiac": "猪"
+   }
+  },
+  {
+   "input": {
+    "solar": "2053-05-20"
+   },
+   "expected": {
+    "yearPillar": "癸酉",
+    "monthPillar": "丁巳",
+    "dayPillar": "丙辰",
+    "zodiac": "鸡"
+   }
+  },
+  {
+   "input": {
+    "solar": "2057-08-13"
+   },
+   "expected": {
+    "yearPillar": "丁丑",
+    "monthPillar": "戊申",
+    "dayPillar": "壬寅",
+    "zodiac": "牛"
+   }
+  },
+  {
+   "input": {
+    "solar": "2045-07-02"
+   },
+   "expected": {
+    "yearPillar": "乙丑",
+    "monthPillar": "壬午",
+    "dayPillar": "丁巳",
+    "zodiac": "牛"
+   }
+  },
+  {
+   "input": {
+    "solar": "2000-03-31"
+   },
+   "expected": {
+    "yearPillar": "庚辰",
+    "monthPillar": "己卯",
+    "dayPillar": "戊子",
+    "zodiac": "龙"
+   }
+  },
+  {
+   "input": {
+    "solar": "1921-11-16"
+   },
+   "expected": {
+    "yearPillar": "辛酉",
+    "monthPillar": "己亥",
+    "dayPillar": "癸未",
+    "zodiac": "鸡"
+   }
+  },
+  {
+   "input": {
+    "solar": "2041-12-02"
+   },
+   "expected": {
+    "yearPillar": "辛酉",
+    "monthPillar": "己亥",
+    "dayPillar": "己巳",
+    "zodiac": "鸡"
+   }
+  },
+  {
+   "input": {
+    "solar": "2027-07-20"
+   },
+   "expected": {
+    "yearPillar": "丁未",
+    "monthPillar": "丁未",
+    "dayPillar": "庚子",
+    "zodiac": "羊"
+   }
+  },
+  {
+   "input": {
+    "solar": "2047-03-24"
+   },
+   "expected": {
+    "yearPillar": "丁卯",
+    "monthPillar": "癸卯",
+    "dayPillar": "丁亥",
+    "zodiac": "兔"
+   }
+  },
+  {
+   "input": {
+    "solar": "2025-07-22"
+   },
+   "expected": {
+    "yearPillar": "乙巳",
+    "monthPillar": "癸未",
+    "dayPillar": "壬辰",
+    "zodiac": "蛇"
+   }
+  },
+  {
+   "input": {
+    "solar": "2042-09-12"
+   },
+   "expected": {
+    "yearPillar": "壬戌",
+    "monthPillar": "己酉",
+    "dayPillar": "癸丑",
+    "zodiac": "狗"
+   }
+  },
+  {
+   "input": {
+    "solar": "1972-12-12"
+   },
+   "expected": {
+    "yearPillar": "壬子",
+    "monthPillar": "壬子",
+    "dayPillar": "丁丑",
+    "zodiac": "鼠"
+   }
+  },
+  {
+   "input": {
+    "solar": "1983-07-27"
+   },
+   "expected": {
+    "yearPillar": "癸亥",
+    "monthPillar": "己未",
+    "dayPillar": "丙辰",
+    "zodiac": "猪"
+   }
+  }
+ ]
+}

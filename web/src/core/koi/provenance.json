@@ -1,0 +1,105 @@
+{
+  "source": {
+    "name": "锦鲤万年历 (Koi)",
+    "repository": "https://github.com/DituLin/Koi",
+    "commit": "f973da1b07a8bc3a387c202fd1a134f24924a3fc"
+  },
+  "calendarVersion": "1.0.0",
+  "ruleVersion": "koi-almanac/1.0",
+  "supportedCivilRange": [
+    "1901-01-01",
+    "2099-12-31"
+  ],
+  "calendarSource": "sxtwl (寿星天文历法); upstream records sampled Hong Kong Observatory checks",
+  "almanacSource": "Koi versioned simplified subset of traditional 协纪辨方书 conventions; not an official daily almanac publication",
+  "upstreamLicenseFile": null,
+  "algorithmReferences": [
+    {
+      "path": "spec/ALMANAC_SPEC.md",
+      "sha256": "b5a73948379f7995d07c084aa3f24670c9a0d8c6f14b0d807e96b440d6395fa4"
+    },
+    {
+      "path": "tools/almanac_ref.py",
+      "sha256": "5f8b3fc838aecb39d462b300c2e4f58ad457e17405d2b7516ffa2ff5b44f140a"
+    },
+    {
+      "path": "tools/gen_calendar_tables.py",
+      "sha256": "c35fbefb82ffa5681b78b7a9c1d0e8c703a834f3edb783cd3e63d3a1fff994b2"
+    },
+    {
+      "path": "tools/gen_fixtures.py",
+      "sha256": "8c259e28bca5b1477fccc6cfb8d6673078412a23ee1bd3be7ef13b2de949472a"
+    },
+    {
+      "path": "tools/gen_almanac_fixtures.py",
+      "sha256": "eeb2e0ae8d4d55fca1043bd8e842a7e3d5af4533068fd3e0f795919462eb216e"
+    },
+    {
+      "path": "data/terms/collected/REPORT.md",
+      "sha256": "4792bfbe0895789430e012ba8f8dc0e25735d27a0c8377b9c5acea9d0096ba24"
+    }
+  ],
+  "files": [
+    {
+      "path": "data/lunar_table.json",
+      "upstreamPath": "data/calendar/lunar_table.json",
+      "sha256": "328f49a5fe0b9b2bcb8685373377aecf3f9a375913cb94d4757e1f4db385643a",
+      "bytes": 16938
+    },
+    {
+      "path": "data/solar_terms.json",
+      "upstreamPath": "data/calendar/solar_terms.json",
+      "sha256": "66eb1fea4e96ade2b760938a7115b5c3854de33fcd878d3b904c5c07d7cef480",
+      "bytes": 231155
+    },
+    {
+      "path": "data/rules.json",
+      "upstreamPath": "data/almanac_rules/rules.json",
+      "sha256": "374fae874fefdd9052277738bd66352efd0d71a8d31b87975fc78fd0c9bc9ec5",
+      "bytes": 5773
+    },
+    {
+      "path": "data/taishen_60.json",
+      "upstreamPath": "data/terms/collected/taishen_60.json",
+      "sha256": "ca051d4b689d2d0f35e31ba783483ff5b0ab8873c6fe83a179300904cfa6bf17",
+      "bytes": 2043
+    },
+    {
+      "path": "data/pengzu.json",
+      "upstreamPath": "data/terms/collected/pengzu.json",
+      "sha256": "daa4a5ec72af78189ae8d37a4a7b58bbfc47dde8c2f021bf6feb2f86b71c0fe6",
+      "bytes": 891
+    },
+    {
+      "path": "data/anchor_28xiu.json",
+      "upstreamPath": "data/terms/collected/anchor_28xiu.json",
+      "sha256": "2993938fccdf1d893f370b2aedf6cc7fbc48717ac9037ec2897c0200f58855d0",
+      "bytes": 546
+    },
+    {
+      "path": "fixtures/lunar.json",
+      "upstreamPath": "spec/fixtures/lunar.json",
+      "sha256": "b1daa5dacbb3168641ced83582fc6c1e54e37132ff9c0395bbc87ae796bacbe5",
+      "bytes": 26836
+    },
+    {
+      "path": "fixtures/ganzhi.json",
+      "upstreamPath": "spec/fixtures/ganzhi.json",
+      "sha256": "53b914378d56c6b402910a91d6a759e88cf67752fce6a97e8108739b38bd9630",
+      "bytes": 24368
+    },
+    {
+      "path": "fixtures/solar_terms.json",
+      "upstreamPath": "spec/fixtures/solar_terms.json",
+      "sha256": "4642e217dae9c35358b41a1f10c483a6905d647e0ca8dd0e18555bc016efe6e2",
+      "bytes": 15388
+    },
+    {
+      "path": "fixtures/almanac.json",
+      "upstreamPath": "spec/fixtures/almanac.json",
+      "sha256": "6ccb3e6a7314f798317050b35045376a40da154b920e72552a90b03cb3bdef99",
+      "bytes": 128823
+    }
+  ],
+  "adapterBoundaryRule": "1901-01-01 through the first bundled 小寒 use the preceding 大雪 month index 10; no unbundled 1900 term date or instant is fabricated."
+}

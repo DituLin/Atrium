@@ -15,6 +15,8 @@
 .today-card__eyebrow--weather { letter-spacing:.08em; color:#edb563; }
 
 .today-almanac { padding:calc(40 * var(--u)) calc(52 * var(--u)) calc(34 * var(--u)); }
+.today-almanac__heading-title { display:flex; align-items:baseline; min-width:0; }
+.today-almanac__source { margin-left:calc(18 * var(--u)); font-size:calc(17 * var(--u)); color:#a3aaa6; white-space:nowrap; }
 .today-almanac__ordinal { font-size:calc(22 * var(--u)); color:#7d8480; letter-spacing:.04em; white-space:nowrap; }
 .today-almanac__body { display:flex; align-items:stretch; flex:1 1 auto; min-height:0; margin-top:calc(18 * var(--u)); }
 .today-almanac__gregorian { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; }
@@ -27,13 +29,17 @@
 .today-almanac__seal { width:calc(52 * var(--u)); height:calc(52 * var(--u)); display:flex; align-items:center; justify-content:center; border:calc(2 * var(--u)) solid #62d8b5; border-radius:calc(12 * var(--u)); color:#85e0c4; font-size:calc(20 * var(--u)); font-weight:700; line-height:1.05; text-align:center; }
 .today-almanac__lunar-date { margin-top:calc(22 * var(--u)); writing-mode:vertical-rl; font-size:calc(86 * var(--u)); font-weight:600; letter-spacing:.16em; line-height:1; white-space:nowrap; }
 .today-almanac__lunar-date--long { font-size:calc(64 * var(--u)); }
-.today-almanac__ganzhi { margin-left:calc(26 * var(--u)); padding-top:calc(74 * var(--u)); writing-mode:vertical-rl; font-size:calc(26 * var(--u)); letter-spacing:.32em; line-height:1.6; color:#a3aaa6; }
+.today-almanac__ganzhi { display:flex; align-items:flex-start; margin-left:calc(22 * var(--u)); padding-top:calc(74 * var(--u)); font-size:calc(23 * var(--u)); letter-spacing:.2em; line-height:1.2; color:#a3aaa6; }
+.today-almanac__ganzhi > span { writing-mode:vertical-rl; white-space:nowrap; }
+.today-almanac__ganzhi > span + span { margin-left:calc(9 * var(--u)); }
 .today-almanac__details { flex:0 0 calc(300 * var(--u)); display:flex; flex-direction:column; }
 .today-almanac__custom { display:flex; flex-direction:column; }
-.today-almanac__custom--avoid { margin-top:calc(28 * var(--u)); }
+.today-almanac__custom--avoid { margin-top:calc(24 * var(--u)); }
 .today-almanac__custom-label { display:flex; align-items:center; justify-content:center; align-self:flex-start; width:calc(52 * var(--u)); height:calc(52 * var(--u)); border-radius:calc(14 * var(--u)); background:rgba(98,216,181,.18); color:#85e0c4; font-size:calc(28 * var(--u)); font-weight:700; }
 .today-almanac__custom--avoid .today-almanac__custom-label { background:rgba(230,147,134,.18); color:#eaa699; }
 .today-almanac__unavailable { margin-top:calc(14 * var(--u)); font-size:calc(30 * var(--u)); font-weight:500; letter-spacing:.12em; color:#a3aaa6; }
+.today-almanac__activities { display:flex; flex-wrap:wrap; margin-top:calc(12 * var(--u)); font-size:calc(26 * var(--u)); font-weight:500; letter-spacing:.04em; line-height:1.45; color:#d6dbd8; }
+.today-almanac__activities > span { margin-right:calc(12 * var(--u)); white-space:nowrap; }
 .today-almanac__festivals { display:flex; flex-wrap:wrap; margin-top:calc(20 * var(--u)); color:#62d8b5; font-size:calc(23 * var(--u)); }
 .today-almanac__festivals > * { margin-right:calc(16 * var(--u)); }
 .today-almanac__term { display:flex; flex-direction:column; margin-top:auto; padding-top:calc(20 * var(--u)); }
@@ -42,6 +48,7 @@
 .today-almanac__progress { position:relative; height:calc(10 * var(--u)); border-radius:calc(999 * var(--u)); background:rgba(255,255,255,.1); margin-top:calc(12 * var(--u)); overflow:hidden; }
 .today-almanac__progress > span { position:absolute; left:0; top:0; bottom:0; border-radius:calc(999 * var(--u)); background:linear-gradient(90deg,rgba(98,216,181,.55),#62d8b5); }
 .today-almanac__term-dates { display:flex; justify-content:space-between; margin-top:calc(10 * var(--u)); font-size:calc(19 * var(--u)); color:#7d8480; }
+.today-almanac__term-unavailable { margin-top:auto; padding-top:calc(20 * var(--u)); font-size:calc(20 * var(--u)); color:#7d8480; }
 .today-almanac__week { display:flex; flex:0 0 auto; margin-top:calc(28 * var(--u)); padding-top:calc(22 * var(--u)); border-top:1px solid rgba(255,255,255,.08); }
 .today-almanac__week-day { display:flex; flex-direction:column; align-items:center; flex:1 1 0; min-width:0; padding:calc(10 * var(--u)) 0 calc(12 * var(--u)); border-radius:calc(20 * var(--u)); }
 .today-almanac__week-day + .today-almanac__week-day { margin-left:calc(8 * var(--u)); }
@@ -55,7 +62,7 @@
 .today-almanac__week-day[aria-current='date'] .today-almanac__week-name,
 .today-almanac__week-day[aria-current='date'] .today-almanac__week-lunar { color:#3a403d; }
 .today-almanac__waiting, .today-almanac__range { display:flex; align-items:center; justify-content:center; flex:1; color:#a3aaa6; font-size:calc(28 * var(--u)); }
-.today-almanac__range { flex:0 1 calc(150 * var(--u)); }
+.today-almanac__range { flex:0 1 calc(150 * var(--u)); font-size:calc(24 * var(--u)); text-align:center; }
 
 .today-weather { padding:calc(28 * var(--u)) calc(32 * var(--u)) calc(24 * var(--u)); }
 .today-weather__updated { font-size:calc(21 * var(--u)); color:#7d8480; white-space:nowrap; margin-left:calc(12 * var(--u)); overflow:hidden; text-overflow:ellipsis; }

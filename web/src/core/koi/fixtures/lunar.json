@@ -1,0 +1,1871 @@
+{
+ "version": "1.0.0",
+ "source": "sxtwl + ALMANAC_SPEC rules",
+ "count": 167,
+ "cases": [
+  {
+   "input": {
+    "solar": "1901-01-01"
+   },
+   "expected": {
+    "lunarYear": 1900,
+    "month": 11,
+    "day": 11,
+    "isLeapMonth": false
+   },
+   "note": "range start; lunar year 1900 十一月"
+  },
+  {
+   "input": {
+    "solar": "1901-02-18"
+   },
+   "expected": {
+    "lunarYear": 1900,
+    "month": 12,
+    "day": 30,
+    "isLeapMonth": false
+   },
+   "note": "last day of lunar 1900"
+  },
+  {
+   "input": {
+    "solar": "1901-02-19"
+   },
+   "expected": {
+    "lunarYear": 1901,
+    "month": 1,
+    "day": 1,
+    "isLeapMonth": false
+   },
+   "note": "lunar new year 1901"
+  },
+  {
+   "input": {
+    "solar": "2099-12-31"
+   },
+   "expected": {
+    "lunarYear": 2099,
+    "month": 11,
+    "day": 20,
+    "isLeapMonth": false
+   },
+   "note": "range end"
+  },
+  {
+   "input": {
+    "solar": "2025-08-08"
+   },
+   "expected": {
+    "lunarYear": 2025,
+    "month": 6,
+    "day": 15,
+    "isLeapMonth": true
+   },
+   "note": "闰六月十五 2025"
+  },
+  {
+   "input": {
+    "solar": "2025-07-25"
+   },
+   "expected": {
+    "lunarYear": 2025,
+    "month": 6,
+    "day": 1,
+    "isLeapMonth": true
+   },
+   "note": "闰六月初一 2025"
+  },
+  {
+   "input": {
+    "solar": "2026-02-16"
+   },
+   "expected": {
+    "lunarYear": 2025,
+    "month": 12,
+    "day": 29,
+    "isLeapMonth": false
+   },
+   "note": "除夕 2026"
+  },
+  {
+   "input": {
+    "solar": "2026-02-17"
+   },
+   "expected": {
+    "lunarYear": 2026,
+    "month": 1,
+    "day": 1,
+    "isLeapMonth": false
+   },
+   "note": "正月初一 2026"
+  },
+  {
+   "input": {
+    "solar": "2033-12-22"
+   },
+   "expected": {
+    "lunarYear": 2033,
+    "month": 11,
+    "day": 1,
+    "isLeapMonth": true
+   },
+   "note": "2033 闰十一月 problem year"
+  },
+  {
+   "input": {
+    "solar": "2034-01-20"
+   },
+   "expected": {
+    "lunarYear": 2033,
+    "month": 12,
+    "day": 1,
+    "isLeapMonth": false
+   },
+   "note": "inside 2033 闰十一月 span"
+  },
+  {
+   "input": {
+    "solar": "1984-12-01"
+   },
+   "expected": {
+    "lunarYear": 1984,
+    "month": 10,
+    "day": 9,
+    "isLeapMonth": true
+   },
+   "note": "1984 闰十月"
+  },
+  {
+   "input": {
+    "solar": "2000-02-05"
+   },
+   "expected": {
+    "lunarYear": 2000,
+    "month": 1,
+    "day": 1,
+    "isLeapMonth": false
+   },
+   "note": "lunar new year 2000"
+  },
+  {
+   "input": {
+    "solar": "1981-11-11"
+   },
+   "expected": {
+    "lunarYear": 1981,
+    "month": 10,
+    "day": 15,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2098-10-08"
+   },
+   "expected": {
+    "lunarYear": 2098,
+    "month": 9,
+    "day": 14,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1909-09-18"
+   },
+   "expected": {
+    "lunarYear": 1909,
+    "month": 8,
+    "day": 5,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1972-01-05"
+   },
+   "expected": {
+    "lunarYear": 1971,
+    "month": 11,
+    "day": 19,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1976-08-29"
+   },
+   "expected": {
+    "lunarYear": 1976,
+    "month": 8,
+    "day": 5,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2010-03-09"
+   },
+   "expected": {
+    "lunarYear": 2010,
+    "month": 1,
+    "day": 24,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2075-02-23"
+   },
+   "expected": {
+    "lunarYear": 2075,
+    "month": 1,
+    "day": 9,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1992-09-21"
+   },
+   "expected": {
+    "lunarYear": 1992,
+    "month": 8,
+    "day": 25,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2006-11-26"
+   },
+   "expected": {
+    "lunarYear": 2006,
+    "month": 10,
+    "day": 6,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1938-09-30"
+   },
+   "expected": {
+    "lunarYear": 1938,
+    "month": 8,
+    "day": 7,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2011-10-26"
+   },
+   "expected": {
+    "lunarYear": 2011,
+    "month": 9,
+    "day": 30,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1969-05-13"
+   },
+   "expected": {
+    "lunarYear": 1969,
+    "month": 3,
+    "day": 27,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2024-11-12"
+   },
+   "expected": {
+    "lunarYear": 2024,
+    "month": 10,
+    "day": 12,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1937-03-06"
+   },
+   "expected": {
+    "lunarYear": 1937,
+    "month": 1,
+    "day": 24,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1978-06-14"
+   },
+   "expected": {
+    "lunarYear": 1978,
+    "month": 5,
+    "day": 9,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2081-05-30"
+   },
+   "expected": {
+    "lunarYear": 2081,
+    "month": 4,
+    "day": 22,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2047-02-24"
+   },
+   "expected": {
+    "lunarYear": 2047,
+    "month": 1,
+    "day": 30,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1916-10-24"
+   },
+   "expected": {
+    "lunarYear": 1916,
+    "month": 9,
+    "day": 28,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1965-09-09"
+   },
+   "expected": {
+    "lunarYear": 1965,
+    "month": 8,
+    "day": 14,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2074-09-01"
+   },
+   "expected": {
+    "lunarYear": 2074,
+    "month": 7,
+    "day": 11,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2039-12-01"
+   },
+   "expected": {
+    "lunarYear": 2039,
+    "month": 10,
+    "day": 16,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1935-08-23"
+   },
+   "expected": {
+    "lunarYear": 1935,
+    "month": 7,
+    "day": 25,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2060-12-18"
+   },
+   "expected": {
+    "lunarYear": 2060,
+    "month": 11,
+    "day": 26,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1987-12-07"
+   },
+   "expected": {
+    "lunarYear": 1987,
+    "month": 10,
+    "day": 17,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1954-10-08"
+   },
+   "expected": {
+    "lunarYear": 1954,
+    "month": 9,
+    "day": 12,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1991-05-21"
+   },
+   "expected": {
+    "lunarYear": 1991,
+    "month": 4,
+    "day": 8,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1918-06-15"
+   },
+   "expected": {
+    "lunarYear": 1918,
+    "month": 5,
+    "day": 7,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2096-06-12"
+   },
+   "expected": {
+    "lunarYear": 2096,
+    "month": 4,
+    "day": 22,
+    "isLeapMonth": true
+   }
+  },
+  {
+   "input": {
+    "solar": "2025-06-06"
+   },
+   "expected": {
+    "lunarYear": 2025,
+    "month": 5,
+    "day": 11,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1949-11-26"
+   },
+   "expected": {
+    "lunarYear": 1949,
+    "month": 10,
+    "day": 7,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1952-06-05"
+   },
+   "expected": {
+    "lunarYear": 1952,
+    "month": 5,
+    "day": 13,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1987-07-05"
+   },
+   "expected": {
+    "lunarYear": 1987,
+    "month": 6,
+    "day": 10,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2065-09-30"
+   },
+   "expected": {
+    "lunarYear": 2065,
+    "month": 9,
+    "day": 1,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1914-01-23"
+   },
+   "expected": {
+    "lunarYear": 1913,
+    "month": 12,
+    "day": 28,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2054-06-15"
+   },
+   "expected": {
+    "lunarYear": 2054,
+    "month": 5,
+    "day": 10,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2006-04-11"
+   },
+   "expected": {
+    "lunarYear": 2006,
+    "month": 3,
+    "day": 14,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2014-01-02"
+   },
+   "expected": {
+    "lunarYear": 2013,
+    "month": 12,
+    "day": 2,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1952-07-29"
+   },
+   "expected": {
+    "lunarYear": 1952,
+    "month": 6,
+    "day": 8,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2098-11-05"
+   },
+   "expected": {
+    "lunarYear": 2098,
+    "month": 10,
+    "day": 13,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1925-10-31"
+   },
+   "expected": {
+    "lunarYear": 1925,
+    "month": 9,
+    "day": 14,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1988-02-06"
+   },
+   "expected": {
+    "lunarYear": 1987,
+    "month": 12,
+    "day": 19,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1930-01-08"
+   },
+   "expected": {
+    "lunarYear": 1929,
+    "month": 12,
+    "day": 9,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2025-11-17"
+   },
+   "expected": {
+    "lunarYear": 2025,
+    "month": 9,
+    "day": 28,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1954-11-18"
+   },
+   "expected": {
+    "lunarYear": 1954,
+    "month": 10,
+    "day": 23,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1943-07-17"
+   },
+   "expected": {
+    "lunarYear": 1943,
+    "month": 6,
+    "day": 16,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2023-12-20"
+   },
+   "expected": {
+    "lunarYear": 2023,
+    "month": 11,
+    "day": 8,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1952-03-16"
+   },
+   "expected": {
+    "lunarYear": 1952,
+    "month": 2,
+    "day": 21,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1940-05-29"
+   },
+   "expected": {
+    "lunarYear": 1940,
+    "month": 4,
+    "day": 23,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1981-02-19"
+   },
+   "expected": {
+    "lunarYear": 1981,
+    "month": 1,
+    "day": 15,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2043-01-30"
+   },
+   "expected": {
+    "lunarYear": 2042,
+    "month": 12,
+    "day": 20,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2003-12-02"
+   },
+   "expected": {
+    "lunarYear": 2003,
+    "month": 11,
+    "day": 9,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2055-12-22"
+   },
+   "expected": {
+    "lunarYear": 2055,
+    "month": 11,
+    "day": 5,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2042-10-20"
+   },
+   "expected": {
+    "lunarYear": 2042,
+    "month": 9,
+    "day": 7,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1995-12-11"
+   },
+   "expected": {
+    "lunarYear": 1995,
+    "month": 10,
+    "day": 20,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1977-05-17"
+   },
+   "expected": {
+    "lunarYear": 1977,
+    "month": 3,
+    "day": 30,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2074-07-27"
+   },
+   "expected": {
+    "lunarYear": 2074,
+    "month": 6,
+    "day": 4,
+    "isLeapMonth": true
+   }
+  },
+  {
+   "input": {
+    "solar": "2010-03-07"
+   },
+   "expected": {
+    "lunarYear": 2010,
+    "month": 1,
+    "day": 22,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2050-01-29"
+   },
+   "expected": {
+    "lunarYear": 2050,
+    "month": 1,
+    "day": 7,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1922-04-03"
+   },
+   "expected": {
+    "lunarYear": 1922,
+    "month": 3,
+    "day": 7,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2023-04-12"
+   },
+   "expected": {
+    "lunarYear": 2023,
+    "month": 2,
+    "day": 22,
+    "isLeapMonth": true
+   }
+  },
+  {
+   "input": {
+    "solar": "2024-01-23"
+   },
+   "expected": {
+    "lunarYear": 2023,
+    "month": 12,
+    "day": 13,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2083-08-11"
+   },
+   "expected": {
+    "lunarYear": 2083,
+    "month": 6,
+    "day": 28,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1950-08-10"
+   },
+   "expected": {
+    "lunarYear": 1950,
+    "month": 6,
+    "day": 27,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1930-04-29"
+   },
+   "expected": {
+    "lunarYear": 1930,
+    "month": 4,
+    "day": 1,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1925-04-07"
+   },
+   "expected": {
+    "lunarYear": 1925,
+    "month": 3,
+    "day": 15,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2081-09-19"
+   },
+   "expected": {
+    "lunarYear": 2081,
+    "month": 8,
+    "day": 17,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2097-04-10"
+   },
+   "expected": {
+    "lunarYear": 2097,
+    "month": 2,
+    "day": 28,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1986-05-14"
+   },
+   "expected": {
+    "lunarYear": 1986,
+    "month": 4,
+    "day": 6,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2024-06-26"
+   },
+   "expected": {
+    "lunarYear": 2024,
+    "month": 5,
+    "day": 21,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1961-07-19"
+   },
+   "expected": {
+    "lunarYear": 1961,
+    "month": 6,
+    "day": 7,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2084-05-19"
+   },
+   "expected": {
+    "lunarYear": 2084,
+    "month": 4,
+    "day": 15,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2084-04-17"
+   },
+   "expected": {
+    "lunarYear": 2084,
+    "month": 3,
+    "day": 13,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2036-08-28"
+   },
+   "expected": {
+    "lunarYear": 2036,
+    "month": 7,
+    "day": 7,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1997-02-20"
+   },
+   "expected": {
+    "lunarYear": 1997,
+    "month": 1,
+    "day": 14,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2005-10-18"
+   },
+   "expected": {
+    "lunarYear": 2005,
+    "month": 9,
+    "day": 16,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2011-11-08"
+   },
+   "expected": {
+    "lunarYear": 2011,
+    "month": 10,
+    "day": 13,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2020-02-29"
+   },
+   "expected": {
+    "lunarYear": 2020,
+    "month": 2,
+    "day": 7,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1949-10-24"
+   },
+   "expected": {
+    "lunarYear": 1949,
+    "month": 9,
+    "day": 3,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1915-04-08"
+   },
+   "expected": {
+    "lunarYear": 1915,
+    "month": 2,
+    "day": 24,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2040-02-21"
+   },
+   "expected": {
+    "lunarYear": 2040,
+    "month": 1,
+    "day": 10,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1995-12-16"
+   },
+   "expected": {
+    "lunarYear": 1995,
+    "month": 10,
+    "day": 25,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1911-09-26"
+   },
+   "expected": {
+    "lunarYear": 1911,
+    "month": 8,
+    "day": 5,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1926-11-13"
+   },
+   "expected": {
+    "lunarYear": 1926,
+    "month": 10,
+    "day": 9,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1970-12-25"
+   },
+   "expected": {
+    "lunarYear": 1970,
+    "month": 11,
+    "day": 27,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1912-11-17"
+   },
+   "expected": {
+    "lunarYear": 1912,
+    "month": 10,
+    "day": 9,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1953-02-20"
+   },
+   "expected": {
+    "lunarYear": 1953,
+    "month": 1,
+    "day": 7,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2057-02-15"
+   },
+   "expected": {
+    "lunarYear": 2057,
+    "month": 1,
+    "day": 12,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2091-11-03"
+   },
+   "expected": {
+    "lunarYear": 2091,
+    "month": 9,
+    "day": 22,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1933-05-28"
+   },
+   "expected": {
+    "lunarYear": 1933,
+    "month": 5,
+    "day": 5,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1955-03-27"
+   },
+   "expected": {
+    "lunarYear": 1955,
+    "month": 3,
+    "day": 4,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2043-08-24"
+   },
+   "expected": {
+    "lunarYear": 2043,
+    "month": 7,
+    "day": 20,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1976-10-01"
+   },
+   "expected": {
+    "lunarYear": 1976,
+    "month": 8,
+    "day": 8,
+    "isLeapMonth": true
+   }
+  },
+  {
+   "input": {
+    "solar": "1921-11-01"
+   },
+   "expected": {
+    "lunarYear": 1921,
+    "month": 10,
+    "day": 2,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2052-05-31"
+   },
+   "expected": {
+    "lunarYear": 2052,
+    "month": 5,
+    "day": 4,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1949-04-21"
+   },
+   "expected": {
+    "lunarYear": 1949,
+    "month": 3,
+    "day": 24,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2075-07-22"
+   },
+   "expected": {
+    "lunarYear": 2075,
+    "month": 6,
+    "day": 10,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2078-04-02"
+   },
+   "expected": {
+    "lunarYear": 2078,
+    "month": 2,
+    "day": 20,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2037-03-27"
+   },
+   "expected": {
+    "lunarYear": 2037,
+    "month": 2,
+    "day": 11,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1901-09-01"
+   },
+   "expected": {
+    "lunarYear": 1901,
+    "month": 7,
+    "day": 19,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2072-09-10"
+   },
+   "expected": {
+    "lunarYear": 2072,
+    "month": 7,
+    "day": 28,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2074-10-08"
+   },
+   "expected": {
+    "lunarYear": 2074,
+    "month": 8,
+    "day": 18,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2061-08-31"
+   },
+   "expected": {
+    "lunarYear": 2061,
+    "month": 7,
+    "day": 17,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2020-03-22"
+   },
+   "expected": {
+    "lunarYear": 2020,
+    "month": 2,
+    "day": 29,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2050-09-26"
+   },
+   "expected": {
+    "lunarYear": 2050,
+    "month": 8,
+    "day": 11,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1929-07-09"
+   },
+   "expected": {
+    "lunarYear": 1929,
+    "month": 6,
+    "day": 3,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1927-05-22"
+   },
+   "expected": {
+    "lunarYear": 1927,
+    "month": 4,
+    "day": 22,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1961-08-30"
+   },
+   "expected": {
+    "lunarYear": 1961,
+    "month": 7,
+    "day": 20,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2006-01-27"
+   },
+   "expected": {
+    "lunarYear": 2005,
+    "month": 12,
+    "day": 28,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2092-06-07"
+   },
+   "expected": {
+    "lunarYear": 2092,
+    "month": 5,
+    "day": 3,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2027-10-07"
+   },
+   "expected": {
+    "lunarYear": 2027,
+    "month": 9,
+    "day": 8,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1978-04-02"
+   },
+   "expected": {
+    "lunarYear": 1978,
+    "month": 2,
+    "day": 25,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2021-09-03"
+   },
+   "expected": {
+    "lunarYear": 2021,
+    "month": 7,
+    "day": 27,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2017-01-31"
+   },
+   "expected": {
+    "lunarYear": 2017,
+    "month": 1,
+    "day": 4,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1998-11-30"
+   },
+   "expected": {
+    "lunarYear": 1998,
+    "month": 10,
+    "day": 12,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2079-01-18"
+   },
+   "expected": {
+    "lunarYear": 2078,
+    "month": 12,
+    "day": 16,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1939-12-19"
+   },
+   "expected": {
+    "lunarYear": 1939,
+    "month": 11,
+    "day": 9,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2066-07-21"
+   },
+   "expected": {
+    "lunarYear": 2066,
+    "month": 5,
+    "day": 29,
+    "isLeapMonth": true
+   }
+  },
+  {
+   "input": {
+    "solar": "1906-03-17"
+   },
+   "expected": {
+    "lunarYear": 1906,
+    "month": 2,
+    "day": 23,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1954-06-14"
+   },
+   "expected": {
+    "lunarYear": 1954,
+    "month": 5,
+    "day": 14,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1943-03-02"
+   },
+   "expected": {
+    "lunarYear": 1943,
+    "month": 1,
+    "day": 26,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2016-09-06"
+   },
+   "expected": {
+    "lunarYear": 2016,
+    "month": 8,
+    "day": 6,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1986-07-19"
+   },
+   "expected": {
+    "lunarYear": 1986,
+    "month": 6,
+    "day": 13,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1972-11-13"
+   },
+   "expected": {
+    "lunarYear": 1972,
+    "month": 10,
+    "day": 8,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2080-02-04"
+   },
+   "expected": {
+    "lunarYear": 2080,
+    "month": 1,
+    "day": 14,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2028-03-25"
+   },
+   "expected": {
+    "lunarYear": 2028,
+    "month": 2,
+    "day": 30,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2060-04-20"
+   },
+   "expected": {
+    "lunarYear": 2060,
+    "month": 3,
+    "day": 20,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1989-05-18"
+   },
+   "expected": {
+    "lunarYear": 1989,
+    "month": 4,
+    "day": 14,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2016-04-14"
+   },
+   "expected": {
+    "lunarYear": 2016,
+    "month": 3,
+    "day": 8,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1989-11-03"
+   },
+   "expected": {
+    "lunarYear": 1989,
+    "month": 10,
+    "day": 6,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1967-06-01"
+   },
+   "expected": {
+    "lunarYear": 1967,
+    "month": 4,
+    "day": 24,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1955-07-26"
+   },
+   "expected": {
+    "lunarYear": 1955,
+    "month": 6,
+    "day": 8,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1975-10-22"
+   },
+   "expected": {
+    "lunarYear": 1975,
+    "month": 9,
+    "day": 18,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2049-12-07"
+   },
+   "expected": {
+    "lunarYear": 2049,
+    "month": 11,
+    "day": 13,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1975-10-06"
+   },
+   "expected": {
+    "lunarYear": 1975,
+    "month": 9,
+    "day": 2,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2019-05-01"
+   },
+   "expected": {
+    "lunarYear": 2019,
+    "month": 3,
+    "day": 27,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2084-03-04"
+   },
+   "expected": {
+    "lunarYear": 2084,
+    "month": 1,
+    "day": 28,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1928-09-29"
+   },
+   "expected": {
+    "lunarYear": 1928,
+    "month": 8,
+    "day": 16,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2001-07-25"
+   },
+   "expected": {
+    "lunarYear": 2001,
+    "month": 6,
+    "day": 5,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1911-09-25"
+   },
+   "expected": {
+    "lunarYear": 1911,
+    "month": 8,
+    "day": 4,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2061-03-22"
+   },
+   "expected": {
+    "lunarYear": 2061,
+    "month": 3,
+    "day": 1,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2097-12-14"
+   },
+   "expected": {
+    "lunarYear": 2097,
+    "month": 11,
+    "day": 11,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1976-09-09"
+   },
+   "expected": {
+    "lunarYear": 1976,
+    "month": 8,
+    "day": 16,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1952-11-06"
+   },
+   "expected": {
+    "lunarYear": 1952,
+    "month": 9,
+    "day": 19,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2022-08-12"
+   },
+   "expected": {
+    "lunarYear": 2022,
+    "month": 7,
+    "day": 15,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1992-07-20"
+   },
+   "expected": {
+    "lunarYear": 1992,
+    "month": 6,
+    "day": 21,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2025-12-18"
+   },
+   "expected": {
+    "lunarYear": 2025,
+    "month": 10,
+    "day": 29,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "1910-03-10"
+   },
+   "expected": {
+    "lunarYear": 1910,
+    "month": 1,
+    "day": 29,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2081-05-27"
+   },
+   "expected": {
+    "lunarYear": 2081,
+    "month": 4,
+    "day": 19,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2013-03-07"
+   },
+   "expected": {
+    "lunarYear": 2013,
+    "month": 1,
+    "day": 26,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "solar": "2085-02-17"
+   },
+   "expected": {
+    "lunarYear": 2085,
+    "month": 1,
+    "day": 23,
+    "isLeapMonth": false
+   }
+  },
+  {
+   "input": {
+    "lunar": {
+     "lunarYear": 2025,
+     "month": 6,
+     "day": 15,
+     "isLeapMonth": true
+    }
+   },
+   "expected": {
+    "solar": "2025-08-08"
+   },
+   "note": "闰六月十五"
+  },
+  {
+   "input": {
+    "lunar": {
+     "lunarYear": 2025,
+     "month": 6,
+     "day": 15,
+     "isLeapMonth": false
+    }
+   },
+   "expected": {
+    "solar": "2025-07-09"
+   },
+   "note": "plain 六月十五"
+  },
+  {
+   "input": {
+    "lunar": {
+     "lunarYear": 2033,
+     "month": 11,
+     "day": 1,
+     "isLeapMonth": true
+    }
+   },
+   "expected": {
+    "solar": "2033-12-22"
+   },
+   "note": "2033 闰十一月初一"
+  },
+  {
+   "input": {
+    "lunar": {
+     "lunarYear": 2026,
+     "month": 1,
+     "day": 1,
+     "isLeapMonth": false
+    }
+   },
+   "expected": {
+    "solar": "2026-02-17"
+   },
+   "note": "正月初一"
+  },
+  {
+   "input": {
+    "lunar": {
+     "lunarYear": 2026,
+     "month": 6,
+     "day": 1,
+     "isLeapMonth": true
+    }
+   },
+   "expected": {
+    "solar": null
+   },
+   "note": "invalid: 2026 has no 闰六月"
+  }
+ ]
+}

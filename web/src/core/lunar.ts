@@ -7,6 +7,8 @@
  * Each entry encodes one lunar year: bits 5–16 = months 1–12 (1 = 30 days),
  * bit 4 = the leap month has 30 days, bits 0–3 = leap month number (0 = none).
  */
+import { calendarFestivals } from './calendarFestivals';
+
 const YEAR_TABLE: readonly number[] = [
   0x17a48, 0xea40, 0x1d4a0, 0x16545, 0xc960, 0x15360, 0x154d4, 0xad40, 0x16b20, 0x17542,
   0xea40, 0x1b4a6, 0x164a0, 0x14960, 0x14975, 0x55a0, 0xad60, 0xb633, 0x1b520, 0x1d257,
@@ -187,14 +189,6 @@ export function solarTerms(year: number): SolarTerm[] {
 
 /* ------------------------------------------------------------ almanac */
 
-const LUNAR_FESTIVALS: Record<string, string> = {
-  '1-1': '春节', '1-15': '元宵节', '2-2': '龙抬头', '5-5': '端午节', '7-7': '七夕',
-  '7-15': '中元节', '8-15': '中秋节', '9-9': '重阳节', '12-8': '腊八节', '12-23': '小年',
-};
-const SOLAR_FESTIVALS: Record<string, string> = {
-  '1-1': '元旦', '5-1': '劳动节', '10-1': '国庆节',
-};
-
 export interface Almanac {
   /** 八月十六 */
   lunar: string;
@@ -213,14 +207,7 @@ export function almanac(year: number, month: number, day: number): Almanac | nul
   const lunar = toLunar(year, month, day);
   if (!lunar) return null;
   const { ganzhi, zodiac } = ganzhiYear(lunar.year);
-  const today: string[] = [];
-  if (!lunar.leap) {
-    const festival = LUNAR_FESTIVALS[`${lunar.month}-${lunar.day}`];
-    if (festival) today.push(festival);
-    if (lunar.month === 12 && lunar.day === lunar.monthLength) today.push('除夕');
-  }
-  const solar = SOLAR_FESTIVALS[`${month}-${day}`];
-  if (solar) today.push(solar);
+  const today = calendarFestivals(month, day, lunar);
   const dayNumber = utcDay(year, month, day);
   const terms = [...solarTerms(year), ...solarTerms(year + 1)];
   const term = terms.find(t => utcDay(t.year, t.month, t.day) === dayNumber);

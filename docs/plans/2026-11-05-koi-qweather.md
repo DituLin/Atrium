@@ -11,7 +11,9 @@
 - [x] Identify current missing fields: auspicious/inauspicious activities and month sexagenary label. Gregorian/lunar date, year/day labels, solar terms and week strip already have local calculations.
 - [x] Verify the Mac mini's `koi-calendar` directory contains only a specification, not a reusable implementation. A saved KOI project is on another host; request access to its actual source rather than claiming an invented data source.
 - [x] Verify current QWeather v1 coordinate endpoints and authentication against official documentation. Preserve optional forecast fields and WMO-normalized weather codes.
-- [ ] Confirm actual KOI implementation, license and date-boundary conventions before importing any data or library. Compare representative dates, leap months, solar-term month transitions and local midnight with KOI's own outputs.
+- [x] Obtain the user-provided KOI repository at `f973da1b07a8bc3a387c202fd1a134f24924a3fc`. It supplies generic offline tables/rules and reference fixtures. No LICENSE is present; reuse is authorized by the repository owner in this task, without claiming independent license verification. Pin the commit and hashes.
+- [x] Audit the 1901–2099 range, leap months, whole-civil-day Lichun year/Jie month transitions, UTC+8 minute-precision terms and simplified `koi-almanac/1.0` rules. Existing fixtures are conformance checks rather than an independent authoritative almanac.
+- [x] Port the engine and preserve January 1–5, 1901 month semantics using the previous Jie interval index 10 without fabricating a December 1900 term instant. Missing range-edge term progress stays missing.
 
 ## Server-side QWeather
 
@@ -28,9 +30,9 @@ Root integration: `internal/app/runtime.go` supplies the household timezone only
 ## Frontend and calendar adaptation
 
 - [x] Show QWeather attribution beside weather wherever consumed, without nested interactive elements or remote-focus theft. Keep observed time distinct from refresh time and cover stale readings.
-- [ ] Once the actual KOI source is available, define the smallest reusable calendar module and map real month/activity fields into `AlmanacCard`. Preserve the source's semantic boundary and existing family timezone; do not copy design examples into data.
+- [x] Port KOI as a pure TypeScript module with original tables, rules and fixtures. Use it consistently for all Today calendar fields; keep legacy consumers unchanged except sharing festival labels. Map complete month/activity fields into `AlmanacCard`.
 - [x] Verify weather refresh focus, empty/stale forecasts, attribution navigation and Chrome 66 output at 1920, 1366 and 804 widths.
-- [ ] Verify long calendar activity lists and month labels once the KOI source is available.
+- [x] Verify 12 representative dates at 1920 and 804 widths, including the longest activity lists, two-digit dates, leap-month names and range boundaries. Independent full-range comparison matches the original Python rule implementation; independent sxtwl lunar comparison also passes (72,684 days).
 
 ## Delivery
 
@@ -43,5 +45,14 @@ Root integration: `internal/app/runtime.go` supplies the household timezone only
 
 - QWeather adapter and UI are implemented. Full frontend regression: 96 files / 718 tests passed; lint and TypeScript/build passed. Full Go regression and widget/config race tests passed. An independent review retained its original timeout/null/attribution probes and verified cache isolation, bounded retries and concurrent refresh deduplication.
 - Synthetic browser checks passed at 1920×1080, 1366×768 and 804×384, including long attribution remote scrolling, safe links that do not trigger refresh, complete card layout and House attribution. All task-owned synthetic listeners were stopped.
-- Required inputs remain unavailable: the actual KOI source, dedicated QWeather host and credentials, and a confirmed weather location. Saved-project metadata locates KOI on a different host. The current Mac mini copy is only a specification. No calendar values have been invented, and production configuration/service have not been changed for this feature.
-- Signed production activation and physical-device validation remain pending those inputs. Prior release verification is not evidence of QWeather production acceptance.
+- The user supplied the actual KOI GitHub source on November 5. Calendar implementation is proceeding from the pinned repository. KOI weather is a placeholder and contains no reusable QWeather credentials. A dedicated QWeather host, credentials and a confirmed weather location are still unavailable; production weather configuration remains unchanged.
+- Signed calendar production activation and physical-device validation are pending the calendar implementation checks. QWeather production acceptance remains pending its real configuration; prior release verification is not evidence of that acceptance.
+
+## KOI implementation verification (2026-11-05)
+
+- Pure offline engine: 411 tests passed, including 373 original fixture cases and whole-range lunar round trips. Original tables/rules/fixtures and their recorded hashes match KOI byte-for-byte.
+- Complete frontend regression: 98 files / 1,135 tests passed; ESLint passed. Existing screen assertions were updated for the newly available KOI source while preserving family-date and week behavior.
+- The exact current deployed Go source closure plus the allowlisted QWeather changes passed all Go tests and widget/config race checks. No unrelated backend implementation is being replaced.
+- Browser checks cover 12 dates at 1920×1080 and 804×384, with a different browser timezone, long activity lists, leap months, range edges and removed flat/flatMap support. No overlap or page errors.
+- Independent original-reference comparison covers all 72,684 supported civil days and all 4,776 term entries; sxtwl lunar comparison also matches. Upstream sxtwl month-pillar getter differs from KOI’s bundled whole-day term convention on two historical dates; preserve the explicitly versioned KOI contract.
+- Deployment and OnePlus verification remain pending at this implementation checkpoint. Weather activation still requires actual account/location configuration.

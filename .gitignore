@@ -17,6 +17,9 @@ web/node_modules/
 # Local state
 .worktrees/
 data/
+# Versioned generic KOI calendar tables (not household runtime data).
+!web/src/core/koi/data/
+!web/src/core/koi/data/*.json
 .data/
 config.yaml
 config.local.yaml
